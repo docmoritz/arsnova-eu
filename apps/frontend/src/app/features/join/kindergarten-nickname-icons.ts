@@ -2,15 +2,12 @@
  * Emoji je Eintrag in KINDERGARTEN (gleiche Reihenfolge wie NICKNAME_LISTS.KINDERGARTEN).
  * Index-basiert, damit alle Locales (de/en/fr/es/it) dieselbe Grafik erhalten.
  */
-import type { SupportedLocale } from '../../core/locale-from-path';
+import { getEffectiveLocale, type SupportedLocale } from '../../core/locale-from-path';
 import { NICKNAME_LISTS_BY_LOCALE } from './nickname-themes';
-
-const KINDERGARTEN_LOCALES: SupportedLocale[] = ['de', 'en', 'fr', 'es', 'it'];
 
 /** Parallel zu `NICKNAME_LISTS.KINDERGARTEN`. */
 export const KINDERGARTEN_NICKNAME_EMOJIS: readonly string[] = [
-  '🐘', // Blauer Elefant
-  '🦄', // Rotes Einhorn
+  '🐉', // Roter Drache
   '🐸', // Grüner Frosch
   '🦁', // Gelber Löwe
   '🐬', // Lila Delfin
@@ -21,8 +18,8 @@ export const KINDERGARTEN_NICKNAME_EMOJIS: readonly string[] = [
   '🐆', // Schwarzer Panther
   '🐇', // Weißer Hase
   '🐺', // Grauer Wolf
-  '🐠', // Goldener Fisch
-  '🐦', // Silberner Vogel
+  '🦪', // Goldene Auster
+  '🦤', // Silberner Dodo
   '🦜', // Bunter Papagei
   '🦢', // Hellblauer Schwan
   '🐍', // Dunkelgrüne Schlange
@@ -39,7 +36,7 @@ export const KINDERGARTEN_NICKNAME_EMOJIS: readonly string[] = [
   '🦫', // Tannengrüner Biber
   '🐛', // Apfelgrüne Raupe
   '🐹', // Maulwurfsgrauer Hamster
-  '🐎', // Kastanienbraunes Pony
+  '🐒', // Kastanienbrauner Pavian
   '🐊', // Salbeigrünes Krokodil
   '🦡', // Terrakottafarbener Dachs
   '🦗', // Smaragdgrüne Libelle (näherungsweise)
@@ -109,6 +106,12 @@ export const KINDERGARTEN_NICKNAME_EMOJIS: readonly string[] = [
   '🦖', // Kirschroter T-Rex
   '🐂', // Stahlgrauer Ochse
   '🐔', // Honiggelbe Henne
+  '🐈‍⬛', // Schwarze Katze
+  '🐥', // Goldgelbes Küken
+  '🐣', // Silbernes Schlüpfküken
+  '🐕‍🦺', // Türkiser Assistenzhund
+  '🐦‍⬛', // Kobaltblauer Rabe
+  '🐲', // Korallenfarbener Drachenkopf
 ] as const;
 
 export function kindergartenEmojiAtIndex(index: number): string | null {
@@ -116,19 +119,22 @@ export function kindergartenEmojiAtIndex(index: number): string | null {
   return KINDERGARTEN_NICKNAME_EMOJIS[index] ?? null;
 }
 
-/** Findet den Listenindex über alle übersetzten Kindergarten-Strings (gespeicherter Nickname). */
-export function findKindergartenNicknameIndex(nickname: string): number | null {
+/** Findet den Listenindex in der aktiven UI-Locale oder explizit angegebenen Locale. */
+export function findKindergartenNicknameIndex(
+  nickname: string,
+  locale: SupportedLocale = getEffectiveLocale(),
+): number | null {
   const t = nickname.trim();
   if (!t) return null;
-  for (const loc of KINDERGARTEN_LOCALES) {
-    const list = NICKNAME_LISTS_BY_LOCALE[loc].KINDERGARTEN;
-    const i = list.indexOf(t);
-    if (i >= 0) return i;
-  }
-  return null;
+  const list = NICKNAME_LISTS_BY_LOCALE[locale].KINDERGARTEN;
+  const i = list.indexOf(t);
+  return i >= 0 ? i : null;
 }
 
-export function findKindergartenNicknameEmoji(nickname: string): string | null {
-  const i = findKindergartenNicknameIndex(nickname);
+export function findKindergartenNicknameEmoji(
+  nickname: string,
+  locale: SupportedLocale = getEffectiveLocale(),
+): string | null {
+  const i = findKindergartenNicknameIndex(nickname, locale);
   return i === null ? null : kindergartenEmojiAtIndex(i);
 }
