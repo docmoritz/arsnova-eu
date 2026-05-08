@@ -10,6 +10,7 @@ import { incrementCompletedSessionsTotal } from './platformStatistic';
 const STALE_SESSION_HOURS = 24;
 const FINISHED_SESSION_RETENTION_HOURS = 24;
 const BONUS_TOKEN_RETENTION_DAYS = 90;
+const SESSION_FEEDBACK_RETENTION_DAYS = 90;
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000; // 1h
 
 const ACTIVE_SESSION_STATUSES = [
@@ -67,15 +68,51 @@ export async function cleanupExpiredBonusTokens(): Promise<number> {
   return result.count;
 }
 
+export async function cleanupExpiredSessionFeedback(): Promise<number> {
+  const cutoff = new Date(Date.now() - SESSION_FEEDBACK_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+
+  const result = await prisma.sessionFeedback.deleteMany({
+    where: {
+      createdAt: { lt: cutoff },
+      session: { status: 'FINISHED' },
+    },
+  });
+
+  if (result.count > 0) {
+    logger.info(
+      `SessionFeedback-Cleanup: ${result.count} Bewertung(en) älter als ` +
+        `${SESSION_FEEDBACK_RETENTION_DAYS} Tage gelöscht.`,
+    );
+  }
+
+  return result.count;
+}
+
 export async function cleanupExpiredFinishedSessions(): Promise<number> {
   const now = new Date();
-  const cutoff = new Date(Date.now() - FINISHED_SESSION_RETENTION_HOURS * 60 * 60 * 1000);
+  const finishedCutoff = new Date(Date.now() - FINISHED_SESSION_RETENTION_HOURS * 60 * 60 * 1000);
+  const bonusRetentionCutoff = new Date(
+    Date.now() - BONUS_TOKEN_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const feedbackRetentionCutoff = new Date(
+    Date.now() - SESSION_FEEDBACK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+  );
 
   const sessionsToPurge = await prisma.session.findMany({
     where: {
       status: 'FINISHED',
-      endedAt: { not: null, lt: cutoff },
+      endedAt: { not: null, lt: finishedCutoff },
       OR: [{ legalHoldUntil: null }, { legalHoldUntil: { lte: now } }],
+      bonusTokens: {
+        none: {
+          generatedAt: { gte: bonusRetentionCutoff },
+        },
+      },
+      sessionFeedbacks: {
+        none: {
+          createdAt: { gte: feedbackRetentionCutoff },
+        },
+      },
     },
     select: {
       id: true,
@@ -130,11 +167,14 @@ async function runAllCleanups(): Promise<void> {
   await cleanupStaleSessions().catch((err) => {
     logger.warn('Session-Cleanup fehlgeschlagen:', (err as Error).message);
   });
-  await cleanupExpiredFinishedSessions().catch((err) => {
-    logger.warn('Session-Purge fehlgeschlagen:', (err as Error).message);
-  });
   await cleanupExpiredBonusTokens().catch((err) => {
     logger.warn('BonusToken-Cleanup fehlgeschlagen:', (err as Error).message);
+  });
+  await cleanupExpiredSessionFeedback().catch((err) => {
+    logger.warn('SessionFeedback-Cleanup fehlgeschlagen:', (err as Error).message);
+  });
+  await cleanupExpiredFinishedSessions().catch((err) => {
+    logger.warn('Session-Purge fehlgeschlagen:', (err as Error).message);
   });
 }
 
