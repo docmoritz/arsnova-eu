@@ -241,10 +241,12 @@ export class FoyerEntranceLayerComponent implements OnDestroy {
     }
 
     if (chip.summary) {
-      return chip.direction === 'right' ? 'max(20vw, 14rem)' : 'calc(-1 * max(20vw, 14rem))';
+      const distance = this.maxViewportOrRem(0.2, 14);
+      return this.signedPx(distance, chip.direction === 'right');
     }
 
-    return chip.direction === 'right' ? 'max(48vw, 32rem)' : 'calc(-1 * max(48vw, 32rem))';
+    const distance = this.maxViewportOrRem(0.48, 32);
+    return this.signedPx(distance, chip.direction === 'right');
   }
 
   overlayTravelY(chip: FoyerEntranceChip): string {
@@ -253,11 +255,12 @@ export class FoyerEntranceLayerComponent implements OnDestroy {
     }
 
     if (chip.summary) {
-      return 'max(10vh, 5rem)';
+      return this.px(this.maxViewportHeightOrRem(0.1, 5));
     }
 
-    const offsets = ['calc(-1 * max(20vh, 10rem))', '0px', 'max(20vh, 10rem)'] as const;
-    return offsets[chip.lane % offsets.length] ?? '0px';
+    const offset = this.maxViewportHeightOrRem(0.2, 10);
+    const offsets = [-offset, 0, offset] as const;
+    return this.px(offsets[chip.lane % offsets.length] ?? 0);
   }
 
   overlayTiltStart(chip: FoyerEntranceChip): string {
@@ -271,5 +274,38 @@ export class FoyerEntranceLayerComponent implements OnDestroy {
 
     const tilt = chip.direction === 'right' ? 10 : -10;
     return `${tilt}deg`;
+  }
+
+  private maxViewportOrRem(viewportFraction: number, rem: number): number {
+    const viewportWidth =
+      typeof window !== 'undefined' && Number.isFinite(window.innerWidth) ? window.innerWidth : 0;
+    return Math.max(viewportWidth * viewportFraction, this.remToPx(rem));
+  }
+
+  private maxViewportHeightOrRem(viewportFraction: number, rem: number): number {
+    const viewportHeight =
+      typeof window !== 'undefined' && Number.isFinite(window.innerHeight) ? window.innerHeight : 0;
+    return Math.max(viewportHeight * viewportFraction, this.remToPx(rem));
+  }
+
+  private remToPx(rem: number): number {
+    const rootFontSize =
+      typeof window !== 'undefined' && typeof getComputedStyle === 'function'
+        ? Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+        : Number.NaN;
+
+    return rem * (Number.isFinite(rootFontSize) && rootFontSize > 0 ? rootFontSize : 16);
+  }
+
+  private signedPx(value: number, positive: boolean): string {
+    return this.px(positive ? value : -value);
+  }
+
+  private px(value: number): string {
+    if (!Number.isFinite(value)) {
+      return '0px';
+    }
+
+    return `${Math.round(value)}px`;
   }
 }

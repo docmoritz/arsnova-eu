@@ -156,12 +156,8 @@ describe('FoyerEntranceLayerComponent', () => {
     expect(layer.className).toContain('foyer-entrance-layer--overlay');
     expect(shell.style.getPropertyValue('--foyer-overlay-inline-start')).toBe('50%');
     expect(shell.style.getPropertyValue('--foyer-overlay-block-start')).toBe('50%');
-    expect(shell.style.getPropertyValue('--foyer-overlay-travel-x')).toBe(
-      'calc(-1 * max(48vw, 32rem))',
-    );
-    expect(shell.style.getPropertyValue('--foyer-overlay-travel-y')).toBe(
-      'calc(-1 * max(20vh, 10rem))',
-    );
+    expect(shell.style.getPropertyValue('--foyer-overlay-travel-x')).toBe('-512px');
+    expect(shell.style.getPropertyValue('--foyer-overlay-travel-y')).toBe('-160px');
     expect(shell.style.gridColumn).toBe('2');
     expect(shell.style.gridRow).toBe('2');
   });
