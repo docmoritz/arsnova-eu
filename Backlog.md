@@ -282,6 +282,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - Unter `scripts/load/` existieren bereits ausführbare Bausteine für leichte/protokollnahe Lasttests (`k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js`) sowie einfache Node-Simulationen (`concurrent-50-http.mjs`, `session-participants-50.mjs`).
     - Ergänzend gibt es funktionale Smoke-Flows im Frontend, u. a. `smoke:unified-session`, die zentrale Live-Session-Pfade automatisiert prüfen.
     - Für die volle Story-Erfüllung fehlen weiterhin Realtime-/Artillery-Szenarien, PR-/CI-Einbindung, maschinenlesbare Ergebniszusammenfassungen, Laufvergleich und die breite Abdeckung von Vote, Freitext, Q&A, Reconnect und Sync.
+  - **Performance-Hinweis:** Die Story ist selbst Teil der Performance-Absicherung und damit unmittelbar von [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md) betroffen; neue kritische Live-Features muessen hier mit passenden Lastprofilen und Messpunkten abgebildet werden.
   - **Abhängigkeiten:** Story 0.2 (tRPC WebSocket-Adapter), Story 0.5 (Rate-Limiting), Story 0.6 (CI/CD), Story 2.1a (Session-Start), Story 2.2 (Lobby), Story 3.1 (Join), Story 3.3b (Abstimmung), Story 4.5 (Freitext-Auswertung), Story 8.1–8.4 (Q&A), optional Story 1.6/1.6a/1.6b/1.6d (Sync), ADR-0013.
 
 - **Story 0.8 (Komplexitätsabbau / McCabe-Refactor):** 🟡 Als Entwickler möchte ich überhöhte zyklomatische Komplexität in priorisierten Hotspots systematisch reduzieren, damit Wartbarkeit, Änderbarkeit und Fehlersicherheit steigen, ohne funktionale Regressionen einzuführen.
@@ -532,6 +533,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - Der Legacy-Mirror in `localStorage` ist auf seine Notwendigkeit geprüft und kann perspektivisch reduziert oder entfernt werden.
     - Ein technischer Zielpfad für eine granularere Yjs-Modellierung (`Y.Map`/`Y.Array` statt JSON-Blob) ist dokumentiert.
     - Die Architektur-Dokumentation benennt klar, welche Quick Wins bereits umgesetzt sind und welche Skalierungsmaßnahmen noch offen bleiben.
+  - **Performance-Hinweis:** Diese Story ist nach [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md) als performance-kritisch zu behandeln, weil sie Serialisierung, Write-Frequenz und Mehrgeraete-Sync direkt im Bearbeitungs- und Uebertragungspfad veraendert.
 - **Story 1.7 (Markdown & KaTeX):** 🔴 Als Lehrperson möchte ich im Fragenstamm und in den Antwortoptionen Markdown und KaTeX-Formeln verwenden können, damit ich mathematische und formatierte Inhalte ansprechend darstellen kann.
   - **Akzeptanzkriterien:**
     - Fragenstamm (`Question.text`) und Antworttext (`AnswerOption.text`) akzeptieren Markdown-Syntax (Fett, Kursiv, Listen, Code-Blöcke, Bilder).
@@ -751,6 +753,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
       - gemischte deutsche und englische Begriffe
       - sehr lange Einzelbegriffe
     - **Architekturvorgabe:** Die Umsetzung folgt ADR-0012; `d3-cloud` wird als Layout-Engine in eine eigene Angular-Komponente gekapselt und nicht als unkontrolliertes Fremd-Widget direkt in die UI eingebaut.
+  - **Performance-Hinweis:** Die Story ist nach [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md) performance-kritisch, weil Live-Layout, Re-Rendering, Aggregation und Exportqualitaet im Presenter-/Host-Pfad liegen. Das gilt erst recht fuer spaetere Ausbaustufen mit NLP, Lemmatisierung, semantischer Zusammenfassung oder selbstgehosteter LLM-/Inferenz-Komponente.
   - **Abhängigkeiten:** Story 1.14 (bestehende Word-Cloud), Story 4.5 (Freitext-Auswertung), Story 2.5 (Beamer / Presenter), Story 6.4 (Responsive), Story 6.5 (Barrierefreiheit), ADR-0012.
 - **Story 1.15 (Preset-Konfiguration exportieren & importieren):** 🟢 Als Lehrperson möchte ich meine Preset-Konfiguration (Seriös/Spielerisch inkl. aller Optionen) als Datei exportieren und auf einem anderen Gerät/Browser importieren können, damit ich meine Einstellungen geräteübergreifend nutzen kann — ohne Account und ohne serverseitige Speicherung.
   - **Motivation:** Presets werden im `localStorage` des Browsers gespeichert und sind damit an ein Gerät bzw. einen Browser gebunden. Für Lehrende, die zwischen Laptop und Tablet wechseln, geht die individuelle Konfiguration verloren. Diese Story bietet eine einfache, Zero-Knowledge-konforme Lösung.
@@ -1373,9 +1376,11 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Sicherheits- und Integrationstests decken unzulässige Rolleneskalation ausdrücklich ab.
 - **Story 8.6 (Q&A: Kontroversitäts-Score & Sortierung):** 🟡 Als Lehrperson oder Moderator:in einer Live-Veranstaltung möchte ich Fragen im Q&A nach Kontroversität (ausgeglichene Up- und Downvotes) sortieren können, damit polarisierende Themen sichtbar werden und nicht nur durch hohe Upvote-Zahlen dominieren.
   - **Details:** Formel, Sortier-Tie-Breaker, UI-Schwellen, Testfälle und Beispiel-SQL: [`docs/features/controversy-score.md`](docs/features/controversy-score.md).
+  - **Performance-Hinweis:** Die Story ist nach [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md) beobachtungspflichtig bis performance-kritisch, weil Scoring und Resortierung im laufenden Q&A-Kanal potenziell in den Live-Pfad geraten und bei vielen Fragen/Votes nicht naiv pro Update neu berechnet werden duerfen.
 - **Story 8.7 (Q&A: Sortierung „Beste Fragen“, Wilson-Score):** 🟡 Als Lehrperson oder Moderator:in einer Live-Veranstaltung möchte ich Fragen im Q&A optional nach statistisch belastbarer Zustimmung sortieren können („Beste Fragen“, untere Grenze des Wilson-Konfidenzintervalls), damit Einzelstimmen mit scheinbar 100 % nicht über Fragen mit vielen, fast einhelligen Stimmen rutschen.
   - **Details:** Hintergrund, Wilson-Formel, Beispiel-SQL und Abgrenzung zu Story 8.6: [`docs/features/controversy-score.md`](docs/features/controversy-score.md) (Abschnitte „Best Questions“ / Wilson und Entwicklernotizen).
   - **Hinweis:** Sortier-UI (Dropdown o. Ä.) kann mit Story 8.6 gemeinsam geplant werden; technisch eigenständiges Scoring und Tests.
+  - **Performance-Hinweis:** Auch diese Story faellt unter [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md), weil Wilson-Score-Berechnung, Ranking und Live-Neusortierung bei hohem Q&A-Aufkommen Aggregations- und Datenbanklast erzeugen koennen.
 - **Story 8.8 (Tempo-Livekanal):** 🟡 Als Lehrperson möchte ich einen persistenten Tempo-Livekanal in einer laufenden ARSnova-Session aktivieren können, damit Teilnehmende während eines Vortrags jederzeit anonym signalisieren können, ob sie folgen, ob es schneller gehen darf, ob es zu schnell ist oder ob sie abgehängt sind.
   - **Akzeptanzkriterien:**
     - Der Tempo-Livekanal ist ein **eigenständiger Session-Kanal** und wird **nicht** als Blitzlicht-Fragetyp, Quizfrage oder Gamification-Element modelliert.
@@ -1389,6 +1394,7 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Die Tendenzlogik unterscheidet mindestens: `Die Mehrheit kann folgen.`, `Das Tempo wirkt zu hoch.`, `Mehrere Teilnehmende sind abgehängt.`, `Die Gruppe signalisiert Unterforderung.`, `Die Gruppe ist heterogen.`
     - Die vier Zustände sind auf Smartphones ohne horizontales Scrollen erreichbar; Touch-Ziele, Fokuszustände, Screenreader-Namen und semantische Markierung des aktiven Zustands erfüllen die projektweiten A11y-Regeln.
     - Die technische Umsetzung verwendet ein **eigenes Daten- und API-Modell** für kontinuierliches Tempo-Feedback; Blitzlicht-Logik wie Round-Lock, Vergleichsrunde oder Einmal-Vote wird dafür nicht wiederverwendet.
+  - **Performance-Hinweis:** Der Tempo-Kanal ist gemaess [ADR-0025](docs/architecture/decisions/0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md) automatisch performance-kritisch, weil er als kontinuierlicher Live-Kanal mit dauerhafter Aggregation, potenziellem Fan-out und paralleler Aktivitaet zu Quiz, Q&A und Blitzlicht entworfen wird.
   - **Abhängigkeiten:** Story 2.1c (Host-Token / serverseitige Autorisierung), Story 2.8 (produktives Smartphone-Hosting), Story 3.3b (teilnehmendengebundene Eingaben), Story 6.4 (Mobile-First), Story 6.5 (Barrierefreiheit), ADR-0009, ADR-0010, ADR-0014, ADR-0019.
 
 ---
