@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnDestroy,
+  ViewEncapsulation,
   effect,
   input,
   signal,
@@ -34,6 +35,7 @@ export type FoyerEntranceChip = FoyerChipLabel & {
   templateUrl: './foyer-entrance-layer.component.html',
   styleUrl: './foyer-entrance-layer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class FoyerEntranceLayerComponent implements OnDestroy {
   readonly chips = input<readonly FoyerEntranceChip[]>([]);

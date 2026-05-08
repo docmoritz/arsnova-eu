@@ -68,7 +68,10 @@
   z-index: 0;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-stage-flash 920ms ease-out both;
+    animation-name: foyer-stage-flash;
+    animation-duration: 920ms;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
   }
 }
 
@@ -109,7 +112,11 @@
     );
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-stage-flash 820ms ease-out 1480ms both;
+    animation-name: foyer-stage-flash;
+    animation-duration: 820ms;
+    animation-timing-function: ease-out;
+    animation-delay: 1480ms;
+    animation-fill-mode: both;
   }
 }
 
@@ -125,17 +132,19 @@
   z-index: calc(1 + var(--foyer-z-order, 0));
 
   @media (prefers-reduced-motion: no-preference) {
-    animation:
-      foyer-chip-arrive-transform var(--foyer-arrive-duration) cubic-bezier(0.16, 0.84, 0.28, 1)
-        var(--foyer-delay-ms, 0ms) both,
-      foyer-chip-presence var(--foyer-presence-duration) linear var(--foyer-delay-ms, 0ms) both;
+    animation-name: foyer-chip-arrive-transform, foyer-chip-presence;
+    animation-duration: var(--foyer-arrive-duration), var(--foyer-presence-duration);
+    animation-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1), linear;
+    animation-delay: var(--foyer-delay-ms, 0ms), var(--foyer-delay-ms, 0ms);
+    animation-fill-mode: both, both;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    animation:
-      foyer-chip-arrive-reduced 220ms ease-out var(--foyer-delay-ms, 0ms) both,
-      foyer-chip-presence-reduced var(--foyer-presence-duration) linear var(--foyer-delay-ms, 0ms)
-        both;
+    animation-name: foyer-chip-arrive-reduced, foyer-chip-presence-reduced;
+    animation-duration: 220ms, var(--foyer-presence-duration);
+    animation-timing-function: ease-out, linear;
+    animation-delay: var(--foyer-delay-ms, 0ms), var(--foyer-delay-ms, 0ms);
+    animation-fill-mode: both, both;
   }
 }
 
@@ -162,8 +171,10 @@
   z-index: 0;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-chip-trail-left var(--foyer-arrive-duration) cubic-bezier(0.16, 0.84, 0.28, 1)
-      both;
+    animation-name: foyer-chip-trail-left;
+    animation-duration: var(--foyer-arrive-duration);
+    animation-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1);
+    animation-fill-mode: both;
   }
 }
 
@@ -209,18 +220,19 @@
   will-change: transform, opacity;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation:
-      foyer-overlay-chip-arrive-transform var(--foyer-arrive-duration)
-        cubic-bezier(0.12, 0.9, 0.2, 1) var(--foyer-delay-ms, 0ms) both,
-      foyer-overlay-chip-presence var(--foyer-presence-duration) linear var(--foyer-delay-ms, 0ms)
-        both;
+    animation-name: foyer-overlay-chip-arrive-transform, foyer-overlay-chip-presence;
+    animation-duration: var(--foyer-arrive-duration), var(--foyer-presence-duration);
+    animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1), linear;
+    animation-delay: var(--foyer-delay-ms, 0ms), var(--foyer-delay-ms, 0ms);
+    animation-fill-mode: both, both;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    animation:
-      foyer-overlay-chip-arrive-reduced 240ms ease-out var(--foyer-delay-ms, 0ms) both,
-      foyer-overlay-chip-presence-reduced var(--foyer-presence-duration) linear
-        var(--foyer-delay-ms, 0ms) both;
+    animation-name: foyer-overlay-chip-arrive-reduced, foyer-overlay-chip-presence-reduced;
+    animation-duration: 240ms, var(--foyer-presence-duration);
+    animation-timing-function: ease-out, linear;
+    animation-delay: var(--foyer-delay-ms, 0ms), var(--foyer-delay-ms, 0ms);
+    animation-fill-mode: both, both;
   }
 }
 
@@ -275,7 +287,10 @@
   z-index: 0;
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-overlay-chip-glow var(--foyer-arrive-duration) linear both;
+    animation-name: foyer-overlay-chip-glow;
+    animation-duration: var(--foyer-arrive-duration);
+    animation-timing-function: linear;
+    animation-fill-mode: both;
   }
 }
 
@@ -297,7 +312,10 @@
   color: var(--foyer-accent-color);
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-chip-spin 680ms cubic-bezier(0.17, 0.84, 0.3, 1) both;
+    animation-name: foyer-chip-spin;
+    animation-duration: 680ms;
+    animation-timing-function: cubic-bezier(0.17, 0.84, 0.3, 1);
+    animation-fill-mode: both;
   }
 }
 
@@ -341,8 +359,11 @@
   color: var(--foyer-overlay-color);
 
   @media (prefers-reduced-motion: no-preference) {
-    animation: foyer-overlay-chip-settle 760ms cubic-bezier(0.18, 0.92, 0.24, 1)
-      var(--foyer-settle-delay, 0ms) both;
+    animation-name: foyer-overlay-chip-settle;
+    animation-duration: 760ms;
+    animation-timing-function: cubic-bezier(0.18, 0.92, 0.24, 1);
+    animation-delay: var(--foyer-settle-delay, 0ms);
+    animation-fill-mode: both;
   }
 
   @media (prefers-reduced-motion: reduce) {
