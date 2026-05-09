@@ -3,11 +3,13 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { LOCALE_ID } from '@angular/core';
 import { provideRouter, ActivatedRoute, Router } from '@angular/router';
 import { JoinComponent } from './join.component';
 import { trpc } from '../../core/trpc.client';
 import { consumeParticipantJoinArrival } from '../../core/participant-join-arrival';
 import { peekConfirmedParticipantTeam } from '../../core/participant-team-confirmation';
+import { NICKNAME_LISTS } from './nickname-themes';
 
 const mockSession = {
   id: 'sess-1',
@@ -86,6 +88,7 @@ describe('JoinComponent', () => {
       imports: [JoinComponent],
       providers: [
         provideRouter([]),
+        { provide: LOCALE_ID, useValue: 'de' },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -190,6 +193,65 @@ describe('JoinComponent', () => {
     expect(comp.nicknameOptions()[0]).toBe('Marie Curie');
   });
 
+  it('aktiviert den generativen Reserve-Pool erst nach Erschoepfung der Ursprungsliste', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      allowCustomNicknames: false,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(comp.nicknameFallbackActive()).toBe(false);
+    expect(comp.nicknameOptions()[0]).toBe('Marie Curie');
+    expect(comp.nicknameOptions()).not.toContain('Marie Curie 2');
+  });
+
+  it('wechselt erst nach voller Erschoepfung auf generierte Reserve-Namen', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      allowCustomNicknames: false,
+    });
+    vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
+      nicknames: [...NICKNAME_LISTS.NOBEL_LAUREATES],
+      participantCount: NICKNAME_LISTS.NOBEL_LAUREATES.length,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(comp.nicknameFallbackActive()).toBe(true);
+    expect(comp.nicknameOptions()[0]).toBe('Marie Curie 2');
+    expect(comp.nicknameOptions()).not.toContain('Marie Curie');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Die Namensliste ist vollständig vergeben. Du kannst jetzt aus weiteren Pseudonymen wählen.',
+    );
+  });
+
+  it('ueberspringt bereits vergebene Reserve-Namen', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      allowCustomNicknames: false,
+    });
+    vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
+      nicknames: [...NICKNAME_LISTS.NOBEL_LAUREATES, 'Marie Curie 2'],
+      participantCount: NICKNAME_LISTS.NOBEL_LAUREATES.length + 1,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(comp.nicknameFallbackActive()).toBe(true);
+    expect(comp.nicknameOptions()[0]).toBe('Albert Einstein 2');
+    expect(comp.nicknameOptions()).not.toContain('Marie Curie 2');
+  });
+
   it('markiert vergebene Nicknames (isTaken)', async () => {
     vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
       nicknames: ['Marie Curie'],
@@ -278,6 +340,31 @@ describe('JoinComponent', () => {
 
     expect(comp.selectedNickname()).toBe('Roter Drache');
     expect(comp.kindergartenEmojiForSelected()).toBe('🐉');
+  });
+
+  it('behaelt im Kita-Reserve-Pool das passende Tier-Emoji', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      nicknameTheme: 'KINDERGARTEN',
+      allowCustomNicknames: false,
+    });
+    vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
+      nicknames: [...NICKNAME_LISTS.KINDERGARTEN],
+      participantCount: NICKNAME_LISTS.KINDERGARTEN.length,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    comp.selectedNickname.set('Roter Drache 2');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(comp.nicknameFallbackActive()).toBe(true);
+    expect(comp.kindergartenEmojiForSelected()).toBe('🐉');
+    expect(comp.kindergartenEmojiForOption('Roter Drache 2', 0)).toBe('🐉');
   });
 
   it('ruft join mit Code und Nickname auf und navigiert zu vote (Story 3.2)', async () => {

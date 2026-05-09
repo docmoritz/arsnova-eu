@@ -1888,3 +1888,55 @@ export function getNicknameList(theme: NicknameTheme, locale: SupportedLocale): 
   const byLocaleForTheme = NICKNAME_LISTS_BY_LOCALE[locale] ?? NICKNAME_LISTS_BY_LOCALE.de;
   return byLocaleForTheme[theme] ?? NICKNAME_LISTS[theme] ?? [];
 }
+
+const GENERATED_NICKNAME_MAX_LENGTH = 30;
+
+function normalizeNicknameKey(nickname: string): string {
+  return nickname.trim().toLowerCase();
+}
+
+function formatGeneratedNickname(baseNickname: string, sequence: number): string {
+  const suffix = ` ${sequence}`;
+  const trimmedBase = baseNickname.trim();
+  const maxBaseLength = Math.max(1, GENERATED_NICKNAME_MAX_LENGTH - suffix.length);
+  const safeBase = trimmedBase.slice(0, maxBaseLength).trimEnd();
+  return `${safeBase}${suffix}`;
+}
+
+export function areOriginalNicknamesExhausted(
+  theme: NicknameTheme,
+  locale: SupportedLocale,
+  takenNicknames: ReadonlySet<string>,
+): boolean {
+  const originalNicknames = getNicknameList(theme, locale);
+  if (originalNicknames.length === 0) return false;
+  return originalNicknames.every((nickname) => takenNicknames.has(normalizeNicknameKey(nickname)));
+}
+
+export function getGeneratedNicknameFallbackList(
+  theme: NicknameTheme,
+  locale: SupportedLocale,
+  takenNicknames: ReadonlySet<string>,
+  limit = 500,
+): string[] {
+  const originalNicknames = getNicknameList(theme, locale);
+  if (originalNicknames.length === 0 || limit <= 0) return [];
+
+  const generated: string[] = [];
+  const generatedKeys = new Set<string>();
+
+  for (let sequence = 2; generated.length < limit; sequence += 1) {
+    for (const baseNickname of originalNicknames) {
+      const candidate = formatGeneratedNickname(baseNickname, sequence);
+      const candidateKey = normalizeNicknameKey(candidate);
+      if (takenNicknames.has(candidateKey) || generatedKeys.has(candidateKey)) {
+        continue;
+      }
+      generated.push(candidate);
+      generatedKeys.add(candidateKey);
+      if (generated.length >= limit) break;
+    }
+  }
+
+  return generated;
+}

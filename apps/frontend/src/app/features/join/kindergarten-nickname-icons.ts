@@ -124,7 +124,7 @@ export function findKindergartenNicknameIndex(
   nickname: string,
   locale: SupportedLocale = getEffectiveLocale(),
 ): number | null {
-  const t = nickname.trim();
+  const t = nickname.trim().replace(/\s+\d+$/, '');
   if (!t) return null;
   const list = NICKNAME_LISTS_BY_LOCALE[locale].KINDERGARTEN;
   const i = list.indexOf(t);

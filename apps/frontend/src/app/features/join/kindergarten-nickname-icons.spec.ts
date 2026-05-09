@@ -34,6 +34,11 @@ describe('kindergarten-nickname-icons', () => {
     expect(findKindergartenNicknameEmoji('Red dragon', 'en')).toBe('🐉');
   });
 
+  it('ordnet auch generierte Reserve-Namen dem Ursprungs-Emoji zu', () => {
+    expect(findKindergartenNicknameIndex('Roter Drache 2')).toBe(0);
+    expect(findKindergartenNicknameEmoji('Roter Drache 2')).toBe('🐉');
+  });
+
   it('gibt null für unbekannte Strings zurück', () => {
     expect(findKindergartenNicknameIndex('Unbekannt')).toBeNull();
     expect(findKindergartenNicknameEmoji('Unbekannt')).toBeNull();

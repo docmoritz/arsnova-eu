@@ -17,7 +17,11 @@ import {
 } from '../../core/localize-known-server-message';
 import { localizeCommands, localizePath } from '../../core/locale-router';
 import { sessionCodeAriaLabel as i18nSessionCodeAria } from '../../core/session-code-aria';
-import { getNicknameList } from './nickname-themes';
+import {
+  areOriginalNicknamesExhausted,
+  getGeneratedNicknameFallbackList,
+  getNicknameList,
+} from './nickname-themes';
 import {
   findKindergartenNicknameEmoji,
   kindergartenEmojiAtIndex,
@@ -85,12 +89,30 @@ export class JoinComponent implements OnInit, OnDestroy {
     return i18nSessionCodeAria(code);
   }
 
-  /** Nur die Namensliste, die der Host fürs Quiz vorgegeben hat (nicknameTheme aus Session/Quiz). */
-  readonly nicknameOptions = computed(() => {
+  /** Ursprüngliche Namensliste, die der Host fürs Quiz vorgegeben hat (nicknameTheme aus Session/Quiz). */
+  readonly originalNicknameOptions = computed(() => {
     const s = this.session();
     if (!s) return [];
     const theme = (s.nicknameTheme ?? 'HIGH_SCHOOL') as NicknameTheme;
     return [...getNicknameList(theme, this.locale)];
+  });
+
+  readonly nicknameFallbackActive = computed(() => {
+    const s = this.session();
+    if (!s) return false;
+    const theme = (s.nicknameTheme ?? 'HIGH_SCHOOL') as NicknameTheme;
+    return areOriginalNicknamesExhausted(theme, this.locale, this.takenNicknames());
+  });
+
+  /** Reserve-Pool erst dann, wenn die Ursprungsliste vollständig erschöpft ist. */
+  readonly nicknameOptions = computed(() => {
+    const s = this.session();
+    if (!s) return [];
+    const theme = (s.nicknameTheme ?? 'HIGH_SCHOOL') as NicknameTheme;
+    if (!this.nicknameFallbackActive()) {
+      return this.originalNicknameOptions();
+    }
+    return getGeneratedNicknameFallbackList(theme, this.locale, this.takenNicknames());
   });
 
   /** Liste anzeigen nur wenn der Host keine eigenen Nicks erlaubt und Quiz eine Namensliste (nicknameTheme) vorgegeben hat. */
@@ -121,13 +143,18 @@ export class JoinComponent implements OnInit, OnDestroy {
     return kindergartenEmojiAtIndex(index) ?? '';
   }
 
+  kindergartenEmojiForOption(option: string, index: number): string {
+    if (!this.isKindergartenNicknameTheme()) return '';
+    return findKindergartenNicknameEmoji(option) ?? this.kindergartenEmojiForOptionIndex(index);
+  }
+
   /** Barrierefreie Beschriftung der Option (bei Kita inkl. Emoji-Info für Screenreader). */
   nicknameOptionAriaLabel(option: string, index: number): string {
     const taken = this.isTaken(option) ? ` ${this.takenSuffix()}` : '';
     if (!this.isKindergartenNicknameTheme()) {
       return `${option}${taken}`;
     }
-    const em = kindergartenEmojiAtIndex(index) ?? '';
+    const em = this.kindergartenEmojiForOption(option, index);
     const prefix = em ? `${em} ` : '';
     return `${prefix}${option}${taken}`;
   }
@@ -180,6 +207,9 @@ export class JoinComponent implements OnInit, OnDestroy {
   joinNowLabel = () => $localize`Jetzt beitreten`;
   /** i18n: suffix for taken nickname. */
   takenSuffix = () => $localize`(vergeben)`;
+  /** i18n: hint when generated reserve nicknames become available. */
+  nicknameFallbackHint = () =>
+    $localize`:@@join.nicknameFallbackHint:Die Namensliste ist vollständig vergeben. Du kannst jetzt aus weiteren Pseudonymen wählen.`;
   /** i18n: "in der Lobby" suffix. */
   inLobbyLabel = () => $localize`in der Lobby`;
   teamMembersLabel = (count: number) =>
