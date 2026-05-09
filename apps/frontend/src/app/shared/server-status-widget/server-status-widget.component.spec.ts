@@ -2,6 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { ServerStatusWidgetComponent } from './server-status-widget.component';
 
+function buildDailyHighscores() {
+  return Array.from({ length: 30 }, (_, index) => ({
+    date: `2026-04-${String(index + 1).padStart(2, '0')}`,
+    count: index + 1,
+    updatedAt: `2026-04-${String(index + 1).padStart(2, '0')}T12:00:00.000Z`,
+  }));
+}
+
 describe('ServerStatusWidgetComponent', () => {
   it('emits openRequested when the footer status button is clicked', () => {
     TestBed.configureTestingModule({
@@ -44,8 +52,10 @@ describe('ServerStatusWidgetComponent', () => {
       sessionTransitionsLastMinute: 3,
       activeCountdownSessions: 2,
       completedSessions: 18,
+      usedSessions: 22,
       activeBlitzRounds: 1,
       maxParticipantsSingleSession: 120,
+      dailyHighscores: buildDailyHighscores(),
       maxParticipantsStatisticUpdatedAt: '2026-04-05T10:15:00.000Z',
       serviceStatus: 'stable',
       loadStatus: 'healthy',
@@ -86,8 +96,10 @@ describe('ServerStatusWidgetComponent', () => {
       sessionTransitionsLastMinute: 44,
       activeCountdownSessions: 28,
       completedSessions: 18,
+      usedSessions: 27,
       activeBlitzRounds: 3,
       maxParticipantsSingleSession: 120,
+      dailyHighscores: buildDailyHighscores(),
       maxParticipantsStatisticUpdatedAt: '2026-04-05T10:15:00.000Z',
       serviceStatus: 'limited',
       loadStatus: 'busy',
@@ -114,8 +126,10 @@ describe('ServerStatusWidgetComponent', () => {
       sessionTransitionsLastMinute: 91,
       activeCountdownSessions: 64,
       completedSessions: 18,
+      usedSessions: 31,
       activeBlitzRounds: 4,
       maxParticipantsSingleSession: 120,
+      dailyHighscores: buildDailyHighscores(),
       maxParticipantsStatisticUpdatedAt: '2026-04-05T10:15:00.000Z',
       serviceStatus: 'critical',
       loadStatus: 'overloaded',

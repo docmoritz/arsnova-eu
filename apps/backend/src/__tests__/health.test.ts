@@ -25,6 +25,7 @@ vi.mock('../lib/platformStatistic', async (importOriginal) => {
   return {
     ...actual,
     updateCompletedSessionsTotal: vi.fn(),
+    updateUsedSessionsTotal: vi.fn(),
   };
 });
 
@@ -45,7 +46,7 @@ vi.mock('../lib/sloTelemetry', () => ({
 
 import { pingRedis, getRedis } from '../redis';
 import { prisma } from '../db';
-import { updateCompletedSessionsTotal } from '../lib/platformStatistic';
+import { updateCompletedSessionsTotal, updateUsedSessionsTotal } from '../lib/platformStatistic';
 import { countActiveParticipantsForSessions } from '../lib/presence';
 import { getActiveParticipantCountsForSessions } from '../lib/presence';
 import { readLoadSignals } from '../lib/loadSignal';
@@ -123,6 +124,7 @@ describe('health.footerBundle', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 42,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.footerBundle(undefined);
@@ -134,6 +136,7 @@ describe('health.footerBundle', () => {
     expect(result.stats.votesLastMinute).toBe(0);
     expect(result.stats.sessionTransitionsLastMinute).toBe(0);
     expect(result.stats.activeCountdownSessions).toBe(0);
+    expect(result.stats.usedSessions).toBe(0);
     expect(result.stats.maxParticipantsSingleSession).toBe(42);
     expect(result.stats.dailyHighscores).toHaveLength(30);
     expect(result.stats.maxParticipantsStatisticUpdatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -175,6 +178,7 @@ describe('health.stats', () => {
     expect(result.sessionTransitionsLastMinute).toBe(0);
     expect(result.activeCountdownSessions).toBe(0);
     expect(result.completedSessions).toBe(0);
+    expect(result.usedSessions).toBe(0);
     expect(result.maxParticipantsSingleSession).toBe(0);
     expect(result.dailyHighscores).toHaveLength(30);
     expect(
@@ -188,7 +192,8 @@ describe('health.stats', () => {
   it('berechnet loadStatus "healthy" bei niedriger Last', async () => {
     vi.mocked(prisma.session.count)
       .mockResolvedValueOnce(10) // openSessions (status != FINISHED)
-      .mockResolvedValueOnce(5); // completedSessions (FINISHED)
+      .mockResolvedValueOnce(5) // completedSessions (FINISHED)
+      .mockResolvedValueOnce(8); // usedSessions
     vi.mocked(prisma.session.findMany).mockResolvedValue(
       Array.from({ length: 10 }, (_, index) => ({ id: `s-${index + 1}` })) as never,
     );
@@ -201,6 +206,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 100,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -212,6 +218,7 @@ describe('health.stats', () => {
     expect(result.sessionTransitionsLastMinute).toBe(0);
     expect(result.activeCountdownSessions).toBe(0);
     expect(result.completedSessions).toBe(5);
+    expect(result.usedSessions).toBe(8);
     expect(result.maxParticipantsSingleSession).toBe(100);
     expect(result.loadStatus).toBe('healthy');
     expect(result.serviceStatus).toBe('stable');
@@ -237,7 +244,10 @@ describe('health.stats', () => {
   });
 
   it('berechnet loadStatus "busy" bei hoher Teilnehmerzahl (Hard-Limit)', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(6).mockResolvedValueOnce(50);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(6)
+      .mockResolvedValueOnce(50)
+      .mockResolvedValueOnce(52);
     vi.mocked(countActiveParticipantsForSessions).mockResolvedValue(69);
     vi.mocked(getActiveParticipantCountsForSessions).mockResolvedValue(
       new Map([
@@ -254,6 +264,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 0,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -265,7 +276,10 @@ describe('health.stats', () => {
   });
 
   it('berechnet loadStatus "overloaded" bei sehr hoher Teilnehmerzahl', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(12).mockResolvedValueOnce(1000);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(12)
+      .mockResolvedValueOnce(1000)
+      .mockResolvedValueOnce(1002);
     vi.mocked(countActiveParticipantsForSessions).mockResolvedValue(260);
     vi.mocked(getActiveParticipantCountsForSessions).mockResolvedValue(
       new Map(Array.from({ length: 12 }, (_, index) => [`s-${index + 1}`, 10])),
@@ -275,6 +289,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 0,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -286,7 +301,10 @@ describe('health.stats', () => {
   });
 
   it('berücksichtigt Dynamiksignal (Votes/Transitions/Countdown) auch bei moderaten Bestandswerten', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(10).mockResolvedValueOnce(20);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(10)
+      .mockResolvedValueOnce(20)
+      .mockResolvedValueOnce(21);
     vi.mocked(countActiveParticipantsForSessions).mockResolvedValue(40);
     vi.mocked(getActiveParticipantCountsForSessions).mockResolvedValue(
       new Map([
@@ -306,6 +324,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 0,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -318,7 +337,10 @@ describe('health.stats', () => {
   });
 
   it('leitet serviceStatus aus echter SLO-Telemetrie ab (critical bei schlechter Latenz)', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(8).mockResolvedValueOnce(20);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(8)
+      .mockResolvedValueOnce(20)
+      .mockResolvedValueOnce(22);
     vi.mocked(countActiveParticipantsForSessions).mockResolvedValue(35);
     vi.mocked(getActiveParticipantCountsForSessions).mockResolvedValue(
       new Map([
@@ -344,6 +366,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 0,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -359,6 +382,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 0,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -373,6 +397,7 @@ describe('health.stats', () => {
         'sessionTransitionsLastMinute',
         'activeCountdownSessions',
         'completedSessions',
+        'usedSessions',
         'activeBlitzRounds',
         'maxParticipantsSingleSession',
         'dailyHighscores',
@@ -402,7 +427,10 @@ describe('health.stats', () => {
           ],
         ]),
     } as unknown as Redis);
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
     vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue(null);
 
     const result = await caller.stats(undefined);
@@ -414,7 +442,10 @@ describe('health.stats', () => {
     vi.mocked(getRedis).mockReturnValueOnce({
       scan: vi.fn().mockRejectedValue(new Error('redis unavailable')),
     } as unknown as Redis);
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(6).mockResolvedValueOnce(11);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(6)
+      .mockResolvedValueOnce(11)
+      .mockResolvedValueOnce(14);
     vi.mocked(prisma.session.findMany).mockResolvedValue([{ id: 's-1' }, { id: 's-2' }] as never);
     vi.mocked(countActiveParticipantsForSessions).mockResolvedValue(69);
     vi.mocked(getActiveParticipantCountsForSessions).mockResolvedValue(
@@ -428,6 +459,7 @@ describe('health.stats', () => {
       updatedAt: new Date(),
       maxParticipantsSingleSession: 120,
       completedSessionsTotal: 0,
+      usedSessionsTotal: 0,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -436,17 +468,22 @@ describe('health.stats', () => {
     expect(result.activeSessions).toBe(2);
     expect(result.totalParticipants).toBe(69);
     expect(result.completedSessions).toBe(11);
+    expect(result.usedSessions).toBe(14);
     expect(result.activeBlitzRounds).toBe(0);
     expect(result.maxParticipantsSingleSession).toBe(120);
   });
 
   it('nutzt monotone completedSessionsTotal auch wenn FINISHED-Zeilen sinken', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(11);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(11)
+      .mockResolvedValueOnce(12);
     vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue({
       id: 'default',
       updatedAt: new Date(),
       maxParticipantsSingleSession: 120,
       completedSessionsTotal: 12,
+      usedSessionsTotal: 12,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -456,12 +493,16 @@ describe('health.stats', () => {
   });
 
   it('persistiert höhere FINISHED-Zahl in den monotonen Counter', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(13);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(13)
+      .mockResolvedValueOnce(13);
     vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue({
       id: 'default',
       updatedAt: new Date(),
       maxParticipantsSingleSession: 120,
       completedSessionsTotal: 12,
+      usedSessionsTotal: 13,
     } as never);
 
     const result = await caller.stats(undefined);
@@ -470,8 +511,49 @@ describe('health.stats', () => {
     expect(updateCompletedSessionsTotal).toHaveBeenCalledWith(13);
   });
 
+  it('nutzt monotone usedSessionsTotal auch wenn aktuelle Nutzungszeilen sinken', async () => {
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(11)
+      .mockResolvedValueOnce(14);
+    vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue({
+      id: 'default',
+      updatedAt: new Date(),
+      maxParticipantsSingleSession: 120,
+      completedSessionsTotal: 12,
+      usedSessionsTotal: 15,
+    } as never);
+
+    const result = await caller.stats(undefined);
+
+    expect(result.usedSessions).toBe(15);
+    expect(updateUsedSessionsTotal).not.toHaveBeenCalled();
+  });
+
+  it('persistiert höhere Nutzungszahl in den monotonen Counter', async () => {
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(13)
+      .mockResolvedValueOnce(16);
+    vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue({
+      id: 'default',
+      updatedAt: new Date(),
+      maxParticipantsSingleSession: 120,
+      completedSessionsTotal: 13,
+      usedSessionsTotal: 15,
+    } as never);
+
+    const result = await caller.stats(undefined);
+
+    expect(result.usedSessions).toBe(16);
+    expect(updateUsedSessionsTotal).toHaveBeenCalledWith(16);
+  });
+
   it('zählt nur Sessions mit mindestens 5 aktiven Teilnehmenden als activeSessions', async () => {
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(4).mockResolvedValueOnce(2);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(4)
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(4);
     vi.mocked(prisma.session.findMany).mockResolvedValue([
       { id: 's-1' },
       { id: 's-2' },
@@ -499,7 +581,10 @@ describe('health.stats', () => {
   it('liefert die letzten 30 UTC-Tage chronologisch und füllt Lücken mit 0 auf', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-04T15:30:00.000Z'));
-    vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+    vi.mocked(prisma.session.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
     vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.dailyStatistic.findMany).mockResolvedValue([
       {
