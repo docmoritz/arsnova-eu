@@ -162,6 +162,10 @@ function pickRandom(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function isScoredQuestionType(type: CurrentQuestion['type'] | null | undefined): boolean {
+  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
+}
+
 export function anchorCandidatesForPhase(
   phase: VoteAutoScrollPhase,
   hadReadPhase: boolean,
@@ -316,6 +320,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly qaInfo = signal<string | null>(null);
   readonly qaPendingQuestionIds = signal<Set<string>>(new Set());
   readonly currentQuestion = signal<CurrentQuestion | null>(null);
+  readonly currentQuestionIsScored = computed(() =>
+    isScoredQuestionType(this.currentQuestion()?.type),
+  );
 
   readonly selectedAnswerIds = signal<Set<string>>(new Set());
   readonly voteSent = signal(false);
@@ -2121,7 +2128,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       if (q && this.isResults() && this.voteSent() && !this.motivationMessage()) {
         const settings = this.sessionSettings();
         const qType = 'type' in q ? q.type : null;
-        const isScored = qType === 'SINGLE_CHOICE' || qType === 'MULTIPLE_CHOICE';
+        const isScored = isScoredQuestionType(qType);
 
         if (isScored && 'answers' in q) {
           const selected = this.selectedAnswerIds();
@@ -2154,7 +2161,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
 
       // Story 5.6: Scorecard laden, wenn RESULTS und noch nicht geladen
-      if (q && this.isResults() && 'order' in q) {
+      if (q && this.isResults() && !isScoredQuestionType('type' in q ? q.type : null)) {
+        this.scorecard.set(null);
+        this.scorecardQuestionIndex = -1;
+      } else if (q && this.isResults() && 'order' in q) {
         const qOrder = (q as { order: number }).order;
         if (qOrder !== this.scorecardQuestionIndex) {
           this.scorecardQuestionIndex = qOrder;
@@ -2436,7 +2446,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   async loadScorecard(questionIndex: number): Promise<void> {
     const pid = this.participantId();
-    if (!this.code || !pid) return;
+    if (!this.code || !pid || !this.currentQuestionIsScored()) return;
     try {
       const sc = await trpc.session.getPersonalScorecard.query({
         code: this.code,

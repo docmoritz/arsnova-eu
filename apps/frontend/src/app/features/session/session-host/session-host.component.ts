@@ -218,6 +218,10 @@ function isValidTrack(v: unknown): v is HostMusicTrack {
   return typeof v === 'string' && ALL_MUSIC_TRACK_VALUES.has(v as HostMusicTrack);
 }
 
+function isScoredQuestionType(type: HostCurrentQuestionDTO['type'] | null | undefined): boolean {
+  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
+}
+
 const ALL_MUSIC_TRACKS: ReadonlyArray<{ value: HostMusicTrack; label: string }> = [
   {
     value: 'LOBBY_0',
@@ -459,6 +463,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (board.length === 0) return 0;
     return Math.max(...board.map((e) => e.totalScore));
   });
+  readonly showsInterimLeaderboard = computed(() =>
+    isScoredQuestionType(this.currentQuestionForHost()?.type),
+  );
   readonly wordCloudToggleLabel = computed(() =>
     this.wordCloudExpanded()
       ? $localize`:@@sessionHost.wordCloudHide:Word Cloud ausblenden`

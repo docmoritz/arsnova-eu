@@ -3396,6 +3396,23 @@ describe('SessionHostComponent', () => {
         return { unsubscribe: unsubscribeMock };
       },
     );
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      answers: [
+        { id: 'a1', text: 'A', isCorrect: false },
+        { id: 'a2', text: 'B', isCorrect: true },
+      ],
+      voteDistribution: [
+        { id: 'a1', text: 'A', isCorrect: false, voteCount: 1, votePercentage: 50 },
+        { id: 'a2', text: 'B', isCorrect: true, voteCount: 1, votePercentage: 50 },
+      ],
+      totalVotes: 2,
+      correctVoterCount: 1,
+    });
     getLeaderboardQueryMock.mockResolvedValue([]);
     getTeamLeaderboardQueryMock.mockResolvedValue([
       {
@@ -3428,6 +3445,63 @@ describe('SessionHostComponent', () => {
     expect(interimScore?.textContent ?? '').toContain('∅ 220');
     expect(interimName?.querySelector('.session-host__interim-team-dot')).toBeNull();
     expect(interimName?.querySelector('.session-host__interim-team-emoji')?.textContent).toBe('🍎');
+    fixture.destroy();
+  });
+
+  it('zeigt nach Umfrage-Ergebnissen kein Zwischen-Scoreboard an', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'RESULTS',
+      teamMode: true,
+    });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'RESULTS', currentQuestion: 0 });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Wie hilfreich war das?',
+      type: 'SURVEY',
+      answers: [
+        { id: 'a1', text: 'Sehr', isCorrect: false },
+        { id: 'a2', text: 'Wenig', isCorrect: false },
+      ],
+      voteDistribution: [
+        { id: 'a1', text: 'Sehr', isCorrect: false, voteCount: 5, votePercentage: 63 },
+        { id: 'a2', text: 'Wenig', isCorrect: false, voteCount: 3, votePercentage: 37 },
+      ],
+      totalVotes: 8,
+      correctVoterCount: 0,
+    });
+    getLeaderboardQueryMock.mockResolvedValue([
+      { rank: 1, nickname: 'Ada', totalScore: 120 },
+      { rank: 2, nickname: 'Linus', totalScore: 100 },
+    ]);
+    getTeamLeaderboardQueryMock.mockResolvedValue([
+      {
+        rank: 1,
+        teamName: 'Rot',
+        teamColor: '#1E88E5',
+        totalScore: 220,
+        memberCount: 3,
+        averageScore: 73.3,
+      },
+    ]);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.session-host__interim-leaderboard')).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector('.session-host__interim-leaderboard--teams'),
+    ).toBeNull();
     fixture.destroy();
   });
 

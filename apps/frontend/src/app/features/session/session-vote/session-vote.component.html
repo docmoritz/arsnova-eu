@@ -1070,7 +1070,7 @@
             </div>
           }
 
-          @if (scorecard(); as sc) {
+          @if (currentQuestionIsScored() && scorecard(); as sc) {
             <div
               id="vote-result-score"
               class="vote-scorecard"

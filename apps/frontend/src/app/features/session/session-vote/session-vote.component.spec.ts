@@ -1223,6 +1223,59 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('lädt in RESULTS keine persönliche Scorecard für Umfrage-Fragen', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'RESULTS',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+      text: 'Wie fandest du das?',
+      type: 'SURVEY',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'Gut', isCorrect: false, voteCount: 1, votePercentage: 100 },
+        { id: 'a2', text: 'Nicht so gut', isCorrect: false, voteCount: 0, votePercentage: 0 },
+      ],
+      totalVotes: 1,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    const loadScorecardSpy = vi.spyOn(component, 'loadScorecard');
+    component.scorecard.set({
+      questionOrder: 1,
+      totalQuestions: 3,
+      currentRank: 2,
+      totalScore: 120,
+      wasCorrect: true,
+      streakCount: 1,
+      rankChange: 0,
+    } as never);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    expect(loadScorecardSpy).not.toHaveBeenCalled();
+    expect(component.scorecard()).toBeNull();
+    expect(fixture.nativeElement.querySelector('.vote-scorecard')).toBeNull();
+    fixture.destroy();
+  });
+
   it('leitet nach Session-Ende (FINISHED) zur Startseite um', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
