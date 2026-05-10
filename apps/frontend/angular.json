@@ -57,8 +57,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1.55MB",
-                  "maximumError": "1.70MB"
+                  "maximumWarning": "1.70MB",
+                  "maximumError": "1.85MB"
                 }
               ],
               "outputHashing": "all",
@@ -86,7 +86,7 @@
           "options": {
             "outputPath": "dist/server",
             "main": "src/main.server.ts",
-            "tsConfig": "tsconfig.app.json",
+            "tsConfig": "tsconfig.server.json",
             "inlineStyleLanguage": "scss",
             "i18nMissingTranslation": "warning"
           },

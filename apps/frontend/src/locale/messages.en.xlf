@@ -7608,6 +7608,14 @@
           <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.foyerChipAnonymousAria" datatype="html">
+        <source>Teilnehmende Person</source>
+        <target>Participant</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/foyer-chip-label.util.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutAria" datatype="html">
         <source>Hinweis: Etwas ist in der Session schiefgegangen</source>
         <target>Heads-up: something in your session didn’t work out</target>
@@ -9107,6 +9115,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">1883</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.connectedParticipantCountOne" datatype="html">
+        <source>1 live verbunden</source>
+        <target>1 connected live</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1985</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.connectedParticipantCountMany" datatype="html">
+        <source><x id="connectedCount" equiv-text="connectedCount"/> live verbunden</source>
+        <target><x id="connectedCount" equiv-text="connectedCount"/> connected live</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1987</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.readingReadyProgressAll" datatype="html">
+        <source><x id="readyCount" equiv-text="readyCount"/> von <x id="connectedCount" equiv-text="connectedCount"/> bereit</source>
+        <target><x id="readyCount" equiv-text="readyCount"/> of <x id="connectedCount" equiv-text="connectedCount"/> ready</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2758</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3059004459552059204" datatype="html">
+        <source><x id="PH" equiv-text="readyCount"/> von <x id="PH_1" equiv-text="connectedCount"/> verbunden bereit · <x id="PH_2" equiv-text="totalParticipantCount"/> insgesamt</source>
+        <target><x id="PH" equiv-text="readyCount"/> of <x id="PH_1" equiv-text="connectedCount"/> connected ready · <x id="PH_2" equiv-text="totalParticipantCount"/> total</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2760</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.readingReadyReleaseHintAll" datatype="html">

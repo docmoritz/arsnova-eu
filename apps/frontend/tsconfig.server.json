@@ -1,12 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
+    "outDir": "./dist/out-tsc-server",
     "types": ["node", "@angular/localize"]
   },
   "angularCompilerOptions": {
     "strictTemplates": true
   },
-  "files": ["src/main.ts"],
+  "files": ["src/main.server.ts"],
   "include": ["src/**/*.d.ts"]
 }

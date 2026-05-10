@@ -7554,6 +7554,14 @@
           <context context-type="linenumber">15</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.foyerChipAnonymousAria" datatype="html">
+        <source>Teilnehmende Person</source>
+        <target>Personne participante</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/foyer-chip-label.util.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutAria" datatype="html">
         <source>Hinweis: Etwas ist in der Session schiefgegangen</source>
         <target>À savoir : un petit souci avec ta session</target>
@@ -9052,6 +9060,94 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">1883</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.connectedParticipantCountOne" datatype="html">
+        <source>1 live verbunden</source>
+        <target>1 personne connectée en direct</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1985</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.connectedParticipantCountMany" datatype="html">
+        <source><x id="connectedCount" equiv-text="connectedCount"/> live verbunden</source>
+        <target><x id="connectedCount" equiv-text="connectedCount"/> personnes connectées en direct</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1987</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.readingReadyProgressAll" datatype="html">
+        <source><x id="readyCount" equiv-text="readyCount"/> von <x id="connectedCount" equiv-text="connectedCount"/> bereit</source>
+        <target><x id="readyCount" equiv-text="readyCount"/> sur <x id="connectedCount" equiv-text="connectedCount"/> prêts</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2758</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3059004459552059204" datatype="html">
+        <source><x id="PH" equiv-text="readyCount"/> von <x id="PH_1" equiv-text="connectedCount"/> verbunden bereit · <x id="PH_2" equiv-text="totalParticipantCount"/> insgesamt</source>
+        <target><x id="PH" equiv-text="readyCount"/> sur <x id="PH_1" equiv-text="connectedCount"/> personnes connectées prêtes · <x id="PH_2" equiv-text="totalParticipantCount"/> au total</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2760</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.readingReadyReleaseHintAll" datatype="html">
+        <source>Alle Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.</source>
+        <target>Toutes les personnes participantes sont prêtes ; les options de réponse peuvent être affichées.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1888</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.readingReadyReleaseHintConnected" datatype="html">
+        <source>Alle verbundenen Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.</source>
+        <target>Toutes les personnes participantes connectées sont prêtes ; les options de réponse peuvent être affichées.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1890</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
+        <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details</source>
+        <target>N° de question;Texte de la question;Type;Participantes et participants;Points moyens;Détails</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2572</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardTitle" datatype="html">
+        <source>Team-Wertung</source>
+        <target>Classement des équipes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2612</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardHeader" datatype="html">
+        <source>Rang;Team;Farbe;Mitglieder;Team-Punkte;Ø Punkte pro Mitglied</source>
+        <target>Rang;Équipe;Couleur;Membres;Points de l&apos;équipe;Points moyens par membre</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2614</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesTitle" datatype="html">
+        <source>Bonus-Codes</source>
+        <target>Codes bonus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2630</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesHeader" datatype="html">
+        <source>Rang;Nickname;Code;Punkte;Generiert am</source>
+        <target>Rang;Pseudonyme;Code;Points;Généré le</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2632</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.quiz" datatype="html">
