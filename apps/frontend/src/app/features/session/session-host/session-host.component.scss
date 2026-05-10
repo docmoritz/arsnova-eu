@@ -2572,6 +2572,7 @@
 
 .session-host__leaderboard-winner {
   display: grid;
+  justify-items: center;
   gap: 0.2rem;
   margin-top: 1rem;
   padding: 0.95rem 1rem 1rem;
@@ -2580,6 +2581,7 @@
     linear-gradient(135deg, color-mix(in srgb, #f9a825 20%, transparent), transparent 60%),
     color-mix(in srgb, var(--mat-sys-surface) 92%, var(--mat-sys-surface-container-low));
   border: 1px solid color-mix(in srgb, #f9a825 35%, var(--mat-sys-outline-variant));
+  text-align: center;
 }
 
 .session-host__leaderboard-winner-label {
@@ -2587,6 +2589,7 @@
   align-items: center;
   gap: 0.4rem;
   margin: 0;
+  justify-self: center;
   color: var(--mat-sys-primary);
   font: var(--mat-sys-label-large);
   font-weight: 700;

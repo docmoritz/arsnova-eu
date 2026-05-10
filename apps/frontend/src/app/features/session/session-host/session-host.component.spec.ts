@@ -3309,6 +3309,42 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt im finalen Leaderboard eine Sieger-Copy statt Zwischenstand', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'FINISHED',
+      teamMode: false,
+    });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'FINISHED', currentQuestion: null });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getLeaderboardQueryMock.mockResolvedValue([
+      {
+        rank: 1,
+        nickname: 'Purple dolphin',
+        totalScore: 9400,
+        correctCount: 7,
+        totalQuestions: 7,
+        totalResponseTimeMs: 4200,
+      },
+    ]);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('Gewonnen hat');
+    expect(text).toContain('Purple dolphin');
+    expect(text).toMatch(/Mit 9[.,]400 Punkten/);
+    fixture.destroy();
+  });
+
   it('blendet im Host-Team-Leaderboard den Farbpunkt bei Emoji-Shortcodes aus', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,

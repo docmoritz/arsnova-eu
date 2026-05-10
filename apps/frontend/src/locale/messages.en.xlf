@@ -7825,8 +7825,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaderboardWinnerLabel" datatype="html">
-        <source>Vorn liegt</source>
-        <target>Currently leading</target>
+        <source>Gewonnen hat</source>
+        <target>Winner</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">606</context>
