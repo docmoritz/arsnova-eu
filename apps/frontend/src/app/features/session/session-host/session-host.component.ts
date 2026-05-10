@@ -2762,9 +2762,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   readingReadyReleaseHint(connectedCount: number, totalParticipantCount: number): string {
     if (connectedCount >= totalParticipantCount) {
-      return $localize`Alle Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.`;
+      return $localize`:@@sessionHost.readingReadyReleaseHintAll:Alle Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.`;
     }
-    return $localize`Alle verbundenen Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.`;
+    return $localize`:@@sessionHost.readingReadyReleaseHintConnected:Alle verbundenen Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.`;
   }
 
   effectiveCurrentQuestion(): number | null {

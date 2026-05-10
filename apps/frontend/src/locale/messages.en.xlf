@@ -9109,6 +9109,22 @@
           <context context-type="linenumber">1883</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.readingReadyReleaseHintAll" datatype="html">
+        <source>Alle Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.</source>
+        <target>All participants are ready – answer options can be revealed.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1888</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.readingReadyReleaseHintConnected" datatype="html">
+        <source>Alle verbundenen Teilnehmenden sind bereit – Antwortoptionen können freigegeben werden.</source>
+        <target>All connected participants are ready – answer options can be revealed.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">1890</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionTabs.quiz" datatype="html">
         <source>Quiz</source>
         <target>Quiz</target>
