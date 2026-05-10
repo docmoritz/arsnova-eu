@@ -149,16 +149,18 @@
                 >
               </a>
             }
-            <a
-              matButton
-              [routerLink]="localizedPath('/help')"
-              i18n-aria-label="@@app.footer.helpOpenAria"
-              aria-label="So funktioniert’s"
-            >
-              <mat-icon class="app-footer__icon">menu_book</mat-icon>
-              <span class="app-footer__link-text" i18n="@@app.footer.help">So funktioniert’s</span>
-            </a>
             @if (footerShowOnlineOnlyLinks()) {
+              <a
+                matButton
+                [routerLink]="localizedPath('/help')"
+                i18n-aria-label="@@app.footer.helpOpenAria"
+                aria-label="So funktioniert’s"
+              >
+                <mat-icon class="app-footer__icon">menu_book</mat-icon>
+                <span class="app-footer__link-text" i18n="@@app.footer.help"
+                  >So funktioniert’s</span
+                >
+              </a>
               <a matButton [routerLink]="localizedPath('/legal/imprint')">
                 <mat-icon class="app-footer__icon">gavel</mat-icon>
                 <span class="app-footer__link-text" i18n>Impressum</span>

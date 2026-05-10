@@ -176,7 +176,7 @@ describe('AppComponent', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it('blendet News-Archiv sowie Legal-Links aus, wenn die App offline ist', async () => {
+  it('blendet Footer-Links zu Help, News-Archiv und Legal aus, wenn die App offline ist', async () => {
     TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
@@ -203,9 +203,9 @@ describe('AppComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
 
     expect(text).not.toContain('News-Archiv');
+    expect(text).not.toContain('So funktioniert’s');
     expect(text).not.toContain('Impressum');
     expect(text).not.toContain('Datenschutz');
-    expect(text).toContain('So funktioniert’s');
 
     fixture.destroy();
   });
