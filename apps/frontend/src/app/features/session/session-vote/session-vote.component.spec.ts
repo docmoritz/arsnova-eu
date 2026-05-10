@@ -2164,6 +2164,99 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('setzt bei Peer-Instruction-Runde 2 ohne Status-Event den Abstimmungszustand zurück', async () => {
+    const nowIso = new Date().toISOString();
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Team-Quiz',
+      title: null,
+      participantCount: 6,
+      preset: 'SERIOUS',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock
+      .mockResolvedValueOnce({
+        id: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+        order: 0,
+        text: 'Welche Antwort stimmt?',
+        type: 'SINGLE_CHOICE',
+        timer: 60,
+        difficulty: 'MEDIUM',
+        answers: [
+          { id: 'a1', text: 'Rot' },
+          { id: 'a2', text: 'Blau' },
+        ],
+        activeAt: nowIso,
+        participantCount: 6,
+        totalVotes: 1,
+        currentRound: 1,
+      })
+      .mockResolvedValueOnce({
+        id: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+        order: 0,
+        text: 'Welche Antwort stimmt?',
+        type: 'SINGLE_CHOICE',
+        timer: null,
+        difficulty: 'MEDIUM',
+        answers: [
+          { id: 'a1', text: 'Rot' },
+          { id: 'a2', text: 'Blau' },
+        ],
+        activeAt: nowIso,
+        participantCount: 6,
+        totalVotes: 1,
+        currentRound: 2,
+      });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(fixture.componentInstance.currentRound()).toBe(1);
+      },
+      { timeout: 3000, interval: 10 },
+    );
+
+    const component = fixture.componentInstance;
+    component.voteSent.set(true);
+    component.selectedAnswerIds.set(new Set(['a1']));
+    component.motivationMessage.set('Weiter so');
+    component.scorecard.set({
+      questionOrder: 1,
+      totalQuestions: 3,
+      currentRank: 2,
+      totalScore: 120,
+      wasCorrect: true,
+      streakCount: 1,
+      rankChange: 0,
+    } as never);
+
+    await (component as unknown as { refreshQuestion: () => Promise<void> }).refreshQuestion();
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(component.currentRound()).toBe(2);
+        expect(component.voteSent()).toBe(false);
+        expect(component.selectedAnswerIds().size).toBe(0);
+        expect(component.motivationMessage()).toBeNull();
+        expect(component.scorecard()).toBeNull();
+      },
+      { timeout: 3000, interval: 10 },
+    );
+
+    fixture.destroy();
+  });
+
   it('erlaubt nach Abstimmung in ACTIVE den Wechsel zu anderen Kanälen', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',

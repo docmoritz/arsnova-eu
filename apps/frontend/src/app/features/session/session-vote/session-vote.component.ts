@@ -1444,13 +1444,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
             });
           }
           if (data.status === 'ACTIVE' && newRound === 2 && prevRound === 1) {
-            this.voteSent.set(false);
-            this.selectedAnswerIds.set(new Set());
-            this.voteError.set(null);
-            this.freeTextValue.set('');
-            this.ratingValue.set(null);
-            this.motivationMessage.set(null);
-            this.timeoutMessage.set(null);
+            this.resetForSecondRoundStart();
           }
           if (data.status === 'ACTIVE' && data.activeAt && data.timer && data.timer > 0) {
             const deadline = new Date(data.activeAt).getTime() + data.timer * 1000;
@@ -1482,6 +1476,19 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   private deactivateSessionFallback(): void {
     this.sessionFallbackActive = false;
+  }
+
+  private resetForSecondRoundStart(): void {
+    this.voteSent.set(false);
+    this.selectedAnswerIds.set(new Set());
+    this.voteError.set(null);
+    this.freeTextValue.set('');
+    this.ratingValue.set(null);
+    this.motivationMessage.set(null);
+    this.timeoutMessage.set(null);
+    this.showRewardEffect.set(false);
+    this.scorecard.set(null);
+    this.scorecardQuestionIndex = -1;
   }
 
   private async refreshSessionInfoFallback(): Promise<void> {
@@ -2094,6 +2101,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       const qRound =
         q && 'currentRound' in q ? (q as { currentRound?: number }).currentRound : undefined;
       if (qRound && qRound !== this.currentRound()) {
+        if (this.status() === 'ACTIVE' && qRound === 2 && this.currentRound() === 1) {
+          this.resetForSecondRoundStart();
+        }
         this.emojiSent.set(false);
         this.emojiSentEmoji.set('');
         this.currentRound.set(qRound);
