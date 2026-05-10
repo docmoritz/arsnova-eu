@@ -128,23 +128,27 @@
               footerHealthCheckDone() ? (apiStatus() ? 'ok' : 'offline') : 'pending'
             "
           >
-            <a
-              matButton
-              class="app-footer__link--news-archive"
-              [routerLink]="localizedPath('/news-archive')"
-              [attr.aria-label]="footerNewsArchiveAria()"
-            >
-              <!-- prettier-ignore -->
-              <mat-icon
-                class="app-footer__icon"
-                aria-hidden="false"
-                [matBadge]="footerNewsArchiveBadgeText()"
-                [matBadgeHidden]="motdHeaderState.archiveUnreadCount() === 0"
-                [matBadgeOverlap]="false"
-                matBadgePosition="before"
-              >newspaper</mat-icon>
-              <span class="app-footer__link-text" i18n="@@app.footer.newsArchive">News-Archiv</span>
-            </a>
+            @if (footerShowOnlineOnlyLinks()) {
+              <a
+                matButton
+                class="app-footer__link--news-archive"
+                [routerLink]="localizedPath('/news-archive')"
+                [attr.aria-label]="footerNewsArchiveAria()"
+              >
+                <!-- prettier-ignore -->
+                <mat-icon
+                  class="app-footer__icon"
+                  aria-hidden="false"
+                  [matBadge]="footerNewsArchiveBadgeText()"
+                  [matBadgeHidden]="motdHeaderState.archiveUnreadCount() === 0"
+                  [matBadgeOverlap]="false"
+                  matBadgePosition="before"
+                >newspaper</mat-icon>
+                <span class="app-footer__link-text" i18n="@@app.footer.newsArchive"
+                  >News-Archiv</span
+                >
+              </a>
+            }
             <a
               matButton
               [routerLink]="localizedPath('/help')"
@@ -154,14 +158,16 @@
               <mat-icon class="app-footer__icon">menu_book</mat-icon>
               <span class="app-footer__link-text" i18n="@@app.footer.help">So funktioniert’s</span>
             </a>
-            <a matButton [routerLink]="localizedPath('/legal/imprint')">
-              <mat-icon class="app-footer__icon">gavel</mat-icon>
-              <span class="app-footer__link-text" i18n>Impressum</span>
-            </a>
-            <a matButton [routerLink]="localizedPath('/legal/privacy')">
-              <mat-icon class="app-footer__icon">privacy_tip</mat-icon>
-              <span class="app-footer__link-text" i18n>Datenschutz</span>
-            </a>
+            @if (footerShowOnlineOnlyLinks()) {
+              <a matButton [routerLink]="localizedPath('/legal/imprint')">
+                <mat-icon class="app-footer__icon">gavel</mat-icon>
+                <span class="app-footer__link-text" i18n>Impressum</span>
+              </a>
+              <a matButton [routerLink]="localizedPath('/legal/privacy')">
+                <mat-icon class="app-footer__icon">privacy_tip</mat-icon>
+                <span class="app-footer__link-text" i18n>Datenschutz</span>
+              </a>
+            }
             @if (serverStatusWidgetVisible()) {
               <app-server-status-widget
                 class="app-footer__status-widget"

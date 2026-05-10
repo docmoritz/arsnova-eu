@@ -175,4 +175,38 @@ describe('AppComponent', () => {
     fixture.destroy();
     window.history.pushState({}, '', '/');
   });
+
+  it('blendet News-Archiv sowie Legal-Links aus, wenn die App offline ist', async () => {
+    TestBed.configureTestingModule({
+      imports: [AppComponent],
+      providers: [
+        provideRouter([]),
+        { provide: MatDialog, useValue: { open: vi.fn() } },
+        {
+          provide: SwUpdate,
+          useValue: {
+            isEnabled: false,
+            versionUpdates: { subscribe: swVersionUpdatesSubscribeMock },
+            checkForUpdate: vi.fn().mockResolvedValue(false),
+            activateUpdate: vi.fn().mockResolvedValue(undefined),
+          },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.onOffline();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+    expect(text).not.toContain('News-Archiv');
+    expect(text).not.toContain('Impressum');
+    expect(text).not.toContain('Datenschutz');
+    expect(text).toContain('So funktioniert’s');
+
+    fixture.destroy();
+  });
 });

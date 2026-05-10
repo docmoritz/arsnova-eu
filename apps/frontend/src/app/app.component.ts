@@ -184,6 +184,8 @@ export class AppComponent implements OnInit, OnDestroy {
   footerConnectionOk = computed(() => !this.footerHealthCheckDone() || !!this.apiStatus());
   /** Offline-Styling + Retry nur nach abgeschlossenem Check und fehlgeschlagenem API-Status. */
   footerShowApiOffline = computed(() => this.footerHealthCheckDone() && !this.apiStatus());
+  /** Links, die zusätzliche Netzwerk-/API-Aufrufe triggern, im Offline-Betrieb ausblenden. */
+  footerShowOnlineOnlyLinks = computed(() => this.isOnline());
   isImmersiveHostView = computed(() => this.hostDisplayMode.immersiveHostActive());
   footerVisible = computed(() => !this.isFeedbackRoute() && !this.isImmersiveHostView());
   serverStatusWidgetVisible = computed(
