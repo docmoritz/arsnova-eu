@@ -3816,7 +3816,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.exportExporting.set(true);
     try {
       const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
-      const rows: string[] = [$localize`Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details`];
+      const rows: string[] = [
+        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details`,
+      ];
 
       for (const q of data.questions) {
         let details = '';
@@ -3853,8 +3855,10 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
       if (data.teamMode && data.teamLeaderboard && data.teamLeaderboard.length > 0) {
         rows.push('');
-        rows.push('Team-Wertung');
-        rows.push('Rang;Team;Farbe;Mitglieder;Team-Punkte;Ø Punkte pro Mitglied');
+        rows.push($localize`:@@sessionHost.exportTeamLeaderboardTitle:Team-Wertung`);
+        rows.push(
+          $localize`:@@sessionHost.exportTeamLeaderboardHeader:Rang;Team;Farbe;Mitglieder;Team-Punkte;Ø Punkte pro Mitglied`,
+        );
         for (const team of data.teamLeaderboard) {
           rows.push(
             [
@@ -3871,8 +3875,10 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
       if (data.bonusTokens && data.bonusTokens.length > 0) {
         rows.push('');
-        rows.push('Bonus-Codes');
-        rows.push('Rang;Nickname;Code;Punkte;Generiert am');
+        rows.push($localize`:@@sessionHost.exportBonusCodesTitle:Bonus-Codes`);
+        rows.push(
+          $localize`:@@sessionHost.exportBonusCodesHeader:Rang;Nickname;Code;Punkte;Generiert am`,
+        );
         for (const t of data.bonusTokens) {
           rows.push(`${t.rank};${t.nickname};${t.token};${t.totalScore};${t.generatedAt}`);
         }

@@ -9125,6 +9125,46 @@
           <context context-type="linenumber">1890</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
+        <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details</source>
+        <target>Question No.;Question text;Type;Participants;Avg. points;Details</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2572</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardTitle" datatype="html">
+        <source>Team-Wertung</source>
+        <target>Team leaderboard</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2612</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardHeader" datatype="html">
+        <source>Rang;Team;Farbe;Mitglieder;Team-Punkte;Ø Punkte pro Mitglied</source>
+        <target>Rank;Team;Color;Members;Team points;Avg. points per member</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2614</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesTitle" datatype="html">
+        <source>Bonus-Codes</source>
+        <target>Bonus codes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2630</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesHeader" datatype="html">
+        <source>Rang;Nickname;Code;Punkte;Generiert am</source>
+        <target>Rank;Nickname;Code;Points;Generated at</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">2632</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionTabs.quiz" datatype="html">
         <source>Quiz</source>
         <target>Quiz</target>

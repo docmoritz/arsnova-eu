@@ -4839,6 +4839,101 @@ describe('SessionHostComponent', () => {
       });
     });
 
+    it('exportiert lokalisierte Tabellenköpfe und Bonus-Codes im Ergebnis-CSV', async () => {
+      let exportedCsv = '';
+      const createObjectURLMock = vi.fn(() => 'blob:test-export');
+      const revokeObjectURLMock = vi.fn();
+      const anchorClickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+      const originalBlob = Blob;
+      class CaptureBlob extends Blob {
+        constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+          super(parts, options);
+          exportedCsv = parts
+            .map((part) => (typeof part === 'string' ? part : String(part)))
+            .join('');
+        }
+      }
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: createObjectURLMock,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: revokeObjectURLMock,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: CaptureBlob,
+      });
+      getExportDataQueryMock.mockResolvedValueOnce({
+        sessionId: defaultSession.id,
+        sessionCode: 'ABC123',
+        quizName: 'Demo Quiz',
+        finishedAt: '2026-03-24T12:30:00.000Z',
+        participantCount: 3,
+        teamMode: false,
+        questions: [
+          {
+            questionOrder: 0,
+            questionTextShort: 'Wie zufrieden bist du?',
+            type: 'RATING',
+            participantCount: 3,
+            averageScore: null,
+            optionDistribution: null,
+            freetextAggregates: null,
+            ratingDistribution: { '1': 1, '3': 2 },
+            ratingAverage: 2.3,
+          },
+        ],
+        teamLeaderboard: [],
+        bonusTokens: [
+          {
+            rank: 1,
+            nickname: 'Ada',
+            token: 'BONUS-123',
+            totalScore: 220,
+            generatedAt: '2026-03-24T12:31:00.000Z',
+          },
+        ],
+      });
+
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await fixture.componentInstance.exportSessionResultsCsv();
+      fixture.detectChanges();
+
+      expect(exportedCsv).toContain('Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details');
+      expect(exportedCsv).toContain('Bonus-Codes');
+      expect(exportedCsv).toContain('Rang;Nickname;Code;Punkte;Generiert am');
+      expect(exportedCsv).toContain('1;Ada;BONUS-123;220;2026-03-24T12:31:00.000Z');
+
+      fixture.destroy();
+      anchorClickSpy.mockRestore();
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalCreateObjectURL,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalRevokeObjectURL,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: originalBlob,
+      });
+    });
+
     it('schließt den Callout bei „Okay“ und führt Retry erneut aus', async () => {
       getInfoQueryMock.mockResolvedValue({
         ...defaultSession,

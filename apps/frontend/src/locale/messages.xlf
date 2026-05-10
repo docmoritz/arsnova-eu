@@ -8080,6 +8080,41 @@
           <context context-type="linenumber">2551</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
+        <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3533</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardTitle" datatype="html">
+        <source>Team-Wertung</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3573</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportTeamLeaderboardHeader" datatype="html">
+        <source>Rang;Team;Farbe;Mitglieder;Team-Punkte;Ø Punkte pro Mitglied</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3575</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesTitle" datatype="html">
+        <source>Bonus-Codes</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3591</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportBonusCodesHeader" datatype="html">
+        <source>Rang;Nickname;Code;Punkte;Generiert am</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3593</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionTabs.quiz" datatype="html">
         <source>Quiz</source>
         <context-group purpose="location">
