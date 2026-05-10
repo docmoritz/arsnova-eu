@@ -2656,19 +2656,39 @@ describe('SessionHostComponent', () => {
       '.session-host__results-wrap',
     ) as HTMLElement | null;
     expect(resultsSection).toBeTruthy();
-    const scrollIntoViewSpy = vi.fn();
-    Object.defineProperty(resultsSection!, 'scrollIntoView', {
+    resultsSection!.style.scrollMarginTop = '80px';
+    Object.defineProperty(resultsSection!, 'getBoundingClientRect', {
       configurable: true,
-      value: scrollIntoViewSpy,
+      value: () =>
+        ({
+          top: 420,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 420,
+          toJSON: () => ({}),
+        }) as DOMRect,
     });
+    const scrollingElement = (document.scrollingElement ?? document.documentElement) as HTMLElement;
+    scrollingElement.scrollTop = 180;
+    Object.defineProperty(scrollingElement, 'scrollTo', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    const scrollToSpy = vi.spyOn(scrollingElement, 'scrollTo').mockImplementation(() => undefined);
 
     await fixture.componentInstance.revealResults();
     await fixture.whenStable();
     await new Promise((r) => setTimeout(r, 0));
 
     expect(revealResultsMutateMock).toHaveBeenCalledWith({ code: 'ABC123' });
-    expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(scrollToSpy).toHaveBeenCalledWith({ behavior: 'smooth', top: 520 });
 
+    scrollToSpy.mockRestore();
     fixture.destroy();
   });
 
@@ -2715,19 +2735,39 @@ describe('SessionHostComponent', () => {
       '.session-host__answers',
     ) as HTMLElement | null;
     expect(answersList).toBeTruthy();
-    const scrollIntoViewSpy = vi.fn();
-    Object.defineProperty(answersList!, 'scrollIntoView', {
+    answersList!.style.scrollMarginTop = '88px';
+    Object.defineProperty(answersList!, 'getBoundingClientRect', {
       configurable: true,
-      value: scrollIntoViewSpy,
+      value: () =>
+        ({
+          top: 360,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 360,
+          toJSON: () => ({}),
+        }) as DOMRect,
     });
+    const scrollingElement = (document.scrollingElement ?? document.documentElement) as HTMLElement;
+    scrollingElement.scrollTop = 140;
+    Object.defineProperty(scrollingElement, 'scrollTo', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
+    const scrollToSpy = vi.spyOn(scrollingElement, 'scrollTo').mockImplementation(() => undefined);
 
     await fixture.componentInstance.revealAnswers();
     await fixture.whenStable();
     await new Promise((r) => setTimeout(r, 0));
 
     expect(revealAnswersMutateMock).toHaveBeenCalledWith({ code: 'ABC123' });
-    expect(scrollIntoViewSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(scrollToSpy).toHaveBeenCalledWith({ behavior: 'smooth', top: 412 });
 
+    scrollToSpy.mockRestore();
     fixture.destroy();
   });
 

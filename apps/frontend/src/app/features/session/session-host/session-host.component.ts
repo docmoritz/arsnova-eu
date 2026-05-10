@@ -2996,16 +2996,28 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     afterNextRender(
       () => {
         const target = targetRef?.nativeElement;
+        const scrollingElement = (this.document.scrollingElement ??
+          this.document.documentElement) as HTMLElement | null;
         if (target) {
           try {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (scrollingElement) {
+              const rect = target.getBoundingClientRect();
+              const marginTop =
+                parseFloat(
+                  this.document.defaultView?.getComputedStyle(target).scrollMarginTop ?? '0',
+                ) || 0;
+              const currentTop = scrollingElement.scrollTop ?? 0;
+              const nextTop = Math.max(0, currentTop + rect.top - marginTop);
+              scrollingElement.scrollTo({ top: nextTop, behavior: 'smooth' });
+            } else {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
           } catch {
             target.scrollIntoView();
           }
           return;
         }
 
-        const scrollingElement = this.document.scrollingElement as HTMLElement | null;
         try {
           scrollingElement?.scrollTo({ top: 0, behavior: 'smooth' });
         } catch {

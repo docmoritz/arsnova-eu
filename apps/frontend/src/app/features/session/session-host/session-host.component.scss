@@ -3096,6 +3096,7 @@
   max-width: 100%;
   box-sizing: border-box;
   margin: 0 0 1rem;
+  scroll-margin-top: var(--session-host-toolbar-clearance);
   min-width: 0;
   border-radius: var(--mat-sys-corner-large, 12px);
   border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 18%, var(--mat-sys-outline-variant));
@@ -3135,7 +3136,12 @@
   max-width: 100%;
   margin-inline: 0;
   margin-bottom: 1.25rem;
+  scroll-margin-top: var(--session-host-toolbar-clearance);
   width: 100%;
+}
+
+.session-host__answers {
+  scroll-margin-top: var(--session-host-toolbar-clearance);
 }
 
 .session-host__results-card {
