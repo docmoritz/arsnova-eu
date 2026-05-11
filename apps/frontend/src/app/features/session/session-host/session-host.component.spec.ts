@@ -2891,6 +2891,97 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('haelt die bisherige Frage sichtbar, bis Antwortoptionen fuer den Host nachgeladen sind', async () => {
+    const initialQuestion = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+    let resolveRefresh: ((value: typeof initialQuestion) => void) | null = null;
+
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'QUESTION_OPEN' });
+    getCurrentQuestionForHostQueryMock.mockResolvedValue(initialQuestion);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.currentQuestionForHost.set(initialQuestion);
+    getCurrentQuestionForHostQueryMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+
+    const pendingReveal = fixture.componentInstance.revealAnswers();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.currentQuestionForHost()?.questionId).toBe(
+      initialQuestion.questionId,
+    );
+
+    resolveRefresh?.(initialQuestion);
+    await pendingReveal;
+    await fixture.whenStable();
+    fixture.destroy();
+  });
+
+  it('haelt die laufende Frage sichtbar, bis Runde 2 geladen ist', async () => {
+    const roundOneQuestion = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 12,
+      correctVoterCount: 6,
+    };
+    let resolveRefresh: ((value: typeof roundOneQuestion) => void) | null = null;
+
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'DISCUSSION' });
+    getCurrentQuestionForHostQueryMock.mockResolvedValue(roundOneQuestion);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.currentQuestionForHost.set(roundOneQuestion);
+    getCurrentQuestionForHostQueryMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+
+    const pendingRoundStart = component.startSecondRound();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(component.currentQuestionForHost()?.currentRound).toBe(1);
+
+    resolveRefresh?.(roundOneQuestion);
+    await pendingRoundStart;
+    await fixture.whenStable();
+    fixture.destroy();
+  });
+
   it('zeigt bei Ergebnisstand die Aktion "Nächste Frage" im unteren Exit-Anker neben "Session beenden"', async () => {
     getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'RESULTS' });
     onStatusChangedSubscribeMock.mockImplementation(

@@ -223,6 +223,42 @@ function isScoredQuestionType(type: HostCurrentQuestionDTO['type'] | null | unde
   return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
 }
 
+function sameStringArray(
+  left: readonly string[] | null | undefined,
+  right: readonly string[] | null | undefined,
+): boolean {
+  const a = left ?? [];
+  const b = right ?? [];
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function sameNumberRecord(
+  left: Record<string, number> | null | undefined,
+  right: Record<string, number> | null | undefined,
+): boolean {
+  const a = left ?? {};
+  const b = right ?? {};
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  for (const key of aKeys) {
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 const ALL_MUSIC_TRACKS: ReadonlyArray<{ value: HostMusicTrack; label: string }> = [
   {
     value: 'LOBBY_0',
@@ -1274,7 +1310,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       {
         onData: (data) => {
           this.hostRealtimeFallbackActive = false;
-          this.currentQuestionForHost.set(data);
+          this.syncCurrentQuestionForHost(data);
         },
         onError: () => {
           this.currentQuestionSub?.unsubscribe();
@@ -1527,7 +1563,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.sessionUnavailable.set(true);
     this.stopCountdown();
     this.countdownSeconds.set(null);
-    this.currentQuestionForHost.set(null);
+    this.syncCurrentQuestionForHost(null);
     this.statusUpdate.set({
       status: 'FINISHED',
       currentQuestion: null,
@@ -2112,6 +2148,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     payload: SessionParticipantsPayload,
     allowArrivalEvents = true,
   ): void {
+    const previousPayload = this.participantsPayload();
+    if (this.isSameParticipantsPayload(previousPayload, payload)) {
+      return;
+    }
+
     const nextParticipantIds = new Set(payload.participants.map((participant) => participant.id));
     const newParticipants =
       allowArrivalEvents && this.participantBaselineReady
@@ -2578,6 +2619,146 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.foyerTeamDirections.set({});
     this.foyerGlobalLaneCursor = 0;
     this.foyerTeamLaneCursor.clear();
+  }
+
+  private syncCurrentQuestionForHost(next: HostCurrentQuestionDTO | null): void {
+    if (this.isSameHostCurrentQuestion(this.currentQuestionForHost(), next)) {
+      return;
+    }
+    this.currentQuestionForHost.set(next);
+  }
+
+  private isSameParticipantsPayload(
+    left: SessionParticipantsPayload | null,
+    right: SessionParticipantsPayload | null,
+  ): boolean {
+    if (left === right) {
+      return true;
+    }
+    if (!left || !right) {
+      return false;
+    }
+    if (
+      left.participantCount !== right.participantCount ||
+      (left.connectedCount ?? null) !== (right.connectedCount ?? null)
+    ) {
+      return false;
+    }
+
+    const leftReady = left.readingReady;
+    const rightReady = right.readingReady;
+    if (!!leftReady !== !!rightReady) {
+      return false;
+    }
+    if (
+      leftReady &&
+      rightReady &&
+      (leftReady.connectedCount !== rightReady.connectedCount ||
+        leftReady.readyCount !== rightReady.readyCount ||
+        leftReady.allConnectedReady !== rightReady.allConnectedReady ||
+        (leftReady.participantReady ?? null) !== (rightReady.participantReady ?? null))
+    ) {
+      return false;
+    }
+
+    if (left.participants.length !== right.participants.length) {
+      return false;
+    }
+
+    for (let i = 0; i < left.participants.length; i += 1) {
+      const current = left.participants[i];
+      const next = right.participants[i];
+      if (
+        current.id !== next.id ||
+        current.nickname !== next.nickname ||
+        (current.teamId ?? null) !== (next.teamId ?? null) ||
+        (current.teamName ?? null) !== (next.teamName ?? null)
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private isSameHostCurrentQuestion(
+    left: HostCurrentQuestionDTO | null,
+    right: HostCurrentQuestionDTO | null,
+  ): boolean {
+    if (left === right) {
+      return true;
+    }
+    if (!left || !right) {
+      return false;
+    }
+    if (
+      left.questionId !== right.questionId ||
+      left.order !== right.order ||
+      (left.totalQuestions ?? null) !== (right.totalQuestions ?? null) ||
+      left.text !== right.text ||
+      left.type !== right.type ||
+      left.difficulty !== right.difficulty ||
+      (left.timer ?? null) !== (right.timer ?? null) ||
+      (left.ratingMin ?? null) !== (right.ratingMin ?? null) ||
+      (left.ratingMax ?? null) !== (right.ratingMax ?? null) ||
+      (left.ratingLabelMin ?? null) !== (right.ratingLabelMin ?? null) ||
+      (left.ratingLabelMax ?? null) !== (right.ratingLabelMax ?? null) ||
+      (left.ratingAvg ?? null) !== (right.ratingAvg ?? null) ||
+      (left.ratingCount ?? null) !== (right.ratingCount ?? null) ||
+      (left.totalVotes ?? null) !== (right.totalVotes ?? null) ||
+      (left.correctVoterCount ?? null) !== (right.correctVoterCount ?? null) ||
+      (left.currentRound ?? null) !== (right.currentRound ?? null)
+    ) {
+      return false;
+    }
+
+    if (left.answers.length !== right.answers.length) {
+      return false;
+    }
+    for (let i = 0; i < left.answers.length; i += 1) {
+      const current = left.answers[i];
+      const next = right.answers[i];
+      if (
+        current.id !== next.id ||
+        current.text !== next.text ||
+        current.isCorrect !== next.isCorrect
+      ) {
+        return false;
+      }
+    }
+
+    const leftVoteDistribution = left.voteDistribution ?? [];
+    const rightVoteDistribution = right.voteDistribution ?? [];
+    if (leftVoteDistribution.length !== rightVoteDistribution.length) {
+      return false;
+    }
+    for (let i = 0; i < leftVoteDistribution.length; i += 1) {
+      const current = leftVoteDistribution[i];
+      const next = rightVoteDistribution[i];
+      if (
+        current.id !== next.id ||
+        current.text !== next.text ||
+        current.isCorrect !== next.isCorrect ||
+        current.voteCount !== next.voteCount ||
+        current.votePercentage !== next.votePercentage
+      ) {
+        return false;
+      }
+    }
+
+    if (!sameStringArray(left.freeTextResponses, right.freeTextResponses)) {
+      return false;
+    }
+
+    if (!sameNumberRecord(left.ratingDistribution, right.ratingDistribution)) {
+      return false;
+    }
+
+    return (
+      JSON.stringify(left.peerInstructionSuggestion ?? null) ===
+        JSON.stringify(right.peerInstructionSuggestion ?? null) &&
+      JSON.stringify(left.roundComparison ?? null) === JSON.stringify(right.roundComparison ?? null)
+    );
   }
 
   /** i18n: Feedback rating count (singular). */
@@ -3490,7 +3671,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.stopCountdown();
       this.countdownSeconds.set(null);
       const result = await trpc.session.nextQuestion.mutate({ code: this.code.toUpperCase() });
-      this.currentQuestionForHost.set(null);
       this.statusUpdate.set(result);
       await this.refreshCurrentQuestionForHost();
       if (result.status === 'ACTIVE') {
@@ -3510,7 +3690,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     try {
       const result = await trpc.session.startQa.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      this.currentQuestionForHost.set(null);
+      this.syncCurrentQuestionForHost(null);
       this.dismissHostSteeringCallout();
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.startQa());
@@ -3678,7 +3858,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     try {
       this.clearEmojiNewBadge();
       const result = await trpc.session.revealAnswers.mutate({ code: this.code.toUpperCase() });
-      this.currentQuestionForHost.set(null);
       this.statusUpdate.set(result);
       await this.refreshCurrentQuestionForHost();
       this.scrollHostTargetIntoView(this.hostAnswersListRef);
@@ -3736,7 +3915,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.stopCountdown();
       this.countdownSeconds.set(null);
       const result = await trpc.session.startSecondRound.mutate({ code: this.code.toUpperCase() });
-      this.currentQuestionForHost.set(null);
       this.statusUpdate.set(result);
       await this.refreshCurrentQuestionForHost();
       this.dismissHostSteeringCallout();
@@ -3939,7 +4117,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.countdownSeconds.set(null);
       const result = await trpc.session.end.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      this.currentQuestionForHost.set(null);
+      this.syncCurrentQuestionForHost(null);
       this.dismissHostSteeringCallout();
     } catch (error) {
       if (this.isSessionNotFoundError(error)) {
@@ -3958,9 +4136,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       const q = await trpc.session.getCurrentQuestionForHost.query({
         code: this.code.toUpperCase(),
       });
-      this.currentQuestionForHost.set(q);
+      this.syncCurrentQuestionForHost(q);
     } catch {
-      this.currentQuestionForHost.set(null);
+      this.syncCurrentQuestionForHost(null);
     }
   }
 

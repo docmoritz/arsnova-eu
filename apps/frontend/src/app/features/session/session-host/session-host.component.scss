@@ -1861,12 +1861,6 @@
   }
 }
 
-.session-lobby__team-card--playful {
-  @media (prefers-reduced-motion: no-preference) {
-    animation: lobby-team-card-float 2.4s ease-in-out infinite;
-  }
-}
-
 .session-lobby__team-card-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -1882,12 +1876,6 @@
   width: 1rem;
   height: 1rem;
   border-radius: 999px;
-
-  .session-lobby__team-card--playful & {
-    @media (prefers-reduced-motion: no-preference) {
-      animation: lobby-team-dot-pulse 1.8s ease-in-out infinite;
-    }
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2171,28 +2159,6 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes lobby-team-card-float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-2px);
-    }
-  }
-
-  @keyframes lobby-team-dot-pulse {
-    0%,
-    100% {
-      transform: scale(1);
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-    }
-    50% {
-      transform: scale(1.08);
-      box-shadow: 0 0 0.65rem color-mix(in srgb, var(--session-foyer-arrival-glow) 42%, transparent);
-    }
-  }
-
   @keyframes lobby-team-card-arrival-flash-a {
     0% {
       opacity: 0;
