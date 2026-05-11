@@ -228,6 +228,21 @@ Stand 2026-05-09:
   - Standard-Listenerlimits der EventEmitter mussten fuer hohe Subscription-Zahlen angehoben werden
 - als primaere offene Optimierungsfelder bleiben insbesondere datenbanklastige Frage- und Ergebnispfade, Reconnect-Wellen und der produktionsnahe 500er-Lauf auf dem Hetzner-Zielsystem
 
+Stand 2026-05-11:
+
+- Ein Regressionsbefund nach der Hotpath-Verschlankung war, dass Vote-Clients Kanalwechsel `Quiz <-> Q&A <-> Blitzlicht` nicht mehr robust vom Host uebernahmen und Blitzlicht-Ergebnisse teils nicht live sichtbar wurden.
+- Die Korrektur fuehrt deshalb bewusst wieder **kleine fachlich notwendige Zustandsdaten** im Status-Snapshot mit:
+  - `channels` fuer aktiv/offen pro Session-Kanal
+  - `preferredChannel` als synchronisierter Host-Wunschkanal
+- Diese Ergaenzung gilt weiterhin als mit ADR-0026 vereinbar, weil sie nur sehr kleines Zusatzpayload erzeugt, aber teure oder unzuverlaessige Folge-Refetches im Live-Betrieb vermeidet.
+- Fuer Blitzlicht-Ergebnisse wurde auf der Vote-Seite der vorhandene Push-Pfad `quickFeedback.onResults` aktiviert, statt die Anzeige ueber haeufigere Polling- oder Fallback-Requests zu reparieren. Das folgt direkt der Leitplanke "Push/Eventing vor Polling".
+- Ein zwischenzeitlich getesteter Client-Guard, der QA- und Blitzlicht-Refetches bei unveraendertem Kanalstatus unterdruecken sollte, wurde wieder verworfen: Der Eingriff war zwar klein, beeintraechtigte aber die fachliche Robustheit des Vote-seitigen Kanalwechsels. Damit gilt hier explizit: Funktionssicherheit im Live-Pfad hat Vorrang vor einer nur marginalen Zusatzentlastung.
+- Die aktuelle Balance lautet damit:
+  - schlanke, cachebare Status-Snapshots bleiben erhalten
+  - fachlich notwendiger Kanalzustand wird trotzdem mitgefuehrt
+  - eventgetriebene Ergebnis-Updates werden bevorzugt
+  - mikrooptimierende Guards werden nur behalten, wenn sie den Kanalwechsel nicht destabilisieren
+
 ---
 
 **Referenzen:** [ADR-0013: k6 und Artillery fuer Last- und Performance-Tests](./0013-use-k6-and-artillery-for-load-and-performance-testing.md), [ADR-0021: Trennung von Betriebsstatus und Laststatus](./0021-separate-service-status-from-load-status-with-live-slo-telemetry.md), [ADR-0025: Zukuenftige Erweiterungen standardmaessig als performance-kritisch behandeln](./0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md), [health.ts](../../../apps/backend/src/routers/health.ts), [session.ts](../../../apps/backend/src/routers/session.ts), [join.component.ts](../../../apps/frontend/src/app/features/join/join.component.ts), [session-vote.component.ts](../../../apps/frontend/src/app/features/session/session-vote/session-vote.component.ts), [app.component.ts](../../../apps/frontend/src/app/app.component.ts), [platformStatistic.ts](../../../apps/backend/src/lib/platformStatistic.ts).

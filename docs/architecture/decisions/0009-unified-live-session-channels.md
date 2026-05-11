@@ -163,3 +163,10 @@ Stand 2026-03-16:
 - Blitzlicht ist in dieselbe Session integriert und nutzt denselben Session-Code fuer Host- und Teilnehmerfluss.
 - Blitzlicht ist zusaetzlich als direkter Startseiten-Shortcut verfuegbar und teilt denselben fachlichen Kern wie der Session-Kanal.
 - Der End-to-End-Smoke-Test `apps/frontend/scripts/check-unified-session-flow.mjs` verifiziert den Unified-Flow fuer Host, Teilnehmer und Presenter und faellt bei lokalem Session-Rate-Limit automatisch auf bestehende passende Sessions zurueck.
+
+Stand 2026-05-11:
+
+- Der gemeinsame Session-DTO- und Statuspfad transportiert fuer Vote-Clients inzwischen nicht nur den Session-Status, sondern auch den aktuellen Kanalzustand (`channels`) und einen synchronisierten Host-Wunschkanal (`preferredChannel`).
+- Host-Wechsel zwischen `Quiz`, `Q&A` und `Blitzlicht` werden dadurch live an Teilnehmende gespiegelt, ohne dass fuer dieselbe Veranstaltung getrennte Session- oder Kanalcodes entstehen.
+- `preferredChannel` ist im Vote-Client bewusst **kein** dauerhafter Zwangskanal: Teilnehmende folgen Host-Wechseln einmalig, koennen danach aber wieder selbst in den sichtbaren Quiz-Kanal zurueckwechseln, solange keine fachliche Quiz-Sperrphase greift.
+- Fuer Blitzlicht-Ergebnisse nutzt der Vote-Client einen eigenen Live-Result-Pfad, damit laufende Balkendiagramme nicht mehr davon abhaengen, dass ein anderer Session-Refresh zufaellig neue Daten mitliefert.
