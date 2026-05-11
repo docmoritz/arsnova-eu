@@ -2083,6 +2083,22 @@
           <context context-type="linenumber">381</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayTip" datatype="html">
+        <source>Live-Ansicht:</source>
+        <target>Live view:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">394</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayBackToLobby" datatype="html">
+        <source>Zur Lobby</source>
+        <target>Back to lobby</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">403</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="feedback.compareRoundHeadline" datatype="html">
         <source> Jetzt zum Vergleich ein zweites Blitzlicht...</source>
         <target>Let's run a second Pulse Check to compare...</target>

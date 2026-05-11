@@ -2084,6 +2084,22 @@
           <context context-type="linenumber">381</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayTip" datatype="html">
+        <source>Live-Ansicht:</source>
+        <target>Vue en direct :</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">394</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayBackToLobby" datatype="html">
+        <source>Zur Lobby</source>
+        <target>Retour au lobby</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">403</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="feedback.compareRoundHeadline" datatype="html">
         <source> Jetzt zum Vergleich ein zweites Blitzlicht...</source>
         <target>Maintenant, un deuxième Sondage Éclair pour comparer...</target>

@@ -2084,6 +2084,22 @@
           <context context-type="linenumber">381</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayTip" datatype="html">
+        <source>Live-Ansicht:</source>
+        <target>Vista live:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">394</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.joinOverlayBackToLobby" datatype="html">
+        <source>Zur Lobby</source>
+        <target>Torna alla lobby</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">403</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="feedback.compareRoundHeadline" datatype="html">
         <source> Jetzt zum Vergleich ein zweites Blitzlicht...</source>
         <target>Ora, un secondo voto rapido per confrontare...</target>

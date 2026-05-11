@@ -523,6 +523,33 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt im QR-Overlay einen klaren Zur-Lobby-Hinweis und schliesst ueber den CTA', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.joinInfoPopoverOpen.set(true);
+    fixture.detectChanges();
+
+    const overlay = fixture.nativeElement.querySelector(
+      '.session-host__join-viewport-overlay',
+    ) as HTMLElement | null;
+    const text = overlay?.textContent ?? '';
+    const closeButton = Array.from(overlay?.querySelectorAll('button') ?? []).find((button) =>
+      (button.textContent ?? '').includes('Zur Lobby'),
+    ) as HTMLButtonElement | undefined;
+
+    expect(text).toContain('Live-Ansicht:');
+    expect(closeButton).toBeDefined();
+
+    closeButton?.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.joinInfoPopoverOpen()).toBe(false);
+    fixture.destroy();
+  });
+
   it('aktualisiert den Host-Abstimmungsfortschritt ueber die Current-Question-Subscription waehrend ACTIVE', async () => {
     let onData:
       | ((
