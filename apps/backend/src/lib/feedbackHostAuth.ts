@@ -29,6 +29,21 @@ export function extractFeedbackHostToken(req?: IncomingMessage): string | null {
   return null;
 }
 
+function readConnectionParam(connectionParams: unknown, key: string): string | null {
+  if (!connectionParams || typeof connectionParams !== 'object') {
+    return null;
+  }
+
+  const raw = (connectionParams as Record<string, unknown>)[key];
+  return typeof raw === 'string' && raw.trim().length > 0 ? raw.trim() : null;
+}
+
+export function extractFeedbackHostTokenFromConnectionParams(
+  connectionParams: unknown,
+): string | null {
+  return readConnectionParam(connectionParams, 'x-feedback-host-token');
+}
+
 export async function createFeedbackHostToken(sessionCode: string): Promise<string> {
   const token = randomBytes(32).toString('base64url');
   const redis = getRedis();
@@ -63,8 +78,10 @@ export async function isFeedbackHostTokenValid(
 export async function assertFeedbackHostAccess(
   req: IncomingMessage | undefined,
   sessionCode: string,
+  connectionParams?: unknown,
 ): Promise<string> {
-  const token = extractFeedbackHostToken(req);
+  const token =
+    extractFeedbackHostToken(req) ?? extractFeedbackHostTokenFromConnectionParams(connectionParams);
   if (!token) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',

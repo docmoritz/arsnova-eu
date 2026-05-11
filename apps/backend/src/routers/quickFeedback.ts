@@ -192,7 +192,7 @@ async function loadQuickFeedbackForHost(
   if (result.sessionBound === true) {
     await assertHostSessionAccessFromContext(ctx, code);
   } else {
-    await assertFeedbackHostAccess(ctx.req, code);
+    await assertFeedbackHostAccess(ctx.req, code, ctx.connectionParams);
   }
 
   return result;

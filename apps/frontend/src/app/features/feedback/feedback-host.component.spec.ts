@@ -162,7 +162,7 @@ describe('FeedbackHostComponent', () => {
     expect(trpc.quickFeedback.changeType.mutate).not.toHaveBeenCalled();
     expect(trpc.quickFeedback.create.mutate).not.toHaveBeenCalled();
     expect(snackBarSpy).toHaveBeenCalledWith(
-      'Formatwechsel gesperrt. In Runde 2 bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden die Stimmen aus Runde 1 gelöscht.',
+      'Formatwechsel gesperrt. Sobald Stimmen vorliegen oder die Vergleichsrunde läuft, bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden alle bisherigen Stimmen gelöscht.',
       'Zurücksetzen',
       {
         duration: 12000,
@@ -258,6 +258,34 @@ describe('FeedbackHostComponent', () => {
       clearInterval(comp.pollTimer);
       comp.pollTimer = null;
     }
+    fixture.destroy();
+  });
+
+  it('rendert aktualisierte Standalone-Ergebnisse auch bei offenem Beitritts-Overlay', async () => {
+    const fixture = TestBed.createComponent(FeedbackHostComponent);
+    fixture.componentInstance.result.set({
+      type: 'MOOD',
+      theme: 'system',
+      preset: 'serious',
+      locked: false,
+      totalVotes: 0,
+      distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+    });
+
+    fixture.componentInstance.feedbackJoinPopoverOpen.set(true);
+    fixture.detectChanges();
+    fixture.componentInstance.result.set({
+      type: 'MOOD',
+      theme: 'system',
+      preset: 'serious',
+      locked: false,
+      totalVotes: 1,
+      distribution: { POSITIVE: 1, NEUTRAL: 0, NEGATIVE: 0 },
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.feedbackJoinPopoverOpen()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('1 Stimme');
     fixture.destroy();
   });
 

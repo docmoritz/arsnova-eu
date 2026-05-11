@@ -549,7 +549,7 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
 
       if (this.shouldBlockTypeChange(type)) {
         const ref = this.snackBar.open(
-          $localize`:@@feedback.compareRoundFormatHint:Formatwechsel gesperrt. In Runde 2 bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden die Stimmen aus Runde 1 gelöscht.`,
+          $localize`:@@feedback.compareRoundFormatHint:Formatwechsel gesperrt. Sobald Stimmen vorliegen oder die Vergleichsrunde läuft, bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden alle bisherigen Stimmen gelöscht.`,
           $localize`Zurücksetzen`,
           {
             duration: 12000,

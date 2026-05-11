@@ -221,7 +221,33 @@ describe('quickFeedback.vote und Session-Status', () => {
 
     const result = await caller.toggleLock({ sessionCode: 'ABC123' });
 
-    expect(assertFeedbackHostAccessMock).toHaveBeenCalledWith(undefined, 'ABC123');
+    expect(assertFeedbackHostAccessMock).toHaveBeenCalledWith(undefined, 'ABC123', undefined);
+    expect(result).toEqual({ locked: true });
+  });
+
+  it('erlaubt Standalone-Blitzlicht-Steuerung ueber WebSocket-connectionParams', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'MOOD',
+        theme: 'light',
+        preset: 'serious',
+        locked: false,
+        totalVotes: 0,
+        distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+        sessionBound: false,
+      }),
+    );
+
+    const wsCaller = quickFeedbackRouter.createCaller({
+      req: undefined,
+      connectionParams: { 'x-feedback-host-token': 'feedback-owner-token' },
+    });
+
+    const result = await wsCaller.toggleLock({ sessionCode: 'ABC123' });
+
+    expect(assertFeedbackHostAccessMock).toHaveBeenCalledWith(undefined, 'ABC123', {
+      'x-feedback-host-token': 'feedback-owner-token',
+    });
     expect(result).toEqual({ locked: true });
   });
 

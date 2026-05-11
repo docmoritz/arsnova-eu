@@ -113,12 +113,17 @@ function createTrpcHeaders(): Record<string, string> {
 }
 
 function createWsConnectionParams(): Record<string, string> | null {
+  const feedbackCode = resolveRouteFeedbackCode();
+  const feedbackHostToken = feedbackCode ? getFeedbackHostToken(feedbackCode) : null;
   const hostToken = resolveActiveHostToken();
-  if (!hostToken) {
+  if (!hostToken && !feedbackHostToken) {
     return null;
   }
 
-  return { 'x-host-token': hostToken };
+  return {
+    ...(hostToken ? { 'x-host-token': hostToken } : {}),
+    ...(feedbackHostToken ? { 'x-feedback-host-token': feedbackHostToken } : {}),
+  };
 }
 
 if (isBrowser) {

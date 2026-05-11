@@ -2292,8 +2292,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.compareRoundFormatHint" datatype="html">
-        <source>Formatwechsel gesperrt. In Runde 2 bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden die Stimmen aus Runde 1 gelöscht.</source>
-        <target>Format locked. Round 2 uses the same Pulse Check format. To switch, reset the Pulse Check first (this clears Round 1 votes).</target>
+        <source>Formatwechsel gesperrt. Sobald Stimmen vorliegen oder die Vergleichsrunde läuft, bleibt das aktuelle Blitzlicht-Format aktiv. Für einen Wechsel setze das Blitzlicht zuerst zurück. Dabei werden alle bisherigen Stimmen gelöscht.</source>
+        <target>Format locked. Once votes exist or the compare round is running, the current Pulse Check format stays active. To switch, reset the Pulse Check first. This clears all existing votes.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">552</context>

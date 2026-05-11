@@ -26,6 +26,8 @@ import {
   ParticipantDTOSchema,
   SessionParticipantsPayloadSchema,
   SessionParticipantNicknamesPayloadSchema,
+  SessionChannelsDTOSchema,
+  SessionLiveChannelSchema,
   SessionTeamsPayloadSchema,
   SessionStatusUpdateSchema,
   HostCurrentQuestionDTOSchema,
@@ -197,6 +199,8 @@ type StatusSnapshotPayload = {
   timer?: number | null;
   preset?: string;
   currentRound?: number;
+  channels?: z.infer<typeof SessionChannelsDTOSchema>;
+  preferredChannel?: z.infer<typeof SessionLiveChannelSchema>;
 };
 
 type VoteSummary = {
@@ -218,6 +222,7 @@ const currentQuestionCache = new Map<string, CacheEntry<unknown>>();
 const participantMembershipCache = new Map<string, CacheEntry<boolean>>();
 const voteCountCache = new Map<string, CacheEntry<number>>();
 const voteSummaryCache = new Map<string, CacheEntry<VoteSummary>>();
+const preferredLiveChannelByCode = new Map<string, z.infer<typeof SessionLiveChannelSchema>>();
 const sessionInfoInFlight = new Map<
   string,
   Promise<Omit<z.infer<typeof SessionInfoDTOSchema>, 'serverTime'>>
@@ -544,6 +549,16 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
       const session = await prisma.session.findUnique({
         where: { code },
         select: {
+          type: true,
+          quizId: true,
+          qaEnabled: true,
+          qaOpen: true,
+          qaTitle: true,
+          qaModerationMode: true,
+          title: true,
+          moderationMode: true,
+          quickFeedbackEnabled: true,
+          quickFeedbackOpen: true,
           status: true,
           currentQuestion: true,
           currentRound: true,
@@ -574,11 +589,14 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
               session.quiz?.timerScaleByDifficulty ?? true,
             )
           : null;
+      const channels = buildSessionChannels(session);
       return {
         status: session.status,
         currentQuestion: session.currentQuestion,
         currentRound: session.currentRound,
         preset: (session.quiz?.preset as 'PLAYFUL' | 'SERIOUS') || undefined,
+        channels,
+        preferredChannel: resolvePreferredLiveChannel(code, channels),
         ...(isActive && {
           activeAt: session.statusChangedAt.toISOString(),
           timer: currentTimer,
@@ -1529,6 +1547,26 @@ function buildSessionChannels(session: {
       open: quickFeedbackOpen,
     },
   };
+}
+
+function defaultPreferredLiveChannel(
+  channels: z.infer<typeof SessionChannelsDTOSchema>,
+): z.infer<typeof SessionLiveChannelSchema> {
+  if (channels.quiz.enabled) return 'quiz';
+  if (channels.qa.enabled) return 'qa';
+  if (channels.quickFeedback.enabled) return 'quickFeedback';
+  return 'quiz';
+}
+
+function resolvePreferredLiveChannel(
+  code: string,
+  channels: z.infer<typeof SessionChannelsDTOSchema>,
+): z.infer<typeof SessionLiveChannelSchema> {
+  const stored = preferredLiveChannelByCode.get(code.toUpperCase());
+  if (stored === 'quiz' && channels.quiz.enabled) return stored;
+  if (stored === 'qa' && channels.qa.enabled) return stored;
+  if (stored === 'quickFeedback' && channels.quickFeedback.enabled) return stored;
+  return defaultPreferredLiveChannel(channels);
 }
 
 /** Anteil vollstaendig korrekter Stimmen (SC/MC, Runde 1): Empfehlung nur in diesem Fenster. */
@@ -2659,6 +2697,7 @@ export const sessionRouter = router({
                 })
               : null;
           const onboardingProfile = resolveSessionOnboardingProfile(session, q);
+          const channels = buildSessionChannels(session);
           return {
             id: session.id,
             code: session.code,
@@ -2667,7 +2706,8 @@ export const sessionRouter = router({
             quizName: q?.name ?? null,
             quizMotifImageUrl: q?.motifImageUrl ?? null,
             title: session.title ?? null,
-            channels: buildSessionChannels(session),
+            channels,
+            preferredChannel: resolvePreferredLiveChannel(session.code, channels),
             participantCount: session._count.participants,
             nicknameTheme: onboardingProfile.nicknameTheme,
             allowCustomNicknames: onboardingProfile.allowCustomNicknames,
@@ -2979,6 +3019,54 @@ export const sessionRouter = router({
         qaTitle: updated.qaTitle,
         title: updated.title,
       };
+    }),
+
+  setPreferredLiveChannel: hostProcedure
+    .input(
+      z.object({
+        code: z.string().length(6),
+        channel: SessionLiveChannelSchema,
+      }),
+    )
+    .output(z.object({ preferredChannel: SessionLiveChannelSchema }))
+    .mutation(async ({ input }) => {
+      const code = input.code.toUpperCase();
+      const session = await prisma.session.findUnique({
+        where: { code },
+        select: {
+          type: true,
+          quizId: true,
+          qaEnabled: true,
+          qaOpen: true,
+          qaTitle: true,
+          qaModerationMode: true,
+          title: true,
+          moderationMode: true,
+          quickFeedbackEnabled: true,
+          quickFeedbackOpen: true,
+        },
+      });
+      if (!session) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
+      }
+
+      const channels = buildSessionChannels(session);
+      if (input.channel === 'quiz' && !channels.quiz.enabled) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Quiz-Kanal ist nicht aktiv.' });
+      }
+      if (input.channel === 'qa' && !channels.qa.enabled) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Q&A-Kanal ist nicht aktiv.' });
+      }
+      if (input.channel === 'quickFeedback' && !channels.quickFeedback.enabled) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Blitzlicht-Kanal ist nicht aktiv.',
+        });
+      }
+
+      preferredLiveChannelByCode.set(code, input.channel);
+      invalidateSessionStatusCachesForCode(code);
+      return { preferredChannel: input.channel };
     }),
 
   onStatusChanged: publicProcedure.input(GetSessionInfoInputSchema).subscription(async function* ({
@@ -3813,6 +3901,7 @@ export const sessionRouter = router({
       void updateDailyMaxParticipants(newParticipantCount);
       void touchParticipantPresence(session.id, participantId);
       const serverTime = new Date().toISOString();
+      const channels = buildSessionChannels(session);
       return {
         id: session.id,
         code: session.code,
@@ -3822,7 +3911,8 @@ export const sessionRouter = router({
         quizName: session.quiz?.name ?? null,
         quizMotifImageUrl: session.quiz?.motifImageUrl ?? null,
         title: session.title ?? null,
-        channels: buildSessionChannels(session),
+        channels,
+        preferredChannel: resolvePreferredLiveChannel(session.code, channels),
         participantCount: newParticipantCount,
         nicknameTheme: onboardingProfile.nicknameTheme,
         allowCustomNicknames: onboardingProfile.allowCustomNicknames,

@@ -3129,6 +3129,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
         this.syncQaTitleDraftFromSession();
       }
       this.ensureActiveChannel();
+      await this.syncPreferredLiveChannel(channel);
     }
   }
 
@@ -3200,6 +3201,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     await this.refreshQuickFeedbackResult();
     this.activeChannel.set('quiz');
     this.ensureActiveChannel();
+    await this.syncPreferredLiveChannel('quiz');
   }
 
   private async chooseQuizForSession(): Promise<string | undefined> {
@@ -3291,10 +3293,25 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
       this.activeChannel.set(channel);
       this.ensureActiveChannel();
+      await this.syncPreferredLiveChannel(channel);
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.enableChannel(channel));
     } finally {
       this.channelActivationPending.set(null);
+    }
+  }
+
+  private async syncPreferredLiveChannel(channel: SessionChannelTab): Promise<void> {
+    if (!this.code || !this.isChannelEnabled(channel)) {
+      return;
+    }
+    try {
+      await trpc.session.setPreferredLiveChannel.mutate({
+        code: this.code.toUpperCase(),
+        channel,
+      });
+    } catch {
+      // Der Host bleibt lokal bedienbar; bei nächstem gültigen Kanalwechsel erneut versuchen.
     }
   }
 

@@ -513,6 +513,9 @@ export const UpdateSessionQaTitleOutputSchema = z.object({
 });
 export type UpdateSessionQaTitleOutput = z.infer<typeof UpdateSessionQaTitleOutputSchema>;
 
+export const SessionLiveChannelSchema = z.enum(['quiz', 'qa', 'quickFeedback']);
+export type SessionLiveChannel = z.infer<typeof SessionLiveChannelSchema>;
+
 /** Output: Status-Update nach nextQuestion / revealAnswers / revealResults (Story 2.3, 3.5). */
 export const SessionStatusUpdateSchema = z.object({
   status: SessionStatusEnum,
@@ -522,6 +525,9 @@ export const SessionStatusUpdateSchema = z.object({
   preset: QuizPresetEnum.optional(),
   /** Aktuelle Runde bei Peer Instruction (Story 2.7), 1 oder 2. */
   currentRound: z.number().int().min(1).max(2).optional(),
+  /** Kanalzustand für Live-Umschaltung auf Vote-Clients. */
+  channels: z.lazy(() => SessionChannelsDTOSchema).optional(),
+  preferredChannel: SessionLiveChannelSchema.optional(),
 });
 export type SessionStatusUpdate = z.infer<typeof SessionStatusUpdateSchema>;
 
@@ -795,6 +801,7 @@ export const SessionInfoDTOSchema = z.object({
   quizMotifImageUrl: z.union([MotifImageUrlSchema, z.null()]).optional(),
   title: z.string().nullable().optional(),
   channels: SessionChannelsDTOSchema.optional(), // ADR-0009: Übergangsweise optional für schrittweise Migration
+  preferredChannel: SessionLiveChannelSchema.optional(),
   participantCount: z.number(),
   nicknameTheme: NicknameThemeEnum.optional(),
   allowCustomNicknames: z.boolean().optional(),

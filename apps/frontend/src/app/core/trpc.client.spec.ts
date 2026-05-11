@@ -87,6 +87,25 @@ describe('trpc.client host transport', () => {
     });
   });
 
+  it('sendet Blitzlicht-Host-Token ueber WebSocket-Connection-Params fuer Standalone-Host-Subscriptions', async () => {
+    getFeedbackHostTokenMock.mockReturnValue('feedback-token-456');
+
+    await loadClientModule('/en/feedback/abc123');
+
+    const wsOptions = createWSClientMock.mock.calls[0]?.[0] as {
+      connectionParams: () =>
+        | Promise<Record<string, string> | undefined>
+        | Record<string, string>
+        | undefined;
+    };
+    const connectionParams = await wsOptions.connectionParams();
+
+    expect(normalizeFeedbackCodeMock).toHaveBeenCalledWith('abc123');
+    expect(connectionParams).toEqual({
+      'x-feedback-host-token': 'feedback-token-456',
+    });
+  });
+
   it('erkennt lokalisierte Blitzlicht-Host-Routen weiter fuer Header-Injektion', async () => {
     getFeedbackHostTokenMock.mockReturnValue('feedback-token-456');
 

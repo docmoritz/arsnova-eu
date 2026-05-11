@@ -297,4 +297,24 @@ describe('session.enable channel mutations', () => {
     expect(closed.quickFeedback).toMatchObject({ enabled: true, open: false });
     expect(reopened.quickFeedback).toMatchObject({ enabled: true, open: true });
   });
+
+  it('setzt den bevorzugten Live-Kanal auf Q&A, wenn der Kanal aktiv ist', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      type: 'QUIZ',
+      quizId: '11111111-1111-4111-8111-111111111111',
+      qaEnabled: true,
+      qaOpen: true,
+      qaTitle: 'Fragen',
+      qaModerationMode: true,
+      title: null,
+      moderationMode: false,
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+    });
+
+    const result = await caller.setPreferredLiveChannel({ code: 'ABC123', channel: 'qa' });
+
+    expect(result).toEqual({ preferredChannel: 'qa' });
+    expect(prismaMock.session.update).not.toHaveBeenCalled();
+  });
 });

@@ -33,6 +33,7 @@ const {
   attachQuizToSessionMutateMock,
   enableQaChannelMutateMock,
   enableQuickFeedbackChannelMutateMock,
+  setPreferredLiveChannelMutateMock,
   closeQaChannelMutateMock,
   reopenQaChannelMutateMock,
   closeQuickFeedbackChannelMutateMock,
@@ -71,6 +72,7 @@ const {
   attachQuizToSessionMutateMock: vi.fn(),
   enableQaChannelMutateMock: vi.fn(),
   enableQuickFeedbackChannelMutateMock: vi.fn(),
+  setPreferredLiveChannelMutateMock: vi.fn(),
   closeQaChannelMutateMock: vi.fn(),
   reopenQaChannelMutateMock: vi.fn(),
   closeQuickFeedbackChannelMutateMock: vi.fn(),
@@ -111,6 +113,7 @@ vi.mock('../../../core/trpc.client', () => ({
       attachQuizToSession: { mutate: attachQuizToSessionMutateMock },
       enableQaChannel: { mutate: enableQaChannelMutateMock },
       enableQuickFeedbackChannel: { mutate: enableQuickFeedbackChannelMutateMock },
+      setPreferredLiveChannel: { mutate: setPreferredLiveChannelMutateMock },
       closeQaChannel: { mutate: closeQaChannelMutateMock },
       reopenQaChannel: { mutate: reopenQaChannelMutateMock },
       closeQuickFeedbackChannel: { mutate: closeQuickFeedbackChannelMutateMock },
@@ -339,6 +342,7 @@ describe('SessionHostComponent', () => {
       qa: { enabled: false, open: false, title: null, moderationMode: false },
       quickFeedback: { enabled: true, open: true },
     });
+    setPreferredLiveChannelMutateMock.mockResolvedValue({ preferredChannel: 'quiz' });
     closeQaChannelMutateMock.mockResolvedValue({
       quiz: { enabled: true },
       qa: { enabled: true, open: false, title: 'Fragen', moderationMode: true },

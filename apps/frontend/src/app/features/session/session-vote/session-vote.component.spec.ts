@@ -2070,6 +2070,123 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('folgt einem geänderten bevorzugten Live-Kanal, ohne die Rückkehr ins Quiz zu blockieren', async () => {
+    let quickFeedbackListener: ((data: unknown) => void) | null = null;
+
+    quickFeedbackOnResultsSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        quickFeedbackListener = opts.onData;
+        return { unsubscribe: vi.fn() };
+      },
+    );
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Team-Quiz',
+      title: null,
+      participantCount: 6,
+      preset: 'SERIOUS',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue(null);
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.status.set('ACTIVE');
+    component.sessionSettings.set({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      serverTime: MOCK_SERVER_TIME,
+      quizName: 'Team-Quiz',
+      participantCount: 6,
+      preset: 'SERIOUS',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen', moderationMode: false },
+        quickFeedback: { enabled: true, open: true },
+      },
+      preferredChannel: 'quickFeedback',
+    } as never);
+    expect(component.channels().quickFeedback).toBe(true);
+    (
+      component as unknown as {
+        applyPreferredChannelIfChanged: (channel: 'quiz' | 'qa' | 'quickFeedback') => void;
+        ensureQuickFeedbackSubscription: () => void;
+        ensureActiveChannel: () => void;
+      }
+    ).ensureQuickFeedbackSubscription();
+    (
+      component as unknown as {
+        applyPreferredChannelIfChanged: (channel: 'quiz' | 'qa' | 'quickFeedback') => void;
+      }
+    ).applyPreferredChannelIfChanged('quickFeedback');
+    (
+      component as unknown as {
+        ensureActiveChannel: () => void;
+      }
+    ).ensureActiveChannel();
+
+    expect(quickFeedbackOnResultsSubscribeMock).toHaveBeenCalledWith(
+      { sessionCode: 'ABC123' },
+      expect.objectContaining({ onData: expect.any(Function) }),
+    );
+
+    quickFeedbackListener?.({
+      type: 'MOOD',
+      theme: 'system',
+      preset: 'serious',
+      locked: false,
+      totalVotes: 3,
+      distribution: { POSITIVE: 1, NEUTRAL: 1, NEGATIVE: 1 },
+      currentRound: 1,
+    });
+    fixture.detectChanges();
+
+    expect(component.activeChannel()).toBe('quickFeedback');
+
+    component.sessionSettings.update((current) => ({
+      ...current,
+      preferredChannel: 'qa',
+    }));
+    (
+      component as unknown as {
+        applyPreferredChannelIfChanged: (channel: 'quiz' | 'qa' | 'quickFeedback') => void;
+      }
+    ).applyPreferredChannelIfChanged('qa');
+
+    expect(component.activeChannel()).toBe('qa');
+
+    component.currentQuestion.set({
+      id: 'question-1',
+      type: 'RATING',
+      order: 1,
+      points: 0,
+      timeLimit: 60,
+      currentRound: 1,
+      answers: [],
+    } as never);
+    component.voteSent.set(true);
+    component.selectChannel('quiz');
+
+    expect(component.activeChannel()).toBe('quiz');
+    (
+      component as unknown as {
+        ensureActiveChannel: () => void;
+      }
+    ).ensureActiveChannel();
+    expect(component.activeChannel()).toBe('quiz');
+    fixture.destroy();
+  });
+
   it('entfernt in Peer-Instruction-Runde 2 den Countdown bei gleicher Frage', async () => {
     const nowIso = new Date().toISOString();
     let statusListener: ((data: unknown) => void) | null = null;

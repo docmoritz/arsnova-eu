@@ -39,6 +39,8 @@ import type {
   QuestionPreviewDTO,
   QuestionRevealedDTO,
   QuestionStudentDTO,
+  SessionChannelsDTO,
+  SessionLiveChannel,
   SessionInfoDTO,
   SessionStatus,
   TeamDTO,
@@ -287,6 +289,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private statusSub: Unsubscribable | null = null;
   private qaSub: Unsubscribable | null = null;
+  private quickFeedbackSub: Unsubscribable | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private pollStartTimeout: ReturnType<typeof setTimeout> | null = null;
   private sessionFallbackActive = false;
@@ -479,6 +482,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   } | null>(null);
   private readonly markdownCache = new Map<string, SafeHtml>();
   private feedbackStateLoaded = false;
+  private lastAppliedPreferredChannel: SessionLiveChannel | null = null;
 
   /**
    * Nach Session-Ende: Bonus-Code sichern und/oder Session-Feedback, dann Startseite.
@@ -657,6 +661,27 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.qaDraft().trim().length <= 500 &&
       !this.qaSubmitting(),
   );
+
+  private patchSessionChannels(channels: SessionChannelsDTO): void {
+    this.sessionSettings.update((current) => ({ ...current, channels }));
+  }
+
+  private patchPreferredChannel(preferredChannel: SessionLiveChannel): void {
+    this.sessionSettings.update((current) => ({ ...current, preferredChannel }));
+  }
+
+  private applyPreferredChannelIfChanged(
+    preferredChannel: SessionLiveChannel | null | undefined,
+  ): void {
+    if (!preferredChannel || preferredChannel === this.lastAppliedPreferredChannel) {
+      return;
+    }
+
+    if (this.visibleChannels().includes(preferredChannel)) {
+      this.activeChannel.set(preferredChannel);
+    }
+    this.lastAppliedPreferredChannel = preferredChannel;
+  }
   readonly ownTeamEntry = computed(() => {
     const teamName = this.participantTeam()?.teamName;
     if (!teamName) {
@@ -1340,6 +1365,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.sessionId.set(session.id);
       this.status.set(session.status as SessionStatus);
       this.sessionSettings.set(session);
+      this.applyPreferredChannelIfChanged(session.preferredChannel);
       if (session.status === 'FINISHED') {
         this.redirectToHomeIfSessionFinished();
         this.applyPendingLobbyArrivalIfNeeded();
@@ -1347,6 +1373,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
       this.ensureStatusSubscription();
       this.ensureQaSubscription();
+      this.ensureQuickFeedbackSubscription();
       await this.refreshQaQuestions();
       if (session.preset === 'PLAYFUL' || session.preset === 'SERIOUS') {
         this.themePreset.setPreset(session.preset === 'PLAYFUL' ? 'spielerisch' : 'serious', {
@@ -1361,6 +1388,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
       await this.refreshQuestion();
       await this.refreshQuickFeedbackResult();
+      this.ensureActiveChannel();
       this.applyPendingLobbyArrivalIfNeeded();
       return true;
     } catch {
@@ -1397,6 +1425,34 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     );
   }
 
+  private ensureQuickFeedbackSubscription(): void {
+    if (!this.channels().quickFeedback || !this.isQuickFeedbackChannelOpen() || !this.code) {
+      this.quickFeedbackSub?.unsubscribe();
+      this.quickFeedbackSub = null;
+      this.quickFeedbackResult.set(null);
+      return;
+    }
+
+    if (this.quickFeedbackSub) {
+      return;
+    }
+
+    this.quickFeedbackSub = trpc.quickFeedback.onResults.subscribe(
+      { sessionCode: this.code },
+      {
+        onData: (data) => {
+          this.quickFeedbackResult.set(data);
+          this.ensureActiveChannel();
+        },
+        onError: () => {
+          this.quickFeedbackSub?.unsubscribe();
+          this.quickFeedbackSub = null;
+          void this.refreshQuickFeedbackResult();
+        },
+      },
+    );
+  }
+
   private ensureStatusSubscription(): void {
     if (!this.code || this.statusSub) {
       return;
@@ -1420,6 +1476,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           timer?: number | null;
           preset?: string;
           currentRound?: number;
+          channels?: SessionChannelsDTO;
+          preferredChannel?: SessionLiveChannel;
           serverTime?: string;
         }) => {
           this.deactivateSessionFallback();
@@ -1429,6 +1487,23 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           const prevRound = this.currentRound();
           const newRound = data.currentRound ?? 1;
           this.status.set(data.status as SessionStatus);
+          let channelStateChanged = false;
+          if (data.channels) {
+            this.patchSessionChannels(data.channels);
+            this.ensureQaSubscription();
+            this.ensureQuickFeedbackSubscription();
+            void this.refreshQaQuestions();
+            void this.refreshQuickFeedbackResult();
+            channelStateChanged = true;
+          }
+          if (data.preferredChannel) {
+            this.patchPreferredChannel(data.preferredChannel);
+            this.applyPreferredChannelIfChanged(data.preferredChannel);
+            channelStateChanged = true;
+          }
+          if (channelStateChanged) {
+            this.ensureActiveChannel();
+          }
           if (data.status === 'FINISHED') {
             this.redirectToHomeIfSessionFinished();
             return;
@@ -1508,6 +1583,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       const previousTeamMode = this.sessionSettings().teamMode === true;
       this.sessionId.set(session.id);
       this.sessionSettings.set(session);
+      this.applyPreferredChannelIfChanged(session.preferredChannel);
       this.status.set(nextStatus);
       if (nextStatus === 'FINISHED') {
         this.redirectToHomeIfSessionFinished();
@@ -1515,6 +1591,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
       this.ensureStatusSubscription();
       this.ensureQaSubscription();
+      this.ensureQuickFeedbackSubscription();
+      this.ensureActiveChannel();
       if (session.teamMode && !previousTeamMode) {
         await Promise.all([this.loadParticipantTeam(), this.loadSessionTeams()]);
       }
@@ -1547,6 +1625,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     this.statusSub = null;
     this.qaSub?.unsubscribe();
     this.qaSub = null;
+    this.quickFeedbackSub?.unsubscribe();
+    this.quickFeedbackSub = null;
     this.stopFallbackPolling();
     if (this.lobbyArrivalTimeout) {
       clearTimeout(this.lobbyArrivalTimeout);
@@ -1699,6 +1779,13 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (visible.includes('quiz') && this.quizChannelLocksStudentNavigation()) {
+      if (active !== 'quiz') {
+        this.activeChannel.set('quiz');
+      }
+      return;
+    }
+
     const quizContentVisible =
       visible.includes('quiz') &&
       this.currentQuestion() !== null &&
@@ -1735,10 +1822,6 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     if (active === 'quiz' && qaRoundVisible) {
       this.activeChannel.set('qa');
       return;
-    }
-
-    if (active !== 'quiz' && visible.includes('quiz') && this.quizChannelLocksStudentNavigation()) {
-      this.activeChannel.set('quiz');
     }
   }
 
