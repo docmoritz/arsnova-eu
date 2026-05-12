@@ -681,6 +681,7 @@
                           @if (lobbyKindergartenEmoji(leader.nickname); as em) {
                             <span
                               class="session-host__kindergarten-emoji session-host__kindergarten-emoji--winner"
+                              [attr.title]="leader.nickname"
                               aria-hidden="true"
                               >{{ em }}</span
                             >
@@ -731,6 +732,7 @@
                                 @if (lobbyKindergartenEmoji(entry.nickname); as em) {
                                   <span
                                     class="session-host__kindergarten-emoji session-host__kindergarten-emoji--table"
+                                    [attr.title]="entry.nickname"
                                     aria-hidden="true"
                                     >{{ em }}</span
                                   >
@@ -1628,6 +1630,7 @@
                           @if (lobbyKindergartenEmoji(entry.nickname); as em) {
                             <span
                               class="session-host__kindergarten-emoji session-host__kindergarten-emoji--interim"
+                              [attr.title]="entry.nickname"
                               aria-hidden="true"
                               >{{ em }}</span
                             >

@@ -3514,6 +3514,7 @@ describe('SessionHostComponent', () => {
       ...defaultSession,
       status: 'FINISHED',
       teamMode: false,
+      nicknameTheme: 'KINDERGARTEN',
     });
     onStatusChangedSubscribeMock.mockImplementation(
       (_input: unknown, opts: { onData: (d: unknown) => void }) => {
@@ -3524,11 +3525,19 @@ describe('SessionHostComponent', () => {
     getLeaderboardQueryMock.mockResolvedValue([
       {
         rank: 1,
-        nickname: 'Purple dolphin',
+        nickname: 'Lila Delfin',
         totalScore: 9400,
         correctCount: 7,
         totalQuestions: 7,
         totalResponseTimeMs: 4200,
+      },
+      {
+        rank: 2,
+        nickname: 'Lagunenblaue Qualle',
+        totalScore: 9100,
+        correctCount: 6,
+        totalQuestions: 7,
+        totalResponseTimeMs: 4500,
       },
     ]);
 
@@ -3539,9 +3548,98 @@ describe('SessionHostComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent ?? '';
+    const winnerEmoji = fixture.nativeElement.querySelector(
+      '.session-host__kindergarten-emoji--winner',
+    ) as HTMLElement | null;
+    const tableEmojis = Array.from(
+      fixture.nativeElement.querySelectorAll('.session-host__kindergarten-emoji--table'),
+    ) as HTMLElement[];
+
     expect(text).toContain('Gewonnen hat');
-    expect(text).toContain('Purple dolphin');
+    expect(text).toContain('Lila Delfin');
     expect(text).toMatch(/Mit 9[.,]400 Punkten/);
+    expect(winnerEmoji?.getAttribute('title')).toBe('Lila Delfin');
+    expect(tableEmojis.map((emoji) => emoji.getAttribute('title'))).toEqual([
+      'Lila Delfin',
+      'Lagunenblaue Qualle',
+    ]);
+    fixture.destroy();
+  });
+
+  it('zeigt im Host-Zwischenleaderboard Titles an Kindergarten-Tiericons', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'RESULTS',
+      nicknameTheme: 'KINDERGARTEN',
+    });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'RESULTS', currentQuestion: 0 });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      voteDistribution: [
+        {
+          id: 'aaaaaaaa-1111-4111-8111-111111111111',
+          text: 'A',
+          isCorrect: false,
+          voteCount: 1,
+          votePercentage: 33,
+        },
+        {
+          id: 'bbbbbbbb-2222-4222-8222-222222222222',
+          text: 'B',
+          isCorrect: true,
+          voteCount: 2,
+          votePercentage: 67,
+        },
+      ],
+      totalVotes: 3,
+      correctVoterCount: 2,
+    });
+    getLeaderboardQueryMock.mockResolvedValue([
+      {
+        rank: 1,
+        nickname: 'Lila Delfin',
+        totalScore: 500,
+        correctCount: 3,
+        totalQuestions: 3,
+        totalResponseTimeMs: 3000,
+      },
+      {
+        rank: 2,
+        nickname: 'Lagunenblaue Qualle',
+        totalScore: 450,
+        correctCount: 2,
+        totalQuestions: 3,
+        totalResponseTimeMs: 3200,
+      },
+    ]);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    const interimEmojis = Array.from(
+      fixture.nativeElement.querySelectorAll('.session-host__kindergarten-emoji--interim'),
+    ) as HTMLElement[];
+
+    expect(interimEmojis.map((emoji) => emoji.getAttribute('title'))).toEqual([
+      'Lila Delfin',
+      'Lagunenblaue Qualle',
+    ]);
     fixture.destroy();
   });
 
