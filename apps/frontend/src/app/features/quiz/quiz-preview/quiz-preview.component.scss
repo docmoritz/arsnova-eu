@@ -274,12 +274,22 @@
   display: block;
   min-width: 0;
   line-height: 1.6;
+  --answer-leading-emoji-size: 2.2em;
+  --answer-leading-emoji-gap: 1.05em;
+  --answer-leading-emoji-slot: calc(
+    var(--answer-leading-emoji-size) + var(--answer-leading-emoji-gap)
+  );
 }
 
 @media (max-width: 599px) {
   .quiz-preview-question__answer-row {
     column-gap: 1.15rem;
     padding-inline: 1.1rem;
+  }
+
+  .quiz-preview-question__answer-content {
+    --answer-leading-emoji-size: 2.35em;
+    --answer-leading-emoji-gap: 1.2em;
   }
 }
 

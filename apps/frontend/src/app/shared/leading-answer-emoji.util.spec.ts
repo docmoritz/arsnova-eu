@@ -6,7 +6,7 @@ describe('decorateLeadingAnswerEmoji', () => {
     const html = '😄 Bereit loszulegen';
 
     expect(decorateLeadingAnswerEmoji(html)).toBe(
-      '<span class="answer-leading-emoji">😄</span>Bereit loszulegen',
+      '<span class="answer-leading-emoji">😄</span><span class="answer-leading-emoji-text">Bereit loszulegen</span>',
     );
   });
 
@@ -14,7 +14,7 @@ describe('decorateLeadingAnswerEmoji', () => {
     const html = '<p>😭 Gerade etwas überfordert</p>';
 
     expect(decorateLeadingAnswerEmoji(html)).toBe(
-      '<p class="answer-leading-emoji-block"><span class="answer-leading-emoji">😭</span>Gerade etwas überfordert</p>',
+      '<p class="answer-leading-emoji-block"><span class="answer-leading-emoji">😭</span><span class="answer-leading-emoji-text">Gerade etwas überfordert</span></p>',
     );
   });
 
@@ -22,7 +22,7 @@ describe('decorateLeadingAnswerEmoji', () => {
     const html = '<p class="markdown-body">😄 Bereit loszulegen</p>';
 
     expect(decorateLeadingAnswerEmoji(html)).toBe(
-      '<p class="markdown-body answer-leading-emoji-block"><span class="answer-leading-emoji">😄</span>Bereit loszulegen</p>',
+      '<p class="markdown-body answer-leading-emoji-block"><span class="answer-leading-emoji">😄</span><span class="answer-leading-emoji-text">Bereit loszulegen</span></p>',
     );
   });
 
@@ -30,7 +30,7 @@ describe('decorateLeadingAnswerEmoji', () => {
     const html = '<p><span class="markdown-emoji" title=":apple:">🍎</span> Bereit loszulegen</p>';
 
     expect(decorateLeadingAnswerEmoji(html)).toBe(
-      '<p class="answer-leading-emoji-block"><span class="markdown-emoji answer-leading-emoji" title=":apple:">🍎</span>Bereit loszulegen</p>',
+      '<p class="answer-leading-emoji-block"><span class="markdown-emoji answer-leading-emoji" title=":apple:">🍎</span><span class="answer-leading-emoji-text">Bereit loszulegen</span></p>',
     );
   });
 

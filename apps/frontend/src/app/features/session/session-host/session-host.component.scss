@@ -3301,17 +3301,22 @@
   min-width: 0;
   font-weight: 400;
   line-height: 1.45;
-  --answer-leading-emoji-size: 1.8em;
-  --answer-leading-emoji-gap: 0.75em;
+  --answer-leading-emoji-size: 3.2em;
+  --answer-leading-emoji-layout-size: 2.2em;
+  --answer-leading-emoji-visual-scale: 1.45;
+  --answer-leading-emoji-transform-origin: left center;
+  --answer-leading-emoji-gap: 1.45em;
   --answer-leading-emoji-slot: calc(
-    var(--answer-leading-emoji-size) + var(--answer-leading-emoji-gap)
+    var(--answer-leading-emoji-layout-size) + var(--answer-leading-emoji-gap)
   );
 }
 
 @media (max-width: 599px) {
   .session-host__answer-text {
-    --answer-leading-emoji-size: 1.95em;
-    --answer-leading-emoji-gap: 0.85em;
+    --answer-leading-emoji-size: 2.8em;
+    --answer-leading-emoji-layout-size: 1.95em;
+    --answer-leading-emoji-visual-scale: 1.44;
+    --answer-leading-emoji-gap: 1.2em;
   }
 }
 
