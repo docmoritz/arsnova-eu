@@ -23,6 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DEFAULT_MARKDOWN_FENCE_LANGUAGE } from '../markdown-code-highlight';
+import { replaceEmojiShortcodes } from '../emoji-shortcode.util';
 import { renderMarkdownWithKatex } from '../markdown-katex.util';
 import {
   MarkdownImageDialogComponent,
@@ -150,7 +151,12 @@ export class MarkdownKatexEditorComponent implements AfterViewInit, OnChanges, O
   readonly previewKatexError = computed(() => this.previewResult().katexError);
   readonly hasMarkdownOrKatexFormatting = computed(() => {
     const value = this.rawValue().trim();
-    return value.length > 0 && (MARKDOWN_REGEX.test(value) || KATEX_REGEX.test(value));
+    return (
+      value.length > 0 &&
+      (MARKDOWN_REGEX.test(value) ||
+        KATEX_REGEX.test(value) ||
+        replaceEmojiShortcodes(value) !== value)
+    );
   });
   readonly visibleRows = computed(() => {
     const rows = this.rowsValue();

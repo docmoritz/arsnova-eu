@@ -209,6 +209,44 @@ describe('QuizEditComponent', () => {
     );
   });
 
+  it('markiert fuehrende Antwort-Emojis in der Editor-Gesamtvorschau fuer haengenden Einzug', () => {
+    vi.useFakeTimers();
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.questionFormPanelOpen.set(true);
+    component.answersArray.at(0).controls.text.setValue('😢 Gerade etwas überfordert');
+    component.answersArray.at(1).controls.text.setValue('😄 Bereit loszulegen');
+    fixture.detectChanges();
+    vi.advanceTimersByTime(250);
+    fixture.detectChanges();
+
+    const firstAnswer = (fixture.nativeElement as HTMLElement).querySelector(
+      '.quiz-edit-form__preview-answers li',
+    ) as HTMLElement | null;
+    expect(firstAnswer?.querySelector('.answer-leading-emoji')?.textContent).toContain('😢');
+  });
+
+  it('markiert fuehrende Shortcut-Emojis in der Editor-Gesamtvorschau', () => {
+    vi.useFakeTimers();
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.questionFormPanelOpen.set(true);
+    component.answersArray.at(0).controls.text.setValue(':apple: Bereit loszulegen');
+    component.answersArray.at(1).controls.text.setValue('Neutral');
+    fixture.detectChanges();
+    vi.advanceTimersByTime(250);
+    fixture.detectChanges();
+
+    const firstAnswer = (fixture.nativeElement as HTMLElement).querySelector(
+      '.quiz-edit-form__preview-answers li',
+    ) as HTMLElement | null;
+    const leadingEmoji = firstAnswer?.querySelector('.answer-leading-emoji') as HTMLElement | null;
+    expect(leadingEmoji?.textContent).toContain('🍎');
+    expect(leadingEmoji?.getAttribute('title')).toBe(':apple:');
+  });
+
   it('speichert eine FREETEXT-Frage ohne Antwortoptionen', () => {
     const fixture = TestBed.createComponent(QuizEditComponent);
     const component = fixture.componentInstance;

@@ -130,6 +130,22 @@ describe('MarkdownKatexEditorComponent', () => {
     expect(fixture.nativeElement.querySelector('.mk-editor__preview-body')).not.toBeNull();
   });
 
+  it('öffnet die Mobile-Vorschau automatisch bei bekannten Emoji-Shortcodes', () => {
+    const { fixture, component } = setup({ mobile: true });
+
+    component.onInput(':apple:');
+    fixture.detectChanges();
+
+    const preview = fixture.nativeElement.querySelector('.mk-editor__preview') as HTMLElement;
+    const toggle = fixture.nativeElement.querySelector(
+      '.mk-editor__preview-toggle',
+    ) as HTMLButtonElement;
+
+    expect(preview.className).not.toContain('mk-editor__preview--collapsed');
+    expect(toggle.disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('.mk-editor__preview-body')).not.toBeNull();
+  });
+
   it('erkennt einfache Inline-KaTeX-Variablen wie $f$ für die Mobile-Vorschau', () => {
     const { fixture, component } = setup({ mobile: true });
 

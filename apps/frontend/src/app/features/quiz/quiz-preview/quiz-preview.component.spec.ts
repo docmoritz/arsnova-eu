@@ -401,6 +401,42 @@ describe('QuizPreviewComponent', () => {
     expect(children[2]?.classList.contains('quiz-preview-question__answer-content')).toBe(true);
   });
 
+  it('markiert fuehrende Antwort-Emojis in der Vorschau fuer haengenden Einzug', () => {
+    const originalAnswer = quiz.questions[1]!.answers[0]!.text;
+    quiz.questions[1]!.answers[0]!.text = '😢 Gerade etwas überfordert';
+    const fixture = TestBed.createComponent(QuizPreviewComponent);
+    const component = fixture.componentInstance;
+    component.currentIndex.set(1);
+    fixture.detectChanges();
+
+    const answerContent = fixture.nativeElement.querySelector(
+      '.quiz-preview-question__answer-content',
+    ) as HTMLElement | null;
+
+    expect(answerContent?.querySelector('.answer-leading-emoji')?.textContent).toContain('😢');
+    quiz.questions[1]!.answers[0]!.text = originalAnswer;
+  });
+
+  it('markiert fuehrende Shortcut-Emojis in der Vorschau fuer mobilen Einzug', () => {
+    const originalAnswer = quiz.questions[1]!.answers[0]!.text;
+    quiz.questions[1]!.answers[0]!.text = ':apple: Bereit loszulegen';
+    const fixture = TestBed.createComponent(QuizPreviewComponent);
+    const component = fixture.componentInstance;
+    component.currentIndex.set(1);
+    fixture.detectChanges();
+
+    const answerContent = fixture.nativeElement.querySelector(
+      '.quiz-preview-question__answer-content',
+    ) as HTMLElement | null;
+    const leadingEmoji = answerContent?.querySelector(
+      '.answer-leading-emoji',
+    ) as HTMLElement | null;
+
+    expect(leadingEmoji?.textContent).toContain('🍎');
+    expect(leadingEmoji?.getAttribute('title')).toBe(':apple:');
+    quiz.questions[1]!.answers[0]!.text = originalAnswer;
+  });
+
   it('schaltet mit Hotkey E die Inline-Bearbeitung um', () => {
     const fixture = TestBed.createComponent(QuizPreviewComponent);
     const component = fixture.componentInstance;

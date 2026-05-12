@@ -14,7 +14,23 @@ describe('decorateLeadingAnswerEmoji', () => {
     const html = '<p>😭 Gerade etwas überfordert</p>';
 
     expect(decorateLeadingAnswerEmoji(html)).toBe(
-      '<p><span class="answer-leading-emoji">😭</span>Gerade etwas überfordert</p>',
+      '<p class="answer-leading-emoji-block"><span class="answer-leading-emoji">😭</span>Gerade etwas überfordert</p>',
+    );
+  });
+
+  it('preserves existing classes when decorating paragraph markup', () => {
+    const html = '<p class="markdown-body">😄 Bereit loszulegen</p>';
+
+    expect(decorateLeadingAnswerEmoji(html)).toBe(
+      '<p class="markdown-body answer-leading-emoji-block"><span class="answer-leading-emoji">😄</span>Bereit loszulegen</p>',
+    );
+  });
+
+  it('decorates leading markdown shortcode emoji spans inside paragraph markup', () => {
+    const html = '<p><span class="markdown-emoji" title=":apple:">🍎</span> Bereit loszulegen</p>';
+
+    expect(decorateLeadingAnswerEmoji(html)).toBe(
+      '<p class="answer-leading-emoji-block"><span class="markdown-emoji answer-leading-emoji" title=":apple:">🍎</span>Bereit loszulegen</p>',
     );
   });
 

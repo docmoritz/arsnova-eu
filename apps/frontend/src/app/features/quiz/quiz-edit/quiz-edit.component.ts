@@ -65,6 +65,7 @@ import {
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
 import { MarkdownKatexEditorComponent } from '../../../shared/markdown-katex-editor/markdown-katex-editor.component';
+import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
 import { replaceEmojiShortcodes } from '../../../shared/emoji-shortcode.util';
 import {
   focusAndScrollElement,
@@ -538,6 +539,15 @@ export class QuizEditComponent implements OnDestroy {
     const source = value ?? '';
     return this.sanitizer.bypassSecurityTrustHtml(
       renderMarkdownWithKatex(source, { imagePolicy: 'allow-relative-and-https' }).html,
+    );
+  }
+
+  renderAnswerMarkdown(value: string | null | undefined): SafeHtml {
+    const source = value ?? '';
+    return this.sanitizer.bypassSecurityTrustHtml(
+      decorateLeadingAnswerEmoji(
+        renderMarkdownWithKatex(source, { imagePolicy: 'allow-relative-and-https' }).html,
+      ),
     );
   }
 
@@ -1456,7 +1466,9 @@ export class QuizEditComponent implements OnDestroy {
         }),
       );
       this.answerPreviewHtml.set(
-        answerResults.map((result) => this.sanitizer.bypassSecurityTrustHtml(result.html)),
+        answerResults.map((result) =>
+          this.sanitizer.bypassSecurityTrustHtml(decorateLeadingAnswerEmoji(result.html)),
+        ),
       );
 
       const firstError =

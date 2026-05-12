@@ -47,6 +47,7 @@ import {
   type SupportedQuestionType,
 } from '../data/quiz-store.service';
 import { localizeCommands } from '../../../core/locale-router';
+import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { MarkdownKatexEditorComponent } from '../../../shared/markdown-katex-editor/markdown-katex-editor.component';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
@@ -647,6 +648,14 @@ export class QuizPreviewComponent implements OnDestroy {
   renderMarkdown(value: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(
       renderMarkdownWithKatex(value, { imagePolicy: 'allow-relative-and-https' }).html,
+    );
+  }
+
+  renderAnswerMarkdown(value: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(
+      decorateLeadingAnswerEmoji(
+        renderMarkdownWithKatex(value, { imagePolicy: 'allow-relative-and-https' }).html,
+      ),
     );
   }
 
