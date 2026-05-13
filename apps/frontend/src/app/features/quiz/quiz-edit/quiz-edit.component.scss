@@ -695,14 +695,9 @@
   height: 2rem;
   border-radius: 0.45rem;
   color: #fff;
-  font-weight: 700;
-  line-height: 1;
   justify-self: center;
-}
-
-.quiz-edit-form__preview-answer-shape {
-  font-size: 1.15rem;
-  line-height: 1;
+  --answer-option-badge-icon-size: 64%;
+  --answer-option-badge-stroke-width: 2.6;
 }
 
 .quiz-edit-form__preview-answer-text {

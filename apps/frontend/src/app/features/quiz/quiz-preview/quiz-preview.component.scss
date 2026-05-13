@@ -270,6 +270,13 @@
   font-weight: 600;
 }
 
+.quiz-preview-question__answer-label--badge {
+  border-radius: 0.45rem;
+  color: #fff;
+  --answer-option-badge-icon-size: 64%;
+  --answer-option-badge-stroke-width: 2.6;
+}
+
 .quiz-preview-question__answer-content {
   display: block;
   min-width: 0;

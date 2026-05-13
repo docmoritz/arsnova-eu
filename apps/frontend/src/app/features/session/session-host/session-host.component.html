@@ -1005,9 +1005,11 @@
                       ></span>
                     </mat-card-title>
                     <div class="session-host__question-meta" aria-label="Frage-Metadaten">
-                      <span class="session-host__question-badge">
-                        {{ hostQuestionTypeLabel(q.type) }}
-                      </span>
+                      @if (showQuestionTypeIndicators(q)) {
+                        <span class="session-host__question-badge">
+                          {{ hostQuestionTypeLabel(q.type) }}
+                        </span>
+                      }
                       @if (hostQuestionTypeShowsDifficulty(q.type) && q.difficulty) {
                         <span
                           class="session-host__question-badge session-host__question-badge--difficulty"
@@ -1241,14 +1243,12 @@
                                   "
                                 >
                                   <div class="session-host__round-comparison-option">
-                                    <span
+                                    <app-answer-option-badge
                                       class="session-host__answer-badge session-host__answer-badge--small"
-                                      [style.background-color]="getColor(i)"
-                                    >
-                                      <span class="session-host__answer-badge-shape">{{
-                                        getShape(i)
-                                      }}</span>
-                                    </span>
+                                      [index]="i"
+                                      [questionType]="q.type"
+                                      [showTypeIndicator]="q.showQuestionTypeIndicators"
+                                    ></app-answer-option-badge>
                                     <span
                                       class="session-host__round-comparison-text session-host__rich-text markdown-body"
                                       [innerHTML]="renderMarkdown(a.text)"
@@ -1379,14 +1379,12 @@
                                   "
                                 >
                                   <div class="session-host__vote-dist-header">
-                                    <span
+                                    <app-answer-option-badge
                                       class="session-host__answer-badge session-host__answer-badge--small"
-                                      [style.background-color]="getColor(i)"
-                                    >
-                                      <span class="session-host__answer-badge-shape">{{
-                                        getShape(i)
-                                      }}</span>
-                                    </span>
+                                      [index]="i"
+                                      [questionType]="q.type"
+                                      [showTypeIndicator]="q.showQuestionTypeIndicators"
+                                    ></app-answer-option-badge>
                                     <span
                                       class="session-host__vote-dist-text session-host__rich-text markdown-body"
                                       [innerHTML]="renderMarkdown(a.text)"
@@ -1485,14 +1483,12 @@
                                   effectiveStatus() === 'RESULTS' && !a.isCorrect
                                 "
                               >
-                                <span
+                                <app-answer-option-badge
                                   class="session-host__answer-badge"
-                                  [style.background-color]="getColor(i)"
-                                >
-                                  <span class="session-host__answer-badge-shape">{{
-                                    getShape(i)
-                                  }}</span>
-                                </span>
+                                  [index]="i"
+                                  [questionType]="q.type"
+                                  [showTypeIndicator]="q.showQuestionTypeIndicators"
+                                ></app-answer-option-badge>
                                 <span
                                   class="session-host__answer-text session-host__rich-text markdown-body"
                                   [innerHTML]="renderMarkdown(a.text)"

@@ -48,6 +48,8 @@ import {
 } from '../data/quiz-store.service';
 import { localizeCommands } from '../../../core/locale-router';
 import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
+import { answerOptionColor, answerOptionShape } from '../../../shared/answer-option-badge.util';
+import { AnswerOptionBadgeComponent } from '../../../shared/answer-option-badge/answer-option-badge.component';
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { MarkdownKatexEditorComponent } from '../../../shared/markdown-katex-editor/markdown-katex-editor.component';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
@@ -76,6 +78,7 @@ import { tryRequestDocumentFullscreen } from '../../../core/document-fullscreen.
     MatOption,
     MarkdownKatexEditorComponent,
     MarkdownImageLightboxDirective,
+    AnswerOptionBadgeComponent,
   ],
   templateUrl: './quiz-preview.component.html',
   styleUrls: ['../../../shared/styles/dialog-title-header.scss', './quiz-preview.component.scss'],
@@ -643,6 +646,22 @@ export class QuizPreviewComponent implements OnDestroy {
 
   answerOptionLabel(index: number): string {
     return String.fromCharCode(65 + index);
+  }
+
+  previewAnswerColor(index: number): string {
+    return answerOptionColor(index);
+  }
+
+  previewAnswerShape(index: number, questionType: SupportedQuestionType): string {
+    return answerOptionShape(
+      index,
+      questionType,
+      this.quiz()?.settings.showQuestionTypeIndicators ?? true,
+    );
+  }
+
+  showQuestionTypeIndicators(): boolean {
+    return this.quiz()?.settings.showQuestionTypeIndicators !== false;
   }
 
   renderMarkdown(value: string): SafeHtml {

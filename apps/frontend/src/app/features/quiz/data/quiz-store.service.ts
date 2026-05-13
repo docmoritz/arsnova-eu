@@ -89,6 +89,7 @@ export interface QuizSettings {
   enableRewardEffects: boolean;
   enableMotivationMessages: boolean;
   enableEmojiReactions: boolean;
+  showQuestionTypeIndicators: boolean;
   anonymousMode: boolean;
   teamMode: boolean;
   teamCount: number | null;
@@ -306,6 +307,7 @@ const QuizSettingsSchema = CreateQuizInputSchema.pick({
   enableRewardEffects: true,
   enableMotivationMessages: true,
   enableEmojiReactions: true,
+  showQuestionTypeIndicators: true,
   anonymousMode: true,
   teamMode: true,
   teamCount: true,
@@ -763,6 +765,7 @@ export class QuizStoreService implements OnDestroy {
         enableRewardEffects: document.settings.enableRewardEffects,
         enableMotivationMessages: document.settings.enableMotivationMessages,
         enableEmojiReactions: document.settings.enableEmojiReactions,
+        showQuestionTypeIndicators: document.settings.showQuestionTypeIndicators,
         anonymousMode: document.settings.anonymousMode,
         teamMode: document.settings.teamMode,
         teamCount: document.settings.teamCount,
@@ -890,6 +893,7 @@ export class QuizStoreService implements OnDestroy {
       enableRewardEffects: document.settings.enableRewardEffects,
       enableMotivationMessages: document.settings.enableMotivationMessages,
       enableEmojiReactions: document.settings.enableEmojiReactions,
+      showQuestionTypeIndicators: document.settings.showQuestionTypeIndicators,
       anonymousMode: document.settings.anonymousMode,
       teamMode: document.settings.teamMode,
       teamCount: document.settings.teamCount ?? undefined,
@@ -982,6 +986,7 @@ export class QuizStoreService implements OnDestroy {
         enableRewardEffects: quizData.enableRewardEffects,
         enableMotivationMessages: quizData.enableMotivationMessages,
         enableEmojiReactions: quizData.enableEmojiReactions,
+        showQuestionTypeIndicators: quizData.showQuestionTypeIndicators ?? true,
         anonymousMode: quizData.anonymousMode,
         teamMode: quizData.teamMode,
         teamCount: quizData.teamCount ?? null,
@@ -1984,6 +1989,7 @@ function parseQuizSettings(input: Partial<QuizSettings>): QuizSettings {
     enableRewardEffects: input.enableRewardEffects,
     enableMotivationMessages: input.enableMotivationMessages,
     enableEmojiReactions: input.enableEmojiReactions,
+    showQuestionTypeIndicators: input.showQuestionTypeIndicators,
     anonymousMode: input.anonymousMode,
     teamMode: input.teamMode,
     teamCount: input.teamCount ?? undefined,
@@ -2010,6 +2016,7 @@ function parseQuizSettings(input: Partial<QuizSettings>): QuizSettings {
     enableRewardEffects: parsed.data.enableRewardEffects,
     enableMotivationMessages: parsed.data.enableMotivationMessages,
     enableEmojiReactions: parsed.data.enableEmojiReactions,
+    showQuestionTypeIndicators: parsed.data.showQuestionTypeIndicators ?? true,
     anonymousMode: parsed.data.anonymousMode,
     teamMode: parsed.data.teamMode,
     teamCount: parsed.data.teamCount ?? null,
@@ -2040,6 +2047,7 @@ function normalizeStoredQuizSettings(value: unknown): QuizSettings {
       enableRewardEffects: readBoolean(candidate['enableRewardEffects']),
       enableMotivationMessages: readBoolean(candidate['enableMotivationMessages']),
       enableEmojiReactions: readBoolean(candidate['enableEmojiReactions']),
+      showQuestionTypeIndicators: readBoolean(candidate['showQuestionTypeIndicators']),
       anonymousMode: readBoolean(candidate['anonymousMode']),
       teamMode: readBoolean(candidate['teamMode']),
       teamCount: teamCountValue === null ? null : teamCountValue,

@@ -524,6 +524,7 @@ export class QuizListComponent implements OnInit {
       enableRewardEffects: presetDefaults.enableRewardEffects ?? true,
       enableMotivationMessages: presetDefaults.enableMotivationMessages ?? true,
       enableEmojiReactions: presetDefaults.enableEmojiReactions ?? true,
+      showQuestionTypeIndicators: presetDefaults.showQuestionTypeIndicators ?? true,
       anonymousMode: presetDefaults.anonymousMode ?? false,
       teamMode: false,
       teamCount: null,

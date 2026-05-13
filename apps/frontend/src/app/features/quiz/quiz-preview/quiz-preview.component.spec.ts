@@ -32,6 +32,7 @@ describe('QuizPreviewComponent', () => {
       enableRewardEffects: true,
       enableMotivationMessages: true,
       enableEmojiReactions: true,
+      showQuestionTypeIndicators: true,
       anonymousMode: false,
       teamMode: false,
       teamCount: null,
@@ -399,6 +400,40 @@ describe('QuizPreviewComponent', () => {
     expect(children[0]?.classList.contains('quiz-preview-question__answer-label')).toBe(true);
     expect(children[1]?.classList.contains('quiz-preview-question__correct-toggle')).toBe(true);
     expect(children[2]?.classList.contains('quiz-preview-question__answer-content')).toBe(true);
+  });
+
+  it('nutzt typisierte Antwort-Badges, wenn Frageart-Indikatoren aktiv sind', () => {
+    const fixture = TestBed.createComponent(QuizPreviewComponent);
+    const component = fixture.componentInstance;
+    component.currentIndex.set(1);
+    fixture.detectChanges();
+
+    const answerLabels = Array.from(
+      fixture.nativeElement.querySelectorAll('.quiz-preview-question__answer-label--badge'),
+    ) as HTMLElement[];
+
+    expect(answerLabels[0]?.getAttribute('data-answer-shape')).toBe('circle');
+    expect(answerLabels[1]?.getAttribute('data-answer-shape')).toBe('circle');
+    expect(component.previewAnswerColor(0)).toBe('#1565c0');
+    expect(component.previewAnswerColor(1)).toBe('#e65100');
+  });
+
+  it('faellt bei deaktivierten Frageart-Indikatoren auf gemischte Badges zurueck', () => {
+    quiz.settings.showQuestionTypeIndicators = false;
+    const fixture = TestBed.createComponent(QuizPreviewComponent);
+    const component = fixture.componentInstance;
+    component.currentIndex.set(1);
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    const answerLabels = Array.from(
+      fixture.nativeElement.querySelectorAll('.quiz-preview-question__answer-label--badge'),
+    ) as HTMLElement[];
+
+    expect(text).not.toContain('Single Choice');
+    expect(answerLabels[0]?.getAttribute('data-answer-shape')).toBe('triangle');
+    expect(answerLabels[1]?.getAttribute('data-answer-shape')).toBe('circle');
+    quiz.settings.showQuestionTypeIndicators = true;
   });
 
   it('markiert fuehrende Antwort-Emojis in der Vorschau fuer haengenden Einzug', () => {

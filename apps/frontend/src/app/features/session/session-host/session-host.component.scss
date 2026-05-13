@@ -3386,23 +3386,14 @@
   height: 42px;
   border-radius: 8px;
   color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
+  --answer-option-badge-icon-size: 64%;
+  --answer-option-badge-stroke-width: 2.7;
 
   &--small {
     width: 30px;
     height: 30px;
     border-radius: 6px;
-    font-size: 0.8rem;
-  }
-}
-
-.session-host__answer-badge-shape {
-  font-size: 1.3rem;
-  line-height: 1;
-
-  .session-host__answer-badge--small & {
-    font-size: 0.95rem;
+    --answer-option-badge-icon-size: 62%;
   }
 }
 

@@ -197,6 +197,7 @@ export const CreateQuizInputSchema = z.object({
   enableRewardEffects: z.boolean().optional().default(true),
   enableMotivationMessages: z.boolean().optional().default(true),
   enableEmojiReactions: z.boolean().optional().default(true),
+  showQuestionTypeIndicators: z.boolean().optional().default(true),
   anonymousMode: z.boolean().optional().default(false),
   teamMode: z.boolean().optional().default(false),
   teamCount: z.number().int().min(2).max(8).optional().default(DEFAULT_TEAM_COUNT),
@@ -260,6 +261,7 @@ export const QuizUploadInputSchema = z.object({
   enableRewardEffects: z.boolean(),
   enableMotivationMessages: z.boolean(),
   enableEmojiReactions: z.boolean(),
+  showQuestionTypeIndicators: z.boolean().optional(),
   anonymousMode: z.boolean(),
   teamMode: z.boolean(),
   teamCount: z.number().int().min(2).max(8).nullable().optional(),
@@ -274,7 +276,7 @@ export const QuizUploadInputSchema = z.object({
     .array(AddQuestionInputSchema)
     .min(1, { error: 'Mindestens eine Frage erforderlich' }),
 });
-export type QuizUploadInput = z.infer<typeof QuizUploadInputSchema>;
+export type QuizUploadInput = z.input<typeof QuizUploadInputSchema>;
 
 /** Output: Antwort auf quiz.upload (Story 2.1a). */
 export const QuizUploadOutputSchema = z.object({
@@ -612,6 +614,7 @@ export const HostCurrentQuestionDTOSchema = z.object({
   text: z.string(),
   type: QuestionTypeEnum,
   difficulty: DifficultyEnum,
+  showQuestionTypeIndicators: z.boolean().optional().default(true),
   timer: z.number().nullable().optional(),
   answers: z.array(
     z.object({
@@ -715,6 +718,7 @@ export const QuestionRevealedDTOSchema = z.object({
   text: z.string(),
   type: QuestionTypeEnum,
   difficulty: DifficultyEnum,
+  showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
   /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage“). */
   totalQuestions: z.number().int().min(1).optional(),
@@ -731,6 +735,7 @@ export const QuestionStudentDTOSchema = z.object({
   type: QuestionTypeEnum,
   timer: z.number().nullable(),
   difficulty: DifficultyEnum,
+  showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
   /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage“). */
   totalQuestions: z.number().int().min(1).optional(),
@@ -756,6 +761,7 @@ export const QuestionPreviewDTOSchema = z.object({
   text: z.string(),
   type: QuestionTypeEnum,
   difficulty: DifficultyEnum,
+  showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
   /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage“). */
   totalQuestions: z.number().int().min(1).optional(),
@@ -811,6 +817,7 @@ export const SessionInfoDTOSchema = z.object({
   enableRewardEffects: z.boolean().optional(),
   enableMotivationMessages: z.boolean().optional(),
   enableEmojiReactions: z.boolean().optional(),
+  showQuestionTypeIndicators: z.boolean().optional(),
   readingPhaseEnabled: z.boolean().optional(),
   defaultTimer: z.number().nullable().optional(),
   timerScaleByDifficulty: z.boolean().optional(),
@@ -1097,6 +1104,7 @@ export const QuizExportSchema = z.object({
     enableRewardEffects: z.boolean(),
     enableMotivationMessages: z.boolean(),
     enableEmojiReactions: z.boolean(),
+    showQuestionTypeIndicators: z.boolean().optional(),
     anonymousMode: z.boolean(),
     teamMode: z.boolean(),
     teamCount: z.number().int().min(2).max(8).nullable().optional(),
@@ -1647,6 +1655,7 @@ export const QUIZ_PRESETS: Record<QuizPreset, Partial<CreateQuizInput>> = {
     enableRewardEffects: true,
     enableMotivationMessages: true,
     enableEmojiReactions: true,
+    showQuestionTypeIndicators: true,
     anonymousMode: false,
     allowCustomNicknames: false,
     nicknameTheme: 'HIGH_SCHOOL',
@@ -1660,6 +1669,7 @@ export const QUIZ_PRESETS: Record<QuizPreset, Partial<CreateQuizInput>> = {
     enableRewardEffects: false,
     enableMotivationMessages: false,
     enableEmojiReactions: false,
+    showQuestionTypeIndicators: true,
     /** Pseudonyme aus Themenliste (Oberstufe), nicht reiner Anonym-Modus */
     anonymousMode: false,
     allowCustomNicknames: false,

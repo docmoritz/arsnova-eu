@@ -129,6 +129,7 @@ export class QuizNewComponent implements OnInit, OnDestroy {
     enableRewardEffects: [true],
     enableMotivationMessages: [true],
     enableEmojiReactions: [true],
+    showQuestionTypeIndicators: [true],
     anonymousMode: [false],
     readingPhaseEnabled: [false],
     teamMode: [false],
@@ -221,6 +222,7 @@ export class QuizNewComponent implements OnInit, OnDestroy {
       enableRewardEffects: values.enableRewardEffects ?? true,
       enableMotivationMessages: values.enableMotivationMessages ?? true,
       enableEmojiReactions: values.enableEmojiReactions ?? true,
+      showQuestionTypeIndicators: values.showQuestionTypeIndicators ?? true,
       anonymousMode: values.anonymousMode ?? false,
       allowCustomNicknames: values.allowCustomNicknames ?? false,
       nicknameTheme: values.nicknameTheme ?? 'HIGH_SCHOOL',
@@ -241,6 +243,8 @@ export class QuizNewComponent implements OnInit, OnDestroy {
         (target.enableMotivationMessages ?? current.enableMotivationMessages) &&
       current.enableEmojiReactions ===
         (target.enableEmojiReactions ?? current.enableEmojiReactions) &&
+      current.showQuestionTypeIndicators ===
+        (target.showQuestionTypeIndicators ?? current.showQuestionTypeIndicators) &&
       current.anonymousMode === (target.anonymousMode ?? current.anonymousMode) &&
       current.readingPhaseEnabled === (target.readingPhaseEnabled ?? current.readingPhaseEnabled) &&
       current.defaultTimer === (target.defaultTimer ?? current.defaultTimer) &&
@@ -263,6 +267,7 @@ export class QuizNewComponent implements OnInit, OnDestroy {
       enableRewardEffects: this.form.controls.enableRewardEffects.value,
       enableMotivationMessages: this.form.controls.enableMotivationMessages.value,
       enableEmojiReactions: this.form.controls.enableEmojiReactions.value,
+      showQuestionTypeIndicators: this.form.controls.showQuestionTypeIndicators.value,
       anonymousMode: this.form.controls.anonymousMode.value,
       teamMode: this.form.controls.teamMode.value,
       teamCount: this.form.controls.teamMode.value ? this.teamCountControl.value : null,
@@ -391,6 +396,7 @@ function presetDefaultOptions(quizPreset: QuizPreset): Record<string, boolean> {
       enableRewardEffects: false,
       enableMotivationMessages: false,
       enableEmojiReactions: false,
+      showQuestionTypeIndicators: true,
       bonusTokenCount: false,
       defaultTimer: false,
       readingPhaseEnabled: true,
@@ -404,6 +410,7 @@ function presetDefaultOptions(quizPreset: QuizPreset): Record<string, boolean> {
     enableRewardEffects: true,
     enableMotivationMessages: true,
     enableEmojiReactions: true,
+    showQuestionTypeIndicators: true,
     bonusTokenCount: false,
     defaultTimer: true,
     readingPhaseEnabled: false,

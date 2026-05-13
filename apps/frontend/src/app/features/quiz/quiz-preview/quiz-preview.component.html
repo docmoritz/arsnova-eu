@@ -55,9 +55,11 @@
           <mat-card-content>
             <div class="quiz-preview-question__header">
               <div class="quiz-preview-question__meta">
-                <span class="quiz-preview-question__badge">{{
-                  questionTypeLabel(slide.question.type)
-                }}</span>
+                @if (showQuestionTypeIndicators()) {
+                  <span class="quiz-preview-question__badge">{{
+                    questionTypeLabel(slide.question.type)
+                  }}</span>
+                }
                 @if (questionTypeShowsDifficulty(slide.question.type)) {
                   <span
                     class="quiz-preview-question__badge quiz-preview-question__badge--difficulty"
@@ -149,9 +151,12 @@
                       questionTypeHasCorrectAnswers(slide.question.type) && answer.isCorrect
                     "
                   >
-                    <span class="quiz-preview-question__answer-label" aria-hidden="true">{{
-                      answerOptionLabel(i)
-                    }}</span>
+                    <app-answer-option-badge
+                      class="quiz-preview-question__answer-label quiz-preview-question__answer-label--badge"
+                      [index]="i"
+                      [questionType]="slide.question.type"
+                      [showTypeIndicator]="showQuestionTypeIndicators()"
+                    ></app-answer-option-badge>
                     @if (questionTypeHasCorrectAnswers(slide.question.type)) {
                       <span class="quiz-preview-question__correct-toggle" aria-hidden="true">
                         <mat-icon class="quiz-preview-question__correct">

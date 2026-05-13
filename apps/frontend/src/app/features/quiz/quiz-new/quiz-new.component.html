@@ -181,6 +181,11 @@
                   >Emojis erlauben</mat-checkbox
                 >
                 <mat-checkbox
+                  formControlName="showQuestionTypeIndicators"
+                  i18n="@@quizSettings.showQuestionTypeIndicators"
+                  >Single-/Multiple-Choice an Antwort-Badges erkennen</mat-checkbox
+                >
+                <mat-checkbox
                   i18n="@@quizForm.defaultTimerEnabled"
                   [checked]="defaultTimerControl.value !== null"
                   (change)="onDefaultTimerEnabledChange($event.checked)"

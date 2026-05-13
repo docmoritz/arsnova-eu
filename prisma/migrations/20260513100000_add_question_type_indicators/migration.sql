@@ -1,0 +1,1 @@
+ALTER TABLE "Quiz" ADD COLUMN IF NOT EXISTS "showQuestionTypeIndicators" BOOLEAN NOT NULL DEFAULT true;

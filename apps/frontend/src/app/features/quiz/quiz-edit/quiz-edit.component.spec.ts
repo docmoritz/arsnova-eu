@@ -26,6 +26,7 @@ describe('QuizEditComponent', () => {
       enableRewardEffects: true,
       enableMotivationMessages: true,
       enableEmojiReactions: true,
+      showQuestionTypeIndicators: true,
       anonymousMode: false,
       teamMode: false,
       teamCount: null,
@@ -227,7 +228,7 @@ describe('QuizEditComponent', () => {
     const badge = firstAnswer?.querySelector(
       '.quiz-edit-form__preview-answer-badge',
     ) as HTMLElement | null;
-    expect(badge?.textContent?.trim()).toBe('△');
+    expect(badge?.getAttribute('data-answer-shape')).toBe('circle');
     expect(firstAnswer?.querySelector('.answer-leading-emoji')?.textContent).toContain('😢');
   });
 
@@ -249,7 +250,7 @@ describe('QuizEditComponent', () => {
     const badge = firstAnswer?.querySelector(
       '.quiz-edit-form__preview-answer-badge',
     ) as HTMLElement | null;
-    expect(badge?.textContent?.trim()).toBe('△');
+    expect(badge?.getAttribute('data-answer-shape')).toBe('circle');
     const leadingEmoji = firstAnswer?.querySelector('.answer-leading-emoji') as HTMLElement | null;
     expect(leadingEmoji?.textContent).toContain('🍎');
     expect(leadingEmoji?.getAttribute('title')).toBe(':apple:');
@@ -641,6 +642,7 @@ describe('QuizEditComponent', () => {
       enableRewardEffects: true,
       enableMotivationMessages: false,
       enableEmojiReactions: true,
+      showQuestionTypeIndicators: true,
       anonymousMode: true,
       teamMode: true,
       teamCount: 3,
@@ -663,6 +665,7 @@ describe('QuizEditComponent', () => {
       enableRewardEffects: true,
       enableMotivationMessages: false,
       enableEmojiReactions: true,
+      showQuestionTypeIndicators: true,
       anonymousMode: true,
       teamMode: true,
       teamCount: 3,

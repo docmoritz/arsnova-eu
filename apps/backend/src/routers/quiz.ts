@@ -24,6 +24,7 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
   enableRewardEffects: boolean;
   enableMotivationMessages: boolean;
   enableEmojiReactions: boolean;
+  showQuestionTypeIndicators: boolean;
   anonymousMode: boolean;
   teamMode: boolean;
   teamCount: number | null;
@@ -64,6 +65,7 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
     enableRewardEffects: quiz.enableRewardEffects,
     enableMotivationMessages: quiz.enableMotivationMessages,
     enableEmojiReactions: quiz.enableEmojiReactions,
+    showQuestionTypeIndicators: quiz.showQuestionTypeIndicators,
     anonymousMode: quiz.anonymousMode,
     teamMode: quiz.teamMode,
     teamCount: quiz.teamCount ?? undefined,
@@ -117,6 +119,7 @@ export const quizRouter = router({
           enableRewardEffects: input.enableRewardEffects,
           enableMotivationMessages: input.enableMotivationMessages,
           enableEmojiReactions: input.enableEmojiReactions,
+          showQuestionTypeIndicators: input.showQuestionTypeIndicators ?? true,
           anonymousMode: input.anonymousMode,
           teamMode: input.teamMode,
           teamCount: input.teamCount ?? null,
@@ -172,6 +175,7 @@ export const quizRouter = router({
             enableRewardEffects: true,
             enableMotivationMessages: true,
             enableEmojiReactions: true,
+            showQuestionTypeIndicators: true,
             anonymousMode: true,
             teamMode: true,
             teamCount: true,

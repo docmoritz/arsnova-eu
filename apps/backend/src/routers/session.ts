@@ -1000,6 +1000,7 @@ const quizHistoryAccessQuizSelect = Prisma.validator<Prisma.QuizSelect>()({
   enableRewardEffects: true,
   enableMotivationMessages: true,
   enableEmojiReactions: true,
+  showQuestionTypeIndicators: true,
   anonymousMode: true,
   teamMode: true,
   teamCount: true,
@@ -1056,6 +1057,7 @@ function buildQuizHistoryAccessPayload(
     enableRewardEffects: quiz.enableRewardEffects,
     enableMotivationMessages: quiz.enableMotivationMessages,
     enableEmojiReactions: quiz.enableEmojiReactions,
+    showQuestionTypeIndicators: quiz.showQuestionTypeIndicators,
     anonymousMode: quiz.anonymousMode,
     teamMode: quiz.teamMode,
     teamCount: quiz.teamCount ?? undefined,
@@ -1822,6 +1824,7 @@ type HostCurrentQuestionSession = {
   quiz: {
     defaultTimer: number | null;
     timerScaleByDifficulty: boolean | null;
+    showQuestionTypeIndicators: boolean | null;
     preset: string | null;
     questions: Array<{
       id: string;
@@ -1862,6 +1865,7 @@ async function buildHostCurrentQuestionDto(
     text: question.text,
     type: question.type as 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'FREETEXT' | 'RATING' | 'SURVEY',
     difficulty: question.difficulty,
+    showQuestionTypeIndicators: session.quiz.showQuestionTypeIndicators ?? true,
     timer:
       session.currentRound === 2
         ? null
@@ -2016,6 +2020,7 @@ async function fetchHostCurrentQuestion(
           },
           defaultTimer: true,
           timerScaleByDifficulty: true,
+          showQuestionTypeIndicators: true,
           preset: true,
         },
       },
@@ -2682,6 +2687,7 @@ export const sessionRouter = router({
                     enableRewardEffects: true,
                     enableMotivationMessages: true,
                     enableEmojiReactions: true,
+                    showQuestionTypeIndicators: true,
                     readingPhaseEnabled: true,
                     defaultTimer: true,
                     timerScaleByDifficulty: true,
@@ -2722,6 +2728,7 @@ export const sessionRouter = router({
               enableRewardEffects: q.enableRewardEffects,
               enableMotivationMessages: q.enableMotivationMessages,
               enableEmojiReactions: q.enableEmojiReactions,
+              showQuestionTypeIndicators: q.showQuestionTypeIndicators,
               readingPhaseEnabled: q.readingPhaseEnabled,
               defaultTimer: q.defaultTimer,
               timerScaleByDifficulty: q.timerScaleByDifficulty,
@@ -3408,6 +3415,7 @@ export const sessionRouter = router({
               },
               defaultTimer: true,
               timerScaleByDifficulty: true,
+              showQuestionTypeIndicators: true,
               preset: true,
             },
           },
@@ -3452,6 +3460,7 @@ export const sessionRouter = router({
           text: question.text,
           type: question.type,
           difficulty: question.difficulty,
+          showQuestionTypeIndicators: quiz.showQuestionTypeIndicators ?? true,
           order: question.order,
           totalQuestions,
           ratingMin: question.ratingMin ?? null,
@@ -3468,6 +3477,7 @@ export const sessionRouter = router({
           text: question.text,
           type: question.type,
           difficulty: question.difficulty,
+          showQuestionTypeIndicators: quiz.showQuestionTypeIndicators ?? true,
           order: question.order,
           totalQuestions,
           ratingMin: question.ratingMin ?? null,
@@ -3494,6 +3504,7 @@ export const sessionRouter = router({
               id: question.id,
               text: question.text,
               type: question.type,
+              showQuestionTypeIndicators: quiz.showQuestionTypeIndicators ?? true,
               timer:
                 session.currentRound === 2
                   ? null
@@ -3538,6 +3549,7 @@ export const sessionRouter = router({
               text: question.text,
               type: question.type,
               difficulty: question.difficulty,
+              showQuestionTypeIndicators: quiz.showQuestionTypeIndicators ?? true,
               order: question.order,
               totalQuestions,
               answers: answersOrdered.map((a) => ({

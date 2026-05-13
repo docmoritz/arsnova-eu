@@ -50,6 +50,12 @@ import { clearHostToken } from '../../../core/host-session-token';
 import { trpc } from '../../../core/trpc.client';
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
+import {
+  answerOptionColor,
+  answerOptionShape,
+  showQuestionTypeIndicator,
+} from '../../../shared/answer-option-badge.util';
+import { AnswerOptionBadgeComponent } from '../../../shared/answer-option-badge/answer-option-badge.component';
 import { ThemePresetService } from '../../../core/theme-preset.service';
 import { SoundService } from '../../../core/sound.service';
 import { HostDisplayModeService } from '../../../core/host-display-mode.service';
@@ -103,26 +109,6 @@ import {
 } from './foyer-entrance-layer.component';
 import { buildFoyerChipLabel } from './foyer-chip-label.util';
 
-const ANSWER_COLORS = [
-  '#1565c0',
-  '#e65100',
-  '#2e7d32',
-  '#6a1b9a',
-  '#c62828',
-  '#00838f',
-  '#4e342e',
-  '#37474f',
-];
-const ANSWER_SHAPES = [
-  '\u25B3',
-  '\u25CB',
-  '\u25A1',
-  '\u25C7',
-  '\u2606',
-  '\u2B21',
-  '\u2B20',
-  '\u2BC6',
-];
 const HOST_AUX_POLL_MS = 3000;
 const HOST_CLOCK_POLL_MS = 15000;
 const FOYER_MAX_ACTIVE_CHIPS = 6;
@@ -347,6 +333,7 @@ function musicTracksForPhase(
     FeedbackHostComponent,
     MarkdownImageLightboxDirective,
     FoyerEntranceLayerComponent,
+    AnswerOptionBadgeComponent,
   ],
   templateUrl: './session-host.component.html',
   styleUrls: ['../../../shared/styles/dialog-title-header.scss', './session-host.component.scss'],
@@ -1113,10 +1100,17 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   getColor(index: number): string {
-    return ANSWER_COLORS[index % ANSWER_COLORS.length];
+    return answerOptionColor(index);
   }
-  getShape(index: number): string {
-    return ANSWER_SHAPES[index % ANSWER_SHAPES.length];
+  getShape(
+    index: number,
+    questionType?: HostCurrentQuestionDTO['type'] | null,
+    showTypeIndicator?: boolean | null,
+  ): string {
+    return answerOptionShape(index, questionType, showTypeIndicator);
+  }
+  showQuestionTypeIndicators(q: HostCurrentQuestionDTO | null | undefined): boolean {
+    return showQuestionTypeIndicator(q?.showQuestionTypeIndicators);
   }
   getLetter(index: number): string {
     return String.fromCharCode(65 + index);
@@ -2698,6 +2692,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       left.text !== right.text ||
       left.type !== right.type ||
       left.difficulty !== right.difficulty ||
+      (left.showQuestionTypeIndicators ?? true) !== (right.showQuestionTypeIndicators ?? true) ||
       (left.timer ?? null) !== (right.timer ?? null) ||
       (left.ratingMin ?? null) !== (right.ratingMin ?? null) ||
       (left.ratingMax ?? null) !== (right.ratingMax ?? null) ||

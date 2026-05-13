@@ -633,6 +633,7 @@ describe('QuizStoreService', () => {
           enableRewardEffects: true,
           enableMotivationMessages: true,
           enableEmojiReactions: true,
+          showQuestionTypeIndicators: true,
           anonymousMode: false,
           teamMode: false,
           teamAssignment: 'AUTO',

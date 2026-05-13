@@ -27,6 +27,12 @@ import {
 } from '../../../core/localize-known-server-message';
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
+import {
+  answerOptionColor,
+  answerOptionShape,
+  showQuestionTypeIndicator,
+} from '../../../shared/answer-option-badge.util';
+import { AnswerOptionBadgeComponent } from '../../../shared/answer-option-badge/answer-option-badge.component';
 import { questionTypeLabel } from '../../../shared/question-type-label';
 import { ThemePresetService } from '../../../core/theme-preset.service';
 import * as vpc from './session-vote-participant-copy';
@@ -93,26 +99,6 @@ type StoredVoteResponse = {
   updatedAt: string;
 };
 
-const ANSWER_COLORS = [
-  '#1565c0',
-  '#e65100',
-  '#2e7d32',
-  '#6a1b9a',
-  '#c62828',
-  '#00838f',
-  '#4e342e',
-  '#37474f',
-];
-const ANSWER_SHAPES = [
-  '\u25B3',
-  '\u25CB',
-  '\u25A1',
-  '\u25C7',
-  '\u2606',
-  '\u2B21',
-  '\u2B20',
-  '\u2BC6',
-];
 const MESSAGES_CORRECT_PLAYFUL = [
   $localize`Perfekt! 🎯`,
   $localize`Richtig! 💪`,
@@ -271,6 +257,7 @@ function getContextMotivation(
     DecimalPipe,
     FeedbackVoteComponent,
     MarkdownImageLightboxDirective,
+    AnswerOptionBadgeComponent,
   ],
   templateUrl: './session-vote.component.html',
   styleUrls: ['../../../shared/styles/dialog-title-header.scss', './session-vote.component.scss'],
@@ -941,10 +928,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   getColor(index: number): string {
-    return ANSWER_COLORS[index % ANSWER_COLORS.length];
+    return answerOptionColor(index);
   }
-  getShape(index: number): string {
-    return ANSWER_SHAPES[index % ANSWER_SHAPES.length];
+  getShape(
+    index: number,
+    questionType?: CurrentQuestion['type'] | null,
+    showTypeIndicator?: boolean | null,
+  ): string {
+    return answerOptionShape(index, questionType, showTypeIndicator);
+  }
+  showQuestionTypeIndicators(q: CurrentQuestion | null | undefined): boolean {
+    return showQuestionTypeIndicator(q?.showQuestionTypeIndicators);
   }
   getLetter(index: number): string {
     return String.fromCharCode(65 + index);

@@ -59,6 +59,7 @@ describe('QuizListComponent', () => {
     enableRewardEffects: true,
     enableMotivationMessages: true,
     enableEmojiReactions: true,
+    showQuestionTypeIndicators: true,
     anonymousMode: false,
     teamMode: false,
     teamCount: undefined,

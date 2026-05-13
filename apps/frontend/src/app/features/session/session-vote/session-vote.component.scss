@@ -1829,13 +1829,8 @@
     height: 46px;
     border-radius: var(--mat-sys-corner-small, 8px);
     color: #fff;
-    font-weight: 700;
-    font-size: 1.05rem;
-  }
-
-  &__shape {
-    font-size: 1.45rem;
-    line-height: 1;
+    --answer-option-badge-icon-size: 64%;
+    --answer-option-badge-stroke-width: 2.7;
   }
 
   &__text {

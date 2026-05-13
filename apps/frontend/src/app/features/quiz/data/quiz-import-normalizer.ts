@@ -102,6 +102,7 @@ function convertArsnovaClickExport(source: JsonRecord): NormalizedQuizImportPayl
     enableRewardEffects: true,
     enableMotivationMessages: true,
     enableEmojiReactions: true,
+    showQuestionTypeIndicators: true,
     anonymousMode: false,
     teamMode: teamSettings.teamMode,
     teamCount: teamSettings.teamCount,

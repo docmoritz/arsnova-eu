@@ -66,6 +66,8 @@ import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
 import { MarkdownKatexEditorComponent } from '../../../shared/markdown-katex-editor/markdown-katex-editor.component';
 import { decorateLeadingAnswerEmoji } from '../../../shared/leading-answer-emoji.util';
+import { answerOptionColor, answerOptionShape } from '../../../shared/answer-option-badge.util';
+import { AnswerOptionBadgeComponent } from '../../../shared/answer-option-badge/answer-option-badge.component';
 import { replaceEmojiShortcodes } from '../../../shared/emoji-shortcode.util';
 import {
   focusAndScrollElement,
@@ -105,6 +107,7 @@ type QuizSettingsFormGroup = FormGroup<{
   enableRewardEffects: FormControl<boolean>;
   enableMotivationMessages: FormControl<boolean>;
   enableEmojiReactions: FormControl<boolean>;
+  showQuestionTypeIndicators: FormControl<boolean>;
   anonymousMode: FormControl<boolean>;
   readingPhaseEnabled: FormControl<boolean>;
   teamMode: FormControl<boolean>;
@@ -116,28 +119,6 @@ type QuizSettingsFormGroup = FormGroup<{
   bonusTokenCount: FormControl<number | null>;
   preset: FormControl<QuizPreset>;
 }>;
-
-const PREVIEW_ANSWER_COLORS = [
-  '#1565c0',
-  '#e65100',
-  '#2e7d32',
-  '#6a1b9a',
-  '#c62828',
-  '#00838f',
-  '#4e342e',
-  '#37474f',
-];
-
-const PREVIEW_ANSWER_SHAPES = [
-  '\u25B3',
-  '\u25CB',
-  '\u25A1',
-  '\u25C7',
-  '\u2606',
-  '\u2B21',
-  '\u2B20',
-  '\u2BC6',
-];
 
 type QuizMetadataFormGroup = FormGroup<{
   name: FormControl<string>;
@@ -178,6 +159,7 @@ type QuizMetadataFormGroup = FormGroup<{
     CdkDragPlaceholder,
     MarkdownImageLightboxDirective,
     MarkdownKatexEditorComponent,
+    AnswerOptionBadgeComponent,
   ],
   templateUrl: './quiz-edit.component.html',
   styleUrls: ['../../../shared/styles/dialog-title-header.scss', './quiz-edit.component.scss'],
@@ -299,6 +281,7 @@ export class QuizEditComponent implements OnDestroy {
     enableRewardEffects: this.formBuilder.control(true),
     enableMotivationMessages: this.formBuilder.control(true),
     enableEmojiReactions: this.formBuilder.control(true),
+    showQuestionTypeIndicators: this.formBuilder.control(true),
     anonymousMode: this.formBuilder.control(false),
     readingPhaseEnabled: this.formBuilder.control(false),
     teamMode: this.formBuilder.control(false),
@@ -509,6 +492,7 @@ export class QuizEditComponent implements OnDestroy {
         enableRewardEffects: values.enableRewardEffects ?? true,
         enableMotivationMessages: values.enableMotivationMessages ?? true,
         enableEmojiReactions: values.enableEmojiReactions ?? true,
+        showQuestionTypeIndicators: values.showQuestionTypeIndicators ?? true,
         anonymousMode: values.anonymousMode ?? false,
         allowCustomNicknames: values.allowCustomNicknames ?? false,
         nicknameTheme: values.nicknameTheme ?? 'HIGH_SCHOOL',
@@ -574,11 +558,19 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   previewAnswerColor(index: number): string {
-    return PREVIEW_ANSWER_COLORS[index % PREVIEW_ANSWER_COLORS.length];
+    return answerOptionColor(index);
   }
 
   previewAnswerShape(index: number): string {
-    return PREVIEW_ANSWER_SHAPES[index % PREVIEW_ANSWER_SHAPES.length];
+    return answerOptionShape(
+      index,
+      this.typeControl.value,
+      this.settingsForm.controls.showQuestionTypeIndicators.value,
+    );
+  }
+
+  showQuestionTypeIndicators(): boolean {
+    return this.settingsForm.controls.showQuestionTypeIndicators.value;
   }
 
   addAnswer(): void {
@@ -991,6 +983,7 @@ export class QuizEditComponent implements OnDestroy {
         enableRewardEffects: settings.enableRewardEffects,
         enableMotivationMessages: settings.enableMotivationMessages,
         enableEmojiReactions: settings.enableEmojiReactions,
+        showQuestionTypeIndicators: settings.showQuestionTypeIndicators,
         anonymousMode: settings.anonymousMode,
         readingPhaseEnabled: settings.readingPhaseEnabled,
         teamMode: settings.teamMode,
@@ -1021,6 +1014,7 @@ export class QuizEditComponent implements OnDestroy {
       enableRewardEffects: this.settingsForm.controls.enableRewardEffects.value,
       enableMotivationMessages: this.settingsForm.controls.enableMotivationMessages.value,
       enableEmojiReactions: this.settingsForm.controls.enableEmojiReactions.value,
+      showQuestionTypeIndicators: this.settingsForm.controls.showQuestionTypeIndicators.value,
       anonymousMode: this.settingsForm.controls.anonymousMode.value,
       teamMode: this.settingsForm.controls.teamMode.value,
       teamCount: this.settingsForm.controls.teamMode.value
@@ -1049,6 +1043,8 @@ export class QuizEditComponent implements OnDestroy {
         (target.enableMotivationMessages ?? current.enableMotivationMessages) &&
       current.enableEmojiReactions ===
         (target.enableEmojiReactions ?? current.enableEmojiReactions) &&
+      current.showQuestionTypeIndicators ===
+        (target.showQuestionTypeIndicators ?? current.showQuestionTypeIndicators) &&
       current.anonymousMode === (target.anonymousMode ?? current.anonymousMode) &&
       current.readingPhaseEnabled === (target.readingPhaseEnabled ?? current.readingPhaseEnabled) &&
       current.defaultTimer === (target.defaultTimer ?? current.defaultTimer) &&

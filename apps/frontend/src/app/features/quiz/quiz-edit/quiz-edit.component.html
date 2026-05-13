@@ -231,6 +231,11 @@
                 >Emojis erlauben</mat-checkbox
               >
               <mat-checkbox
+                formControlName="showQuestionTypeIndicators"
+                i18n="@@quizSettings.showQuestionTypeIndicators"
+                >Single-/Multiple-Choice an Antwort-Badges erkennen</mat-checkbox
+              >
+              <mat-checkbox
                 i18n="@@quizForm.defaultTimerEnabled"
                 [checked]="settingsTimerControl.value !== null"
                 (change)="onDefaultTimerEnabledChange($event.checked)"
@@ -764,15 +769,13 @@
                 <ul class="quiz-edit-form__preview-answers markdown-body">
                   @for (answerHtml of answerPreviewHtml(); track $index) {
                     <li>
-                      <span
+                      <app-answer-option-badge
                         class="quiz-edit-form__preview-answer-badge"
-                        [style.background-color]="previewAnswerColor($index)"
-                        aria-hidden="true"
+                        [index]="$index"
+                        [questionType]="typeControl.value"
+                        [showTypeIndicator]="settingsForm.controls.showQuestionTypeIndicators.value"
                       >
-                        <span class="quiz-edit-form__preview-answer-shape">{{
-                          previewAnswerShape($index)
-                        }}</span>
-                      </span>
+                      </app-answer-option-badge>
                       <div
                         class="quiz-edit-form__preview-answer-text"
                         [innerHTML]="answerHtml"
@@ -849,7 +852,9 @@
                       <span i18n="@@quiz.edit.questionListPosition"
                         >Frage {{ question.order + 1 }}</span
                       >
-                      · {{ questionTypeLabel(question.type) }}
+                      @if (showQuestionTypeIndicators()) {
+                        <span> · {{ questionTypeLabel(question.type) }}</span>
+                      }
                       @if (questionTypeShowsDifficulty(question.type)) {
                         <span class="quiz-edit-question__difficulty">
                           ·
