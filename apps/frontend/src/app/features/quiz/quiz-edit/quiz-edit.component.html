@@ -685,6 +685,7 @@
                     (valueChange)="answerTextControl(i).setValue($event); onLivePreviewInput()"
                     [rows]="2"
                     [compact]="true"
+                    [answerPreview]="true"
                   />
                   <div class="quiz-edit-answer__hints">
                     <span class="quiz-edit-answer__count"
@@ -762,7 +763,21 @@
                 </p>
                 <ul class="quiz-edit-form__preview-answers markdown-body">
                   @for (answerHtml of answerPreviewHtml(); track $index) {
-                    <li [innerHTML]="answerHtml"></li>
+                    <li>
+                      <span
+                        class="quiz-edit-form__preview-answer-badge"
+                        [style.background-color]="previewAnswerColor($index)"
+                        aria-hidden="true"
+                      >
+                        <span class="quiz-edit-form__preview-answer-shape">{{
+                          previewAnswerShape($index)
+                        }}</span>
+                      </span>
+                      <div
+                        class="quiz-edit-form__preview-answer-text"
+                        [innerHTML]="answerHtml"
+                      ></div>
+                    </li>
                   }
                 </ul>
               </div>

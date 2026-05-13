@@ -23,6 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DEFAULT_MARKDOWN_FENCE_LANGUAGE } from '../markdown-code-highlight';
+import { decorateLeadingAnswerEmoji } from '../leading-answer-emoji.util';
 import { replaceEmojiShortcodes } from '../emoji-shortcode.util';
 import { renderMarkdownWithKatex } from '../markdown-katex.util';
 import {
@@ -113,6 +114,7 @@ export class MarkdownKatexEditorComponent implements AfterViewInit, OnChanges, O
   @Input() placeholder = '';
   @Input() rows = 4;
   @Input() compact = false;
+  @Input() answerPreview = false;
   /** Kein Rand um Quelltext + Vorschau (Toolbar bleibt mit Umrandung). */
   @Input() framelessPanels = false;
 
@@ -146,7 +148,10 @@ export class MarkdownKatexEditorComponent implements AfterViewInit, OnChanges, O
   );
 
   readonly preview = computed<SafeHtml>(() => {
-    return this.sanitizer.bypassSecurityTrustHtml(this.previewResult().html);
+    const html = this.previewResult().html;
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.answerPreview ? decorateLeadingAnswerEmoji(html) : html,
+    );
   });
   readonly previewKatexError = computed(() => this.previewResult().katexError);
   readonly hasMarkdownOrKatexFormatting = computed(() => {

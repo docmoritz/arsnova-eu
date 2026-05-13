@@ -315,6 +315,22 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('markiert fuehrende Shortcut-Emojis in Antworttexten fuer das Vote-Layout', () => {
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+
+    const rendered = component.renderMarkdown(':cry: Gerade etwas überfordert') as unknown as {
+      changingThisBreaksApplicationSecurity?: string;
+    };
+
+    expect(rendered.changingThisBreaksApplicationSecurity).toContain(
+      'markdown-emoji answer-leading-emoji',
+    );
+    expect(rendered.changingThisBreaksApplicationSecurity).toContain('title=":cry:"');
+    expect(rendered.changingThisBreaksApplicationSecurity).toContain('answer-leading-emoji-text');
+    fixture.destroy();
+  });
+
   it('baut QR-Join-Links unter einem localized production base href', () => {
     const base = document.createElement('base');
     base.setAttribute('href', '/fr/');

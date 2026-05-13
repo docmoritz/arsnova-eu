@@ -4020,6 +4020,14 @@ button.session-host__btn-discussion {
   min-width: 0;
   font: var(--mat-sys-body-large);
   color: var(--mat-sys-on-surface);
+  --answer-leading-emoji-size: 2.55em;
+  --answer-leading-emoji-layout-size: 1.55em;
+  --answer-leading-emoji-visual-scale: 1.65;
+  --answer-leading-emoji-transform-origin: left center;
+  --answer-leading-emoji-gap: 1.55em;
+  --answer-leading-emoji-slot: calc(
+    var(--answer-leading-emoji-layout-size) + var(--answer-leading-emoji-gap)
+  );
 }
 
 .session-host__vote-dist-pct {
@@ -4088,6 +4096,13 @@ button.session-host__btn-discussion {
   .session-host__vote-dist-text {
     font: var(--mat-sys-body-small);
     line-height: 1.35;
+  }
+
+  .session-host__vote-dist-text {
+    --answer-leading-emoji-size: 2.65em;
+    --answer-leading-emoji-layout-size: 1.45em;
+    --answer-leading-emoji-visual-scale: 1.83;
+    --answer-leading-emoji-gap: 1.55em;
   }
 
   .session-host__answer-correct-label,
@@ -4406,6 +4421,14 @@ $round2-color: var(--mat-sys-primary, #1565c0);
   flex: 1;
   min-width: 0;
   font: var(--mat-sys-body-large);
+  --answer-leading-emoji-size: 2.45em;
+  --answer-leading-emoji-layout-size: 1.5em;
+  --answer-leading-emoji-visual-scale: 1.63;
+  --answer-leading-emoji-transform-origin: left center;
+  --answer-leading-emoji-gap: 0.9em;
+  --answer-leading-emoji-slot: calc(
+    var(--answer-leading-emoji-layout-size) + var(--answer-leading-emoji-gap)
+  );
 }
 
 .session-host__round-comparison-bars {
@@ -4635,6 +4658,10 @@ $round2-color: var(--mat-sys-primary, #1565c0);
   .session-host__round-comparison-text {
     font: var(--mat-sys-body-medium);
     line-height: 1.5;
+    --answer-leading-emoji-size: 2.45em;
+    --answer-leading-emoji-layout-size: 1.45em;
+    --answer-leading-emoji-visual-scale: 1.69;
+    --answer-leading-emoji-gap: 0.85em;
   }
 
   .session-host__round-comparison-bar {

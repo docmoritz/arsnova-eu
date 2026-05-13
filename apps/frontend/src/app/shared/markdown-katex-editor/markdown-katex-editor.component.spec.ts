@@ -21,7 +21,12 @@ describe('MarkdownKatexEditorComponent', () => {
     );
   }
 
-  function setup(options?: { mobile?: boolean; rows?: number; compact?: boolean }) {
+  function setup(options?: {
+    mobile?: boolean;
+    rows?: number;
+    compact?: boolean;
+    answerPreview?: boolean;
+  }) {
     stubMatchMedia(options?.mobile ?? false);
     const matDialogMock = {
       open: vi.fn(),
@@ -34,6 +39,8 @@ describe('MarkdownKatexEditorComponent', () => {
     fixture.componentInstance.value = '';
     fixture.componentInstance.rows = options?.rows ?? fixture.componentInstance.rows;
     fixture.componentInstance.compact = options?.compact ?? fixture.componentInstance.compact;
+    fixture.componentInstance.answerPreview =
+      options?.answerPreview ?? fixture.componentInstance.answerPreview;
     fixture.detectChanges();
     return {
       fixture,
@@ -144,6 +151,24 @@ describe('MarkdownKatexEditorComponent', () => {
     expect(preview.className).not.toContain('mk-editor__preview--collapsed');
     expect(toggle.disabled).toBe(false);
     expect(fixture.nativeElement.querySelector('.mk-editor__preview-body')).not.toBeNull();
+  });
+
+  it('dekoriert führende Emoji-Shortcodes in Antwortvorschauen', () => {
+    vi.useFakeTimers();
+    const { fixture, component } = setup({ answerPreview: true });
+
+    component.onInput(':smile: Bereit loszulegen');
+    vi.advanceTimersByTime(250);
+    fixture.detectChanges();
+
+    const previewBody = fixture.nativeElement.querySelector(
+      '.mk-editor__preview-body',
+    ) as HTMLElement | null;
+    const leadingEmoji = previewBody?.querySelector('.answer-leading-emoji');
+    const textSlot = previewBody?.querySelector('.answer-leading-emoji-text');
+
+    expect(leadingEmoji?.textContent).toContain('😄');
+    expect(textSlot?.textContent).toBe('Bereit loszulegen');
   });
 
   it('erkennt einfache Inline-KaTeX-Variablen wie $f$ für die Mobile-Vorschau', () => {

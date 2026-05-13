@@ -1840,9 +1840,15 @@
 
   &__text {
     flex: 1;
+    min-width: 0;
     overflow: visible;
     text-overflow: clip;
     line-height: 1.4;
+    --answer-leading-emoji-size: 2.25em;
+    --answer-leading-emoji-layout-size: var(--answer-leading-emoji-size);
+    --answer-leading-emoji-visual-scale: 1;
+    --answer-leading-emoji-transform-origin: center center;
+    --answer-leading-emoji-gap: 1em;
   }
 
   &__icon {
@@ -1867,6 +1873,11 @@
   .vote-answer {
     gap: 1.35rem;
     padding-inline: 1.35rem;
+
+    &__text {
+      --answer-leading-emoji-size: 2.45em;
+      --answer-leading-emoji-gap: 1.05em;
+    }
   }
 }
 

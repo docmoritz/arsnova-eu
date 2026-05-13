@@ -224,6 +224,10 @@ describe('QuizEditComponent', () => {
     const firstAnswer = (fixture.nativeElement as HTMLElement).querySelector(
       '.quiz-edit-form__preview-answers li',
     ) as HTMLElement | null;
+    const badge = firstAnswer?.querySelector(
+      '.quiz-edit-form__preview-answer-badge',
+    ) as HTMLElement | null;
+    expect(badge?.textContent?.trim()).toBe('△');
     expect(firstAnswer?.querySelector('.answer-leading-emoji')?.textContent).toContain('😢');
   });
 
@@ -242,6 +246,10 @@ describe('QuizEditComponent', () => {
     const firstAnswer = (fixture.nativeElement as HTMLElement).querySelector(
       '.quiz-edit-form__preview-answers li',
     ) as HTMLElement | null;
+    const badge = firstAnswer?.querySelector(
+      '.quiz-edit-form__preview-answer-badge',
+    ) as HTMLElement | null;
+    expect(badge?.textContent?.trim()).toBe('△');
     const leadingEmoji = firstAnswer?.querySelector('.answer-leading-emoji') as HTMLElement | null;
     expect(leadingEmoji?.textContent).toContain('🍎');
     expect(leadingEmoji?.getAttribute('title')).toBe(':apple:');

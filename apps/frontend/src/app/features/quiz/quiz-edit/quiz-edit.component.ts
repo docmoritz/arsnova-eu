@@ -117,6 +117,28 @@ type QuizSettingsFormGroup = FormGroup<{
   preset: FormControl<QuizPreset>;
 }>;
 
+const PREVIEW_ANSWER_COLORS = [
+  '#1565c0',
+  '#e65100',
+  '#2e7d32',
+  '#6a1b9a',
+  '#c62828',
+  '#00838f',
+  '#4e342e',
+  '#37474f',
+];
+
+const PREVIEW_ANSWER_SHAPES = [
+  '\u25B3',
+  '\u25CB',
+  '\u25A1',
+  '\u25C7',
+  '\u2606',
+  '\u2B21',
+  '\u2B20',
+  '\u2BC6',
+];
+
 type QuizMetadataFormGroup = FormGroup<{
   name: FormControl<string>;
   description: FormControl<string>;
@@ -549,6 +571,14 @@ export class QuizEditComponent implements OnDestroy {
         renderMarkdownWithKatex(source, { imagePolicy: 'allow-relative-and-https' }).html,
       ),
     );
+  }
+
+  previewAnswerColor(index: number): string {
+    return PREVIEW_ANSWER_COLORS[index % PREVIEW_ANSWER_COLORS.length];
+  }
+
+  previewAnswerShape(index: number): string {
+    return PREVIEW_ANSWER_SHAPES[index % PREVIEW_ANSWER_SHAPES.length];
   }
 
   addAnswer(): void {

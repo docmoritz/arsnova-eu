@@ -686,9 +686,12 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
 
 .vote-answer__text,
 .session-host__answer-text,
+.session-host__vote-dist-text,
+.session-host__round-comparison-text,
 .quiz-preview-question__answer-content,
 .quiz-edit-question__answer-text,
-.quiz-edit-form__preview-answers li {
+.quiz-edit-answer .mk-editor__preview-body,
+.quiz-edit-form__preview-answer-text {
   --answer-leading-emoji-size: 1.6em;
   --answer-leading-emoji-layout-size: var(--answer-leading-emoji-size);
   --answer-leading-emoji-visual-scale: 1;
@@ -701,27 +704,43 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
 
 .vote-answer__text:has(> .answer-leading-emoji),
 .session-host__answer-text:has(> .answer-leading-emoji),
+.session-host__vote-dist-text:has(> .answer-leading-emoji),
+.session-host__round-comparison-text:has(> .answer-leading-emoji),
 .quiz-preview-question__answer-content:has(> .answer-leading-emoji),
-.quiz-edit-question__answer-text:has(> .answer-leading-emoji) {
+.quiz-edit-question__answer-text:has(> .answer-leading-emoji),
+.quiz-edit-answer .mk-editor__preview-body:has(> .answer-leading-emoji),
+.quiz-edit-form__preview-answer-text:has(> .answer-leading-emoji) {
   display: grid;
   grid-template-columns: var(--answer-leading-emoji-layout-size) minmax(0, 1fr);
   column-gap: var(--answer-leading-emoji-gap);
   align-items: center;
 }
 
+.quiz-edit-answer .mk-editor__preview-body,
+.quiz-edit-form__preview-answer-text {
+  --answer-leading-emoji-size: 2.2em;
+  --answer-leading-emoji-gap: 1.05em;
+}
+
 .vote-answer__text > p,
 .session-host__answer-text > p,
+.session-host__vote-dist-text > p,
+.session-host__round-comparison-text > p,
 .quiz-preview-question__answer-content > p,
 .quiz-edit-question__answer-text > p,
-.quiz-edit-form__preview-answers li > p {
+.quiz-edit-answer .mk-editor__preview-body > p,
+.quiz-edit-form__preview-answer-text > p {
   margin: 0;
 }
 
 .vote-answer__text > p.answer-leading-emoji-block,
 .session-host__answer-text > p.answer-leading-emoji-block,
+.session-host__vote-dist-text > p.answer-leading-emoji-block,
+.session-host__round-comparison-text > p.answer-leading-emoji-block,
 .quiz-preview-question__answer-content > p.answer-leading-emoji-block,
 .quiz-edit-question__answer-text > p.answer-leading-emoji-block,
-.quiz-edit-form__preview-answers li > p.answer-leading-emoji-block {
+.quiz-edit-answer .mk-editor__preview-body > p.answer-leading-emoji-block,
+.quiz-edit-form__preview-answer-text > p.answer-leading-emoji-block {
   display: grid;
   grid-template-columns: var(--answer-leading-emoji-layout-size) minmax(0, 1fr);
   column-gap: var(--answer-leading-emoji-gap);
@@ -730,9 +749,12 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
 
 .vote-answer__text > p:has(> .answer-leading-emoji),
 .session-host__answer-text > p:has(> .answer-leading-emoji),
+.session-host__vote-dist-text > p:has(> .answer-leading-emoji),
+.session-host__round-comparison-text > p:has(> .answer-leading-emoji),
 .quiz-preview-question__answer-content > p:has(> .answer-leading-emoji),
 .quiz-edit-question__answer-text > p:has(> .answer-leading-emoji),
-.quiz-edit-form__preview-answers li > p:has(> .answer-leading-emoji) {
+.quiz-edit-answer .mk-editor__preview-body > p:has(> .answer-leading-emoji),
+.quiz-edit-form__preview-answer-text > p:has(> .answer-leading-emoji) {
   display: grid;
   grid-template-columns: var(--answer-leading-emoji-layout-size) minmax(0, 1fr);
   column-gap: var(--answer-leading-emoji-gap);
@@ -742,22 +764,40 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
 .session-host__answer-text:has(> .answer-leading-emoji),
 .session-host__answer-text > p.answer-leading-emoji-block,
 .session-host__answer-text > p:has(> .answer-leading-emoji),
+.session-host__vote-dist-text:has(> .answer-leading-emoji),
+.session-host__vote-dist-text > p.answer-leading-emoji-block,
+.session-host__vote-dist-text > p:has(> .answer-leading-emoji),
+.session-host__round-comparison-text:has(> .answer-leading-emoji),
+.session-host__round-comparison-text > p.answer-leading-emoji-block,
+.session-host__round-comparison-text > p:has(> .answer-leading-emoji),
 .quiz-preview-question__answer-content:has(> .answer-leading-emoji),
 .quiz-preview-question__answer-content > p.answer-leading-emoji-block,
-.quiz-preview-question__answer-content > p:has(> .answer-leading-emoji) {
+.quiz-preview-question__answer-content > p:has(> .answer-leading-emoji),
+.quiz-edit-answer .mk-editor__preview-body:has(> .answer-leading-emoji),
+.quiz-edit-answer .mk-editor__preview-body > p.answer-leading-emoji-block,
+.quiz-edit-answer .mk-editor__preview-body > p:has(> .answer-leading-emoji),
+.quiz-edit-form__preview-answer-text:has(> .answer-leading-emoji),
+.quiz-edit-form__preview-answer-text > p.answer-leading-emoji-block,
+.quiz-edit-form__preview-answer-text > p:has(> .answer-leading-emoji) {
   grid-template-columns: auto minmax(0, 1fr);
 }
 
 .vote-answer__text > .answer-leading-emoji,
 .session-host__answer-text > .answer-leading-emoji,
+.session-host__vote-dist-text > .answer-leading-emoji,
+.session-host__round-comparison-text > .answer-leading-emoji,
 .quiz-preview-question__answer-content > .answer-leading-emoji,
 .quiz-edit-question__answer-text > .answer-leading-emoji,
-.quiz-edit-form__preview-answers li > .answer-leading-emoji,
+.quiz-edit-answer .mk-editor__preview-body > .answer-leading-emoji,
+.quiz-edit-form__preview-answer-text > .answer-leading-emoji,
 .vote-answer__text > p > .answer-leading-emoji,
 .session-host__answer-text > p > .answer-leading-emoji,
+.session-host__vote-dist-text > p > .answer-leading-emoji,
+.session-host__round-comparison-text > p > .answer-leading-emoji,
 .quiz-preview-question__answer-content > p > .answer-leading-emoji,
 .quiz-edit-question__answer-text > p > .answer-leading-emoji,
-.quiz-edit-form__preview-answers li > p > .answer-leading-emoji {
+.quiz-edit-answer .mk-editor__preview-body > p > .answer-leading-emoji,
+.quiz-edit-form__preview-answer-text > p > .answer-leading-emoji {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -775,10 +815,20 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
   transform-origin: var(--answer-leading-emoji-transform-origin);
 }
 
+.vote-answer__text > .answer-leading-emoji,
+.vote-answer__text > p > .answer-leading-emoji,
 .session-host__answer-text > .answer-leading-emoji,
 .session-host__answer-text > p > .answer-leading-emoji,
+.session-host__vote-dist-text > .answer-leading-emoji,
+.session-host__vote-dist-text > p > .answer-leading-emoji,
+.session-host__round-comparison-text > .answer-leading-emoji,
+.session-host__round-comparison-text > p > .answer-leading-emoji,
 .quiz-preview-question__answer-content > .answer-leading-emoji,
-.quiz-preview-question__answer-content > p > .answer-leading-emoji {
+.quiz-preview-question__answer-content > p > .answer-leading-emoji,
+.quiz-edit-answer .mk-editor__preview-body > .answer-leading-emoji,
+.quiz-edit-answer .mk-editor__preview-body > p > .answer-leading-emoji,
+.quiz-edit-form__preview-answer-text > .answer-leading-emoji,
+.quiz-edit-form__preview-answer-text > p > .answer-leading-emoji {
   width: auto;
   min-width: 0;
   justify-content: flex-start;
@@ -792,11 +842,20 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
 @media (max-width: 599px) {
   .vote-answer__text,
   .session-host__answer-text,
+  .session-host__vote-dist-text,
+  .session-host__round-comparison-text,
   .quiz-preview-question__answer-content,
   .quiz-edit-question__answer-text,
-  .quiz-edit-form__preview-answers li {
+  .quiz-edit-answer .mk-editor__preview-body,
+  .quiz-edit-form__preview-answer-text {
     --answer-leading-emoji-size: 1.95em;
     --answer-leading-emoji-gap: 0.85em;
+  }
+
+  .quiz-edit-answer .mk-editor__preview-body,
+  .quiz-edit-form__preview-answer-text {
+    --answer-leading-emoji-size: 2.35em;
+    --answer-leading-emoji-gap: 1.2em;
   }
 }
 
@@ -863,10 +922,20 @@ img[data-markdown-image-lightbox='true'][data-markdown-image-state='error'] {
   transform-origin: var(--answer-leading-emoji-transform-origin);
 }
 
+.vote-answer__text > .answer-leading-emoji.markdown-emoji,
+.vote-answer__text > p > .answer-leading-emoji.markdown-emoji,
 .session-host__answer-text > .answer-leading-emoji.markdown-emoji,
 .session-host__answer-text > p > .answer-leading-emoji.markdown-emoji,
+.session-host__vote-dist-text > .answer-leading-emoji.markdown-emoji,
+.session-host__vote-dist-text > p > .answer-leading-emoji.markdown-emoji,
+.session-host__round-comparison-text > .answer-leading-emoji.markdown-emoji,
+.session-host__round-comparison-text > p > .answer-leading-emoji.markdown-emoji,
 .quiz-preview-question__answer-content > .answer-leading-emoji.markdown-emoji,
-.quiz-preview-question__answer-content > p > .answer-leading-emoji.markdown-emoji {
+.quiz-preview-question__answer-content > p > .answer-leading-emoji.markdown-emoji,
+.quiz-edit-answer .mk-editor__preview-body > .answer-leading-emoji.markdown-emoji,
+.quiz-edit-answer .mk-editor__preview-body > p > .answer-leading-emoji.markdown-emoji,
+.quiz-edit-form__preview-answer-text > .answer-leading-emoji.markdown-emoji,
+.quiz-edit-form__preview-answer-text > p > .answer-leading-emoji.markdown-emoji {
   inline-size: auto;
   justify-items: start;
 }
