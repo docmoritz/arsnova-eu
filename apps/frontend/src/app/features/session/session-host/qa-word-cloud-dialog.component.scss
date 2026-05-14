@@ -111,13 +111,21 @@
     gap: 0.7rem;
     padding: max(0.5rem, env(safe-area-inset-top, 0px)) 0.5rem
       max(0.5rem, env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
   }
 
   .qa-word-cloud-dialog__toolbar {
+    gap: 0.45rem;
     padding-right: 3rem;
   }
 
+  .qa-word-cloud-dialog__sort-toggle,
+  .qa-word-cloud-dialog__analysis-toggle {
+    max-width: min(100%, 26rem);
+  }
+
   .qa-word-cloud-dialog__cloud {
-    min-height: clamp(16rem, 60dvh, 24rem);
+    min-height: 0;
+    height: 100%;
   }
 }

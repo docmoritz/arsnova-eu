@@ -140,8 +140,8 @@ describe('WordCloudComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Antworten verdichten sich live zu einem schnellen Themenbild.');
-    expect(text).toContain('Größere Begriffe stehen für häufigere Nennungen.');
+    expect(text).toContain('Häufig genannte Begriffe erscheinen größer.');
+    expect(text).toContain('Je größer ein Begriff, desto öfter wurde er genannt.');
   });
 
   it('kann öffentliche Presenter-Ansichten im Output-only-Modus ohne Bedien-UI rendern', () => {
@@ -153,8 +153,8 @@ describe('WordCloudComponent', () => {
 
     const text = fixture.nativeElement.textContent as string;
     expect(text).not.toContain('Maximieren');
-    expect(text).not.toContain('CSV exportieren');
-    expect(text).not.toContain('PNG exportieren');
+    expect(text).not.toContain('CSV speichern');
+    expect(text).not.toContain('PNG speichern');
     expect(text).not.toContain('Antwort anzeigen');
     expect(fixture.nativeElement.querySelector('.word-cloud__supporting')).toBeNull();
   });
@@ -264,7 +264,7 @@ describe('WordCloudComponent', () => {
     expect(Number.parseInt(mediumMinHeight, 10)).toBeLessThan(Number.parseInt(wideMinHeight, 10));
   });
 
-  it('haelt den D3-Vollbildrahmen scrollbar und kappt die Buehnenhoehe nicht auf die Rahmenhoehe', () => {
+  it('haelt die D3-Vollbildbuehne in knappen Landscape-Hoehen sichtbar zentriert', () => {
     const fixture = TestBed.createComponent(WordCloudComponent);
     fixture.componentRef.setInput('presentationMode', true);
     fixture.componentRef.setInput('responses', [
@@ -281,8 +281,8 @@ describe('WordCloudComponent', () => {
       cloudStageHeightPx: () => number;
     };
 
-    component.stageWidth.set(640);
-    component.availableVisualFrameHeight.set(220);
+    component.stageWidth.set(812);
+    component.availableVisualFrameHeight.set(150);
     fixture.detectChanges();
 
     const visualFrame = fixture.nativeElement.querySelector(
@@ -290,7 +290,36 @@ describe('WordCloudComponent', () => {
     ) as HTMLElement;
 
     expect(visualFrame.classList.contains('word-cloud__visual-frame--scrollable')).toBe(true);
-    expect(component.cloudStageHeightPx()).toBeGreaterThan(220);
+    expect(component.cloudStageHeightPx()).toBe(180);
+  });
+
+  it('nutzt knapp ausreichende Landscape-Hoehen ohne unnoetigen Scrollrahmen aus', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'Konfidenzintervall',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      availableVisualFrameHeight: { set(value: number): void };
+      cloudStageHeightPx: () => number;
+    };
+
+    component.stageWidth.set(812);
+    component.availableVisualFrameHeight.set(220);
+    fixture.detectChanges();
+
+    const visualFrame = fixture.nativeElement.querySelector(
+      '.word-cloud__visual-frame',
+    ) as HTMLElement;
+
+    expect(visualFrame.classList.contains('word-cloud__visual-frame--scrollable')).toBe(false);
+    expect(component.cloudStageHeightPx()).toBe(220);
   });
 
   it('haelt die Desktop-D3-Buehne im Vollbild innerhalb der verfuegbaren Rahmenhoehe', () => {
@@ -515,7 +544,7 @@ describe('WordCloudComponent', () => {
 
     expect(entry).toBeTruthy();
     expect(component.wordTooltip(entry!)).toContain('Nennungen: 3');
-    expect(component.wordTooltip(entry!)).toContain('Formen:');
+    expect(component.wordTooltip(entry!)).toContain('Auch gezählt:');
     expect(component.wordTooltip(entry!)).toContain('validierung');
     expect(component.wordTooltip(entry!)).toContain('validiert');
     expect(component.wordTooltip(entry!)).toContain('validieren');
@@ -526,7 +555,7 @@ describe('WordCloudComponent', () => {
     fixture.componentRef.setInput('analysisMode', 'qa');
     fixture.componentRef.setInput('itemLabelSingular', 'Frage');
     fixture.componentRef.setInput('itemLabelPlural', 'Fragen');
-    fixture.componentRef.setInput('tooltipMetricLabel', 'Wilson-Score');
+    fixture.componentRef.setInput('tooltipMetricLabel', 'belastbare Zustimmung');
     fixture.componentRef.setInput('responses', [
       'Sollten wir zuerst Python oder zuerst die Formel herleiten?',
       'Brauchen wir noch ein Rechenbeispiel zur Standardabweichung?',
@@ -544,8 +573,8 @@ describe('WordCloudComponent', () => {
 
     expect(entry).toBeTruthy();
     const tooltip = component.wordTooltipDisplay(entry!);
-    expect(tooltip).toContain('Gewichteter Wert: 26');
-    expect(tooltip).toContain('Basis: Wilson-Score');
+    expect(tooltip).toContain('Wert für die Größe: 26');
+    expect(tooltip).toContain('Gewichtet nach: belastbare Zustimmung');
     expect(tooltip).toContain('Fragen:');
     expect(tooltip).toContain('• Sollten wir zuerst Python oder zuerst');
     expect(tooltip).toContain('   Formel herleiten?');
@@ -594,7 +623,7 @@ describe('WordCloudComponent', () => {
     ]);
 
     const initialText = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
-    expect(initialText).toContain('Analysefokus: Pruefungsstoff Kapitel 4');
+    expect(initialText).toContain('Im Fokus: Pruefungsstoff Kapitel 4');
 
     component.toggleWord('pruefungsstoff-kapitel-4');
     fixture.detectChanges();
@@ -604,19 +633,19 @@ describe('WordCloudComponent', () => {
       'Kapitel 4 pruefungsstoff?',
     ]);
     const tooltip = component.wordTooltipDisplay(component.words()[0]!);
-    expect(tooltip).toContain('Basis: Kapitel 4');
-    expect(tooltip).toMatch(/Treffsicherheit:\s*hoch\s*\(92\s*%\)/);
+    expect(tooltip).toContain('Zusammengefasst als: Kapitel 4');
+    expect(tooltip).toMatch(/Erkennung:\s*sicher\s*\(92\s*%\)/);
     expect(tooltip).toContain('Kapitel 4 klausurrelevant?');
 
     const text = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
     expect(text).toContain('Pruefungsstoff Kapitel 4');
-    expect(text).toContain('Basis: Kapitel 4');
-    expect(text).toMatch(/Treffsicherheit:\s*hoch\s*\(92\s*%\)/);
-    expect(text).toContain('Filter aktiv: Pruefungsstoff Kapitel 4');
+    expect(text).toContain('Zusammengefasst als: Kapitel 4');
+    expect(text).toMatch(/Erkennung:\s*sicher\s*\(92\s*%\)/);
+    expect(text).toContain('Ausgewählt: Pruefungsstoff Kapitel 4');
 
     const highBadge = fixture.nativeElement.querySelector('.word-cloud__meta-pill--detail-high');
     expect(highBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
-      /Treffsicherheit:\s*hoch\s*\(92\s*%\)/,
+      /Erkennung:\s*sicher\s*\(92\s*%\)/,
     );
   });
 
@@ -663,17 +692,17 @@ describe('WordCloudComponent', () => {
     expect(component.confidenceFilter()).toBe('all');
 
     expect(component.wordTooltipDisplay(component.words()[0]!)).toMatch(
-      /Treffsicherheit:\s*mittel\s*\(72\s*%\)/,
+      /Erkennung:\s*mittel\s*\(72\s*%\)/,
     );
     expect(component.wordTooltipDisplay(component.words()[1]!)).toMatch(
-      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+      /Erkennung:\s*unsicher\s*\(54\s*%\)/,
     );
 
     component.setConfidenceFilter('low');
     fixture.detectChanges();
 
     expect(component.wordTooltipDisplay(component.words()[0]!)).toMatch(
-      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+      /Erkennung:\s*unsicher\s*\(54\s*%\)/,
     );
 
     component.setConfidenceFilter('medium');
@@ -686,7 +715,7 @@ describe('WordCloudComponent', () => {
       '.word-cloud__meta-pill--detail-medium',
     );
     expect(mediumBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
-      /Treffsicherheit:\s*mittel\s*\(72\s*%\)/,
+      /Erkennung:\s*mittel\s*\(72\s*%\)/,
     );
 
     component.setConfidenceFilter('low');
@@ -699,11 +728,11 @@ describe('WordCloudComponent', () => {
       '.word-cloud__meta-pill--detail-cautious',
     );
     expect(cautiousBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
-      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+      /Erkennung:\s*unsicher\s*\(54\s*%\)/,
     );
   });
 
-  it('filtert Themen-Entries ueber den Treffsicherheits-Toggle nach hoch, mittel und niedrig', () => {
+  it('filtert Themen-Entries ueber den Erkennungs-Toggle nach sicher, mittel und unsicher', () => {
     const fixture = TestBed.createComponent(WordCloudComponent);
     fixture.componentRef.setInput('analysisMode', 'qa');
     fixture.componentRef.setInput('responses', ['Frage A', 'Frage B', 'Frage C']);
@@ -758,10 +787,10 @@ describe('WordCloudComponent', () => {
 
     const component = fixture.componentInstance;
     const text = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
-    expect(text).toContain('Treffsicherheit filtern');
-    expect(text).toContain('hoch');
+    expect(text).toContain('Erkannte Themen');
+    expect(text).toContain('sicher');
     expect(text).toContain('mittel');
-    expect(text).toContain('niedrig');
+    expect(text).toContain('unsicher');
     expect(component.confidenceFilter()).toBe('high');
     expect(component.words().map((entry) => entry.groupKey)).toEqual(['hoch-cluster']);
     expect(component.filteredResponses()).toEqual(['Frage A']);
@@ -784,6 +813,54 @@ describe('WordCloudComponent', () => {
     component.setConfidenceFilter('all');
     fixture.detectChanges();
     expect(component.words()).toHaveLength(3);
+  });
+
+  it('zeigt Analyse-Fallbacks ohne Treffsicherheit trotz hohem Defaultfilter', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', ['Welche Frage gewinnt?']);
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'gewinnt',
+        label: 'gewinnt',
+        count: 4,
+        basisLabel: null,
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Welche Frage gewinnt?',
+            weight: 4,
+          },
+        ],
+        variants: ['gewinnt'],
+        confidence: null,
+      },
+      {
+        key: 'offen',
+        label: 'offen',
+        count: 1,
+        basisLabel: null,
+        members: [
+          {
+            sourceId: 'question-2',
+            text: 'Welche Frage bleibt offen?',
+            weight: 1,
+          },
+        ],
+        variants: ['offen'],
+        confidence: null,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.confidenceFilter()).toBe('high');
+    expect(component.showConfidenceFilterToggle()).toBe(false);
+    expect(component.words().map((entry) => entry.groupKey)).toEqual(['gewinnt', 'offen']);
+    expect(component.filteredResponses()).toEqual([
+      'Welche Frage gewinnt?',
+      'Welche Frage bleibt offen?',
+    ]);
   });
 
   it('haelt beim asynchronen Eintreffen von Theme-Entries den Default auf hoch', () => {
@@ -962,7 +1039,7 @@ describe('WordCloudComponent', () => {
     expect(context.fillText).toHaveBeenCalled();
     expect(clickSpy).toHaveBeenCalled();
     expect(component.statusMessage()).toBe('PNG exportiert.');
-    expect(fixture.nativeElement.textContent).toContain('PNG exportieren (geordnet)');
+    expect(fixture.nativeElement.textContent).toContain('PNG speichern');
   });
 
   it('oeffnet die Wortwolke als maximalen Dialog', async () => {
@@ -986,8 +1063,47 @@ describe('WordCloudComponent', () => {
     expect(config['data']).toMatchObject({
       disableCloudLayout: false,
       responses: ['Motivation durch Teamarbeit', 'Teamarbeit schafft Fokus'],
-      title: 'Word-Cloud (Freitext)',
+      title: 'Wortwolke',
     });
+  });
+
+  it('fordert beim Maximieren echtes Browser-Vollbild an', async () => {
+    const openSpy = vi.fn();
+    const requestFullscreenSpy = vi.fn(() => Promise.resolve());
+    TestBed.overrideProvider(MatDialog, { useValue: { open: openSpy } });
+
+    const documentRef = TestBed.inject(DOCUMENT);
+    const previousDescriptor = Object.getOwnPropertyDescriptor(
+      documentRef.documentElement,
+      'requestFullscreen',
+    );
+    Object.defineProperty(documentRef.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreenSpy,
+    });
+
+    try {
+      const fixture = TestBed.createComponent(WordCloudComponent);
+      fixture.componentRef.setInput('responses', [
+        'Motivation durch Teamarbeit',
+        'Teamarbeit schafft Fokus',
+      ]);
+      fixture.detectChanges();
+
+      fixture.componentInstance.handleMaximize();
+
+      expect(requestFullscreenSpy).toHaveBeenCalledWith({ navigationUI: 'hide' });
+      await vi.waitUntil(() => openSpy.mock.calls.length === 1, {
+        timeout: 1000,
+        interval: 10,
+      });
+    } finally {
+      if (previousDescriptor) {
+        Object.defineProperty(documentRef.documentElement, 'requestFullscreen', previousDescriptor);
+      } else {
+        delete (documentRef.documentElement as Partial<HTMLElement>).requestFullscreen;
+      }
+    }
   });
 
   it('nutzt optional einen benutzerdefinierten Maximieren-Handler', () => {

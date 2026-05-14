@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { LOCALE_ID, type Provider, signal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SessionHostComponent } from './session-host.component';
 import { ThemePresetService } from '../../../core/theme-preset.service';
@@ -466,7 +467,7 @@ describe('SessionHostComponent', () => {
     });
   });
 
-  const setup = () => {
+  const setup = (extraProviders: Provider[] = []) => {
     TestBed.configureTestingModule({
       imports: [SessionHostComponent],
       providers: [
@@ -484,6 +485,7 @@ describe('SessionHostComponent', () => {
             },
           },
         },
+        ...extraProviders,
       ],
     });
     return TestBed.createComponent(SessionHostComponent);
@@ -1310,7 +1312,7 @@ describe('SessionHostComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     await vi.waitUntil(
-      () => (fixture.nativeElement.textContent ?? '').includes('Word Cloud anzeigen'),
+      () => (fixture.nativeElement.textContent ?? '').includes('Wortwolke anzeigen'),
       {
         timeout: 5000,
         interval: 25,
@@ -1319,12 +1321,12 @@ describe('SessionHostComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Word Cloud anzeigen');
+    expect(text).toContain('Wortwolke anzeigen');
     expect(text).not.toContain('Weitere Aktionen');
     expect(text).toContain('2 Antworten');
     expect(text).toContain('Live-Freitext wird aktualisiert.');
     expect(text).toContain('Live-Freitext');
-    expect(text).toContain('Antworten verdichten sich live zu einem gemeinsamen Themenbild.');
+    expect(text).toContain('Häufige Begriffe aus den Antworten.');
     expect(text).toContain('Wortwolke einfrieren');
     fixture.destroy();
   });
@@ -1445,11 +1447,11 @@ describe('SessionHostComponent', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Q&A-Word-Cloud anzeigen');
-    expect(text).toContain('2 Fragen · Wilson-Score gewichtet');
+    expect(text).toContain('Wortwolke anzeigen');
+    expect(text).toContain('2 sichtbare Fragen · Größe der Begriffe: belastbare Zustimmung');
     expect(fixture.componentInstance.qaWordCloudQuestions()).toHaveLength(2);
     expect(fixture.componentInstance.qaWordCloudWeightedResponses()[0]?.weight).toBe(4);
-    expect(fixture.componentInstance.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Wilson-Score)');
+    expect(fixture.componentInstance.qaWordCloudTitle()).toBe('Q&A-Wortwolke');
 
     dialogOpenMock.mockClear();
     const trigger = fixture.nativeElement.querySelector(
@@ -1468,8 +1470,8 @@ describe('SessionHostComponent', () => {
       title: () => string;
       weightingHint: () => string | null;
     };
-    expect(data.title()).toBe('Q&A-Word-Cloud (Wilson-Score)');
-    expect(data.weightingHint()).toContain('höherem Wilson-Score');
+    expect(data.title()).toBe('Q&A-Wortwolke');
+    expect(data.weightingHint()).toContain('viel Zustimmung');
     fixture.destroy();
   });
 
@@ -1561,7 +1563,7 @@ describe('SessionHostComponent', () => {
     expect(text).toContain('Vorab-Moderation');
     expect(text).toContain('Session beenden');
     expect(exitAnchor.className).toContain('session-host__exit-anchor--fixed');
-    expect(text).toContain('Q&A-Word-Cloud anzeigen');
+    expect(text).toContain('Wortwolke anzeigen');
     fixture.destroy();
   });
 
@@ -1664,10 +1666,12 @@ describe('SessionHostComponent', () => {
     );
     expect(component.qaSortMode()).toBe('BEST');
     expect(component.qaWordCloudQuestionWeight(component.qaQuestions()[0]!)).toBe(21);
-    expect(component.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Wilson-Score)');
-    expect(component.qaWordCloudInfo()).toBe('1 Frage · Wilson-Score gewichtet');
+    expect(component.qaWordCloudTitle()).toBe('Q&A-Wortwolke');
+    expect(component.qaWordCloudInfo()).toBe(
+      '1 sichtbare Frage · Größe der Begriffe: belastbare Zustimmung',
+    );
     expect(fixture.nativeElement.textContent ?? '').toContain(
-      'Wilson-Score bevorzugt belastbare Zustimmung.',
+      'Zeigt Fragen mit viel Zustimmung und genug Stimmen zuerst.',
     );
     fixture.destroy();
   });
@@ -1713,8 +1717,8 @@ describe('SessionHostComponent', () => {
 
     const text = fixture.nativeElement.textContent ?? '';
     expect(component.qaWordCloudQuestionWeight(component.qaQuestions()[0]!)).toBe(27);
-    expect(component.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Kontroversität)');
-    expect(component.qaWordCloudInfo()).toBe('1 Frage · Kontroversität gewichtet');
+    expect(component.qaWordCloudTitle()).toBe('Q&A-Wortwolke');
+    expect(component.qaWordCloudInfo()).toBe('1 sichtbare Frage · Größe der Begriffe: Kontroverse');
     expect(text).toContain('Umstritten');
     expect(text).toContain('8 positiv · 8 negativ');
     expect(text).toContain('Kontroversität 80 %');
@@ -1760,25 +1764,47 @@ describe('SessionHostComponent', () => {
     await component.setQaSortMode('CONTROVERSIAL');
     fixture.detectChanges();
 
-    dialogOpenMock.mockClear();
-    await component.openQaWordCloudDialog();
+    const requestFullscreenSpy = vi.fn(() => Promise.resolve());
+    const documentRef = TestBed.inject(DOCUMENT);
+    const previousDescriptor = Object.getOwnPropertyDescriptor(
+      documentRef.documentElement,
+      'requestFullscreen',
+    );
+    Object.defineProperty(documentRef.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreenSpy,
+    });
 
-    expect(dialogOpenMock).toHaveBeenCalledTimes(1);
-    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
-    expect(config['panelClass']).toBe('word-cloud-dialog-panel');
-    expect(config['height']).toBe('100dvh');
-    const data = config['data'] as {
-      analysisVariant: () => string;
-      sortMode: () => string;
-      title: () => string;
-      tooltipMetricLabel: () => string;
-      weightingHint: () => string | null;
-    };
-    expect(data.analysisVariant()).toBe('THEME');
-    expect(data.sortMode()).toBe('CONTROVERSIAL');
-    expect(data.title()).toBe('Q&A-Word-Cloud (Kontroversität)');
-    expect(data.tooltipMetricLabel()).toBe('Kontroversität');
-    expect(data.weightingHint()).toContain('stärker umstrittenen Fragen');
+    dialogOpenMock.mockClear();
+    try {
+      await component.openQaWordCloudDialog();
+
+      expect(requestFullscreenSpy).toHaveBeenCalledWith({ navigationUI: 'hide' });
+      expect(dialogOpenMock).toHaveBeenCalledTimes(1);
+      const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+      expect(config['panelClass']).toBe('word-cloud-dialog-panel');
+      expect(config['height']).toBe('100dvh');
+      const data = config['data'] as {
+        analysisVariant: () => string;
+        themeModeAvailable: () => boolean;
+        sortMode: () => string;
+        title: () => string;
+        tooltipMetricLabel: () => string;
+        weightingHint: () => string | null;
+      };
+      expect(data.analysisVariant()).toBe('THEME');
+      expect(data.themeModeAvailable()).toBe(true);
+      expect(data.sortMode()).toBe('CONTROVERSIAL');
+      expect(data.title()).toBe('Q&A-Wortwolke');
+      expect(data.tooltipMetricLabel()).toBe('Kontroverse');
+      expect(data.weightingHint()).toContain('gegensätzlichen Reaktionen');
+    } finally {
+      if (previousDescriptor) {
+        Object.defineProperty(documentRef.documentElement, 'requestFullscreen', previousDescriptor);
+      } else {
+        delete (documentRef.documentElement as Partial<HTMLElement>).requestFullscreen;
+      }
+    }
     fixture.destroy();
   });
 
@@ -1851,6 +1877,11 @@ describe('SessionHostComponent', () => {
       timeout: 5000,
       interval: 25,
     });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(wordCloudAnalyzeQueryMock).not.toHaveBeenCalled();
+
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => NEVER });
+    await fixture.componentInstance.openQaWordCloudDialog();
     await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
       timeout: 5000,
       interval: 25,
@@ -1873,6 +1904,57 @@ describe('SessionHostComponent', () => {
         label: 'Kapitel 4',
       },
     ]);
+    fixture.destroy();
+  });
+
+  it('deaktiviert den Themenmodus fuer Q&A-Live-Lokalisierungen ohne Theme-Analyzer', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Questions du public', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    qaListQueryMock.mockResolvedValue([
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        text: 'Comment suivre les questions importantes?',
+        upvoteCount: 5,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+
+    const fixture = setup([{ provide: LOCALE_ID, useValue: 'fr' }]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudQuestions().length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => NEVER });
+    await fixture.componentInstance.openQaWordCloudDialog();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wordCloudAnalyzeQueryMock).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.qaWordCloudAnalysisLocale()).toBeNull();
+    expect(fixture.componentInstance.qaWordCloudEffectiveAnalysisVariant()).toBe('LEXICAL');
+
+    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+    const data = config['data'] as {
+      analysisVariant: () => string;
+      themeModeAvailable: () => boolean;
+      themeFallbackHint: () => string | null;
+    };
+    expect(data.analysisVariant()).toBe('LEXICAL');
+    expect(data.themeModeAvailable()).toBe(false);
+    expect(data.themeFallbackHint()).toContain('einzelne Wörter');
     fixture.destroy();
   });
 
@@ -1950,6 +2032,10 @@ describe('SessionHostComponent', () => {
     fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
     fixture.detectChanges();
 
+    dialogOpenMock.mockClear();
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => NEVER });
+    await fixture.componentInstance.openQaWordCloudDialog();
+
     await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
       timeout: 5000,
       interval: 25,
@@ -1986,16 +2072,16 @@ describe('SessionHostComponent', () => {
         label: 'Kapitel 4',
       },
     ]);
-    dialogOpenMock.mockClear();
-    await fixture.componentInstance.openQaWordCloudDialog();
 
     const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
     const data = config['data'] as {
       analysisVariant: () => string;
       analysisEntries: () => Array<{ label: string }> | null;
+      themeModeAvailable: () => boolean;
       themeFallbackHint: () => string | null;
     };
     expect(data.analysisVariant()).toBe('THEME');
+    expect(data.themeModeAvailable()).toBe(true);
     expect(data.analysisEntries()).toMatchObject([{ label: 'Kapitel 4' }]);
     expect(data.themeFallbackHint()).toBeNull();
     fixture.destroy();
@@ -2073,6 +2159,11 @@ describe('SessionHostComponent', () => {
 
     fixture.componentInstance.activeChannel.set('qa');
     fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
+
+    dialogOpenMock.mockClear();
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => NEVER });
+    await fixture.componentInstance.openQaWordCloudDialog();
+
     await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
       timeout: 5000,
       interval: 25,
@@ -2083,16 +2174,15 @@ describe('SessionHostComponent', () => {
     });
     fixture.detectChanges();
 
-    dialogOpenMock.mockClear();
-    await fixture.componentInstance.openQaWordCloudDialog();
-
     const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
     const data = config['data'] as {
       analysisVariant: () => string;
       analysisEntries: () => Array<{ label: string }> | null;
+      themeModeAvailable: () => boolean;
       themeFallbackHint: () => string | null;
     };
     expect(data.analysisVariant()).toBe('THEME');
+    expect(data.themeModeAvailable()).toBe(true);
     expect(data.analysisEntries()?.[0]?.label).toBe('Kapitel 4');
     expect(data.themeFallbackHint()).toBeNull();
     fixture.destroy();
@@ -2128,8 +2218,8 @@ describe('SessionHostComponent', () => {
       fallbackUsed: true,
       entries: [
         {
-          key: 'welche frage gewinnt?',
-          label: 'Welche Frage gewinnt?',
+          key: 'gewinnt',
+          label: 'gewinnt',
           count: 3,
           basisLabel: null,
           members: [
@@ -2139,7 +2229,7 @@ describe('SessionHostComponent', () => {
               weight: 3,
             },
           ],
-          variants: ['Welche Frage gewinnt?'],
+          variants: ['gewinnt'],
           confidence: null,
         },
       ],
@@ -2155,6 +2245,11 @@ describe('SessionHostComponent', () => {
 
     fixture.componentInstance.activeChannel.set('qa');
     fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
+
+    dialogOpenMock.mockClear();
+    dialogOpenMock.mockReturnValueOnce({ afterClosed: () => NEVER });
+    await fixture.componentInstance.openQaWordCloudDialog();
+
     await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
       timeout: 5000,
       interval: 25,
@@ -2165,20 +2260,17 @@ describe('SessionHostComponent', () => {
     });
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.qaWordCloudThemeFallbackHint()).toContain(
-      'lexikalischen Fallback',
-    );
-
-    dialogOpenMock.mockClear();
-    await fixture.componentInstance.openQaWordCloudDialog();
+    expect(fixture.componentInstance.qaWordCloudThemeFallbackHint()).toContain('einzelne Wörter');
 
     const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
     const data = config['data'] as {
       analysisVariant: () => string;
+      themeModeAvailable: () => boolean;
       themeFallbackHint: () => string | null;
     };
     expect(data.analysisVariant()).toBe('THEME');
-    expect(data.themeFallbackHint()).toContain('lexikalischen Fallback');
+    expect(data.themeModeAvailable()).toBe(true);
+    expect(data.themeFallbackHint()).toContain('einzelne Wörter');
     fixture.destroy();
   });
 

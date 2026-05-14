@@ -22,6 +22,7 @@ export type QaWordCloudDialogData = {
   tooltipMetricLabel: () => string | null;
   analysisVariant: () => WordCloudAnalysisVariant;
   setAnalysisVariant: (variant: WordCloudAnalysisVariant) => void | Promise<void>;
+  themeModeAvailable: () => boolean;
   themeFallbackHint: () => string | null;
   sortMode: () => QaQuestionSortMode;
   setSortMode: (mode: QaQuestionSortMode) => void | Promise<void>;
@@ -53,6 +54,7 @@ export class QaWordCloudDialogComponent {
   readonly weightingHint = computed(() => this.data.weightingHint());
   readonly tooltipMetricLabel = computed(() => this.data.tooltipMetricLabel());
   readonly analysisVariant = computed(() => this.data.analysisVariant());
+  readonly themeModeAvailable = computed(() => this.data.themeModeAvailable());
   readonly themeFallbackHint = computed(() => this.data.themeFallbackHint());
   readonly sortMode = computed(() => this.data.sortMode());
 

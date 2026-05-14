@@ -344,8 +344,8 @@ describe('aggregateWords', () => {
   it('filtert zusaetzliche deutsche Q&A-Fuellwoerter haerter als die Standardwolke', () => {
     const result = aggregateWords(
       [
-        'Koennen wir eigentlich kurz noch mal ein paar Schritte zur Formel machen?',
-        'Vielleicht noch einen Moment zur Formel, wie wir das gemacht haben?',
+        'Welche Frage koennen wir eigentlich kurz noch mal zur Formel machen?',
+        'Vielleicht noch ein Thema zur Formel, wie wir das gemacht haben?',
       ],
       DEFAULT_STOPWORDS,
       'de',
@@ -359,6 +359,8 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'moment')).toBe(false);
     expect(result.some((entry) => entry.word === 'machen')).toBe(false);
     expect(result.some((entry) => entry.word === 'gemacht')).toBe(false);
+    expect(result.some((entry) => entry.word === 'frage')).toBe(false);
+    expect(result.some((entry) => entry.word === 'thema')).toBe(false);
     expect(result.find((entry) => entry.word === 'formel')).toMatchObject({
       word: 'formel',
       count: 2,
@@ -368,8 +370,8 @@ describe('aggregateWords', () => {
   it('filtert zusaetzliche englische Q&A-Fuellwoerter haerter als die Standardwolke', () => {
     const result = aggregateWords(
       [
-        'Could we actually just make the formula simpler again, please?',
-        'Maybe we need one more moment to make the formula work.',
+        'Could we actually just make the formula simpler again, please, as a question?',
+        'Maybe this topic needs one more moment to make the formula work.',
       ],
       getStopwordsForLocale('en'),
       'en',
@@ -382,6 +384,8 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'moment')).toBe(false);
     expect(result.some((entry) => entry.word === 'make')).toBe(false);
     expect(result.some((entry) => entry.word === 'need')).toBe(false);
+    expect(result.some((entry) => entry.word === 'question')).toBe(false);
+    expect(result.some((entry) => entry.word === 'topic')).toBe(false);
     expect(result.find((entry) => entry.word === 'formula')).toMatchObject({
       word: 'formula',
       count: 2,
@@ -391,8 +395,8 @@ describe('aggregateWords', () => {
   it('filtert zusaetzliche franzoesische Q&A-Fuellwoerter haerter als die Standardwolke', () => {
     const result = aggregateWords(
       [
-        'Comment pouvez-vous faire cela plus simplement ?',
-        'Pourquoi avons-nous besoin d’un moment pour faire la formule maintenant ?',
+        'Comment pouvez-vous faire cette question plus simplement ?',
+        'Pourquoi avons-nous besoin d’un sujet pour faire la formule maintenant ?',
       ],
       getStopwordsForLocale('fr'),
       'fr',
@@ -407,6 +411,8 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'simplement')).toBe(false);
     expect(result.some((entry) => entry.word === 'maintenant')).toBe(false);
     expect(result.some((entry) => entry.word === 'faire')).toBe(false);
+    expect(result.some((entry) => entry.word === 'question')).toBe(false);
+    expect(result.some((entry) => entry.word === 'sujet')).toBe(false);
     expect(result.find((entry) => entry.word === 'formule')).toMatchObject({
       word: 'formule',
       count: 1,
@@ -416,8 +422,8 @@ describe('aggregateWords', () => {
   it('filtert zusaetzliche italienische Q&A-Fuellwoerter haerter als die Standardwolke', () => {
     const result = aggregateWords(
       [
-        'Quando possiamo fare un momento sulla formula?',
-        'Perche abbiamo bisogno di spiegare la formula semplicemente adesso?',
+        'Quando possiamo fare una domanda sulla formula?',
+        'Perche abbiamo bisogno di un argomento sulla formula semplicemente adesso?',
       ],
       getStopwordsForLocale('it'),
       'it',
@@ -431,6 +437,8 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'bisogno')).toBe(false);
     expect(result.some((entry) => entry.word === 'semplicemente')).toBe(false);
     expect(result.some((entry) => entry.word === 'adesso')).toBe(false);
+    expect(result.some((entry) => entry.word === 'domanda')).toBe(false);
+    expect(result.some((entry) => entry.word === 'argomento')).toBe(false);
     expect(result.find((entry) => entry.word === 'formula')).toMatchObject({
       word: 'formula',
       count: 2,
@@ -440,8 +448,8 @@ describe('aggregateWords', () => {
   it('filtert zusaetzliche spanische Q&A-Fuellwoerter haerter als die Standardwolke', () => {
     const result = aggregateWords(
       [
-        'Podemos hacer esto ahora, justo para la formula?',
-        'Necesitamos un momento simplemente para que la formula funcione.',
+        'Podemos hacer esta pregunta ahora, justo para la formula?',
+        'Necesitamos un tema simplemente para que la formula funcione.',
       ],
       getStopwordsForLocale('es'),
       'es',
@@ -453,6 +461,8 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'justo')).toBe(false);
     expect(result.some((entry) => entry.word === 'momento')).toBe(false);
     expect(result.some((entry) => entry.word === 'simplemente')).toBe(false);
+    expect(result.some((entry) => entry.word === 'pregunta')).toBe(false);
+    expect(result.some((entry) => entry.word === 'tema')).toBe(false);
     expect(result.find((entry) => entry.word === 'formula')).toMatchObject({
       word: 'formula',
       count: 2,

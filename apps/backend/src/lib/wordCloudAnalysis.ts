@@ -174,6 +174,8 @@ const STOPWORDS_BY_LOCALE: Record<SupportedLocale, ReadonlySet<string>> = {
     'erklären',
     'es',
     'fuer',
+    'frage',
+    'fragen',
     'für',
     'geben',
     'grosse',
@@ -216,6 +218,8 @@ const STOPWORDS_BY_LOCALE: Record<SupportedLocale, ReadonlySet<string>> = {
     'soll',
     'sollte',
     'sollten',
+    'thema',
+    'themen',
     'trotz',
     'und',
     'uns',
@@ -278,6 +282,8 @@ const STOPWORDS_BY_LOCALE: Record<SupportedLocale, ReadonlySet<string>> = {
     'there',
     'this',
     'to',
+    'topic',
+    'topics',
     'use',
     'we',
     'what',
@@ -288,49 +294,75 @@ const STOPWORDS_BY_LOCALE: Record<SupportedLocale, ReadonlySet<string>> = {
     'with',
     'would',
     'you',
+    'question',
+    'questions',
   ]),
 };
 
 export function buildLexicalWordCloudEntries(
   items: WordCloudAnalysisSourceItem[],
+  locale: SupportedLocale,
   limit?: number,
 ): WordCloudAnalysisEntry[] {
-  const buckets = new Map<string, WordCloudAnalysisEntry>();
+  const buckets = new Map<
+    string,
+    {
+      key: string;
+      count: number;
+      labels: Map<string, number>;
+      members: WordCloudAnalysisEntry['members'];
+    }
+  >();
 
   for (const item of items) {
-    const normalizedKey = item.text.trim().toLocaleLowerCase();
-    const existing = buckets.get(normalizedKey);
-    if (existing) {
-      existing.count += item.weight;
-      existing.members.push({
-        sourceId: item.id,
-        text: item.text,
-        weight: item.weight,
-      });
-      if (!existing.variants.includes(item.text)) {
-        existing.variants.push(item.text);
-      }
-      continue;
-    }
-
-    buckets.set(normalizedKey, {
-      key: normalizedKey,
-      label: item.text,
-      count: item.weight,
-      basisLabel: null,
-      members: [
-        {
+    const prepared = prepareItem(item, locale);
+    for (const candidate of prepared.candidates.filter((entry) => entry.kind === 'token')) {
+      const existing = buckets.get(candidate.key);
+      if (existing) {
+        existing.count += item.weight;
+        existing.labels.set(
+          candidate.label,
+          (existing.labels.get(candidate.label) ?? 0) + item.weight,
+        );
+        existing.members.push({
           sourceId: item.id,
           text: item.text,
           weight: item.weight,
-        },
-      ],
-      variants: [item.text],
-      confidence: null,
-    });
+        });
+        continue;
+      }
+
+      buckets.set(candidate.key, {
+        key: candidate.key,
+        count: item.weight,
+        labels: new Map([[candidate.label, item.weight]]),
+        members: [
+          {
+            sourceId: item.id,
+            text: item.text,
+            weight: item.weight,
+          },
+        ],
+      });
+    }
   }
 
-  return sortEntries([...buckets.values()], limit);
+  const entries = [...buckets.values()].map((bucket) => {
+    const variants = sortVariantEntries(bucket.labels, locale).map(([variant]) => variant);
+    return {
+      key: bucket.key,
+      label: variants[0] ?? bucket.key,
+      count: bucket.count,
+      basisLabel: null,
+      members: bucket.members.sort(
+        (left, right) => right.weight - left.weight || left.text.localeCompare(right.text),
+      ),
+      variants,
+      confidence: null,
+    };
+  });
+
+  return sortEntries(entries, limit);
 }
 
 export function buildThemeWordCloudAnalysis(

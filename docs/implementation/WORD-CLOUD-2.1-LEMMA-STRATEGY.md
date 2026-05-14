@@ -211,7 +211,7 @@ Der Q&A-spezifische Ausbau umfasst:
 
 - ein explizites Analyseprofil `qa` statt stiller Sonderfaelle in Host oder Presenter
 - abgeflachte Upvote-Gewichtung ueber `1 + round(sqrt(upvotes))` statt linearer Dominanz
-- zusaetzliche Frage-Fuelltokens pro Locale, damit Woerter wie `genau`, `bitte` oder `need` die Wolke weniger verschlechtern
+- zusaetzliche Frage-Fuelltokens pro Locale, damit Woerter wie `genau`, `bitte`, `need` sowie Q&A-Traeger wie `frage`, `question`, `topic`, `sujet`, `domanda` oder `pregunta` die Wolke weniger verschlechtern
 - leichte, regelbasierte Themenphrasen fuer haeufige Bigramme wie `kapitel 4` oder `lineare regression`
 - eine `outputOnly`-Buehnenansicht fuer oeffentliche Presenter-Screens ohne Export-, Antworten- oder Maximieren-UI
 
@@ -220,6 +220,7 @@ Wichtig ist dabei:
 - Das ist weiterhin **kein semantischer 3.x-Layer**.
 - Es bleibt eine kontrollierte lexikalische Verdichtung.
 - Die Q&A-Wolke soll dadurch weniger nach kompletten Fragesaetzen und mehr nach Themenraum aussehen.
+- Backend-Fallbacks im Host-Q&A-Themenmodus nutzen dieselbe Grundidee: Sie fallen auf tokenisierte, stopwortbereinigte Begriffe zurueck, nicht auf komplette Fragetexte.
 
 Fuer den aktuellen Host-first-Themenmodus und dessen Backend-Analysepfad siehe `docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md`.
 

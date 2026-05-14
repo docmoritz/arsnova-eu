@@ -212,6 +212,9 @@
 .word-cloud__visual--cloud {
   position: relative;
   display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-inline: auto;
   min-height: 0;
   padding: clamp(0.45rem, 1vw, 0.7rem);
   overflow: hidden;
@@ -538,7 +541,48 @@
     min-height: 100%;
   }
 
+  .word-cloud-card--presentation .mat-mdc-card-header {
+    padding: 0.7rem 0.85rem 0.25rem;
+  }
+
+  .word-cloud-card--presentation .mat-mdc-card-title {
+    font-size: clamp(1.15rem, 3vw, 1.45rem);
+    line-height: 1.05;
+  }
+
+  .word-cloud-card--presentation .word-cloud__description {
+    display: none;
+  }
+
+  .word-cloud--presentation {
+    gap: 0.55rem;
+  }
+
+  .word-cloud__meta {
+    gap: 0.4rem 0.7rem;
+    padding-block: 0;
+  }
+
+  .word-cloud__meta-pill {
+    min-height: 1.75rem;
+    padding: 0.18rem 0.62rem;
+  }
+
+  .word-cloud__reading-hint {
+    padding: 0.45rem 0.65rem;
+    line-height: 1.32;
+  }
+
   .word-cloud--presentation .word-cloud__visual-frame {
-    min-height: clamp(13rem, 48dvh, 20rem);
+    min-height: 0;
+    padding: 0.55rem;
+  }
+
+  .word-cloud--presentation .word-cloud__visual-frame--scrollable {
+    min-height: clamp(6rem, 42dvh, 11rem);
+  }
+
+  .word-cloud--presentation .word-cloud__visual {
+    padding: 0.15rem;
   }
 }

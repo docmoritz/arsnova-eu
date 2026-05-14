@@ -67,9 +67,11 @@
   .word-cloud-dialog {
     padding: max(0.5rem, env(safe-area-inset-top, 0px)) 0.5rem
       max(0.5rem, env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
   }
 
   .word-cloud-dialog__cloud {
-    min-height: clamp(16rem, 60dvh, 24rem);
+    min-height: 0;
+    height: 100%;
   }
 }

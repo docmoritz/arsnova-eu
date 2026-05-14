@@ -33,9 +33,9 @@
         <div class="word-cloud__filter-info">
           <p class="word-cloud__filter-info-line">
             @if (showsSelectedFilterDetails()) {
-              Filter aktiv: <strong>{{ analysisDetailLabel() }}</strong>
+              {{ selectedFilterPrefix }} <strong>{{ analysisDetailLabel() }}</strong>
             } @else {
-              Analysefokus: <strong>{{ analysisDetailLabel() }}</strong>
+              {{ focusFilterPrefix }} <strong>{{ analysisDetailLabel() }}</strong>
             }
           </p>
           @if (selectedWordAnalysisDetails().length > 0) {
@@ -165,7 +165,7 @@
               @if (showExportActions()) {
                 <button mat-button type="button" class="word-cloud__action" (click)="exportCsv()">
                   <mat-icon>table_view</mat-icon>
-                  CSV exportieren
+                  {{ exportCsvLabel }}
                 </button>
                 <button mat-button type="button" class="word-cloud__action" (click)="exportPng()">
                   <mat-icon>image</mat-icon>

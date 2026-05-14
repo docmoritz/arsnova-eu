@@ -168,6 +168,8 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'erklärst',
     'geben',
     'genau',
+    'frage',
+    'fragen',
     'große',
     'hilft',
     'kleiner',
@@ -210,6 +212,8 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'trotz',
     'über',
     'werden',
+    'thema',
+    'themen',
   ],
   en: [
     'please',
@@ -231,6 +235,10 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'makes',
     'made',
     'making',
+    'question',
+    'questions',
+    'topic',
+    'topics',
   ],
   fr: [
     'svp',
@@ -256,6 +264,10 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'vraiment',
     'maintenant',
     'faire',
+    'question',
+    'questions',
+    'sujet',
+    'sujets',
   ],
   it: [
     'per',
@@ -279,6 +291,10 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'può',
     'puo',
     'possono',
+    'domanda',
+    'domande',
+    'argomento',
+    'argomenti',
   ],
   es: [
     'favor',
@@ -296,6 +312,10 @@ const QA_EXTRA_STOPWORDS_BY_LOCALE: Partial<Record<SupportedLocale, readonly str
     'justo',
     'hacer',
     'hace',
+    'pregunta',
+    'preguntas',
+    'tema',
+    'temas',
   ],
 };
 

@@ -307,11 +307,49 @@ describe('wordCloud.analyze', () => {
     expect(result.fallbackUsed).toBe(true);
     expect(result.entries).toMatchObject([
       {
-        key: 'welche frage gewinnt?',
-        label: 'Welche Frage gewinnt?',
+        key: 'gewinnt',
+        label: 'gewinnt',
         count: 4,
         basisLabel: null,
-        variants: ['Welche Frage gewinnt?'],
+        variants: ['gewinnt'],
+      },
+    ]);
+  });
+
+  it('aggregiert im lexikalischen Pfad Tokens statt kompletter Fragetexte', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'LEXICAL',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+          text: 'Welche Frage gewinnt?',
+          weight: 2,
+        },
+        {
+          id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+          text: 'Welche Frage bleibt offen?',
+          weight: 1,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries.map((entry) => entry.key)).not.toContain('welche frage gewinnt?');
+    expect(result.entries.slice(0, 2)).toMatchObject([
+      {
+        key: 'gewinnt',
+        label: 'gewinnt',
+        count: 2,
+        variants: ['gewinnt'],
+      },
+      {
+        key: 'offen',
+        label: 'offen',
+        count: 1,
+        variants: ['offen'],
       },
     ]);
   });

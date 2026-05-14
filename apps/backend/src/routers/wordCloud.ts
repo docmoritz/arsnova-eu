@@ -11,7 +11,7 @@ import {
 import { hostProcedure, router } from '../trpc';
 
 function buildFallbackAnalysisResult(input: AnalyzeWordCloudInput): AnalyzeWordCloudOutput {
-  const entries = buildLexicalWordCloudEntries(input.items, input.maxEntries);
+  const entries = buildLexicalWordCloudEntries(input.items, input.locale, input.maxEntries);
 
   return AnalyzeWordCloudOutputSchema.parse({
     mode: input.mode,

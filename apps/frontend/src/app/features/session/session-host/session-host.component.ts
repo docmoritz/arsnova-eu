@@ -84,6 +84,7 @@ import type {
   SessionStatusUpdate,
   TeamDTO,
   TeamLeaderboardEntryDTO,
+  WordCloudAnalysisLocale,
   WordCloudAnalysisVariant,
 } from '@arsnova/shared-types';
 import { WordCloudComponent } from '../session-present/word-cloud.component';
@@ -422,10 +423,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly wordCloudFrozen = signal(false);
   readonly frozenWordCloudResponses = signal<string[] | null>(null);
   readonly freetextWordCloudEyebrow = $localize`:@@sessionWordCloud.freetextEyebrow:Live-Freitext`;
-  readonly freetextWordCloudDescription = $localize`:@@sessionWordCloud.freetextDescription:Antworten verdichten sich live zu einem gemeinsamen Themenbild.`;
-  readonly qaWordCloudEyebrow = $localize`:@@sessionWordCloud.qaEyebrow:Publikumsfragen`;
-  readonly qaWordCloudDescription = $localize`:@@sessionWordCloud.qaDescription:Sichtbare Fragen werden als Themenraum lesbar gebündelt.`;
+  readonly freetextWordCloudDescription = $localize`:@@sessionWordCloud.freetextDescription:Häufige Begriffe aus den Antworten.`;
+  readonly qaWordCloudEyebrow = $localize`:@@sessionWordCloud.qaEyebrow:Q&A-Analyse`;
+  readonly qaWordCloudDescription = $localize`:@@sessionWordCloud.qaDescription:Zeigt, welche Begriffe in den sichtbaren Q&A-Fragen dominieren.`;
   readonly qaWordCloudAnalysisVariant = signal<WordCloudAnalysisVariant>('THEME');
+  readonly qaWordCloudDialogOpen = signal(false);
   readonly qaWordCloudThemeAnalysisPending = signal(false);
   readonly qaWordCloudThemeFallbackActive = signal(false);
   readonly qaWordCloudThemeAnalysisResult = signal<AnalyzeWordCloudOutput | null>(null);
@@ -508,8 +510,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   );
   readonly wordCloudToggleLabel = computed(() =>
     this.wordCloudExpanded()
-      ? $localize`:@@sessionHost.wordCloudHide:Word Cloud ausblenden`
-      : $localize`:@@sessionHost.wordCloudShow:Word Cloud anzeigen`,
+      ? $localize`:@@sessionHost.wordCloudHide:Wortwolke ausblenden`
+      : $localize`:@@sessionHost.wordCloudShow:Wortwolke anzeigen`,
   );
   readonly wordCloudFreezeLabel = computed(() =>
     this.wordCloudFrozen()
@@ -763,32 +765,36 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly qaWordCloudResponses = computed(() =>
     this.qaWordCloudQuestions().map((question) => question.text),
   );
-  readonly qaWordCloudAnalysisLocale = computed<'de' | 'en'>(() => {
+  readonly qaWordCloudAnalysisLocale = computed<WordCloudAnalysisLocale | null>(() => {
     const locale = getEffectiveLocale(localeIdToSupported(this.localeId));
-    return locale === 'en' ? 'en' : 'de';
+    return locale === 'de' || locale === 'en' ? locale : null;
+  });
+  readonly qaWordCloudThemeModeAvailable = computed(
+    () => this.qaWordCloudAnalysisLocale() !== null,
+  );
+  readonly qaWordCloudEffectiveAnalysisVariant = computed<WordCloudAnalysisVariant>(() => {
+    const variant = this.qaWordCloudAnalysisVariant();
+    return variant === 'THEME' && !this.qaWordCloudThemeModeAvailable() ? 'LEXICAL' : variant;
   });
   readonly qaWordCloudMetricLabel = computed(() => {
     switch (this.qaSortMode()) {
       case 'BEST':
-        return $localize`:@@sessionQa.wordCloudMetricBest:Wilson-Score`;
+        return $localize`:@@sessionQa.wordCloudMetricBest:belastbare Zustimmung`;
       case 'CONTROVERSIAL':
-        return $localize`:@@sessionQa.wordCloudMetricControversial:Kontroversität`;
+        return $localize`:@@sessionQa.wordCloudMetricControversial:Kontroverse`;
       default:
-        return $localize`:@@sessionQa.wordCloudMetricTop:Netto-Score`;
+        return $localize`:@@sessionQa.wordCloudMetricTop:positive Stimmen`;
     }
   });
-  readonly qaWordCloudTitle = computed(
-    () =>
-      $localize`:@@sessionQa.wordCloudTitleMetric:Q&A-Word-Cloud (${this.qaWordCloudMetricLabel()}:metric:)`,
-  );
+  readonly qaWordCloudTitle = computed(() => $localize`:@@sessionQa.wordCloudTitle:Q&A-Wortwolke`);
   readonly qaWordCloudWeightingHint = computed(() => {
     switch (this.qaSortMode()) {
       case 'BEST':
-        return $localize`:@@sessionQa.wordCloudHintBest:Größere Begriffe stammen aus Fragen mit höherem Wilson-Score.`;
+        return $localize`:@@sessionQa.wordCloudHintBest:Große Begriffe kommen aus Fragen mit viel Zustimmung und ausreichend Stimmen.`;
       case 'CONTROVERSIAL':
-        return $localize`:@@sessionQa.wordCloudHintControversial:Größere Begriffe stammen aus stärker umstrittenen Fragen. Mit der Maus über einen Begriff fahren, um Gewichtung und zugehörige Fragen zu sehen.`;
+        return $localize`:@@sessionQa.wordCloudHintControversial:Große Begriffe kommen aus Fragen mit gegensätzlichen Reaktionen. Darüberfahren zeigt die zugehörigen Fragen.`;
       default:
-        return $localize`:@@sessionQa.wordCloudHintTop:Größere Begriffe stammen aus Fragen mit höherem Netto-Score.`;
+        return $localize`:@@sessionQa.wordCloudHintTop:Große Begriffe kommen aus Fragen mit vielen positiven Stimmen.`;
     }
   });
   readonly qaWordCloudWeightedResponses = computed(() =>
@@ -801,14 +807,18 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.buildQaWordCloudAnalysisRequest(),
   );
   readonly qaWordCloudAnalysisEntries = computed(() => {
-    if (this.qaWordCloudAnalysisVariant() !== 'THEME') {
+    if (this.qaWordCloudEffectiveAnalysisVariant() !== 'THEME') {
       return null;
     }
 
     return this.qaWordCloudThemeAnalysisResult()?.entries ?? null;
   });
   readonly qaWordCloudThemeFallbackHint = computed(() => {
-    if (this.qaWordCloudAnalysisVariant() !== 'THEME') {
+    if (this.qaWordCloudAnalysisVariant() === 'THEME' && !this.qaWordCloudThemeModeAvailable()) {
+      return $localize`:@@sessionQa.wordCloudThemeUnavailableHint:Themen gibt es für diese Sprache noch nicht. Es werden einzelne Wörter gezählt.`;
+    }
+
+    if (this.qaWordCloudEffectiveAnalysisVariant() !== 'THEME') {
       return null;
     }
 
@@ -816,28 +826,28 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    return $localize`:@@sessionQa.wordCloudThemeFallbackHint:Themenmodus ist vorbereitet, nutzt aktuell aber noch den lexikalischen Fallback.`;
+    return $localize`:@@sessionQa.wordCloudThemeFallbackHint:Es werden einzelne Wörter gezählt, weil noch keine sicheren Themen erkannt wurden.`;
   });
   readonly qaSortHint = computed(() => {
     switch (this.qaSortMode()) {
       case 'BEST':
-        return $localize`:@@sessionQa.sortHintBest:Wilson-Score bevorzugt belastbare Zustimmung.`;
+        return $localize`:@@sessionQa.sortHintBest:Zeigt Fragen mit viel Zustimmung und genug Stimmen zuerst.`;
       case 'CONTROVERSIAL':
-        return $localize`:@@sessionQa.sortHintControversial:Kontroversität bevorzugt ausgeglichene Beteiligung.`;
+        return $localize`:@@sessionQa.sortHintControversial:Zeigt Fragen mit gemischter Reaktion zuerst.`;
       default:
-        return $localize`:@@sessionQa.sortHintTop:Netto-Score zuerst.`;
+        return $localize`:@@sessionQa.sortHintTop:Zeigt Fragen mit den meisten positiven Stimmen zuerst.`;
     }
   });
   readonly qaWordCloudOpenLabel = computed(
-    () => $localize`:@@sessionQa.wordCloudShow:Q&A-Word-Cloud anzeigen`,
+    () => $localize`:@@sessionQa.wordCloudShow:Wortwolke anzeigen`,
   );
   readonly qaWordCloudInfo = computed(() => {
     const count = this.qaWordCloudQuestions().length;
     const metric = this.qaWordCloudMetricLabel();
     if (count === 1) {
-      return $localize`:@@sessionQa.wordCloudCountOneMetric:1 Frage · ${metric}:metric: gewichtet`;
+      return $localize`:@@sessionQa.wordCloudCountOneMetric:1 sichtbare Frage · Größe der Begriffe: ${metric}:metric:`;
     }
-    return $localize`:@@sessionQa.wordCloudCountManyMetric:${count}:count: Fragen · ${metric}:metric: gewichtet`;
+    return $localize`:@@sessionQa.wordCloudCountManyMetric:${count}:count: sichtbare Fragen · Größe der Begriffe: ${metric}:metric:`;
   });
   readonly qaPinnedCount = computed(
     () => this.qaQuestions().filter((q) => q.status === 'PINNED').length,
@@ -852,37 +862,53 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     () => this.qaQuestions().filter((q) => q.status === 'DELETED').length,
   );
   readonly openQaWordCloudDialog = async (): Promise<void> => {
-    const { QaWordCloudDialogComponent } = await import('./qa-word-cloud-dialog.component');
-    this.dialog.open(QaWordCloudDialogComponent, {
-      data: {
-        responses: () => this.qaWordCloudResponses(),
-        weightedResponses: () => this.qaWordCloudWeightedResponses(),
-        analysisEntries: () => this.qaWordCloudAnalysisEntries(),
-        title: () => this.qaWordCloudTitle(),
-        eyebrow: this.qaWordCloudEyebrow,
-        description: this.qaWordCloudDescription,
-        weightingHint: () => this.qaWordCloudWeightingHint(),
-        tooltipMetricLabel: () => this.qaWordCloudMetricLabel(),
-        analysisVariant: () => this.qaWordCloudAnalysisVariant(),
-        setAnalysisVariant: (variant: WordCloudAnalysisVariant) =>
-          this.setQaWordCloudAnalysisVariant(variant),
-        themeFallbackHint: () => this.qaWordCloudThemeFallbackHint(),
-        sortMode: () => this.qaSortMode(),
-        setSortMode: (mode: QaQuestionSortMode) => this.setQaSortMode(mode),
-        itemLabelSingular: 'Frage',
-        itemLabelPlural: 'Fragen',
-      },
-      autoFocus: false,
-      restoreFocus: true,
-      enterAnimationDuration: 180,
-      exitAnimationDuration: 140,
-      width: '100vw',
-      maxWidth: '100vw',
-      height: '100dvh',
-      maxHeight: '100dvh',
-      panelClass: 'word-cloud-dialog-panel',
-      backdropClass: 'word-cloud-dialog-backdrop',
-    });
+    this.tryEnterWordCloudFullscreenFromUserGesture();
+    this.qaWordCloudDialogOpen.set(true);
+    const request = this.qaWordCloudAnalysisRequest();
+    if (request) {
+      this.queueQaWordCloudThemeAnalysis(request);
+    }
+
+    try {
+      const { QaWordCloudDialogComponent } = await import('./qa-word-cloud-dialog.component');
+      const dialogRef = this.dialog.open(QaWordCloudDialogComponent, {
+        data: {
+          responses: () => this.qaWordCloudResponses(),
+          weightedResponses: () => this.qaWordCloudWeightedResponses(),
+          analysisEntries: () => this.qaWordCloudAnalysisEntries(),
+          title: () => this.qaWordCloudTitle(),
+          eyebrow: this.qaWordCloudEyebrow,
+          description: this.qaWordCloudDescription,
+          weightingHint: () => this.qaWordCloudWeightingHint(),
+          tooltipMetricLabel: () => this.qaWordCloudMetricLabel(),
+          analysisVariant: () => this.qaWordCloudEffectiveAnalysisVariant(),
+          setAnalysisVariant: (variant: WordCloudAnalysisVariant) =>
+            this.setQaWordCloudAnalysisVariant(variant),
+          themeModeAvailable: () => this.qaWordCloudThemeModeAvailable(),
+          themeFallbackHint: () => this.qaWordCloudThemeFallbackHint(),
+          sortMode: () => this.qaSortMode(),
+          setSortMode: (mode: QaQuestionSortMode) => this.setQaSortMode(mode),
+          itemLabelSingular: 'Frage',
+          itemLabelPlural: 'Fragen',
+        },
+        autoFocus: false,
+        restoreFocus: true,
+        enterAnimationDuration: 180,
+        exitAnimationDuration: 140,
+        width: '100vw',
+        maxWidth: '100vw',
+        height: '100dvh',
+        maxHeight: '100dvh',
+        panelClass: 'word-cloud-dialog-panel',
+        backdropClass: 'word-cloud-dialog-backdrop',
+      });
+      dialogRef.afterClosed().subscribe(() => {
+        this.qaWordCloudDialogOpen.set(false);
+      });
+    } catch (error) {
+      this.qaWordCloudDialogOpen.set(false);
+      throw error;
+    }
   };
   readonly qaShowNewBanner = computed(() => this.qaUnseenCount() > 0 && this.qaScrolledDown());
   readonly qaUnseenCount = computed(
@@ -1029,14 +1055,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const requestKey = JSON.stringify(request);
-      if (requestKey === this.lastQaWordCloudAnalysisRequestKey) {
-        return;
-      }
-      this.lastQaWordCloudAnalysisRequestKey = requestKey;
-
       untracked(() => {
-        void this.refreshQaWordCloudThemeAnalysis(request);
+        this.queueQaWordCloudThemeAnalysis(request);
       });
     });
     effect(() => {
@@ -1689,6 +1709,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
    * damit `requestFullscreen()` noch in derselben User-Geste wie der Klick liegt.
    */
   private tryEnterHostFullscreenFromUserGesture(): void {
+    tryRequestDocumentFullscreen(this.document, () => {
+      this.isFullscreenActive.set(this.getFullscreenElement() !== null);
+    });
+  }
+
+  private tryEnterWordCloudFullscreenFromUserGesture(): void {
     tryRequestDocumentFullscreen(this.document, () => {
       this.isFullscreenActive.set(this.getFullscreenElement() !== null);
     });
@@ -3492,11 +3518,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   setQaWordCloudAnalysisVariant(variant: WordCloudAnalysisVariant): void {
-    if (variant === this.qaWordCloudAnalysisVariant()) {
+    const nextVariant =
+      variant === 'THEME' && !this.qaWordCloudThemeModeAvailable() ? 'LEXICAL' : variant;
+
+    if (nextVariant === this.qaWordCloudAnalysisVariant()) {
       return;
     }
 
-    this.qaWordCloudAnalysisVariant.set(variant);
+    this.qaWordCloudAnalysisVariant.set(nextVariant);
   }
 
   async selectChannel(channel: string): Promise<void> {
@@ -3974,9 +4003,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   private buildQaWordCloudAnalysisRequest(
-    variant: WordCloudAnalysisVariant = this.qaWordCloudAnalysisVariant(),
+    variant: WordCloudAnalysisVariant = this.qaWordCloudEffectiveAnalysisVariant(),
   ): AnalyzeWordCloudInput | null {
-    if (variant !== 'THEME') {
+    if (variant !== 'THEME' || !this.qaWordCloudDialogOpen()) {
+      return null;
+    }
+
+    const locale = this.qaWordCloudAnalysisLocale();
+    if (!locale) {
       return null;
     }
 
@@ -3992,11 +4026,21 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return {
       sessionCode: this.code.toUpperCase(),
       mode: 'THEME',
-      locale: this.qaWordCloudAnalysisLocale(),
+      locale,
       metric: this.qaSortMode(),
       items,
       maxEntries: 40,
     };
+  }
+
+  private queueQaWordCloudThemeAnalysis(request: AnalyzeWordCloudInput): void {
+    const requestKey = JSON.stringify(request);
+    if (requestKey === this.lastQaWordCloudAnalysisRequestKey) {
+      return;
+    }
+
+    this.lastQaWordCloudAnalysisRequestKey = requestKey;
+    void this.refreshQaWordCloudThemeAnalysis(request);
   }
 
   private async refreshQaWordCloudThemeAnalysis(request: AnalyzeWordCloudInput): Promise<void> {

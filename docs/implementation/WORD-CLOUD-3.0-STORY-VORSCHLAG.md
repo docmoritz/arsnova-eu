@@ -88,8 +88,8 @@ Nicht jede spaetere `3.x`-Faehigkeit muss in diese erste Story hinein.
 4. **Moderationsgewichte bleiben erhalten:** `TOP`, `BEST` und `CONTROVERSIAL` wirken auch im Themenmodus weiter als Gewichtungsbasis.
 5. **Tooltip mit Evidenz:** Ein Themen-Tooltip zeigt mindestens Thema, gewichteten Wert, zugrunde liegende Metrik und eine kleine Liste zugehoeriger Beispiel-Fragen.
 6. **Export bleibt lesbar:** CSV exportiert im Themenmodus mindestens `label,count,members,basis`.
-7. **Fallback ohne UI-Bruch:** Wenn der Themenpfad keine belastbaren Themenanker findet oder kein brauchbares Ergebnis liefert, faellt die UI automatisch auf `Lexikalisch` zurueck, ohne leere oder kaputte Karte.
-8. **Sprachgrenze bewusst:** `de` und `en` sind fuer den Themenmodus in dieser Story Pflicht; andere Locales koennen kontrolliert auf den lexikalischen Pfad zurueckfallen.
+7. **Fallback ohne UI-Bruch:** Wenn der Themenpfad keine belastbaren Themenanker findet oder kein brauchbares Ergebnis liefert, faellt die UI automatisch auf `Lexikalisch` zurueck, ohne leere oder kaputte Karte. Der Backend-Fallback liefert dabei tokenisierte Begriffe, keine kompletten Fragesaetze.
+8. **Sprachgrenze bewusst:** `de` und `en` sind fuer den Themenmodus in dieser Story Pflicht; andere Locales fallen kontrolliert auf den lexikalischen Pfad zurueck und deaktivieren den `Themen`-Toggle.
 9. **Scope-Grenze bleibt stabil:** Presenter-Q&A und Quiz-Freitext verhalten sich nach dieser Story weiterhin wie heute.
 
 ---
@@ -110,6 +110,7 @@ Wichtig ist dabei:
 - `app-word-cloud` bleibt primaer eine **Rendering- und Interaktionskomponente**
 - der Themenmodus wird als **eigener Analysevertrag** eingefuehrt, nicht als schwer wartbarer Sonderfall mitten im Renderer
 - semantische Qualitaet soll aus **Kandidatenextraktion + erklaerbarer Clusterbildung** kommen, nicht aus frei formulierten KI-Labels
+- die Host-Theme-Analyse startet nur fuer geoeffnete Q&A-Wortwolken, damit der Livebetrieb keine verdeckten Backend-Analysen fuer ungenutzte Dialoge ausloest
 
 ---
 
@@ -285,7 +286,7 @@ Aufgaben:
 
 Ergebnis:
 
-- Themenmodus ist nutzbar, analysierte Entries werden in Host-Karte und Vollbilddialog gerendert, die lexikalische Sicht bleibt jederzeit verfuegbar, und der gemeinsame Renderer zeigt inzwischen auch `Basis` und Confidence-Badges fuer Theme-Entries
+- Themenmodus ist im Host-Vollbilddialog nutzbar, analysierte Entries werden dort gerendert, die lexikalische Sicht bleibt jederzeit verfuegbar, und der gemeinsame Renderer zeigt inzwischen auch `Basis` und Confidence-Badges fuer Theme-Entries. Fuer nicht unterstuetzte Locales (`fr`, `it`, `es`) bleibt der Dialog explizit lexikalisch.
 
 ### Phase 4: Tests, Fixtures und Performance-Grenzen absichern
 

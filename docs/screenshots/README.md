@@ -5,7 +5,7 @@ Dieser Ordner enthält kuratierte Screenshots zu Wortwolken, Stopwörtern und zu
 ## Produktstand (Mai 2026)
 
 - Die aktuelle Freitext-Wortwolke nutzt in Host und Presenter ein echtes `d3-cloud`-Layout mit gruppierten Wortfamilien (`Word Cloud 2.1/2.2`).
-- Die Q&A-Wortwolke nutzt dieselbe Basis, aber mit eigenem Q&A-Profil: abgeflachte Grundgewichtung, zusaetzliche Frage-Fuelltokens, leichte Themenphrasen wie `kapitel 4` oder `lineare regression` sowie Host-Sortiermodi `Top`, `Beste Fragen` und `Umstritten`.
+- Die Q&A-Wortwolke nutzt dieselbe Basis, aber mit eigenem Q&A-Profil: abgeflachte Grundgewichtung, zusaetzliche Frage-Fuelltokens inklusive kanaltypischer Traegerwoerter wie `frage`/`question`, leichte Themenphrasen wie `kapitel 4` oder `lineare regression` sowie Host-Sortiermodi `Top`, `Beste Fragen` und `Umstritten`.
 - Die Presenter-Ansichten fuer Freitext und Q&A zeigen die Wortwolke oeffentlich als reine Buehnenansicht ohne Export-, Antwort- oder Maximieren-UI.
 - Stopwörter werden im Produkt standardmäßig ausgeblendet. Die Dateien mit `Eingeblendet` sind deshalb Vergleichs- und Erklärbilder, kein aktueller Laufzeit-Umschalter in der UI.
 - Der PNG-Export der Wortwolke ist bewusst ein geordneter Zeilenexport nach Wortgröße; die Live-Ansicht bleibt die freie Bühnenwolke.

@@ -84,13 +84,14 @@ export class SessionPresentComponent implements OnInit, OnDestroy {
   readonly presenterInfo = signal($localize`Warte auf Live-Freitextdaten …`);
   readonly presenterFreetextActive = signal(false);
   readonly freetextWordCloudEyebrow = $localize`:@@sessionWordCloud.freetextEyebrow:Live-Freitext`;
-  readonly freetextWordCloudDescription = $localize`:@@sessionWordCloud.freetextDescription:Antworten verdichten sich live zu einem gemeinsamen Themenbild.`;
+  readonly freetextWordCloudDescription = $localize`:@@sessionWordCloud.freetextDescription:Häufige Begriffe aus den Antworten.`;
   readonly freetextWordCloudStageTitle = computed(
-    () => this.currentQuestionLabel() ?? $localize`:@@wordCloud.title:Word-Cloud (Freitext)`,
+    () => this.currentQuestionLabel() ?? $localize`:@@wordCloud.title:Wortwolke`,
   );
-  readonly qaWordCloudEyebrow = $localize`:@@sessionWordCloud.qaEyebrow:Publikumsfragen`;
-  readonly qaWordCloudDescription = $localize`:@@sessionWordCloud.qaDescription:Sichtbare Fragen werden als Themenraum lesbar gebündelt.`;
-  readonly qaWordCloudWeightingHint = $localize`:@@sessionWordCloud.qaHint:Größere Begriffe verbinden Häufigkeit und Upvotes.`;
+  readonly qaWordCloudEyebrow = $localize`:@@sessionWordCloud.qaEyebrow:Q&A-Analyse`;
+  readonly qaWordCloudDescription = $localize`:@@sessionWordCloud.qaDescription:Zeigt, welche Begriffe in den sichtbaren Q&A-Fragen dominieren.`;
+  readonly qaWordCloudTitle = $localize`:@@sessionQa.wordCloudTitle:Q&A-Wortwolke`;
+  readonly qaWordCloudWeightingHint = $localize`:@@sessionWordCloud.qaHint:Große Begriffe kommen aus häufiger genannten oder stärker unterstützten Fragen.`;
   readonly isPlayfulPreset = computed(() => this.session()?.preset === 'PLAYFUL');
   readonly showPinnedQaQuestion = computed(
     () => this.pinnedQaQuestion() !== null && !this.showTeamFinish(),

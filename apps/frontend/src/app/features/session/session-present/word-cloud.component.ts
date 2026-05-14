@@ -27,6 +27,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import d3Cloud, { type CloudLayout } from 'd3-cloud';
 import type { WordCloudAnalysisEntryDTO } from '@arsnova/shared-types';
 import { getEffectiveLocale, localeIdToSupported } from '../../../core/locale-from-path';
+import { tryRequestDocumentFullscreen } from '../../../core/document-fullscreen.util';
 import {
   getWordCloudChipPadding,
   getWordCloudLayoutHeight,
@@ -174,10 +175,10 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   readonly analysisEntries = input<WordCloudAnalysisEntryDTO[] | null>(null);
   readonly analysisMode = input<WordCloudAnalysisMode>('default');
   readonly selectionScopeKey = input<string | null>(null);
-  readonly title = input($localize`:@@wordCloud.title:Word-Cloud (Freitext)`);
+  readonly title = input($localize`:@@wordCloud.title:Wortwolke`);
   readonly eyebrow = input<string | null>(null);
   readonly description = input<string | null>(
-    $localize`:@@wordCloud.description:Antworten verdichten sich live zu einem schnellen Themenbild.`,
+    $localize`:@@wordCloud.description:Häufig genannte Begriffe erscheinen größer.`,
   );
   readonly tooltipMetricLabel = input<string | null>(null);
   readonly disableCloudLayout = input(false);
@@ -201,7 +202,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   );
   readonly showResponsesPanel = input(true);
   readonly weightingHint = input<string | null>(
-    $localize`:@@wordCloud.weightingHint:Größere Begriffe stehen für häufigere Nennungen.`,
+    $localize`:@@wordCloud.weightingHint:Je größer ein Begriff, desto öfter wurde er genannt.`,
   );
   readonly showReleaseNote = input(false);
   readonly selectedGroupKey = signal<string | null>(null);
@@ -213,8 +214,11 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   readonly layoutPending = signal(false);
   readonly maximizeLabel = $localize`:@@wordCloud.maximize:Maximieren`;
   readonly maximizeAriaLabel = $localize`:@@wordCloud.maximizeAria:Wortwolke maximieren`;
-  readonly exportPngLabel = $localize`:@@wordCloud.exportPngOrdered:PNG exportieren (geordnet)`;
-  readonly confidenceFilterGroupLabel = $localize`:@@wordCloud.themeConfidenceFilter:Treffsicherheit filtern`;
+  readonly selectedFilterPrefix = $localize`:@@wordCloud.selectedFilterPrefix:Ausgewählt:`;
+  readonly focusFilterPrefix = $localize`:@@wordCloud.focusFilterPrefix:Im Fokus:`;
+  readonly exportCsvLabel = $localize`:@@wordCloud.exportCsv:CSV speichern`;
+  readonly exportPngLabel = $localize`:@@wordCloud.exportPngOrdered:PNG speichern`;
+  readonly confidenceFilterGroupLabel = $localize`:@@wordCloud.themeConfidenceFilter:Erkannte Themen`;
   readonly showActionsPanel = computed(
     () => !this.outputOnly() && (this.showMaximizeAction() || this.showExportActions()),
   );
@@ -334,6 +338,10 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return entries;
     }
 
+    if (!entries.some((entry) => this.resolveConfidenceFilterTier(entry.confidence))) {
+      return entries;
+    }
+
     const filter = this.confidenceFilter();
     if (filter === 'all') {
       return entries;
@@ -406,8 +414,8 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return preferredHeight;
     }
 
-    const minimumHeight = width < MOBILE_WORD_CLOUD_BREAKPOINT ? 180 : 240;
     const availableHeight = this.availableVisualFrameHeight();
+    const minimumHeight = this.minimumPresentationStageHeight(width, availableHeight);
     if (availableHeight <= 0) {
       if (width < MOBILE_WORD_CLOUD_BREAKPOINT) {
         return Math.max(minimumHeight, Math.min(preferredHeight, Math.round(width * 1.2)));
@@ -417,7 +425,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
     }
 
     if (this.shouldAllowPresentationFrameScroll(width, availableHeight)) {
-      return Math.max(minimumHeight, preferredHeight);
+      return minimumHeight;
     }
 
     return Math.max(minimumHeight, Math.min(preferredHeight, availableHeight));
@@ -737,6 +745,8 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   }
 
   handleMaximize(): void {
+    tryRequestDocumentFullscreen(this.document);
+
     const customHandler = this.maximizeActionHandler();
     if (customHandler) {
       void customHandler();
@@ -809,7 +819,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
     if (entry.variants.length > 1) {
       const variants = this.wordVariantPreview(entry.variants);
-      lines.push($localize`:@@wordCloud.variantsTooltip:Formen: ${variants}:variants:`);
+      lines.push($localize`:@@wordCloud.variantsTooltip:Auch gezählt: ${variants}:variants:`);
     }
 
     if (this.analysisMode() === 'qa') {
@@ -842,7 +852,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
     if (entry.variants.length > 1) {
       const variants = this.wordVariantPreview(entry.variants);
-      lines.push($localize`:@@wordCloud.variantsTooltip:Formen: ${variants}:variants:`);
+      lines.push($localize`:@@wordCloud.variantsTooltip:Auch gezählt: ${variants}:variants:`);
     }
 
     if (this.analysisMode() === 'qa') {
@@ -1083,6 +1093,31 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
     if (!this.disableCloudLayout()) {
       const stageWidth = this.stageWidth();
+      const availableHeight = this.availableVisualFrameHeight();
+      if (availableHeight > 0 && availableHeight < 260) {
+        if (wordCount >= 24) {
+          return { min: 9, max: 18 };
+        }
+
+        if (wordCount >= 12) {
+          return { min: 10, max: 22 };
+        }
+
+        return { min: 11, max: 26 };
+      }
+
+      if (availableHeight > 0 && availableHeight < 360) {
+        if (wordCount >= 24) {
+          return { min: 10, max: 22 };
+        }
+
+        if (wordCount >= 12) {
+          return { min: 11, max: 28 };
+        }
+
+        return { min: 12, max: 34 };
+      }
+
       if (stageWidth > 0 && stageWidth < MOBILE_WORD_CLOUD_BREAKPOINT) {
         const widthScale = getWordCloudWidthScale(stageWidth);
         if (wordCount >= 24) {
@@ -1125,8 +1160,15 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   }
 
   private shouldAllowPresentationFrameScroll(width: number, availableHeight: number): boolean {
-    const minimumHeight = width < MOBILE_WORD_CLOUD_BREAKPOINT ? 180 : 240;
-    return availableHeight < minimumHeight;
+    return availableHeight < this.minimumPresentationStageHeight(width, availableHeight);
+  }
+
+  private minimumPresentationStageHeight(width: number, availableHeight: number): number {
+    if (availableHeight > 0 && availableHeight < 260) {
+      return 180;
+    }
+
+    return width < MOBILE_WORD_CLOUD_BREAKPOINT ? 180 : 240;
   }
 
   private clearScheduledLayout(): void {
@@ -1269,7 +1311,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
   private tooltipValueLine(count: number): string {
     if (this.analysisMode() === 'qa') {
-      return $localize`:@@wordCloud.weightedValueTooltip:Gewichteter Wert: ${count}:count:`;
+      return $localize`:@@wordCloud.weightedValueTooltip:Wert für die Größe: ${count}:count:`;
     }
 
     return $localize`:@@wordCloud.mentionsTooltip:Nennungen: ${count}:count:`;
@@ -1281,7 +1323,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return null;
     }
 
-    return $localize`:@@wordCloud.metricBasisTooltip:Basis: ${metricLabel}:metric:`;
+    return $localize`:@@wordCloud.metricWeightTooltip:Gewichtet nach: ${metricLabel}:metric:`;
   }
 
   private analysisBasisLine(entry: Pick<CloudWord, 'basisLabel' | 'word'>): string | null {
@@ -1290,7 +1332,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return null;
     }
 
-    return $localize`:@@wordCloud.metricBasisTooltip:Basis: ${basisLabel}:metric:`;
+    return $localize`:@@wordCloud.groupedAsTooltip:Zusammengefasst als: ${basisLabel}:metric:`;
   }
 
   private analysisBasisDetail(
@@ -1319,7 +1361,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
     const tier = this.analysisConfidenceTierLabel(confidence);
 
-    return $localize`:@@wordCloud.themeConfidenceLabel:Treffsicherheit: ${tier}:tier: (${percent}:percent:)`;
+    return $localize`:@@wordCloud.themeConfidenceLabel:Erkennung: ${tier}:tier: (${percent}:percent:)`;
   }
 
   private analysisConfidenceDetail(confidence: number | null): AnalysisDetailChip | null {
@@ -1353,11 +1395,11 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   private confidenceFilterTierLabel(tier: Exclude<ConfidenceFilter, 'all'>): string {
     switch (tier) {
       case 'high':
-        return $localize`:@@wordCloud.themeConfidenceHigh:hoch`;
+        return $localize`:@@wordCloud.themeConfidenceHigh:sicher`;
       case 'medium':
         return $localize`:@@wordCloud.themeConfidenceMedium:mittel`;
       case 'low':
-        return $localize`:@@wordCloud.themeConfidenceCautious:niedrig`;
+        return $localize`:@@wordCloud.themeConfidenceCautious:unsicher`;
     }
   }
 
