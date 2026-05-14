@@ -4,7 +4,8 @@
 
 **Status:** umgesetzt und in `Word Cloud 2.2` stabilisiert (Mai 2026)  
 **Bezug:** Freitext-Wortwolke in `apps/frontend/src/app/features/session/session-present/word-cloud.util.ts` und `apps/frontend/src/app/features/session/session-present/word-cloud.component.ts`  
-**Ergaenzung zu:** `docs/architecture/decisions/0012-use-d3-cloud-for-freetext-word-clouds.md`
+**Ergaenzung zu:** `docs/architecture/decisions/0012-use-d3-cloud-for-freetext-word-clouds.md`  
+**Weiterfuehrung:** `docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md`
 
 ---
 
@@ -35,6 +36,8 @@ Nicht Ziel dieser Ausbaustufe ist bereits eine voll semantische Clusterung wie:
 - `regression`, `modell`, `prognose`
 
 Das ist spaeter `Word Cloud 3.x` oder ein eigener semantischer Layer.
+
+Seit Mai 2026 existiert fuer den Host-Q&A-Pfad bereits der erste `3.0`-Schritt als erklaerbarer Themenmodus im Backend/Host-Frontend. Diese Datei bleibt dennoch die kanonische Beschreibung des stabilen lexikalischen `2.x`-Pfads, auf dem Presenter und Quiz-Freitext weiterhin standardmaessig laufen.
 
 ---
 
@@ -218,6 +221,8 @@ Wichtig ist dabei:
 - Es bleibt eine kontrollierte lexikalische Verdichtung.
 - Die Q&A-Wolke soll dadurch weniger nach kompletten Fragesaetzen und mehr nach Themenraum aussehen.
 
+Fuer den aktuellen Host-first-Themenmodus und dessen Backend-Analysepfad siehe `docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md`.
+
 Technisch bleibt die Trennung sauber:
 
 - Fachlogik in `word-cloud.util.ts`
@@ -324,6 +329,8 @@ Zusatztests:
 - kuratierte Synonymtabellen fuer Fachdomainen
 - moegliche gemeinsame Nutzung der Gruppierungslogik in Frontend, Backend oder Shared-Layer
 - spaetere Mehrsprachigkeit ueber reine Wortformen hinaus
+
+Ein konkreter, fuer dieses Repo heruntergebrochener Story-Vorschlag fuer den ersten `3.0`-Schritt steht in `docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md`.
 
 ## Kurzfazit
 

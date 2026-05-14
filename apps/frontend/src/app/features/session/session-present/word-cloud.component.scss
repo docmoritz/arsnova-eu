@@ -1,5 +1,7 @@
 :host {
   display: block;
+  min-width: 0;
+  min-height: 0;
 }
 
 .word-cloud-card {
@@ -35,7 +37,8 @@
 }
 
 .word-cloud-card--presentation .mat-mdc-card-content:last-child {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .word-cloud__header {
@@ -65,10 +68,11 @@
 }
 
 .word-cloud--presentation {
-  min-height: 100%;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .word-cloud-card--presentation .mat-mdc-card-title {
@@ -158,6 +162,13 @@
   overflow: hidden;
 }
 
+.word-cloud--presentation .word-cloud__visual-frame--scrollable {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
+}
+
 .word-cloud__empty {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
@@ -183,6 +194,19 @@
   gap: 1.2rem;
   padding: clamp(0.8rem, 1.8vw, 1.3rem);
   min-height: var(--word-cloud-stage-height, 28rem);
+}
+
+.word-cloud--presentation .word-cloud__visual--wrapped-presentation {
+  width: min(100%, clamp(36rem, 78vw, 72rem));
+  margin-inline: auto;
+  justify-content: center;
+  align-content: center;
+  gap: clamp(0.65rem, 1.4vw, 0.95rem);
+  padding: clamp(0.45rem, 1vw, 0.8rem);
+}
+
+.word-cloud--presentation .word-cloud__visual--wrapped-presentation .word-cloud__word {
+  max-inline-size: min(100%, 18rem);
 }
 
 .word-cloud__visual--cloud {
@@ -316,10 +340,70 @@
 }
 
 .word-cloud__filter-info {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.word-cloud__filter-info-line {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);
   font: var(--mat-sys-body-small);
   padding-top: 0.15rem;
+}
+
+.word-cloud__analysis-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.85rem;
+  align-items: center;
+}
+
+.word-cloud__analysis-toolbar-label {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
+}
+
+.word-cloud__analysis-toggle {
+  flex-wrap: wrap;
+}
+
+.word-cloud__analysis-toggle .mat-button-toggle-label-content {
+  line-height: 2rem;
+  padding-inline: 0.9rem;
+}
+
+.word-cloud__analysis-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.word-cloud__meta-pill--detail {
+  min-height: 1.9rem;
+  padding: 0.25rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 78%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-secondary-container) 42%, var(--mat-sys-surface));
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+}
+
+.word-cloud__meta-pill--detail-high {
+  border-color: color-mix(in srgb, var(--mat-sys-tertiary) 32%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-tertiary-container) 74%, var(--mat-sys-surface));
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.word-cloud__meta-pill--detail-medium {
+  border-color: color-mix(in srgb, var(--mat-sys-secondary) 28%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-secondary-container) 82%, var(--mat-sys-surface));
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.word-cloud__meta-pill--detail-cautious {
+  border-color: color-mix(in srgb, var(--mat-sys-error) 22%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-error-container) 72%, var(--mat-sys-surface));
+  color: var(--mat-sys-on-error-container);
 }
 
 .word-cloud__responses {
@@ -378,6 +462,10 @@
     align-items: flex-start;
   }
 
+  .word-cloud__analysis-toolbar {
+    align-items: flex-start;
+  }
+
   .word-cloud__visual-frame {
     padding: 0.95rem;
   }
@@ -399,6 +487,12 @@
     min-height: var(--word-cloud-stage-height, 20rem);
   }
 
+  .word-cloud--presentation .word-cloud__visual--wrapped-presentation {
+    width: 100%;
+    gap: 0.55rem;
+    padding: 0.2rem;
+  }
+
   .word-cloud__visual--cloud {
     padding: 0.2rem;
   }
@@ -413,8 +507,8 @@
   .word-cloud__word--positioned {
     max-inline-size: none;
     min-height: auto;
-    padding-block: 0.32em;
-    padding-inline: 0.56em;
+    padding-block: 0.22em;
+    padding-inline: 0.36em;
   }
 
   .word-cloud__responses-panel {
@@ -436,5 +530,15 @@
 
   .word-cloud__action {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 960px) and (max-height: 540px) and (orientation: landscape) {
+  .word-cloud-card--presentation {
+    min-height: 100%;
+  }
+
+  .word-cloud--presentation .word-cloud__visual-frame {
+    min-height: clamp(13rem, 48dvh, 20rem);
   }
 }

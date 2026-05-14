@@ -7,6 +7,7 @@ import { quickFeedbackRouter } from './quickFeedback';
 import { qaRouter } from './qa';
 import { adminRouter } from './admin';
 import { motdRouter } from './motd';
+import { wordCloudRouter } from './wordCloud';
 
 /**
  * Der zentrale App-Router.
@@ -20,6 +21,7 @@ export const appRouter = router({
   vote: voteRouter,
   qa: qaRouter,
   quickFeedback: quickFeedbackRouter,
+  wordCloud: wordCloudRouter,
   admin: adminRouter,
   motd: motdRouter,
 });

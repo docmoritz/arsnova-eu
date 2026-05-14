@@ -2007,37 +2007,19 @@
                   </button>
                 }
                 @if (qaWordCloudQuestions().length > 0) {
-                  <details class="session-host__extra" [open]="qaWordCloudExpanded()">
-                    <summary
-                      class="session-host__extra-summary"
-                      (click)="qaWordCloudExpanded.set(!qaWordCloudExpanded())"
+                  <div class="session-host__extra">
+                    <button
+                      type="button"
+                      class="session-host__extra-summary session-host__extra-summary--button"
+                      (click)="openQaWordCloudDialog()"
                     >
                       <span class="session-host__extra-summary-main">
                         <mat-icon aria-hidden="true">bubble_chart</mat-icon>
-                        <span>{{ qaWordCloudToggleLabel() }}</span>
+                        <span>{{ qaWordCloudOpenLabel() }}</span>
                       </span>
                       <span class="session-host__extra-summary-meta">{{ qaWordCloudInfo() }}</span>
-                    </summary>
-                    <div class="session-host__extra-content">
-                      <section class="session-qa-cloud">
-                        <app-word-cloud
-                          [responses]="qaWordCloudResponses()"
-                          [weightedResponses]="qaWordCloudWeightedResponses()"
-                          [analysisMode]="'qa'"
-                          [eyebrow]="qaWordCloudEyebrow"
-                          [description]="qaWordCloudDescription"
-                          [title]="qaWordCloudTitle()"
-                          [itemLabelSingular]="'Frage'"
-                          [itemLabelPlural]="'Fragen'"
-                          [weightingHint]="qaWordCloudWeightingHint()"
-                          [tooltipMetricLabel]="qaWordCloudMetricLabel()"
-                          [maximizeActionHandler]="openQaWordCloudDialog"
-                          [showResponsesPanel]="true"
-                          [showReleaseNote]="false"
-                        />
-                      </section>
-                    </div>
-                  </details>
+                    </button>
+                  </div>
                 }
                 <div
                   class="session-qa-list"

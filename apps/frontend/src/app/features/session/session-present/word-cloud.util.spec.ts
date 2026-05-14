@@ -50,6 +50,39 @@ describe('aggregateWords', () => {
     expect(result.some((entry) => entry.word === 'formel')).toBe(true);
   });
 
+  it('filtert weitere deutsche Q&A-Traegerwoerter wie sich, werden oder schwaecht aus', () => {
+    const result = aggregateWords(
+      [
+        'Erkläre, warum sich beim Wahlrecht eher große Unterschiede zeigen und woran es direkt liegt.',
+        'Warum werden über das Wahlrecht trotz mehr Debatten neue Modelle diskutiert, obwohl manches dran bleibt?',
+        'Was hilft beim Wahlrecht, wenn ein Vorschlag kleiner wirkt, Parteien schwächt und sich schwer erklären lässt?',
+      ],
+      DEFAULT_STOPWORDS,
+      'de',
+      'qa',
+    );
+
+    expect(result.some((entry) => entry.word === 'sich')).toBe(false);
+    expect(result.some((entry) => entry.word === 'werden')).toBe(false);
+    expect(result.some((entry) => entry.word === 'geben')).toBe(false);
+    expect(result.some((entry) => entry.word === 'mehr')).toBe(false);
+    expect(result.some((entry) => entry.word === 'beim')).toBe(false);
+    expect(result.some((entry) => entry.word === 'bleibt')).toBe(false);
+    expect(result.some((entry) => entry.word === 'direkt')).toBe(false);
+    expect(result.some((entry) => entry.word === 'dran')).toBe(false);
+    expect(result.some((entry) => entry.word === 'über')).toBe(false);
+    expect(result.some((entry) => entry.word === 'große')).toBe(false);
+    expect(result.some((entry) => entry.word === 'hilft')).toBe(false);
+    expect(result.some((entry) => entry.word === 'kleiner')).toBe(false);
+    expect(result.some((entry) => entry.word === 'lässt')).toBe(false);
+    expect(result.some((entry) => entry.word === 'liegt')).toBe(false);
+    expect(result.some((entry) => entry.word === 'erkläre')).toBe(false);
+    expect(result.some((entry) => entry.word === 'schwächt')).toBe(false);
+    expect(result.some((entry) => entry.word === 'trotz')).toBe(false);
+    expect(result.some((entry) => entry.word === 'eher')).toBe(false);
+    expect(result.some((entry) => entry.word === 'wahlrecht')).toBe(true);
+  });
+
   it('bildet in der Q&A-Wortwolke leichte Themenphrasen statt nur Einzelwoerter', () => {
     const result = aggregateWords(
       [

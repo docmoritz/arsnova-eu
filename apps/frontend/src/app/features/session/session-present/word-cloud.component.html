@@ -29,19 +29,61 @@
           >{{ responseSummary().total }} {{ itemLabel(responseSummary().total) }}</span
         >
       </p>
-      @if (selectedWordLabel()) {
-        <p class="word-cloud__filter-info">
-          Filter aktiv: <strong>{{ selectedWordLabel() }}</strong>
-        </p>
+      @if (analysisDetailLabel()) {
+        <div class="word-cloud__filter-info">
+          <p class="word-cloud__filter-info-line">
+            @if (showsSelectedFilterDetails()) {
+              Filter aktiv: <strong>{{ analysisDetailLabel() }}</strong>
+            } @else {
+              Analysefokus: <strong>{{ analysisDetailLabel() }}</strong>
+            }
+          </p>
+          @if (selectedWordAnalysisDetails().length > 0) {
+            <p class="word-cloud__analysis-meta">
+              @for (detail of selectedWordAnalysisDetails(); track detail.label) {
+                <span
+                  class="word-cloud__meta-pill word-cloud__meta-pill--detail"
+                  [class.word-cloud__meta-pill--detail-high]="detail.tone === 'high'"
+                  [class.word-cloud__meta-pill--detail-medium]="detail.tone === 'medium'"
+                  [class.word-cloud__meta-pill--detail-cautious]="detail.tone === 'cautious'"
+                  >{{ detail.label }}</span
+                >
+              }
+            </p>
+          }
+        </div>
       }
     </div>
+    @if (showConfidenceFilterToggle()) {
+      <div class="word-cloud__analysis-toolbar">
+        <span class="word-cloud__analysis-toolbar-label">{{ confidenceFilterGroupLabel }}</span>
+        <mat-button-toggle-group
+          class="word-cloud__analysis-toggle"
+          [value]="confidenceFilter()"
+          (valueChange)="setConfidenceFilter($any($event))"
+          [hideSingleSelectionIndicator]="true"
+          [attr.aria-label]="confidenceFilterGroupLabel"
+        >
+          @for (option of confidenceFilterOptions(); track option.value) {
+            <mat-button-toggle [value]="option.value" [disabled]="option.count === 0">
+              {{ option.label }}
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      </div>
+    }
     @if (weightingHint()) {
       <div class="word-cloud__reading-hint" role="note">
         <mat-icon aria-hidden="true">insights</mat-icon>
         <span>{{ weightingHint() }}</span>
       </div>
     }
-    <div #exportSurface #visualFrame class="word-cloud__visual-frame">
+    <div
+      #exportSurface
+      #visualFrame
+      class="word-cloud__visual-frame"
+      [class.word-cloud__visual-frame--scrollable]="presentationFrameScrollable()"
+    >
       @if (words().length === 0) {
         <p class="word-cloud__empty">{{ emptyMessage() }}</p>
       } @else {
@@ -50,6 +92,9 @@
           class="word-cloud__visual"
           [class.word-cloud__visual--cloud]="cloudLayoutActive()"
           [class.word-cloud__visual--pending]="layoutPending() && !cloudLayoutActive()"
+          [class.word-cloud__visual--wrapped-presentation]="
+            presentationMode() && disableCloudLayout()
+          "
           [style.--word-cloud-stage-height]="stageMinHeight()"
           [style.height.px]="renderedCloudStageHeightPx() || null"
         >

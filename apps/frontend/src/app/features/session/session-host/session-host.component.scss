@@ -1324,6 +1324,27 @@
   margin-block: 0.9rem 0.25rem;
 }
 
+.session-qa-cloud__toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-block: 0.2rem 0.7rem;
+}
+
+.session-qa-cloud__mode-toggle {
+  --mat-standard-button-toggle-height: 2.15rem;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 10%, var(--mat-sys-outline-variant));
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, var(--mat-sys-surface));
+}
+
+.session-qa-cloud__mode-note {
+  margin: 0 0 0.7rem;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.82;
+}
+
 .session-qa-empty--filtered {
   padding: 1.5rem 1rem;
 }
@@ -3578,6 +3599,15 @@ button.session-host__btn-discussion {
   &:hover {
     background: color-mix(in srgb, var(--mat-sys-primary-container) 24%, var(--mat-sys-surface));
   }
+}
+
+.session-host__extra-summary--button {
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
 }
 
 .session-host__extra[open] .session-host__extra-summary {

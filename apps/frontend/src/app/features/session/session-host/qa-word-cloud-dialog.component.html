@@ -24,12 +24,31 @@
         >Umstritten</mat-button-toggle
       >
     </mat-button-toggle-group>
+    <mat-button-toggle-group
+      class="qa-word-cloud-dialog__analysis-toggle"
+      [value]="analysisVariant()"
+      (valueChange)="setAnalysisVariant($any($event))"
+      i18n-aria-label="@@sessionQa.wordCloudAnalysisAria"
+      aria-label="Wortwolken-Analysemodus"
+    >
+      <mat-button-toggle value="LEXICAL" i18n="@@sessionQa.wordCloudAnalysisLexical"
+        >Lexikalisch</mat-button-toggle
+      >
+      <mat-button-toggle value="THEME" i18n="@@sessionQa.wordCloudAnalysisTheme"
+        >Themen</mat-button-toggle
+      >
+    </mat-button-toggle-group>
   </div>
+
+  @if (themeFallbackHint()) {
+    <p class="qa-word-cloud-dialog__mode-note">{{ themeFallbackHint() }}</p>
+  }
 
   <app-word-cloud
     class="qa-word-cloud-dialog__cloud"
     [responses]="responses()"
     [weightedResponses]="weightedResponses()"
+    [analysisEntries]="analysisEntries()"
     [analysisMode]="'qa'"
     [title]="title()"
     [eyebrow]="data.eyebrow"

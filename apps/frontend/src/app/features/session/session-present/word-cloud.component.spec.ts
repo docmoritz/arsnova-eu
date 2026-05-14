@@ -187,6 +187,198 @@ describe('WordCloudComponent', () => {
     });
   });
 
+  it('ordnet im maximierten Wrapped-Modus die groessten Begriffe zur Wolkenmitte hin an', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('disableCloudLayout', true);
+    fixture.componentRef.setInput('responses', [
+      'alpha alpha alpha alpha alpha',
+      'alpha',
+      'beta beta beta beta',
+      'beta',
+      'gamma gamma gamma',
+      'delta delta',
+      'epsilon',
+    ]);
+    fixture.detectChanges();
+
+    const words = fixture.componentInstance.displayWords();
+    expect(words).toHaveLength(5);
+    expect(words[2]?.rank).toBe(0);
+    expect(words[3]?.rank).toBe(1);
+    expect(words[0]?.rank).toBeGreaterThan(words[2]!.rank);
+    expect(words[4]?.rank).toBeGreaterThan(words[3]!.rank);
+  });
+
+  it('begrenzt die D3-Buehnenhoehe im mobilen Vollbild ohne gemessene Rahmenhoehe', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'Konfidenzintervall',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      availableVisualFrameHeight: { set(value: number): void };
+      cloudStageHeightPx: () => number;
+    };
+
+    component.stageWidth.set(320);
+    component.availableVisualFrameHeight.set(0);
+
+    expect(component.cloudStageHeightPx()).toBe(384);
+  });
+
+  it('laesst die D3-Buehnenhoehe im Vollbild oberhalb des Mobile-Breakpoints mit der Breite wachsen', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'Konfidenzintervall',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      availableVisualFrameHeight: { set(value: number): void };
+      cloudStageHeightPx: () => number;
+      stageMinHeight: () => string;
+    };
+
+    component.availableVisualFrameHeight.set(0);
+    component.stageWidth.set(640);
+    const mediumHeight = component.cloudStageHeightPx();
+    const mediumMinHeight = component.stageMinHeight();
+
+    component.stageWidth.set(960);
+    const wideHeight = component.cloudStageHeightPx();
+    const wideMinHeight = component.stageMinHeight();
+
+    expect(mediumHeight).toBeLessThan(wideHeight);
+    expect(Number.parseInt(mediumMinHeight, 10)).toBeLessThan(Number.parseInt(wideMinHeight, 10));
+  });
+
+  it('haelt den D3-Vollbildrahmen scrollbar und kappt die Buehnenhoehe nicht auf die Rahmenhoehe', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'Konfidenzintervall',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      availableVisualFrameHeight: { set(value: number): void };
+      cloudStageHeightPx: () => number;
+    };
+
+    component.stageWidth.set(640);
+    component.availableVisualFrameHeight.set(220);
+    fixture.detectChanges();
+
+    const visualFrame = fixture.nativeElement.querySelector(
+      '.word-cloud__visual-frame',
+    ) as HTMLElement;
+
+    expect(visualFrame.classList.contains('word-cloud__visual-frame--scrollable')).toBe(true);
+    expect(component.cloudStageHeightPx()).toBeGreaterThan(220);
+  });
+
+  it('haelt die Desktop-D3-Buehne im Vollbild innerhalb der verfuegbaren Rahmenhoehe', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'Konfidenzintervall',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      availableVisualFrameHeight: { set(value: number): void };
+      cloudStageHeightPx: () => number;
+    };
+
+    component.stageWidth.set(1280);
+    component.availableVisualFrameHeight.set(540);
+    fixture.detectChanges();
+
+    const visualFrame = fixture.nativeElement.querySelector(
+      '.word-cloud__visual-frame',
+    ) as HTMLElement;
+
+    expect(visualFrame.classList.contains('word-cloud__visual-frame--scrollable')).toBe(false);
+    expect(component.cloudStageHeightPx()).toBe(540);
+  });
+
+  it('verkleinert die D3-Begriffe im mobilen Vollbild gegenueber Desktop-Praesentation', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'lineare Regression',
+      'Standardabweichung',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      words: () => Array<{ size: number; word: string }>;
+    };
+
+    component.stageWidth.set(320);
+    const mobileTopSize = component.words()[0]?.size;
+
+    component.stageWidth.set(960);
+    const desktopTopSize = component.words()[0]?.size;
+
+    expect(mobileTopSize).toBeDefined();
+    expect(desktopTopSize).toBeDefined();
+    expect(mobileTopSize!).toBeLessThan(desktopTopSize!);
+    expect(mobileTopSize!).toBeLessThanOrEqual(24);
+  });
+
+  it('skaliert die D3-Begriffe im mobilen Vollbild auch zwischen schmalen Breiten weiter herunter', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('presentationMode', true);
+    fixture.componentRef.setInput('responses', [
+      'lineare Regression',
+      'lineare Regression',
+      'lineare Regression',
+      'Standardabweichung',
+      'Konfidenzintervall',
+      'p-Wert',
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      stageWidth: { set(value: number): void };
+      words: () => Array<{ size: number; word: string }>;
+    };
+
+    component.stageWidth.set(520);
+    const mediumMobileTopSize = component.words()[0]?.size;
+
+    component.stageWidth.set(360);
+    const narrowMobileTopSize = component.words()[0]?.size;
+
+    expect(mediumMobileTopSize).toBeDefined();
+    expect(narrowMobileTopSize).toBeDefined();
+    expect(narrowMobileTopSize!).toBeLessThan(mediumMobileTopSize!);
+  });
+
   it('zeigt sinnvolle Zwei-Zeichen-Begriffe in der Wolke an', () => {
     const fixture = TestBed.createComponent(WordCloudComponent);
     fixture.componentRef.setInput('responses', ['pi', 'KI', 'a']);
@@ -361,6 +553,287 @@ describe('WordCloudComponent', () => {
     expect(tooltip).toContain('   Hausaufgabe vorbereiten?');
   });
 
+  it('nutzt gelieferte Analyse-Entries fuer Themenlabels und Mitgliederfilter', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', [
+      'Kapitel 4 klausurrelevant?',
+      'Kapitel 4 pruefungsstoff?',
+    ]);
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'pruefungsstoff-kapitel-4',
+        label: 'Pruefungsstoff Kapitel 4',
+        count: 2,
+        basisLabel: 'Kapitel 4',
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Kapitel 4 klausurrelevant?',
+            weight: 1,
+          },
+          {
+            sourceId: 'question-2',
+            text: 'Kapitel 4 pruefungsstoff?',
+            weight: 1,
+          },
+        ],
+        variants: ['Pruefungsstoff Kapitel 4'],
+        confidence: 0.92,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.words()).toMatchObject([
+      {
+        word: 'Pruefungsstoff Kapitel 4',
+        groupKey: 'pruefungsstoff-kapitel-4',
+        count: 2,
+      },
+    ]);
+
+    const initialText = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
+    expect(initialText).toContain('Analysefokus: Pruefungsstoff Kapitel 4');
+
+    component.toggleWord('pruefungsstoff-kapitel-4');
+    fixture.detectChanges();
+
+    expect(component.filteredResponses()).toEqual([
+      'Kapitel 4 klausurrelevant?',
+      'Kapitel 4 pruefungsstoff?',
+    ]);
+    const tooltip = component.wordTooltipDisplay(component.words()[0]!);
+    expect(tooltip).toContain('Basis: Kapitel 4');
+    expect(tooltip).toMatch(/Treffsicherheit:\s*hoch\s*\(92\s*%\)/);
+    expect(tooltip).toContain('Kapitel 4 klausurrelevant?');
+
+    const text = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
+    expect(text).toContain('Pruefungsstoff Kapitel 4');
+    expect(text).toContain('Basis: Kapitel 4');
+    expect(text).toMatch(/Treffsicherheit:\s*hoch\s*\(92\s*%\)/);
+    expect(text).toContain('Filter aktiv: Pruefungsstoff Kapitel 4');
+
+    const highBadge = fixture.nativeElement.querySelector('.word-cloud__meta-pill--detail-high');
+    expect(highBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
+      /Treffsicherheit:\s*hoch\s*\(92\s*%\)/,
+    );
+  });
+
+  it('stuft Analyse-Confidence semantisch in mittel und niedrig ein', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', ['Frage A', 'Frage B']);
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'mittel-cluster',
+        label: 'Lineare Regression',
+        count: 4,
+        basisLabel: 'lineare Regression',
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Frage A',
+            weight: 2,
+          },
+        ],
+        variants: ['lineare Regression'],
+        confidence: 0.72,
+      },
+      {
+        key: 'vorsichtig-cluster',
+        label: 'Klausurthema',
+        count: 2,
+        basisLabel: 'Klausurthema',
+        members: [
+          {
+            sourceId: 'question-2',
+            text: 'Frage B',
+            weight: 1,
+          },
+        ],
+        variants: ['Klausurthema'],
+        confidence: 0.54,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+
+    expect(component.confidenceFilter()).toBe('all');
+
+    expect(component.wordTooltipDisplay(component.words()[0]!)).toMatch(
+      /Treffsicherheit:\s*mittel\s*\(72\s*%\)/,
+    );
+    expect(component.wordTooltipDisplay(component.words()[1]!)).toMatch(
+      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+    );
+
+    component.setConfidenceFilter('low');
+    fixture.detectChanges();
+
+    expect(component.wordTooltipDisplay(component.words()[0]!)).toMatch(
+      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+    );
+
+    component.setConfidenceFilter('medium');
+    fixture.detectChanges();
+
+    component.toggleWord('mittel-cluster');
+    fixture.detectChanges();
+
+    const mediumBadge = fixture.nativeElement.querySelector(
+      '.word-cloud__meta-pill--detail-medium',
+    );
+    expect(mediumBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
+      /Treffsicherheit:\s*mittel\s*\(72\s*%\)/,
+    );
+
+    component.setConfidenceFilter('low');
+    fixture.detectChanges();
+
+    component.toggleWord('vorsichtig-cluster');
+    fixture.detectChanges();
+
+    const cautiousBadge = fixture.nativeElement.querySelector(
+      '.word-cloud__meta-pill--detail-cautious',
+    );
+    expect(cautiousBadge?.textContent?.replace(/\s+/g, ' ')).toMatch(
+      /Treffsicherheit:\s*niedrig\s*\(54\s*%\)/,
+    );
+  });
+
+  it('filtert Themen-Entries ueber den Treffsicherheits-Toggle nach hoch, mittel und niedrig', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', ['Frage A', 'Frage B', 'Frage C']);
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'hoch-cluster',
+        label: 'Kapitel 4',
+        count: 6,
+        basisLabel: 'Kapitel 4',
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Frage A',
+            weight: 2,
+          },
+        ],
+        variants: ['Kapitel 4'],
+        confidence: 0.91,
+      },
+      {
+        key: 'mittel-cluster',
+        label: 'lineare Regression',
+        count: 4,
+        basisLabel: 'lineare Regression',
+        members: [
+          {
+            sourceId: 'question-2',
+            text: 'Frage B',
+            weight: 2,
+          },
+        ],
+        variants: ['lineare Regression'],
+        confidence: 0.72,
+      },
+      {
+        key: 'niedrig-cluster',
+        label: 'Klausurthema',
+        count: 2,
+        basisLabel: 'Klausurthema',
+        members: [
+          {
+            sourceId: 'question-3',
+            text: 'Frage C',
+            weight: 1,
+          },
+        ],
+        variants: ['Klausurthema'],
+        confidence: 0.54,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    const text = (fixture.nativeElement.textContent as string).replace(/\s+/g, ' ');
+    expect(text).toContain('Treffsicherheit filtern');
+    expect(text).toContain('hoch');
+    expect(text).toContain('mittel');
+    expect(text).toContain('niedrig');
+    expect(component.confidenceFilter()).toBe('high');
+    expect(component.words().map((entry) => entry.groupKey)).toEqual(['hoch-cluster']);
+    expect(component.filteredResponses()).toEqual(['Frage A']);
+
+    component.setConfidenceFilter('all');
+    fixture.detectChanges();
+    expect(component.words()).toHaveLength(3);
+    expect(component.filteredResponses()).toEqual(['Frage A', 'Frage B', 'Frage C']);
+
+    component.setConfidenceFilter('medium');
+    fixture.detectChanges();
+    expect(component.words().map((entry) => entry.groupKey)).toEqual(['mittel-cluster']);
+    expect(component.filteredResponses()).toEqual(['Frage B']);
+
+    component.setConfidenceFilter('low');
+    fixture.detectChanges();
+    expect(component.words().map((entry) => entry.groupKey)).toEqual(['niedrig-cluster']);
+    expect(component.filteredResponses()).toEqual(['Frage C']);
+
+    component.setConfidenceFilter('all');
+    fixture.detectChanges();
+    expect(component.words()).toHaveLength(3);
+  });
+
+  it('haelt beim asynchronen Eintreffen von Theme-Entries den Default auf hoch', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', ['Frage A', 'Frage B']);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.confidenceFilter()).toBe('high');
+
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'hoch-cluster',
+        label: 'Kapitel 4',
+        count: 6,
+        basisLabel: 'Kapitel 4',
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Frage A',
+            weight: 2,
+          },
+        ],
+        variants: ['Kapitel 4'],
+        confidence: 0.91,
+      },
+      {
+        key: 'mittel-cluster',
+        label: 'Regression',
+        count: 4,
+        basisLabel: 'Regression',
+        members: [
+          {
+            sourceId: 'question-2',
+            text: 'Frage B',
+            weight: 1,
+          },
+        ],
+        variants: ['Regression'],
+        confidence: 0.71,
+      },
+    ]);
+    fixture.detectChanges();
+
+    expect(component.confidenceFilter()).toBe('high');
+    expect(component.words().map((entry) => entry.groupKey)).toEqual(['hoch-cluster']);
+    expect(component.filteredResponses()).toEqual(['Frage A']);
+  });
+
   it('exportiert CSV mit Variantenliste und setzt eine Statusmeldung', async () => {
     const fixture = TestBed.createComponent(WordCloudComponent);
     fixture.componentRef.setInput('responses', [
@@ -385,6 +858,51 @@ describe('WordCloudComponent', () => {
     expect(filename).toMatch(/^wordcloud_\d{4}-\d{2}-\d{2}\.csv$/);
     expect(mimeType).toBe('text/csv;charset=utf-8');
     expect(component.statusMessage()).toBe('CSV exportiert.');
+  });
+
+  it('exportiert Analyse-Entries im CSV mit Basis und Mitgliedern', () => {
+    const fixture = TestBed.createComponent(WordCloudComponent);
+    fixture.componentRef.setInput('analysisMode', 'qa');
+    fixture.componentRef.setInput('responses', [
+      'Kapitel 4 klausurrelevant?',
+      'Kapitel 4 pruefungsstoff?',
+    ]);
+    fixture.componentRef.setInput('analysisEntries', [
+      {
+        key: 'pruefungsstoff-kapitel-4',
+        label: 'Pruefungsstoff Kapitel 4',
+        count: 2,
+        basisLabel: 'Kapitel 4',
+        members: [
+          {
+            sourceId: 'question-1',
+            text: 'Kapitel 4 klausurrelevant?',
+            weight: 1,
+          },
+          {
+            sourceId: 'question-2',
+            text: 'Kapitel 4 pruefungsstoff?',
+            weight: 1,
+          },
+        ],
+        variants: ['Pruefungsstoff Kapitel 4'],
+        confidence: 0.92,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    const downloadSpy = vi
+      .spyOn(component as never, 'downloadBlob')
+      .mockImplementation(() => undefined);
+
+    component.exportCsv();
+
+    const [csv] = downloadSpy.mock.calls[0] as [string, string, string];
+    expect(csv).toContain('label,count,variants,basis,members');
+    expect(csv).toContain(
+      '"Pruefungsstoff Kapitel 4",2,"Pruefungsstoff Kapitel 4","Kapitel 4","Kapitel 4 klausurrelevant? | Kapitel 4 pruefungsstoff?"',
+    );
   });
 
   it('exportiert PNG mit erfolgreichem Status statt schwarzem Leerbild', async () => {
@@ -466,6 +984,7 @@ describe('WordCloudComponent', () => {
     expect(config['width']).toBe('100vw');
     expect(config['height']).toBe('100dvh');
     expect(config['data']).toMatchObject({
+      disableCloudLayout: false,
       responses: ['Motivation durch Teamarbeit', 'Teamarbeit schafft Fokus'],
       title: 'Word-Cloud (Freitext)',
     });

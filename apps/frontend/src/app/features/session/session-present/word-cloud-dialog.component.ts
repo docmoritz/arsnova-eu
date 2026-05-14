@@ -2,13 +2,16 @@ import { Component, inject } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogClose } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
+import type { WordCloudAnalysisEntryDTO } from '@arsnova/shared-types';
 import { WordCloudComponent } from './word-cloud.component';
 import type { WeightedWordSource, WordCloudAnalysisMode } from './word-cloud.util';
 
 export type WordCloudDialogData = {
   responses: string[];
   weightedResponses: WeightedWordSource[] | null;
+  analysisEntries: WordCloudAnalysisEntryDTO[] | null;
   analysisMode: WordCloudAnalysisMode;
+  disableCloudLayout: boolean;
   title: string;
   eyebrow: string | null;
   description: string | null;

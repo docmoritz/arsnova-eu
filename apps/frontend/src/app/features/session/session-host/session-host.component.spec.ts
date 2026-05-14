@@ -21,6 +21,7 @@ const {
   getLeaderboardQueryMock,
   getTeamLeaderboardQueryMock,
   getExportDataQueryMock,
+  wordCloudAnalyzeQueryMock,
   qaListQueryMock,
   qaModerateMutateMock,
   qaToggleModerationMutateMock,
@@ -60,6 +61,7 @@ const {
   getLeaderboardQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
   getExportDataQueryMock: vi.fn(),
+  wordCloudAnalyzeQueryMock: vi.fn(),
   qaListQueryMock: vi.fn(),
   qaModerateMutateMock: vi.fn(),
   qaToggleModerationMutateMock: vi.fn(),
@@ -139,6 +141,9 @@ vi.mock('../../../core/trpc.client', () => ({
       hostResults: { query: quickFeedbackHostResultsQueryMock },
       toggleLock: { mutate: quickFeedbackToggleLockMutateMock },
       updateStyle: { mutate: quickFeedbackUpdateStyleMutateMock },
+    },
+    wordCloud: {
+      analyze: { mutate: wordCloudAnalyzeQueryMock },
     },
   },
 }));
@@ -367,6 +372,14 @@ describe('SessionHostComponent', () => {
     });
     quickFeedbackHostResultsQueryMock.mockResolvedValue({ totalVotes: 0, options: [] });
     quickFeedbackToggleLockMutateMock.mockResolvedValue({ locked: true });
+    wordCloudAnalyzeQueryMock.mockResolvedValue({
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      generatedAt: '2026-03-24T12:00:00.000Z',
+      fallbackUsed: true,
+      entries: [],
+    });
     quizUploadMutateMock.mockResolvedValue({
       quizId: '44444444-4444-4444-8444-444444444444',
     });
@@ -1431,21 +1444,32 @@ describe('SessionHostComponent', () => {
     fixture.componentInstance.activeChannel.set('qa');
     fixture.detectChanges();
 
-    let text = fixture.nativeElement.textContent ?? '';
+    const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('Q&A-Word-Cloud anzeigen');
     expect(text).toContain('2 Fragen · Netto-Score gewichtet');
     expect(fixture.componentInstance.qaWordCloudQuestions()).toHaveLength(2);
     expect(fixture.componentInstance.qaWordCloudWeightedResponses()[0]?.weight).toBe(4);
     expect(fixture.componentInstance.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Netto-Score)');
 
-    fixture.componentInstance.qaWordCloudExpanded.set(true);
-    fixture.detectChanges();
+    dialogOpenMock.mockClear();
+    const trigger = fixture.nativeElement.querySelector(
+      '.session-host__extra-summary--button',
+    ) as HTMLButtonElement | null;
+    expect(trigger).not.toBeNull();
 
-    text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Q&A-Word-Cloud ausblenden');
-    expect(text).toContain('Q&A-Word-Cloud (Netto-Score)');
-    expect(text).toContain('Publikumsfragen');
-    expect(text).toContain('Größere Begriffe stammen aus Fragen mit höherem Netto-Score.');
+    trigger?.click();
+    await vi.waitUntil(() => dialogOpenMock.mock.calls.length === 1, {
+      timeout: 1000,
+      interval: 10,
+    });
+
+    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+    const data = config['data'] as {
+      title: () => string;
+      weightingHint: () => string | null;
+    };
+    expect(data.title()).toBe('Q&A-Word-Cloud (Netto-Score)');
+    expect(data.weightingHint()).toContain('höherem Netto-Score');
     fixture.destroy();
   });
 
@@ -1742,15 +1766,417 @@ describe('SessionHostComponent', () => {
     expect(config['panelClass']).toBe('word-cloud-dialog-panel');
     expect(config['height']).toBe('100dvh');
     const data = config['data'] as {
+      analysisVariant: () => string;
       sortMode: () => string;
       title: () => string;
       tooltipMetricLabel: () => string;
       weightingHint: () => string | null;
     };
+    expect(data.analysisVariant()).toBe('THEME');
     expect(data.sortMode()).toBe('CONTROVERSIAL');
     expect(data.title()).toBe('Q&A-Word-Cloud (Kontroversität)');
     expect(data.tooltipMetricLabel()).toBe('Kontroversität');
     expect(data.weightingHint()).toContain('stärker umstrittenen Fragen');
+    fixture.destroy();
+  });
+
+  it('startet die Q&A-Wortwolke standardmaessig im Themenmodus', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    qaListQueryMock.mockResolvedValue([
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        text: 'Kommt Kapitel 4 in der Klausur vor?',
+        upvoteCount: 9,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+        upvoteCount: 4,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:01:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    wordCloudAnalyzeQueryMock.mockResolvedValue({
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      generatedAt: '2026-03-24T12:00:00.000Z',
+      fallbackUsed: false,
+      entries: [
+        {
+          key: 'kapitel-4',
+          label: 'Kapitel 4',
+          count: 7,
+          basisLabel: 'Kapitel 4',
+          members: [
+            {
+              sourceId: '11111111-1111-4111-8111-111111111111',
+              text: 'Kommt Kapitel 4 in der Klausur vor?',
+              weight: 4,
+            },
+            {
+              sourceId: '22222222-2222-4222-8222-222222222222',
+              text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+              weight: 3,
+            },
+          ],
+          variants: ['Kapitel 4'],
+          confidence: 0.88,
+        },
+      ],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudQuestions().length === 2, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudAnalysisEntries()?.length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.qaWordCloudAnalysisVariant()).toBe('THEME');
+    expect(wordCloudAnalyzeQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionCode: 'ABC123',
+        mode: 'THEME',
+      }),
+    );
+    expect(fixture.componentInstance.qaWordCloudAnalysisEntries()).toMatchObject([
+      {
+        label: 'Kapitel 4',
+      },
+    ]);
+    fixture.destroy();
+  });
+
+  it('schaltet fuer die Q&A-Wortwolke in den Themenmodus und rendert erfolgreiche Theme-Entries', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    qaListQueryMock.mockResolvedValue([
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        text: 'Kommt Kapitel 4 in der Klausur vor?',
+        upvoteCount: 9,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+        upvoteCount: 4,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:01:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    wordCloudAnalyzeQueryMock.mockResolvedValue({
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      generatedAt: '2026-03-24T12:00:00.000Z',
+      fallbackUsed: false,
+      entries: [
+        {
+          key: 'kapitel-4',
+          label: 'Kapitel 4',
+          count: 7,
+          basisLabel: 'Kapitel 4',
+          members: [
+            {
+              sourceId: '11111111-1111-4111-8111-111111111111',
+              text: 'Kommt Kapitel 4 in der Klausur vor?',
+              weight: 4,
+            },
+            {
+              sourceId: '22222222-2222-4222-8222-222222222222',
+              text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+              weight: 3,
+            },
+          ],
+          variants: ['Kapitel 4'],
+          confidence: 0.88,
+        },
+      ],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudQuestions().length === 2, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    fixture.componentInstance.activeChannel.set('qa');
+    fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
+    fixture.detectChanges();
+
+    await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudAnalysisEntries()?.length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(wordCloudAnalyzeQueryMock).toHaveBeenCalledWith({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: fixture.componentInstance.qaWordCloudAnalysisLocale(),
+      metric: 'TOP',
+      maxEntries: 40,
+      items: [
+        {
+          id: '11111111-1111-4111-8111-111111111111',
+          text: 'Kommt Kapitel 4 in der Klausur vor?',
+          weight: 4,
+        },
+        {
+          id: '22222222-2222-4222-8222-222222222222',
+          text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+          weight: 3,
+        },
+      ],
+    });
+    expect(fixture.componentInstance.qaWordCloudThemeFallbackHint()).toBeNull();
+    expect(fixture.componentInstance.qaWordCloudAnalysisEntries()).toMatchObject([
+      {
+        label: 'Kapitel 4',
+      },
+    ]);
+    dialogOpenMock.mockClear();
+    await fixture.componentInstance.openQaWordCloudDialog();
+
+    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+    const data = config['data'] as {
+      analysisVariant: () => string;
+      analysisEntries: () => Array<{ label: string }> | null;
+      themeFallbackHint: () => string | null;
+    };
+    expect(data.analysisVariant()).toBe('THEME');
+    expect(data.analysisEntries()).toMatchObject([{ label: 'Kapitel 4' }]);
+    expect(data.themeFallbackHint()).toBeNull();
+    fixture.destroy();
+  });
+
+  it('gibt Analysemodus und erfolgreiche Theme-Entries an den Q&A-Wortwolken-Dialog weiter', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    qaListQueryMock.mockResolvedValue([
+      {
+        id: '44444444-4444-4444-8444-444444444444',
+        text: 'Kommt Kapitel 4 in der Klausur vor?',
+        upvoteCount: 4,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+      {
+        id: '55555555-5555-4555-8555-555555555555',
+        text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+        upvoteCount: 9,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:01:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    wordCloudAnalyzeQueryMock.mockResolvedValue({
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      generatedAt: '2026-03-24T12:00:00.000Z',
+      fallbackUsed: false,
+      entries: [
+        {
+          key: 'kapitel-4',
+          label: 'Kapitel 4',
+          count: 7,
+          basisLabel: 'Kapitel 4',
+          members: [
+            {
+              sourceId: '44444444-4444-4444-8444-444444444444',
+              text: 'Kommt Kapitel 4 in der Klausur vor?',
+              weight: 3,
+            },
+            {
+              sourceId: '55555555-5555-4555-8555-555555555555',
+              text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+              weight: 4,
+            },
+          ],
+          variants: ['Kapitel 4'],
+          confidence: 0.88,
+        },
+      ],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudQuestions().length === 2, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    fixture.componentInstance.activeChannel.set('qa');
+    fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
+    await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudAnalysisEntries()?.length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    fixture.detectChanges();
+
+    dialogOpenMock.mockClear();
+    await fixture.componentInstance.openQaWordCloudDialog();
+
+    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+    const data = config['data'] as {
+      analysisVariant: () => string;
+      analysisEntries: () => Array<{ label: string }> | null;
+      themeFallbackHint: () => string | null;
+    };
+    expect(data.analysisVariant()).toBe('THEME');
+    expect(data.analysisEntries()?.[0]?.label).toBe('Kapitel 4');
+    expect(data.themeFallbackHint()).toBeNull();
+    fixture.destroy();
+  });
+
+  it('zeigt im Themenmodus einen Fallback-Hinweis, wenn der Backend-Pfad lexikalisch zurueckfaellt', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    qaListQueryMock.mockResolvedValue([
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        text: 'Welche Frage gewinnt?',
+        upvoteCount: 4,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    wordCloudAnalyzeQueryMock.mockResolvedValue({
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      generatedAt: '2026-03-24T12:00:00.000Z',
+      fallbackUsed: true,
+      entries: [
+        {
+          key: 'welche frage gewinnt?',
+          label: 'Welche Frage gewinnt?',
+          count: 3,
+          basisLabel: null,
+          members: [
+            {
+              sourceId: '66666666-6666-4666-8666-666666666666',
+              text: 'Welche Frage gewinnt?',
+              weight: 3,
+            },
+          ],
+          variants: ['Welche Frage gewinnt?'],
+          confidence: null,
+        },
+      ],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudQuestions().length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    fixture.componentInstance.activeChannel.set('qa');
+    fixture.componentInstance.setQaWordCloudAnalysisVariant('THEME');
+    await vi.waitUntil(() => wordCloudAnalyzeQueryMock.mock.calls.length >= 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    await vi.waitUntil(() => fixture.componentInstance.qaWordCloudAnalysisEntries()?.length === 1, {
+      timeout: 5000,
+      interval: 25,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.qaWordCloudThemeFallbackHint()).toContain(
+      'lexikalischen Fallback',
+    );
+
+    dialogOpenMock.mockClear();
+    await fixture.componentInstance.openQaWordCloudDialog();
+
+    const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+    const data = config['data'] as {
+      analysisVariant: () => string;
+      themeFallbackHint: () => string | null;
+    };
+    expect(data.analysisVariant()).toBe('THEME');
+    expect(data.themeFallbackHint()).toContain('lexikalischen Fallback');
     fixture.destroy();
   });
 

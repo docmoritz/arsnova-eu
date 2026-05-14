@@ -1,0 +1,341 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { extractHostTokenFromContextMock, isHostSessionTokenValidMock } = vi.hoisted(() => ({
+  extractHostTokenFromContextMock: vi.fn(),
+  isHostSessionTokenValidMock: vi.fn(),
+}));
+
+vi.mock('../lib/hostAuth', () => ({
+  extractHostTokenFromContext: extractHostTokenFromContextMock,
+  isHostSessionTokenValid: isHostSessionTokenValidMock,
+}));
+
+import { wordCloudRouter } from '../routers/wordCloud';
+
+const hostCaller = wordCloudRouter.createCaller({ req: {} as never });
+
+describe('wordCloud.analyze', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    extractHostTokenFromContextMock.mockReturnValue('host-token-123');
+    isHostSessionTokenValidMock.mockResolvedValue(true);
+  });
+
+  it('buendelt paraphrasennahe Fragen im Themenmodus zu erklaerbaren Clustern', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'BEST',
+      maxEntries: 5,
+      items: [
+        {
+          id: '11111111-1111-4111-8111-111111111111',
+          text: 'Kommt Kapitel 4 in der Klausur vor?',
+          weight: 8,
+        },
+        {
+          id: '22222222-2222-4222-8222-222222222222',
+          text: 'Brauchen wir Kapitel 4 fuer die Pruefung?',
+          weight: 5,
+        },
+        {
+          id: '33333333-3333-4333-8333-333333333333',
+          text: 'Wie funktioniert lineare Regression im Praxisprojekt?',
+          weight: 3,
+        },
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          text: 'Wann nutzen wir lineare Regression fuer Prognosen?',
+          weight: 4,
+        },
+      ],
+    });
+
+    expect(result.mode).toBe('THEME');
+    expect(result.metric).toBe('BEST');
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries[0]).toMatchObject({
+      key: 'kapitel 4',
+      label: 'Kapitel 4',
+      count: 13,
+      basisLabel: 'Kapitel 4',
+      variants: ['Kapitel 4'],
+    });
+    expect(result.entries[0]?.members).toHaveLength(2);
+    expect(result.entries[0]?.members.map((member) => member.text)).toEqual([
+      'Kommt Kapitel 4 in der Klausur vor?',
+      'Brauchen wir Kapitel 4 fuer die Pruefung?',
+    ]);
+    expect(result.entries[0]?.confidence).toBeGreaterThanOrEqual(0.65);
+    expect(result.entries[0]?.confidence).toBeLessThan(0.85);
+    expect(result.entries[1]).toMatchObject({
+      key: 'lineare regression',
+      label: 'lineare Regression',
+      count: 7,
+      basisLabel: 'lineare Regression',
+      variants: ['lineare Regression'],
+    });
+    expect(result.entries[1]?.confidence).toBeGreaterThanOrEqual(0.65);
+    expect(result.entries[1]?.confidence).toBeLessThan(0.85);
+  });
+
+  it('buendelt englische Paraphrasen im Themenmodus ueber gemeinsame Kernphrasen', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'en',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          text: 'How does linear regression work in practice?',
+          weight: 4,
+        },
+        {
+          id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+          text: 'When do we use linear regression for forecasts?',
+          weight: 5,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'linear regression',
+        label: 'linear regression',
+        count: 9,
+        basisLabel: 'linear regression',
+        variants: ['linear regression'],
+      },
+    ]);
+    expect(result.entries[0]?.members).toHaveLength(2);
+  });
+
+  it('bevorzugt fachliche Kernphrasen vor generischen Q&A-Traegern im Deutschen', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+          text: 'Welche Themen zur linearen Regression sind klausurrelevant?',
+          weight: 6,
+        },
+        {
+          id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+          text: 'Koennen wir das Thema lineare Regression fuer die Pruefung einordnen?',
+          weight: 4,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'lineare regression',
+        label: 'lineare Regression',
+        count: 10,
+        basisLabel: 'lineare Regression',
+        variants: ['lineare Regression'],
+      },
+    ]);
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('thema');
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('klausur');
+  });
+
+  it('filtert zusaetzliche deutsche Traegerwoerter wie sich, werden oder schwaecht im Themenmodus', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'abababab-abab-4bab-8bab-abababababab',
+          text: 'Erkläre, warum sich beim Wahlrecht eher große Unterschiede zeigen und woran es direkt liegt.',
+          weight: 5,
+        },
+        {
+          id: 'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
+          text: 'Warum werden über das Wahlrecht trotz mehr Debatten neue Modelle diskutiert, obwohl manches dran bleibt?',
+          weight: 4,
+        },
+        {
+          id: 'efefefef-efef-4fef-8fef-efefefefefef',
+          text: 'Was hilft beim Wahlrecht, wenn ein Vorschlag kleiner wirkt, Parteien schwächt und sich schwer erklären lässt?',
+          weight: 3,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'wahlrecht',
+        label: 'Wahlrecht',
+        count: 12,
+        basisLabel: 'Wahlrecht',
+        variants: ['Wahlrecht'],
+      },
+    ]);
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('sich');
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('werden');
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('über');
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('schwächt');
+  });
+
+  it('bevorzugt fachliche Kernphrasen vor generischen Q&A-Traegern im Englischen', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'en',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+          text: 'Which topic about linear regression is exam relevant?',
+          weight: 5,
+        },
+        {
+          id: '99999999-9999-4999-8999-999999999999',
+          text: 'Can we place the topic linear regression for the exam?',
+          weight: 4,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'linear regression',
+        label: 'linear regression',
+        count: 9,
+        basisLabel: 'linear regression',
+        variants: ['linear regression'],
+      },
+    ]);
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('topic');
+    expect(result.entries[0]?.label.toLocaleLowerCase()).not.toContain('exam');
+  });
+
+  it('stuft einen einzelnen numerischen Themenanker vorsichtig ein', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: '12121212-1212-4212-8212-121212121212',
+          text: 'Kommt Kapitel 4 in der Klausur vor?',
+          weight: 4,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'kapitel 4',
+        label: 'Kapitel 4',
+        count: 4,
+        basisLabel: 'Kapitel 4',
+        variants: ['Kapitel 4'],
+      },
+    ]);
+    expect(result.entries[0]?.confidence).toBeLessThan(0.65);
+  });
+
+  it('stuft dreifach belegte Themencluster als hohe Sicherheit ein', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: '13131313-1313-4313-8313-131313131313',
+          text: 'Wie funktioniert lineare Regression im Praxisprojekt?',
+          weight: 4,
+        },
+        {
+          id: '14141414-1414-4414-8414-141414141414',
+          text: 'Wann nutzen wir lineare Regression fuer Prognosen?',
+          weight: 5,
+        },
+        {
+          id: '15151515-1515-4515-8515-151515151515',
+          text: 'Wo setzen wir lineare Regression in der Uebung ein?',
+          weight: 3,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'lineare regression',
+        label: 'lineare Regression',
+        count: 12,
+        basisLabel: 'lineare Regression',
+        variants: ['lineare Regression'],
+      },
+    ]);
+    expect(result.entries[0]?.confidence).toBeGreaterThanOrEqual(0.85);
+  });
+
+  it('faellt bei unsicherem Einzel-Theme kontrolliert lexikalisch zurueck', async () => {
+    const result = await hostCaller.analyze({
+      sessionCode: 'ABC123',
+      mode: 'THEME',
+      locale: 'de',
+      metric: 'TOP',
+      items: [
+        {
+          id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          text: 'Welche Frage gewinnt?',
+          weight: 4,
+        },
+      ],
+    });
+
+    expect(result.fallbackUsed).toBe(true);
+    expect(result.entries).toMatchObject([
+      {
+        key: 'welche frage gewinnt?',
+        label: 'Welche Frage gewinnt?',
+        count: 4,
+        basisLabel: null,
+        variants: ['Welche Frage gewinnt?'],
+      },
+    ]);
+  });
+
+  it('lehnt den Analysepfad ohne gueltigen Host-Token ab', async () => {
+    extractHostTokenFromContextMock.mockReturnValue(null);
+
+    await expect(
+      hostCaller.analyze({
+        sessionCode: 'ABC123',
+        mode: 'LEXICAL',
+        locale: 'de',
+        metric: 'TOP',
+        items: [
+          {
+            id: '11111111-1111-4111-8111-111111111111',
+            text: 'Kapitel 4 in der Klausur',
+            weight: 8,
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+      message: 'Host-Authentifizierung erforderlich.',
+    });
+  });
+});

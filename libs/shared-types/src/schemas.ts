@@ -861,6 +861,72 @@ export const LiveFreetextDTOSchema = z.object({
 });
 export type LiveFreetextDTO = z.infer<typeof LiveFreetextDTOSchema>;
 
+/** Analyseansicht für Word-Cloud 3.0 – lexikalischer Fallback vs. Themenmodus. */
+export const WordCloudAnalysisVariantEnum = z.enum(['LEXICAL', 'THEME']);
+export type WordCloudAnalysisVariant = z.infer<typeof WordCloudAnalysisVariantEnum>;
+
+/** Erste 3.0-Stufe: erklärbarer Themenmodus ist für `de` und `en` Pflichtscope. */
+export const WordCloudAnalysisLocaleEnum = z.enum(['de', 'en']);
+export type WordCloudAnalysisLocale = z.infer<typeof WordCloudAnalysisLocaleEnum>;
+
+/** Gewichtungsbasis für Q&A-Word-Cloud-Analysen. */
+export const WordCloudWeightMetricEnum = QaQuestionSortModeEnum;
+export type WordCloudWeightMetric = z.infer<typeof WordCloudWeightMetricEnum>;
+
+/** Einzelne Quelldaten für eine Word-Cloud-Analyse. */
+export const WordCloudAnalysisSourceItemSchema = z.object({
+  id: z.string().trim().min(1),
+  text: z.string().trim().min(1),
+  weight: z.number().min(0),
+});
+export type WordCloudAnalysisSourceItem = z.infer<typeof WordCloudAnalysisSourceItemSchema>;
+
+/** Input: Analyseauftrag für Word Cloud 3.0. */
+export const AnalyzeWordCloudInputSchema = z.object({
+  sessionCode: z.string().length(6, { error: 'Session-Code muss 6 Zeichen lang sein' }),
+  mode: WordCloudAnalysisVariantEnum,
+  locale: WordCloudAnalysisLocaleEnum,
+  metric: WordCloudWeightMetricEnum,
+  items: z.array(WordCloudAnalysisSourceItemSchema).max(500),
+  maxEntries: z.number().int().min(1).max(100).optional(),
+});
+export type AnalyzeWordCloudInput = z.infer<typeof AnalyzeWordCloudInputSchema>;
+
+/** Mitglied eines erklärbaren Themenclusters oder lexikalischen Buckets. */
+export const WordCloudAnalysisMemberDTOSchema = z.object({
+  sourceId: z.string().trim().min(1),
+  text: z.string().trim().min(1),
+  weight: z.number().min(0),
+});
+export type WordCloudAnalysisMemberDTO = z.infer<typeof WordCloudAnalysisMemberDTOSchema>;
+
+/** Ein analysierter Word-Cloud-Eintrag inklusive Erklärbarkeitsdaten. */
+export const WordCloudAnalysisEntryDTOSchema = z.object({
+  key: z.string().trim().min(1),
+  label: z.string().trim().min(1),
+  count: z.number().min(0),
+  basisLabel: z.string().trim().min(1).nullable(),
+  members: z.array(WordCloudAnalysisMemberDTOSchema).min(1),
+  variants: z.array(z.string().trim().min(1)),
+  confidence: z.number().min(0).max(1).nullable(),
+});
+export type WordCloudAnalysisEntryDTO = z.infer<typeof WordCloudAnalysisEntryDTOSchema>;
+
+/** Output: Erklärbares Ergebnis einer Word-Cloud-Analyse. */
+export const WordCloudAnalysisResultDTOSchema = z.object({
+  mode: WordCloudAnalysisVariantEnum,
+  locale: WordCloudAnalysisLocaleEnum,
+  metric: WordCloudWeightMetricEnum,
+  generatedAt: z.string(), // ISO-8601
+  fallbackUsed: z.boolean(),
+  entries: z.array(WordCloudAnalysisEntryDTOSchema),
+});
+export type WordCloudAnalysisResultDTO = z.infer<typeof WordCloudAnalysisResultDTOSchema>;
+
+/** Output: Antwort auf einen zukünftigen `wordCloud.analyze`-Pfad. */
+export const AnalyzeWordCloudOutputSchema = WordCloudAnalysisResultDTOSchema;
+export type AnalyzeWordCloudOutput = z.infer<typeof AnalyzeWordCloudOutputSchema>;
+
 /** DTO: Live-Zustand authorisierter Quiz-Kopien (Story 1.10). */
 export const ActiveQuizLiveStateDTOSchema = z.object({
   quizId: z.uuid(),
