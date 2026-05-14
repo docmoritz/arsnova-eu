@@ -1671,7 +1671,7 @@ describe('SessionHostComponent', () => {
       '1 sichtbare Frage · Größe der Begriffe: belastbare Zustimmung',
     );
     expect(fixture.nativeElement.textContent ?? '').toContain(
-      'Zeigt Fragen mit viel Zustimmung und genug Stimmen zuerst.',
+      'Zeigt Fragen mit viel Zustimmung und genug Stimmen zuerst. Angeheftete Fragen bleiben oben.',
     );
     fixture.destroy();
   });
@@ -1721,7 +1721,7 @@ describe('SessionHostComponent', () => {
     expect(component.qaWordCloudInfo()).toBe('1 sichtbare Frage · Größe der Begriffe: Kontroverse');
     expect(text).toContain('Umstritten');
     expect(text).toContain('8 positiv · 8 negativ');
-    expect(text).toContain('Kontroversität 80 %');
+    expect(text).toContain('Geteilte Reaktionen 80 %');
     fixture.destroy();
   });
 

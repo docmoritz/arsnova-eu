@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import {
   GetQaQuestionsInputSchema,
@@ -17,8 +18,10 @@ import { prisma } from '../db';
 import { hostProcedure, publicProcedure, router } from '../trpc';
 
 const QA_SUBSCRIPTION_POLL_MS = 1000;
+const QA_PARTICIPANT_COUNT_CACHE_MS = 5000;
 const QA_WILSON_Z = 1.96;
 const QA_WILSON_Z_SQUARED = QA_WILSON_Z * QA_WILSON_Z;
+const PARTICIPANT_VISIBLE_QA_STATUSES = ['ACTIVE', 'PINNED', 'ARCHIVED'] as const;
 
 type QaQuestionVoteRecord = {
   participantId?: string;
@@ -33,6 +36,11 @@ type QaQuestionRecord = {
   createdAt: Date;
   participantId: string;
   upvotes?: QaQuestionVoteRecord[];
+};
+
+type QaQuestionVoteAggregates = {
+  positiveVoteCount: number;
+  negativeVoteCount: number;
 };
 
 type QaQuestionVoteStats = {
@@ -126,19 +134,20 @@ function createQaVoteStats(
   question: QaQuestionRecord,
   includeVoteMetrics: boolean,
   participantCountForControversy?: number,
+  voteAggregates?: QaQuestionVoteAggregates,
 ): QaQuestionVoteStats {
-  const score = question.upvoteCount;
   if (!includeVoteMetrics) {
-    return { score };
+    return { score: question.upvoteCount };
   }
 
-  const positiveVoteCount = (question.upvotes ?? []).filter(
-    (vote) => vote.direction !== 'DOWN',
-  ).length;
-  const negativeVoteCount = (question.upvotes ?? []).filter(
-    (vote) => vote.direction === 'DOWN',
-  ).length;
+  const positiveVoteCount =
+    voteAggregates?.positiveVoteCount ??
+    (question.upvotes ?? []).filter((vote) => vote.direction !== 'DOWN').length;
+  const negativeVoteCount =
+    voteAggregates?.negativeVoteCount ??
+    (question.upvotes ?? []).filter((vote) => vote.direction === 'DOWN').length;
   const voteCount = positiveVoteCount + negativeVoteCount;
+  const score = voteAggregates ? positiveVoteCount - negativeVoteCount : question.upvoteCount;
   const bestScore = computeWilsonBestScore(positiveVoteCount, negativeVoteCount);
   const controversyScore =
     typeof participantCountForControversy === 'number'
@@ -219,7 +228,12 @@ function sortQuestions(
       return right.voteStats.score - left.voteStats.score;
     }
 
-    return left.question.createdAt.getTime() - right.question.createdAt.getTime();
+    const createdAtDiff = left.question.createdAt.getTime() - right.question.createdAt.getTime();
+    if (createdAtDiff !== 0) {
+      return createdAtDiff;
+    }
+
+    return left.question.id.localeCompare(right.question.id);
   });
 }
 
@@ -273,15 +287,132 @@ function buildQaQuestionListPayload(
   sortMode: QaQuestionSortMode,
   includeVoteMetrics: boolean,
   participantCountForControversy?: number,
+  voteAggregatesByQuestionId: ReadonlyMap<string, QaQuestionVoteAggregates> = new Map(),
 ) {
   const decoratedQuestions = questions.map((question) => ({
     question,
-    voteStats: createQaVoteStats(question, includeVoteMetrics, participantCountForControversy),
+    voteStats: createQaVoteStats(
+      question,
+      includeVoteMetrics,
+      participantCountForControversy,
+      voteAggregatesByQuestionId.get(question.id),
+    ),
   }));
 
   return sortQuestions(decoratedQuestions, sortMode).map(({ question, voteStats }) =>
     mapQaQuestion(question, participantId, voteStats, includeVoteMetrics),
   );
+}
+
+function buildQaQuestionWhere(
+  sessionId: string,
+  moderatorView: boolean | undefined,
+  participantId: string | undefined,
+): Prisma.QaQuestionWhereInput {
+  return {
+    sessionId,
+    ...(moderatorView
+      ? {}
+      : participantId
+        ? {
+            OR: [
+              { status: { in: [...PARTICIPANT_VISIBLE_QA_STATUSES] } },
+              { status: 'PENDING' as const, participantId },
+            ],
+          }
+        : { status: { not: 'DELETED' as const } }),
+  };
+}
+
+async function getVoteAggregatesByQuestionId(
+  questionIds: readonly string[],
+): Promise<Map<string, QaQuestionVoteAggregates>> {
+  if (questionIds.length === 0) {
+    return new Map();
+  }
+
+  const groupedVotes = await prisma.qaUpvote.groupBy({
+    by: ['qaQuestionId', 'direction'],
+    where: { qaQuestionId: { in: [...questionIds] } },
+    _count: { _all: true },
+  });
+  const aggregates = new Map<string, QaQuestionVoteAggregates>();
+
+  for (const row of groupedVotes) {
+    const current = aggregates.get(row.qaQuestionId) ?? {
+      positiveVoteCount: 0,
+      negativeVoteCount: 0,
+    };
+    if (row.direction === 'DOWN') {
+      current.negativeVoteCount += row._count._all;
+    } else {
+      current.positiveVoteCount += row._count._all;
+    }
+    aggregates.set(row.qaQuestionId, current);
+  }
+
+  return aggregates;
+}
+
+async function buildQaQuestionPayloadFromDb(
+  sessionId: string,
+  participantId: string | undefined,
+  moderatorView: boolean | undefined,
+  sortMode: QaQuestionSortMode,
+  participantCountForControversy?: number,
+) {
+  const questions = await prisma.qaQuestion.findMany({
+    where: buildQaQuestionWhere(sessionId, moderatorView, participantId),
+    include: {
+      upvotes: moderatorView
+        ? false
+        : participantId
+          ? {
+              where: { participantId },
+              select: { participantId: true, direction: true },
+            }
+          : false,
+    },
+  });
+  const voteAggregatesByQuestionId =
+    moderatorView === true
+      ? await getVoteAggregatesByQuestionId(questions.map((question) => question.id))
+      : new Map<string, QaQuestionVoteAggregates>();
+
+  return buildQaQuestionListPayload(
+    questions,
+    participantId,
+    sortMode,
+    moderatorView === true,
+    participantCountForControversy,
+    voteAggregatesByQuestionId,
+  );
+}
+
+async function getQaQuestionsRevisionKey(
+  sessionId: string,
+  moderatorView: boolean | undefined,
+  participantId: string | undefined,
+  participantCountForControversy?: number,
+): Promise<string> {
+  const revision = await prisma.qaQuestion.aggregate({
+    where: buildQaQuestionWhere(sessionId, moderatorView, participantId),
+    _count: { _all: true },
+    _max: { updatedAt: true },
+    _sum: { upvoteCount: true },
+  });
+
+  const count =
+    typeof revision._count === 'object' && revision._count !== null
+      ? (revision._count._all ?? 0)
+      : 0;
+
+  return [
+    count,
+    revision._max?.updatedAt?.getTime() ?? 0,
+    revision._sum?.upvoteCount ?? 0,
+    participantCountForControversy ?? '',
+  ].join(':');
 }
 
 export const qaRouter = router({
@@ -320,39 +451,11 @@ export const qaRouter = router({
             })
           : undefined;
 
-      const questions = await prisma.qaQuestion.findMany({
-        where: {
-          sessionId: session.id,
-          ...(input.moderatorView
-            ? {}
-            : input.participantId
-              ? {
-                  OR: [
-                    { status: { in: ['ACTIVE', 'PINNED', 'ARCHIVED'] } },
-                    { status: 'PENDING', participantId: input.participantId },
-                  ],
-                }
-              : { status: { not: 'DELETED' } }),
-        },
-        include: {
-          upvotes: input.moderatorView
-            ? {
-                select: { direction: true },
-              }
-            : input.participantId
-              ? {
-                  where: { participantId: input.participantId },
-                  select: { participantId: true, direction: true },
-                }
-              : false,
-        },
-      });
-
-      return buildQaQuestionListPayload(
-        questions,
+      return buildQaQuestionPayloadFromDb(
+        session.id,
         input.participantId,
+        input.moderatorView,
         sortMode,
-        input.moderatorView === true,
         participantCountForControversy,
       );
     }),
@@ -632,6 +735,30 @@ export const qaRouter = router({
         },
       });
 
+      if (existing && existing.direction === 'DOWN') {
+        await prisma.$transaction([
+          prisma.qaUpvote.update({
+            where: { id: existing.id },
+            data: { direction: 'UP' },
+          }),
+          prisma.qaQuestion.update({
+            where: { id: input.questionId },
+            data: { upvoteCount: { increment: 2 } },
+          }),
+        ]);
+
+        const updated = await prisma.qaQuestion.findUnique({
+          where: { id: input.questionId },
+          select: { upvoteCount: true },
+        });
+
+        return {
+          questionId: input.questionId,
+          upvoted: true,
+          upvoteCount: updated?.upvoteCount ?? question.upvoteCount + 2,
+        };
+      }
+
       if (existing) {
         await prisma.$transaction([
           prisma.qaUpvote.delete({ where: { id: existing.id } }),
@@ -834,6 +961,9 @@ export const qaRouter = router({
     .input(GetQaQuestionsInputSchema)
     .subscription(async function* ({ input, ctx }) {
       let lastJson = '';
+      let lastRevisionKey = '';
+      let cachedParticipantCountForControversy: number | undefined;
+      let participantCountCacheExpiresAt = 0;
       const sortMode = normalizeQaSortMode(input.moderatorView, input.sort);
 
       const gateSession = await prisma.session.findUnique({
@@ -872,46 +1002,38 @@ export const qaRouter = router({
           return;
         }
 
-        const participantCountForControversy =
-          input.moderatorView && sortMode === 'CONTROVERSIAL'
-            ? await prisma.participant.count({
-                where: { sessionId: input.sessionId },
-              })
-            : undefined;
+        let participantCountForControversy: number | undefined;
+        if (input.moderatorView && sortMode === 'CONTROVERSIAL') {
+          const now = Date.now();
+          if (
+            cachedParticipantCountForControversy === undefined ||
+            now >= participantCountCacheExpiresAt
+          ) {
+            cachedParticipantCountForControversy = await prisma.participant.count({
+              where: { sessionId: input.sessionId },
+            });
+            participantCountCacheExpiresAt = now + QA_PARTICIPANT_COUNT_CACHE_MS;
+          }
+          participantCountForControversy = cachedParticipantCountForControversy;
+        }
 
-        const questions = await prisma.qaQuestion.findMany({
-          where: {
-            sessionId: input.sessionId,
-            ...(input.moderatorView
-              ? {}
-              : input.participantId
-                ? {
-                    OR: [
-                      { status: { in: ['ACTIVE', 'PINNED', 'ARCHIVED'] } },
-                      { status: 'PENDING', participantId: input.participantId },
-                    ],
-                  }
-                : { status: { not: 'DELETED' } }),
-          },
-          include: {
-            upvotes: input.moderatorView
-              ? {
-                  select: { direction: true },
-                }
-              : input.participantId
-                ? {
-                    where: { participantId: input.participantId },
-                    select: { participantId: true, direction: true },
-                  }
-                : false,
-          },
-        });
-
-        const payload = buildQaQuestionListPayload(
-          questions,
+        const revisionKey = await getQaQuestionsRevisionKey(
+          input.sessionId,
+          input.moderatorView,
           input.participantId,
+          participantCountForControversy,
+        );
+        if (revisionKey === lastRevisionKey) {
+          await new Promise((resolve) => setTimeout(resolve, QA_SUBSCRIPTION_POLL_MS));
+          continue;
+        }
+        lastRevisionKey = revisionKey;
+
+        const payload = await buildQaQuestionPayloadFromDb(
+          input.sessionId,
+          input.participantId,
+          input.moderatorView,
           sortMode,
-          input.moderatorView === true,
           participantCountForControversy,
         );
         const json = JSON.stringify(payload);

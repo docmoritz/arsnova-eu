@@ -24,7 +24,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
-import d3Cloud, { type CloudLayout } from 'd3-cloud';
+import type { CloudLayout } from 'd3-cloud';
 import type { WordCloudAnalysisEntryDTO } from '@arsnova/shared-types';
 import { getEffectiveLocale, localeIdToSupported } from '../../../core/locale-from-path';
 import { tryRequestDocumentFullscreen } from '../../../core/document-fullscreen.util';
@@ -55,6 +55,7 @@ const CLOUD_LAYOUT_TIME_SLICE_MS = 8;
 interface CloudWord {
   word: string;
   count: number;
+  sourceCount: number;
   groupKey: string;
   variants: string[];
   basisLabel: string | null;
@@ -167,6 +168,8 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   private observedVisualFrame: HTMLElement | null = null;
   private layoutTimer: ReturnType<typeof setTimeout> | null = null;
   private activeCloudLayout: CloudLayout<LayoutWord> | null = null;
+  private d3CloudFactory: (typeof import('d3-cloud'))['default'] | null = null;
+  private d3CloudImportPromise: Promise<(typeof import('d3-cloud'))['default']> | null = null;
   private layoutRunId = 0;
   private previousSelectionScopeKey: string | null | undefined = undefined;
 
@@ -362,6 +365,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return providedEntries.map((entry, index) => ({
         word: entry.label,
         count: entry.count,
+        sourceCount: this.analysisEntrySourceCount(entry),
         groupKey: entry.key,
         variants: entry.variants.length > 0 ? entry.variants : [entry.label],
         basisLabel: entry.basisLabel,
@@ -698,7 +702,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       const runId = ++this.layoutRunId;
       const layoutWords = this.createLayoutWords(words);
       this.layoutTimer = setTimeout(
-        () => this.runCloudLayout(layoutWords, width, height, fontFamily, signature, runId),
+        () => void this.runCloudLayout(layoutWords, width, height, fontFamily, signature, runId),
         CLOUD_LAYOUT_DEBOUNCE_MS,
       );
     });
@@ -710,6 +714,7 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.layoutRunId += 1;
     this.clearScheduledLayout();
     this.stopCloudLayout();
     this.resizeObserver?.disconnect();
@@ -802,6 +807,11 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
   wordTooltip(entry: CloudWord): string {
     const lines = [this.tooltipValueLine(entry.count)];
+    const sourceCountLine = this.tooltipSourceCountLine(entry.sourceCount);
+    if (sourceCountLine) {
+      lines.push(sourceCountLine);
+    }
+
     const metricLine = this.tooltipMetricLine();
     if (metricLine) {
       lines.push(metricLine);
@@ -835,6 +845,11 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
   wordTooltipDisplay(entry: CloudWord): string {
     const lines = [this.tooltipValueLine(entry.count)];
+    const sourceCountLine = this.tooltipSourceCountLine(entry.sourceCount);
+    if (sourceCountLine) {
+      lines.push(sourceCountLine);
+    }
+
     const metricLine = this.tooltipMetricLine();
     if (metricLine) {
       lines.push(metricLine);
@@ -1204,14 +1219,14 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
     }));
   }
 
-  private runCloudLayout(
+  private async runCloudLayout(
     words: LayoutWord[],
     stageWidth: number,
     stageHeight: number,
     fontFamily: string,
     signature: string,
     runId: number,
-  ): void {
+  ): Promise<void> {
     this.layoutTimer = null;
     if (!shouldUseWordCloudLayout(stageWidth, words.length)) {
       this.resetCloudLayout();
@@ -1221,6 +1236,11 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
     this.stopCloudLayout();
 
     try {
+      const d3Cloud = await this.loadD3Cloud();
+      if (runId !== this.layoutRunId) {
+        return;
+      }
+
       const layout = d3Cloud<LayoutWord>()
         .size([Math.round(stageWidth), Math.round(stageHeight)])
         .words(words.map((word) => ({ ...word })))
@@ -1270,6 +1290,18 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private loadD3Cloud(): Promise<(typeof import('d3-cloud'))['default']> {
+    if (this.d3CloudFactory) {
+      return Promise.resolve(this.d3CloudFactory);
+    }
+
+    this.d3CloudImportPromise ??= import('d3-cloud').then((module) => {
+      this.d3CloudFactory = module.default;
+      return module.default;
+    });
+    return this.d3CloudImportPromise;
+  }
+
   private createSeededRandom(seed: number): () => number {
     let state = seed >>> 0;
     return () => {
@@ -1311,10 +1343,20 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
 
   private tooltipValueLine(count: number): string {
     if (this.analysisMode() === 'qa') {
-      return $localize`:@@wordCloud.weightedValueTooltip:Wert für die Größe: ${count}:count:`;
+      return $localize`:@@wordCloud.weightedValueTooltip:Größenwert: ${count}:count:`;
     }
 
     return $localize`:@@wordCloud.mentionsTooltip:Nennungen: ${count}:count:`;
+  }
+
+  private tooltipSourceCountLine(sourceCount: number): string | null {
+    if (this.analysisMode() !== 'qa' || !Number.isFinite(sourceCount) || sourceCount <= 0) {
+      return null;
+    }
+
+    return sourceCount === 1
+      ? $localize`:@@wordCloud.qaSourceCountTooltipOne:In 1 Frage gefunden`
+      : $localize`:@@wordCloud.qaSourceCountTooltipMany:In ${sourceCount}:count: Fragen gefunden`;
   }
 
   private tooltipMetricLine(): string | null {
@@ -1323,7 +1365,12 @@ export class WordCloudComponent implements AfterViewInit, OnDestroy {
       return null;
     }
 
-    return $localize`:@@wordCloud.metricWeightTooltip:Gewichtet nach: ${metricLabel}:metric:`;
+    return $localize`:@@wordCloud.metricWeightTooltip:Gewichtung: ${metricLabel}:metric:`;
+  }
+
+  private analysisEntrySourceCount(entry: WordCloudAnalysisEntryDTO): number {
+    const sourceIds = new Set(entry.members.map((member) => member.sourceId));
+    return Math.max(1, sourceIds.size);
   }
 
   private analysisBasisLine(entry: Pick<CloudWord, 'basisLabel' | 'word'>): string | null {

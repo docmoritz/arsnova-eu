@@ -79,8 +79,8 @@ Hinweis: Die Darstellung bleibt produktdatenblatt-typisch verdichtet, bezieht si
 
 ## Epic 8 – Q&A
 
-- Start, Einreichen, Upvotes/Sortierung, Moderation umgesetzt.
-- Offen: delegierbare Moderation sowie zusätzliche Ranking-Algorithmen (Kontroversität/Wilson).
+- Start, Einreichen, bidirektionales Voting, Host-Sortiermodi (`Top`, `Beste Fragen`, `Umstritten`), Q&A-Wortwolke und Moderation umgesetzt.
+- Offen: delegierbare Moderation.
 
 ## Epic 9 – Admin/Recht
 

@@ -314,7 +314,7 @@ Der Host sieht zusätzlich:
 - aktuelle Frage inklusive korrekter Antworten
 - Live-Freitextdaten
 - Freitext-Wortwolke inklusive Einfrieren/Live-Fortsetzen sowie CSV-/PNG-Export
-- Q&A-Wortwolke mit Host-Sortiermodi (`Top`, `Beste Fragen`, `Umstritten`), leichten Themenphrasen, thematischen Tooltips und Vollansicht mit Sortiertoggle
+- Q&A-Wortwolke mit Host-Sortiermodi (`Top`, `Beste Fragen`, `Umstritten`), leichten Themenphrasen, Quellenanzahl im Tooltip, Freeze im Dialog und Vollansicht mit Sortiertoggle
 - Q&A-Fragenliste
 - Blitzlicht-Ergebnisse
 - Emoji-Reaktionen

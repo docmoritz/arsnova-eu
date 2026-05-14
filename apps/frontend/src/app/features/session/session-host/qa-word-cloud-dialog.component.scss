@@ -59,6 +59,21 @@
   backdrop-filter: blur(14px) saturate(1.2);
 }
 
+.qa-word-cloud-dialog__freeze {
+  min-height: 2.7rem;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-surface) 74%, transparent);
+  color: var(--mat-sys-on-surface);
+  box-shadow: 0 0.7rem 1.8rem color-mix(in srgb, var(--mat-sys-shadow) 16%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.qa-word-cloud-dialog__freeze--active {
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 42%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-primary-container) 72%, var(--mat-sys-surface));
+  color: var(--mat-sys-on-primary-container);
+}
+
 .qa-word-cloud-dialog__mode-note {
   margin: -0.15rem 0 0;
   text-align: center;
@@ -101,7 +116,8 @@
   }
 
   .qa-word-cloud-dialog__sort-toggle,
-  .qa-word-cloud-dialog__analysis-toggle {
+  .qa-word-cloud-dialog__analysis-toggle,
+  .qa-word-cloud-dialog__freeze {
     width: 100%;
   }
 }
@@ -122,6 +138,10 @@
   .qa-word-cloud-dialog__sort-toggle,
   .qa-word-cloud-dialog__analysis-toggle {
     max-width: min(100%, 26rem);
+  }
+
+  .qa-word-cloud-dialog__freeze {
+    min-height: 2.35rem;
   }
 
   .qa-word-cloud-dialog__cloud {

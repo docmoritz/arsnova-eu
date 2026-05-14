@@ -81,9 +81,24 @@ const statements = [
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "title" TEXT`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "moderationMode" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "qaEnabled" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "qaOpen" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "qaTitle" TEXT`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "qaModerationMode" BOOLEAN NOT NULL DEFAULT false`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "quickFeedbackEnabled" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "quickFeedbackOpen" BOOLEAN NOT NULL DEFAULT false`,
+
+  // Q&A runtime aggregation: Live-Revision und Vote-Gruppierung
+  `DO $$ BEGIN
+     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'QaVoteDirection') THEN
+       CREATE TYPE "QaVoteDirection" AS ENUM ('UP', 'DOWN');
+     END IF;
+   END $$`,
+  `ALTER TABLE "QaQuestion" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+  `ALTER TABLE "QaUpvote" ADD COLUMN IF NOT EXISTS "direction" "QaVoteDirection" NOT NULL DEFAULT 'UP'`,
+  `CREATE INDEX IF NOT EXISTS "QaQuestion_sessionId_updatedAt_idx"
+     ON "QaQuestion"("sessionId", "updatedAt")`,
+  `CREATE INDEX IF NOT EXISTS "QaUpvote_qaQuestionId_direction_idx"
+     ON "QaUpvote"("qaQuestionId", "direction")`,
 
   // Quiz: readingPhaseEnabled
   `ALTER TABLE "Quiz" ADD COLUMN IF NOT EXISTS "readingPhaseEnabled" BOOLEAN NOT NULL DEFAULT true`,

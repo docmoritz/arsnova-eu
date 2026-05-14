@@ -7,6 +7,7 @@ const WORD_CLOUD_LOCALES: readonly SupportedLocale[] = ['de', 'en', 'fr', 'it', 
 export interface WordAggregate {
   word: string;
   count: number;
+  sourceCount: number;
   groupKey: string;
   variants: string[];
 }
@@ -36,6 +37,7 @@ interface AggregateBucket {
   readonly groupKey: string;
   readonly kind: GroupingKind;
   count: number;
+  sourceCount: number;
   readonly variants: Map<string, number>;
   preferredDisplay: string | null;
 }
@@ -416,6 +418,7 @@ export function aggregateWeightedWords(
 
       const bucket = getOrCreateBucket(buckets, grouping);
       bucket.count += source.weight;
+      bucket.sourceCount += 1;
       for (const display of grouping.displays) {
         bucket.variants.set(display, (bucket.variants.get(display) ?? 0) + source.weight);
       }
@@ -430,7 +433,8 @@ export function aggregateWeightedWords(
       const variants = sortVariantEntries(bucket.variants, locale).map(([variant]) => variant);
       return {
         word: bucket.preferredDisplay ?? variants[0] ?? bucket.groupKey,
-        count: bucket.count,
+        count: resolveAggregateCount(bucket.count, bucket.sourceCount, analysisMode),
+        sourceCount: bucket.sourceCount,
         groupKey: bucket.groupKey,
         variants,
       };
@@ -445,6 +449,21 @@ export function aggregateWeightedWords(
         a.word.localeCompare(b.word)
       );
     });
+}
+
+function resolveAggregateCount(
+  weightedCount: number,
+  sourceCount: number,
+  analysisMode: WordCloudAnalysisMode,
+): number {
+  if (analysisMode !== 'qa') {
+    return weightedCount;
+  }
+
+  // In Q&A sollen Begriffe aus mehreren Fragen stabiler wirken als viele Begriffe
+  // aus einer einzelnen stark bewerteten Frage.
+  const supportDamping = 0.65 + Math.min(1, Math.max(1, sourceCount) / 3) * 0.35;
+  return Math.max(1, Math.round(weightedCount * supportDamping));
 }
 
 export function getWordCloudWeightFromUpvotes(upvoteCount: number): number {
@@ -518,6 +537,7 @@ function getOrCreateBucket(
     groupKey: grouping.groupKey,
     kind: grouping.kind,
     count: 0,
+    sourceCount: 0,
     variants: new Map<string, number>(),
     preferredDisplay: null,
   };

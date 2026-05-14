@@ -9,7 +9,7 @@ Eine einfache Differenz (Upvotes minus Downvotes) rutscht bei **ausgeglichener P
 
 Live-Events haben eine **begrenzte Teilnehmerzahl** (typisch 10–200). Gesucht ist ein Score, der **„Reibung“** (hohe, ausgeglichene Up-/Down-Beteiligung) misst und sich **an die Raumgröße anpasst**, damit vereinzelte Gegenstimmen in großen Räumen nicht als künstliche Kontroverse gelten.
 
-## Produktionsabgleich (Stand 2026-05-13)
+## Produktionsabgleich (Stand 2026-05-14)
 
 Die aktuelle Q&A-Implementierung in arsnova.eu hat bereits **bidirektionales Voting** (`UP` / `DOWN`) und speichert pro Frage einen **Netto-Score** in `QaQuestion.upvoteCount`; die einzelnen Stimmen liegen in `QaUpvote.direction`. Daraus folgen für Story 8.6 und 8.7 verbindliche Produktentscheidungen:
 
@@ -19,15 +19,16 @@ Die aktuelle Q&A-Implementierung in arsnova.eu hat bereits **bidirektionales Vot
 4. **`QaQuestion.upvoteCount` ist im Ist-Stand ein Netto-Score, nicht die Zahl der Upvotes.** Für 8.6 und 8.7 müssen `U` und `D` aus den Einzelstimmen (`QaUpvote.direction`) aggregiert werden; der Netto-Score allein reicht fachlich nicht.
 5. **Die Q&A-UI braucht einen expliziten Sortiermodus**, z. B. `Top`, `Umstritten`, `Beste Fragen`. Ohne sichtbaren Moduswechsel wären 8.6/8.7 für den Host und später auch Moderator:innen nicht nachvollziehbar.
 
-## Implementierungsstand (Stand 2026-05-13)
+## Implementierungsstand (Stand 2026-05-14)
 
 Der heutige Produktstand deckt die Storys 8.6 und 8.7 in der Host-Ansicht bereits ab:
 
 - Die Host-Q&A-Liste bietet die Sortiermodi `Top`, `Beste Fragen` und `Umstritten`.
 - Die Router-/DTO-Schicht liefert neben dem bisherigen Nettofeld auch getrennte `UP`-/`DOWN`-Aggregate sowie `score`, `voteCount`, `bestScore`, `controversyScore` und `isControversial`.
+- Die Host-Liste aggregiert `QaUpvote.direction` serverseitig per DB-Gruppierung statt alle Einzelvotes in den Host-Poll zu laden; `QaQuestion.updatedAt` und ein Revisionsschluessel vermeiden volle Rebuilds, wenn sich seit dem letzten Poll nichts geaendert hat.
 - `PINNED` bleibt oberhalb jeder Score-Sortierung; Score-Logik wirkt nur innerhalb der sichtbaren Statusgruppen.
 - Die Teilnehmendenansicht bleibt auf der einfachen Standardsortierung.
-- Die Q&A-Wortwolke im Host folgt demselben Sortiermodus und wechselt Gewichtung, Titel, Hint und Tooltip-Metrik entsprechend mit.
+- Die Q&A-Wortwolke im Host folgt demselben Sortiermodus, kann im Dialog eingefroren werden und zeigt im Tooltip neben dem Groessenwert auch die Zahl der zugehoerigen Fragen.
 - In der maximierten Host-Vollansicht bleibt der Sortierumschalter oberhalb der Wolke sichtbar.
 
 ## Datenmodell und API-Stand
@@ -35,8 +36,9 @@ Der heutige Produktstand deckt die Storys 8.6 und 8.7 in der Host-Ansicht bereit
 Die Umsetzung nutzt die heutigen Q&A-Tabellen weiterhin, erweitert aber die DTO-/Router-Schicht bereits um:
 
 - `score`: aktueller Netto-Score (`UP = +1`, `DOWN = -1`)
-- `upvoteCount`: Zahl positiver Stimmen `U`
-- `downvoteCount`: Zahl negativer Stimmen `D`
+- `upvoteCount`: kompatibles Legacy-Feld fuer den Netto-Score
+- `positiveVoteCount`: Zahl positiver Stimmen `U`
+- `negativeVoteCount`: Zahl negativer Stimmen `D`
 - `voteCount`: Gesamtzahl `U + D`
 - optional `controversyScore` und `bestScore` im Host-Kontext; bei späterer 8.5-Erweiterung auch im Moderator-Kontext
 
@@ -76,6 +78,7 @@ Bei gleichem `controversy_score` (häufig in kleinen Gruppen) gilt strikt:
 2. `U` **DESC**
 3. `score` **DESC**
 4. `created_at` **ASC** (ältere Frage zuerst — konsistent mit der heutigen stabilen Q&A-Reihenfolge)
+5. `id` **ASC** als finaler technischer Tie-Breaker gegen Jitter
 
 ## UI und Copy (Referenz Deutsch)
 
@@ -96,7 +99,7 @@ Anzeige nur wenn **beides** gilt:
 
 **Visualisierung:** Falls eine Voting-Anzeige existiert, kann ein Verlauf von neutral zu „warnend“ den steigenden Score andeuten (`prefers-reduced-motion` beachten).
 
-Die aktuelle Host-UI ergänzt diese Kennzeichnung durch eine sortierabhaengige Q&A-Wortwolke. Deren Tooltip zeigt den gewichteten Wolkenwert, die zugrunde liegende Basis (`Netto-Score`, `Wilson-Score`, `Kontroversitaet`) sowie zugehoerige Fragen, damit Sortierung und Themenraum zusammen lesbar bleiben.
+Die aktuelle Host-UI ergänzt diese Kennzeichnung durch eine sortierabhaengige Q&A-Wortwolke. Deren Tooltip zeigt den Groessenwert, die Zahl der zugehoerigen Fragen, die Gewichtungsbasis (`positive Stimmen`, `belastbare Zustimmung`, `Kontroverse`) sowie konkrete Fragen, damit Sortierung und Themenraum zusammen lesbar bleiben.
 
 ### Sortier-UI
 
@@ -108,13 +111,13 @@ Die Sortierauswahl sitzt im heutigen Produkt in der Host-Ansicht in unmittelbare
 
 Der aktive Modus bleibt während einer Session stabil, bis der Host ihn bewusst ändert. Bei späterer Moderator-Erweiterung ist ein konsistentes Berechtigungsmodell mit dem Host festzulegen.
 
-Die Host-Q&A-Wortwolke nutzt denselben Modus: `Top` gewichtet nach Netto-Score, `Beste Fragen` nach Wilson-Score und `Umstritten` nach Kontroversität. In der maximierten Vollansicht sitzt die Sortierauswahl oberhalb der Wolke, damit der Kontext beim Wechsel sichtbar bleibt.
+Die Host-Q&A-Wortwolke nutzt denselben Modus: `Top` gewichtet nach Netto-Score, `Beste Fragen` nach Wilson-Score und `Umstritten` nach Kontroversität. In der maximierten Vollansicht sitzt die Sortierauswahl oberhalb der Wolke, damit der Kontext beim Wechsel sichtbar bleibt; ein Freeze-Schalter haelt die aktuell dargestellte Wolke fuer die Auditoriumssituation fest.
 
 ## Akzeptanzkriterien
 
 - [x] **AC 1:** Sortierung bevorzugt stark **ausgeglichene** Up-/Down-Beteiligung gegenüber einseitiger Zustimmung.
 - [x] **AC 2:** \(C\) wird **pro Event/Session** aus der gewählten Definition von \(N\) abgeleitet (kleinerer Raum → kleineres \(C\) als bei großem Raum, bei gleicher Formel).
-- [x] **AC 3:** Gleicher Score → eindeutige Reihenfolge über `U`, dann Netto-Score, dann `created_at`.
+- [x] **AC 3:** Gleicher Score → eindeutige Reihenfolge über `U`, dann Netto-Score, dann `created_at`, dann `id`.
 - [x] **AC 4:** Kein Absturz bei 0 Stimmen oder \(N = 0\); keine Division durch Null.
 - [x] **AC 5:** Fragen oberhalb der Badge-Schwellen werden in der Host-Ansicht sichtbar als kontrovers/umstritten gekennzeichnet (siehe Abschnitt UI); bei späterer 8.5-Erweiterung gilt dies ebenso für Moderator:innen.
 - [x] **AC 6:** `PINNED`-Fragen bleiben unabhängig vom Sortiermodus oberhalb des regulären Rankings.

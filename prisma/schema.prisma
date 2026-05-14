@@ -296,8 +296,10 @@ model QaQuestion {
   participant   Participant      @relation(fields: [participantId], references: [id], onDelete: Cascade)
   upvotes       QaUpvote[]       // Story 8.3: Einzelne Upvotes
   createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @default(now()) @updatedAt
 
   @@index([sessionId, status, createdAt])
+  @@index([sessionId, updatedAt])
   @@index([sessionId, participantId])
 }
 
@@ -311,6 +313,7 @@ model QaUpvote {
   direction     QaVoteDirection @default(UP)
 
   @@unique([qaQuestionId, participantId])
+  @@index([qaQuestionId, direction])
 }
 
 enum QaVoteDirection {

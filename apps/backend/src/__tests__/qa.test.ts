@@ -14,6 +14,7 @@ const { prismaMock, hostAuthMocks } = vi.hoisted(() => ({
     },
     qaQuestion: {
       findMany: vi.fn(),
+      aggregate: vi.fn(),
       create: vi.fn(),
       count: vi.fn(),
       findUnique: vi.fn(),
@@ -22,7 +23,9 @@ const { prismaMock, hostAuthMocks } = vi.hoisted(() => ({
     },
     qaUpvote: {
       findUnique: vi.fn(),
+      groupBy: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -74,6 +77,12 @@ describe('qa router (Epic 8)', () => {
     });
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
+    prismaMock.qaQuestion.aggregate.mockResolvedValue({
+      _count: { _all: 0 },
+      _max: { updatedAt: null },
+      _sum: { upvoteCount: 0 },
+    });
+    prismaMock.qaUpvote.groupBy.mockResolvedValue([]);
   });
 
   it('liefert sichtbare Fragen für einen Teilnehmer inklusive Upvote-Status', async () => {
@@ -411,6 +420,28 @@ describe('qa router (Epic 8)', () => {
         upvotes: [...Array.from({ length: 4 }, () => ({ direction: 'UP' })), { direction: 'DOWN' }],
       },
     ]);
+    prismaMock.qaUpvote.groupBy.mockResolvedValue([
+      {
+        qaQuestionId: '11111111-1111-4111-8111-111111111111',
+        direction: 'UP',
+        _count: { _all: 1 },
+      },
+      {
+        qaQuestionId: '22222222-2222-4222-8222-222222222222',
+        direction: 'UP',
+        _count: { _all: 5 },
+      },
+      {
+        qaQuestionId: '33333333-3333-4333-8333-333333333333',
+        direction: 'UP',
+        _count: { _all: 4 },
+      },
+      {
+        qaQuestionId: '33333333-3333-4333-8333-333333333333',
+        direction: 'DOWN',
+        _count: { _all: 1 },
+      },
+    ]);
 
     const result = await hostCaller.list({
       sessionId: SESSION_ID,
@@ -473,6 +504,33 @@ describe('qa router (Epic 8)', () => {
         status: 'ACTIVE',
         createdAt: new Date('2026-03-13T12:02:00.000Z'),
         upvotes: [{ direction: 'UP' }, { direction: 'DOWN' }],
+      },
+    ]);
+    prismaMock.qaUpvote.groupBy.mockResolvedValue([
+      {
+        qaQuestionId: '11111111-1111-4111-8111-111111111111',
+        direction: 'UP',
+        _count: { _all: 5 },
+      },
+      {
+        qaQuestionId: '11111111-1111-4111-8111-111111111111',
+        direction: 'DOWN',
+        _count: { _all: 5 },
+      },
+      {
+        qaQuestionId: '22222222-2222-4222-8222-222222222222',
+        direction: 'UP',
+        _count: { _all: 10 },
+      },
+      {
+        qaQuestionId: '33333333-3333-4333-8333-333333333333',
+        direction: 'UP',
+        _count: { _all: 1 },
+      },
+      {
+        qaQuestionId: '33333333-3333-4333-8333-333333333333',
+        direction: 'DOWN',
+        _count: { _all: 1 },
       },
     ]);
 

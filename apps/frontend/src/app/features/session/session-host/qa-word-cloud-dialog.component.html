@@ -41,6 +41,17 @@
         >Themen</mat-button-toggle
       >
     </mat-button-toggle-group>
+    <button
+      mat-button
+      type="button"
+      class="qa-word-cloud-dialog__freeze"
+      [class.qa-word-cloud-dialog__freeze--active]="frozen()"
+      [attr.aria-pressed]="frozen()"
+      (click)="toggleFreeze()"
+    >
+      <mat-icon aria-hidden="true">{{ frozen() ? 'play_arrow' : 'pause' }}</mat-icon>
+      <span>{{ freezeLabel() }}</span>
+    </button>
   </div>
 
   @if (themeFallbackHint()) {

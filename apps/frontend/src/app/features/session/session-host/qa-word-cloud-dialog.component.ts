@@ -1,5 +1,5 @@
 import { computed, Component, inject } from '@angular/core';
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MAT_DIALOG_DATA, MatDialogClose } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
@@ -26,6 +26,9 @@ export type QaWordCloudDialogData = {
   themeFallbackHint: () => string | null;
   sortMode: () => QaQuestionSortMode;
   setSortMode: (mode: QaQuestionSortMode) => void | Promise<void>;
+  frozen: () => boolean;
+  freezeLabel: () => string;
+  toggleFreeze: () => void | Promise<void>;
   itemLabelSingular: string;
   itemLabelPlural: string;
 };
@@ -34,6 +37,7 @@ export type QaWordCloudDialogData = {
   selector: 'app-qa-word-cloud-dialog',
   standalone: true,
   imports: [
+    MatButton,
     MatIconButton,
     MatDialogClose,
     MatIcon,
@@ -57,6 +61,8 @@ export class QaWordCloudDialogComponent {
   readonly themeModeAvailable = computed(() => this.data.themeModeAvailable());
   readonly themeFallbackHint = computed(() => this.data.themeFallbackHint());
   readonly sortMode = computed(() => this.data.sortMode());
+  readonly frozen = computed(() => this.data.frozen());
+  readonly freezeLabel = computed(() => this.data.freezeLabel());
 
   setSortMode(mode: QaQuestionSortMode): void {
     if (mode === this.sortMode()) {
@@ -72,5 +78,9 @@ export class QaWordCloudDialogComponent {
     }
 
     void this.data.setAnalysisVariant(variant);
+  }
+
+  toggleFreeze(): void {
+    void this.data.toggleFreeze();
   }
 }

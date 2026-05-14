@@ -79,8 +79,8 @@ Dieses Dokument ist die **kanonische Referenz** für Struktur, Stack, Konvention
 - **VoteAnswer:** voteId, answerOptionId.
 - **BonusToken:** token (UK), sessionId, participantId, nickname, quizName, totalScore, rank.
 - **Team:** name, color, sessionId; Relation: participants.
-- **QaQuestion:** text, upvoteCount, status (QaQuestionStatus), sessionId, participantId; Relation: upvotes (QaUpvote).
-- **QaUpvote:** qaQuestionId, participantId.
+- **QaQuestion:** text, upvoteCount (Netto-Score), status (QaQuestionStatus), sessionId, participantId, createdAt, updatedAt; Relation: upvotes (QaUpvote).
+- **QaUpvote:** qaQuestionId, participantId, direction (UP/DOWN).
 - **MOTD (Epic 10):** u. a. Motd, MotdTemplate, MotdLocale, MotdInteractionCounter, MotdAuditLog — öffentliche Lesepfade über `motdRouter`, Schreibzugriff nur `admin.motd.*` (siehe ADR-0018).
 - **PlatformStatistic:** z. B. eine Zeile `id = default`, Feld `maxParticipantsSingleSession` (Rekord; Anzeige in `health.stats` / Hilfe).
 - **Enums:** QuestionType (MULTIPLE_CHOICE, SINGLE_CHOICE, FREETEXT, SURVEY, RATING), Difficulty (EASY, MEDIUM, HARD), SessionStatus (LOBBY, QUESTION_OPEN, ACTIVE, PAUSED, RESULTS, DISCUSSION, FINISHED), NicknameTheme, TeamAssignment, SessionType (QUIZ, Q_AND_A), QaQuestionStatus (PENDING, ACTIVE, PINNED, ARCHIVED, DELETED).

@@ -573,8 +573,9 @@ describe('WordCloudComponent', () => {
 
     expect(entry).toBeTruthy();
     const tooltip = component.wordTooltipDisplay(entry!);
-    expect(tooltip).toContain('Wert für die Größe: 26');
-    expect(tooltip).toContain('Gewichtet nach: belastbare Zustimmung');
+    expect(tooltip).toContain('Größenwert: 23');
+    expect(tooltip).toContain('In 2 Fragen gefunden');
+    expect(tooltip).toContain('Gewichtung: belastbare Zustimmung');
     expect(tooltip).toContain('Fragen:');
     expect(tooltip).toContain('• Sollten wir zuerst Python oder zuerst');
     expect(tooltip).toContain('   Formel herleiten?');

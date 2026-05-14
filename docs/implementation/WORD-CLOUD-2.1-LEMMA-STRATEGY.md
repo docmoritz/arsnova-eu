@@ -183,7 +183,7 @@ Varianten bleiben parallel erhalten, damit UI und Export erklaeren koennen, was 
 Die Gruppierung wirkt heute bis in die Oberflaeche hinein:
 
 - Wortauswahl und Antwortfilter arbeiten auf `groupKey`-Basis
-- Tooltips zeigen im Quiz-Freitext `Nennungen` und in gewichteten Q&A-Wolken `Gewichteter Wert` plus optionale `Basis`
+- Tooltips zeigen im Quiz-Freitext `Nennungen` und in gewichteten Q&A-Wolken `Groessenwert`, Quellenanzahl und Gewichtungsbasis
 - Q&A-Tooltips koennen zusaetzlich die wichtigsten zugehoerigen Fragen mit lesbarem haengendem Einzug listen
 - CSV exportiert `word,count,variants`
 - Stopwoerter sind produktseitig fest ausgeblendet
@@ -245,8 +245,11 @@ Der Host nutzt heute dieselbe Q&A-Wolke in drei Analyse-Linsen:
 Dabei wechseln nicht nur die Gewichte, sondern auch:
 
 - Titel und Hint der Q&A-Wolke
-- Tooltip-Metrik (`Gewichteter Wert`, `Basis`)
+- Tooltip-Metrik (`Groessenwert`, Zahl der zugehoerigen Fragen, Gewichtungsbasis)
 - die inhaltliche Lesart des Themenraums
+- die Q&A-Livewirkung kann im Dialog eingefroren und wieder live fortgesetzt werden
+
+Die Groesse eines Begriffs wird weiterhin aus der aktiven Sortiermetrik abgeleitet, aber seit 2026-05-14 nicht mehr als reine Summe aller Fragegewichte dargestellt: Begriffe aus nur einer stark bewerteten Frage werden leicht gedaempft, waehrend Begriffe aus mehreren Fragen stabiler wirken. Damit dominiert eine einzelne stark gevotete Frage die Wolke weniger stark.
 
 Fuer die Host-Vollansicht gilt zusaetzlich:
 
