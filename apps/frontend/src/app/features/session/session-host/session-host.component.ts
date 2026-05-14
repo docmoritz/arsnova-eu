@@ -746,7 +746,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const draft = this.qaTitleDraft().trim();
     return draft === server || this.qaTitleSaving();
   });
-  readonly qaSortMode = signal<QaQuestionSortMode>('TOP');
+  readonly qaSortMode = signal<QaQuestionSortMode>('BEST');
   readonly qaShowPinnedOnly = signal(false);
   readonly qaFilteredQuestions = computed(() => {
     const all = this.qaQuestions();

@@ -845,7 +845,7 @@ describe('SessionHostComponent', () => {
       {
         sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
         moderatorView: true,
-        sort: 'TOP',
+        sort: 'BEST',
       },
       expect.any(Object),
     );
@@ -1446,10 +1446,10 @@ describe('SessionHostComponent', () => {
 
     const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('Q&A-Word-Cloud anzeigen');
-    expect(text).toContain('2 Fragen · Netto-Score gewichtet');
+    expect(text).toContain('2 Fragen · Wilson-Score gewichtet');
     expect(fixture.componentInstance.qaWordCloudQuestions()).toHaveLength(2);
     expect(fixture.componentInstance.qaWordCloudWeightedResponses()[0]?.weight).toBe(4);
-    expect(fixture.componentInstance.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Netto-Score)');
+    expect(fixture.componentInstance.qaWordCloudTitle()).toBe('Q&A-Word-Cloud (Wilson-Score)');
 
     dialogOpenMock.mockClear();
     const trigger = fixture.nativeElement.querySelector(
@@ -1468,8 +1468,8 @@ describe('SessionHostComponent', () => {
       title: () => string;
       weightingHint: () => string | null;
     };
-    expect(data.title()).toBe('Q&A-Word-Cloud (Netto-Score)');
-    expect(data.weightingHint()).toContain('höherem Netto-Score');
+    expect(data.title()).toBe('Q&A-Word-Cloud (Wilson-Score)');
+    expect(data.weightingHint()).toContain('höherem Wilson-Score');
     fixture.destroy();
   });
 
@@ -1640,6 +1640,8 @@ describe('SessionHostComponent', () => {
 
     const component = fixture.componentInstance;
     component.activeChannel.set('qa');
+    fixture.detectChanges();
+    await component.setQaSortMode('TOP');
     fixture.detectChanges();
     qaListQueryMock.mockClear();
     qaOnQuestionsUpdatedSubscribeMock.mockClear();
@@ -1815,7 +1817,7 @@ describe('SessionHostComponent', () => {
     wordCloudAnalyzeQueryMock.mockResolvedValue({
       mode: 'THEME',
       locale: 'de',
-      metric: 'TOP',
+      metric: 'BEST',
       generatedAt: '2026-03-24T12:00:00.000Z',
       fallbackUsed: false,
       entries: [
@@ -1963,7 +1965,7 @@ describe('SessionHostComponent', () => {
       sessionCode: 'ABC123',
       mode: 'THEME',
       locale: fixture.componentInstance.qaWordCloudAnalysisLocale(),
-      metric: 'TOP',
+      metric: 'BEST',
       maxEntries: 40,
       items: [
         {
@@ -5721,7 +5723,7 @@ describe('SessionHostComponent', () => {
       expect(qaListQueryMock).toHaveBeenCalledWith({
         sessionId: defaultSession.id,
         moderatorView: true,
-        sort: 'TOP',
+        sort: 'BEST',
       });
       expect(fixture.componentInstance.hostSteeringCallout()?.title).toContain(qaCalloutTitle);
       fixture.destroy();
