@@ -1444,15 +1444,27 @@
 
         @if (isQaChannelOpen()) {
           <div class="session-qa-form">
-            <label class="session-qa-form__label" for="qa-draft">{{
-              vpc.voteQaFormLabel(isPlayfulPreset())
-            }}</label>
+            @if (playerKindergartenBadgeLabel(); as ownBadge) {
+              <div class="session-qa-form__identity">
+                <span class="session-qa-form__identity-text" i18n="@@sessionVote.qaIdentityHint"
+                  >Du fragst als</span
+                >
+                <span
+                  class="session-qa-form__identity-badge"
+                  role="img"
+                  [attr.aria-label]="playerKindergartenBadgeAriaLabel()"
+                  [attr.title]="playerNickname() ?? null"
+                  >{{ ownBadge }}</span
+                >
+              </div>
+            }
             <textarea
               id="qa-draft"
               #qaTextarea
               class="session-qa-form__textarea"
               rows="2"
               maxlength="500"
+              [attr.aria-label]="vpc.voteQaFormLabel(isPlayfulPreset())"
               [value]="qaDraft()"
               (input)="updateQaDraft($any($event.target).value); autoResizeTextarea($event)"
               (focus)="autoResizeTextarea($event)"

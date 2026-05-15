@@ -493,7 +493,7 @@ export function voteLobbyLoading(playful: boolean): string {
 
 export function voteQaFormLabel(playful: boolean): string {
   if (playful) {
-    return $localize`:@@sessionVote.qaFormLabelPlayful:Deine Frage in den Raum`;
+    return $localize`:@@sessionVote.qaFormLabelPlayful:Deine Frage an die Runde`;
   }
   return $localize`:@@sessionVote.qaFormLabelSerious:Deine Frage`;
 }

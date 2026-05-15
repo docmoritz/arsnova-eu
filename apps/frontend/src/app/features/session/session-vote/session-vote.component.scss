@@ -692,18 +692,33 @@
   box-sizing: border-box;
 }
 
-.session-qa-form__label {
+.session-qa-form__identity {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   width: fit-content;
   max-width: 100%;
-  min-height: 1.9rem;
-  padding: 0.2rem 0.6rem;
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 78%, var(--mat-sys-primary));
+  font: var(--mat-sys-body-small);
+  font-weight: 500;
+}
+
+.session-qa-form__identity-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.85rem;
+  padding: 0.18rem 0.65rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface));
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
   color: var(--mat-sys-primary);
   font: var(--mat-sys-label-large);
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .session-qa-form__textarea {

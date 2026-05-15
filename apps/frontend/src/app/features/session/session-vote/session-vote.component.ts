@@ -410,6 +410,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return nick ? findKindergartenNicknameEmoji(nick) : null;
   });
 
+  readonly playerKindergartenBadgeLabel = computed((): string | null => {
+    if (!this.usesKindergartenNicknames()) return null;
+    const nick = this.playerNickname()?.trim();
+    return nick ? findKindergartenNicknameBadgeLabel(nick) : null;
+  });
+
+  readonly playerKindergartenBadgeAriaLabel = computed(() => {
+    const nick = this.playerNickname()?.trim();
+    return nick ? $localize`Du fragst als ${nick}` : $localize`Dein Tier-Icon`;
+  });
+
   readonly playerBadgeAriaLabel = computed(() => {
     const nick = this.playerNickname()?.trim() ?? '';
     const team = this.playerTeamName()?.trim();

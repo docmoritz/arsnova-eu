@@ -1415,6 +1415,7 @@ describe('SessionVoteComponent', () => {
   });
 
   it('zeigt bei aktiver Standalone-Q&A-Session das Frageformular', async () => {
+    localStorage.setItem('arsnova-nickname-ABC123', 'Roter Drache 2');
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
       serverTime: MOCK_SERVER_TIME,
@@ -1425,6 +1426,8 @@ describe('SessionVoteComponent', () => {
       title: 'Offene Fragen',
       participantCount: 6,
       preset: 'SERIOUS',
+      nicknameTheme: 'KINDERGARTEN',
+      anonymousMode: false,
     });
     currentQuestionQueryMock.mockResolvedValue(null);
 
@@ -1440,6 +1443,12 @@ describe('SessionVoteComponent', () => {
     expect(
       host.querySelector('.vote-page__bottom-actions .session-qa-form__submit'),
     ).not.toBeNull();
+    expect(host.querySelector('.session-qa-form__identity-badge')?.textContent?.trim()).toBe(
+      '🐉 2',
+    );
+    expect(host.textContent).toContain('Du fragst als');
+    expect(host.querySelector('.session-qa-form__label')).toBeNull();
+    expect(host.querySelector('#qa-draft')?.getAttribute('aria-label')).toBe('Deine Frage');
     expect(host.textContent).not.toContain('Neue Inhalte erscheinen hier automatisch.');
     fixture.destroy();
   });
