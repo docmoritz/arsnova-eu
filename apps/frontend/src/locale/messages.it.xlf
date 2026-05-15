@@ -8653,6 +8653,30 @@
           <context context-type="linenumber">897</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.wordCloudAnalysisAria" datatype="html">
+        <source>Wortwolken-Ansicht</source>
+        <target>Vista nuvola di parole</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">1770</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.wordCloudAnalysisWords" datatype="html">
+        <source>Einzelwörter</source>
+        <target>Singole parole</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">1774</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.wordCloudAnalysisPhrases" datatype="html">
+        <source>Wörter &amp; Phrasen</source>
+        <target>Parole e frasi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">1778</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionHost.wordCloudFrozenInfo" datatype="html">
         <source>Wortwolke eingefroren.</source>
         <target>Nuvola di parole bloccata.</target>

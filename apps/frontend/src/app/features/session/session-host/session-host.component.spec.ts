@@ -1392,6 +1392,134 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('schaltet fuer Freitext zwischen Einzelwoertern und Woertern mit Phrasen um', async () => {
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: '11111111-1111-4111-8111-111111111111',
+      order: 5,
+      text: 'Warum bleibt ein Satellit im Orbit?',
+      type: 'FREETEXT',
+      difficulty: 'EASY',
+      answers: [],
+    });
+    getLiveFreetextQueryMock.mockResolvedValue({
+      ...defaultLiveFreetext,
+      questionId: '11111111-1111-4111-8111-111111111111',
+      questionOrder: 5,
+      questionType: 'FREETEXT',
+      questionText: 'Warum bleibt ein Satellit im Orbit?',
+      responses: ['Lineare Regression im Projekt', 'Lineare Regression hilft'],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.displayedFreetextResponses().length === 2, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    const component = fixture.componentInstance;
+    expect(component.freetextWordCloudMode()).toBe('PHRASES');
+    expect(component.displayedFreetextWordCloudTerms().some((term) => term.key.includes(' '))).toBe(
+      true,
+    );
+
+    component.setFreetextWordCloudMode('WORDS');
+    fixture.detectChanges();
+
+    expect(component.freetextWordCloudMode()).toBe('WORDS');
+    expect(
+      component.displayedFreetextWordCloudTerms().every((term) => !term.key.includes(' ')),
+    ).toBe(true);
+
+    component.setFreetextWordCloudMode('PHRASES');
+    fixture.detectChanges();
+
+    expect(component.displayedFreetextWordCloudTerms().some((term) => term.key.includes(' '))).toBe(
+      true,
+    );
+    fixture.destroy();
+  });
+
+  it('oeffnet die Freitext-Wortwolke im Vollbild mit Analyse-Toggle und Freeze-Steuerung', async () => {
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: '11111111-1111-4111-8111-111111111111',
+      order: 5,
+      text: 'Warum bleibt ein Satellit im Orbit?',
+      type: 'FREETEXT',
+      difficulty: 'EASY',
+      answers: [],
+    });
+    getLiveFreetextQueryMock.mockResolvedValue({
+      ...defaultLiveFreetext,
+      questionId: '11111111-1111-4111-8111-111111111111',
+      questionOrder: 5,
+      questionType: 'FREETEXT',
+      questionText: 'Warum bleibt ein Satellit im Orbit?',
+      responses: ['Lineare Regression im Projekt', 'Lineare Regression hilft'],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => fixture.componentInstance.displayedFreetextResponses().length === 2, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    const component = fixture.componentInstance;
+    component.setFreetextWordCloudMode('WORDS');
+    await component.toggleWordCloudFreeze();
+
+    const documentRef = TestBed.inject(DOCUMENT);
+    const requestFullscreenSpy = vi.fn().mockResolvedValue(undefined);
+    const previousDescriptor = Object.getOwnPropertyDescriptor(
+      documentRef.documentElement,
+      'requestFullscreen',
+    );
+    Object.defineProperty(documentRef.documentElement, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreenSpy,
+    });
+
+    dialogOpenMock.mockClear();
+    try {
+      await component.openFreetextWordCloudDialog();
+
+      expect(requestFullscreenSpy).toHaveBeenCalledWith({ navigationUI: 'hide' });
+      expect(dialogOpenMock).toHaveBeenCalledTimes(1);
+      const [, config] = dialogOpenMock.mock.calls[0] as [unknown, Record<string, unknown>];
+      expect(config['panelClass']).toBe('word-cloud-dialog-panel');
+      expect(config['height']).toBe('100dvh');
+      const data = config['data'] as {
+        analysisVariant: () => string;
+        setAnalysisVariant: (variant: 'WORDS' | 'PHRASES') => void;
+        frozen: () => boolean;
+        freezeLabel: () => string;
+        toggleFreeze: () => Promise<void>;
+        terms: () => Array<{ key: string }>;
+      };
+      expect(data.analysisVariant()).toBe('WORDS');
+      expect(data.frozen()).toBe(true);
+      expect(data.freezeLabel()).toBe('Live fortsetzen');
+      expect(data.terms().every((term) => !term.key.includes(' '))).toBe(true);
+
+      data.setAnalysisVariant('PHRASES');
+      expect(component.freetextWordCloudMode()).toBe('PHRASES');
+      expect(data.terms().some((term) => term.key.includes(' '))).toBe(true);
+
+      await data.toggleFreeze();
+      expect(component.wordCloudFrozen()).toBe(false);
+    } finally {
+      if (previousDescriptor) {
+        Object.defineProperty(documentRef.documentElement, 'requestFullscreen', previousDescriptor);
+      } else {
+        delete (documentRef.documentElement as Partial<HTMLElement>).requestFullscreen;
+      }
+    }
+    fixture.destroy();
+  });
+
   it('zeigt im Fragen-Tab eine upvote-gewichtete Q&A-Word-Cloud fuer sichtbare Fragen', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,

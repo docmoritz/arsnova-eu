@@ -1766,6 +1766,22 @@
                   </summary>
                   <div class="session-host__extra-content">
                     <div class="session-host__extra-actions">
+                      <mat-button-toggle-group
+                        class="session-host__extra-analysis-toggle"
+                        [value]="freetextWordCloudMode()"
+                        (valueChange)="setFreetextWordCloudMode($any($event))"
+                        i18n-aria-label="@@sessionHost.wordCloudAnalysisAria"
+                        aria-label="Wortwolken-Ansicht"
+                      >
+                        <mat-button-toggle value="WORDS" i18n="@@sessionHost.wordCloudAnalysisWords"
+                          >Einzelwörter</mat-button-toggle
+                        >
+                        <mat-button-toggle
+                          value="PHRASES"
+                          i18n="@@sessionHost.wordCloudAnalysisPhrases"
+                          >Wörter &amp; Phrasen</mat-button-toggle
+                        >
+                      </mat-button-toggle-group>
                       <button
                         mat-button
                         type="button"
@@ -1787,6 +1803,7 @@
                       [selectionScopeKey]="currentQuestionForHost()?.questionId ?? null"
                       [eyebrow]="freetextWordCloudEyebrow"
                       [description]="freetextWordCloudDescription"
+                      [maximizeActionHandler]="openFreetextWordCloudDialog"
                       [showReleaseNote]="false"
                     />
                   </div>

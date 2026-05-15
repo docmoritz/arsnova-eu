@@ -3643,6 +3643,11 @@ button.session-host__btn-discussion {
   margin: 0 0 0.5rem;
 }
 
+.session-host__extra-analysis-toggle {
+  background: color-mix(in srgb, var(--mat-sys-surface) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+}
+
 .session-host__extra-actions--separated {
   margin-top: 0.95rem;
 }
@@ -3663,6 +3668,10 @@ button.session-host__btn-discussion {
 
   .session-host__extra-actions {
     justify-content: flex-start;
+  }
+
+  .session-host__extra-analysis-toggle {
+    width: 100%;
   }
 }
 

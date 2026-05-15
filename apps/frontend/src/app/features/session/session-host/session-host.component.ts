@@ -157,6 +157,7 @@ type FoyerArrivalMotionProfile = {
   badgePresenceMs: number;
   pulseDelayMs: number;
 };
+type FreetextWordCloudMode = 'WORDS' | 'PHRASES';
 type SessionChannelTab = 'quiz' | 'qa' | 'quickFeedback';
 type SessionOnboardingProfile = {
   nicknameTheme: NicknameTheme;
@@ -531,6 +532,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       ? $localize`:@@sessionHost.wordCloudHide:Wortwolke ausblenden`
       : $localize`:@@sessionHost.wordCloudShow:Wortwolke anzeigen`,
   );
+  readonly freetextWordCloudMode = signal<FreetextWordCloudMode>('PHRASES');
   readonly wordCloudFreezeLabel = computed(() =>
     this.wordCloudFrozen()
       ? $localize`:@@sessionHost.wordCloudResume:Live fortsetzen`
@@ -553,7 +555,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       {
         locale: this.wordCloudTermLocale(),
         maxEntries: 80,
-        maxNgramLength: 3,
+        maxNgramLength: this.freetextWordCloudMode() === 'WORDS' ? 1 : 3,
       },
     ),
   );
@@ -1368,6 +1370,46 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.frozenWordCloudResponses.set([...this.freetextResponses()]);
     this.wordCloudFrozen.set(true);
   }
+
+  setFreetextWordCloudMode(mode: FreetextWordCloudMode): void {
+    if (mode === this.freetextWordCloudMode()) {
+      return;
+    }
+
+    this.freetextWordCloudMode.set(mode);
+  }
+
+  readonly openFreetextWordCloudDialog = async (): Promise<void> => {
+    this.tryEnterWordCloudFullscreenFromUserGesture();
+
+    const { FreetextWordCloudDialogComponent } =
+      await import('./freetext-word-cloud-dialog.component');
+    this.dialog.open(FreetextWordCloudDialogComponent, {
+      data: {
+        responses: () => this.displayedFreetextResponses(),
+        terms: () => this.displayedFreetextWordCloudTerms(),
+        selectionScopeKey: () => this.currentQuestionForHost()?.questionId ?? null,
+        eyebrow: this.freetextWordCloudEyebrow,
+        description: this.freetextWordCloudDescription,
+        analysisVariant: () => this.freetextWordCloudMode(),
+        setAnalysisVariant: (variant: FreetextWordCloudMode) =>
+          this.setFreetextWordCloudMode(variant),
+        frozen: () => this.wordCloudFrozen(),
+        freezeLabel: () => this.wordCloudFreezeLabel(),
+        toggleFreeze: () => this.toggleWordCloudFreeze(),
+      },
+      autoFocus: false,
+      restoreFocus: true,
+      enterAnimationDuration: 180,
+      exitAnimationDuration: 140,
+      width: '100vw',
+      maxWidth: '100vw',
+      height: '100dvh',
+      maxHeight: '100dvh',
+      panelClass: 'word-cloud-dialog-panel',
+      backdropClass: 'word-cloud-dialog-backdrop',
+    });
+  };
 
   ratingBarRange(q: HostCurrentQuestionDTO): number[] {
     const min = q.ratingMin ?? 1;
