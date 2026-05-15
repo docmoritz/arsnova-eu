@@ -8,6 +8,7 @@ import {
   focusTargetIdForAnchor,
   SessionVoteComponent,
 } from './session-vote.component';
+import { NICKNAME_LISTS } from '../../join/nickname-themes';
 import * as vpc from './session-vote-participant-copy';
 import {
   hasParticipantJoinArrival,
@@ -32,6 +33,8 @@ const {
   getHasSubmittedFeedbackQueryMock,
   getSessionFeedbackSummaryQueryMock,
   submitSessionFeedbackMutateMock,
+  getParticipantNicknamesQueryMock,
+  joinMutateMock,
   qaListQueryMock,
   qaSubmitMutateMock,
   qaUpvoteMutateMock,
@@ -51,6 +54,8 @@ const {
   getHasSubmittedFeedbackQueryMock: vi.fn(),
   getSessionFeedbackSummaryQueryMock: vi.fn(),
   submitSessionFeedbackMutateMock: vi.fn(),
+  getParticipantNicknamesQueryMock: vi.fn(),
+  joinMutateMock: vi.fn(),
   qaListQueryMock: vi.fn(),
   qaSubmitMutateMock: vi.fn(),
   qaUpvoteMutateMock: vi.fn(),
@@ -72,6 +77,8 @@ vi.mock('../../../core/trpc.client', () => ({
       getHasSubmittedFeedback: { query: getHasSubmittedFeedbackQueryMock },
       getSessionFeedbackSummary: { query: getSessionFeedbackSummaryQueryMock },
       submitSessionFeedback: { mutate: submitSessionFeedbackMutateMock },
+      getParticipantNicknames: { query: getParticipantNicknamesQueryMock },
+      join: { mutate: joinMutateMock },
     },
     quickFeedback: {
       results: { query: quickFeedbackResultsQueryMock },
@@ -183,6 +190,11 @@ describe('SessionVoteComponent', () => {
       wouldRepeatNo: 0,
     });
     submitSessionFeedbackMutateMock.mockResolvedValue({ success: true });
+    getParticipantNicknamesQueryMock.mockResolvedValue({ nicknames: [], participantCount: 0 });
+    joinMutateMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      participantId: '11111111-1111-4111-8111-111111111111',
+    });
     quickFeedbackResultsQueryMock.mockRejectedValue(new Error('not found'));
     quickFeedbackOnResultsSubscribeMock.mockReturnValue({ unsubscribe: vi.fn() });
     qaListQueryMock.mockResolvedValue([]);
@@ -1473,6 +1485,141 @@ describe('SessionVoteComponent', () => {
         hasUpvoted: false,
       }),
     ).toBe('🐉 2');
+    fixture.destroy();
+  });
+
+  it('nutzt fuer den Q&A-Autojoin fortlaufende Kita-Reserve-Namen statt Zufallszahlen', async () => {
+    localStorage.removeItem('arsnova-participant-ABC123');
+    localStorage.removeItem('arsnova-nickname-ABC123');
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'Q_AND_A',
+      status: 'ACTIVE',
+      quizName: null,
+      title: 'Offene Fragen',
+      participantCount: NICKNAME_LISTS.KINDERGARTEN.length + 1,
+      preset: 'SERIOUS',
+      nicknameTheme: 'KINDERGARTEN',
+      allowCustomNicknames: false,
+      anonymousMode: false,
+    });
+    currentQuestionQueryMock.mockResolvedValue(null);
+    getParticipantNicknamesQueryMock.mockResolvedValue({
+      nicknames: [...NICKNAME_LISTS.KINDERGARTEN, 'Roter Drache 2'],
+      participantCount: NICKNAME_LISTS.KINDERGARTEN.length + 1,
+    });
+    joinMutateMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      participantId: '33333333-3333-4333-8333-333333333333',
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.activeChannel.set('qa');
+    component.updateQaDraft('Kommt Aufgabe 3 in der Klausur vor?');
+    fixture.detectChanges();
+
+    await component.submitQaQuestion();
+
+    expect(joinMutateMock).toHaveBeenCalledWith({
+      code: 'ABC123',
+      nickname: 'Grüner Frosch 2',
+    });
+    expect(localStorage.getItem('arsnova-nickname-ABC123')).toBe('Grüner Frosch 2');
+    expect(qaSubmitMutateMock).toHaveBeenCalledWith({
+      sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      participantId: '33333333-3333-4333-8333-333333333333',
+      text: 'Kommt Aufgabe 3 in der Klausur vor?',
+    });
+    fixture.destroy();
+  });
+
+  it('selektiert Q&A-Fragen per Tier-Badge und hebt die Auswahl wieder auf', () => {
+    localStorage.setItem('arsnova-nickname-ABC123', 'Roter Drache 2');
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.status.set('ACTIVE');
+    component.activeChannel.set('qa');
+    component.sessionSettings.set({
+      type: 'Q_AND_A',
+      status: 'ACTIVE',
+      title: 'Offene Fragen',
+      nicknameTheme: 'KINDERGARTEN',
+      anonymousMode: false,
+    } as never);
+    component.qaQuestions.set([
+      {
+        id: 'question-1',
+        text: 'Wie viel Stoff ist klausurrelevant?',
+        upvoteCount: 2,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        authorNickname: 'Roter Drache 2',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+      {
+        id: 'question-2',
+        text: 'Gibt es eine Musterlösung?',
+        upvoteCount: 1,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:05:00.000Z',
+        authorNickname: 'Grüner Frosch',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const badges = host.querySelectorAll('.session-qa-card__author-icon');
+    (badges[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    let cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBe('Roter Drache 2');
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.className).toContain('session-qa-card--author-selected');
+
+    (host.querySelector('.session-qa-card__author-icon') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBeNull();
+    expect(cards).toHaveLength(2);
+    expect(cards[0]?.className).not.toContain('session-qa-card--author-selected');
+
+    (host.querySelectorAll('.session-qa-card__author-icon')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBe('Grüner Frosch');
+    expect(cards).toHaveLength(1);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBeNull();
+    expect(cards).toHaveLength(2);
+    expect(cards[1]?.className).not.toContain('session-qa-card--author-selected');
+
+    (host.querySelector('.session-qa-form__identity-badge') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBe('Roter Drache 2');
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.className).toContain('session-qa-card--author-selected');
     fixture.destroy();
   });
 

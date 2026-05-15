@@ -4,6 +4,7 @@ import {
   OnInit,
   OnDestroy,
   ElementRef,
+  HostListener,
   ViewChild,
   inject,
   Injector,
@@ -11,6 +12,7 @@ import {
   computed,
   effect,
   afterNextRender,
+  untracked,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -70,7 +72,11 @@ import {
   findKindergartenNicknameEmoji,
 } from '../../join/kindergarten-nickname-icons';
 import { getEffectiveLocale } from '../../../core/locale-from-path';
-import { getNicknameList } from '../../join/nickname-themes';
+import {
+  areOriginalNicknamesExhausted,
+  getGeneratedNicknameFallbackList,
+  getNicknameList,
+} from '../../join/nickname-themes';
 import {
   edgeEmojiMarkerPosition,
   extractEdgeEmoji,
@@ -92,6 +98,8 @@ const VOTE_ANCHOR_RESULT_CONTAINER = 'vote-result-anchor';
 const VOTE_ANCHOR_RESULT_SCORE = 'vote-result-score';
 const VOTE_ANCHOR_RESULT_MESSAGE = 'vote-result-message';
 const VOTE_ANCHOR_ERROR = 'vote-error';
+const AUTO_JOIN_NICKNAME_CANDIDATE_LIMIT = 80;
+const SESSION_NICKNAME_CONFLICT_DE = 'Dieser Nickname ist in dieser Session bereits vergeben.';
 
 export type VoteAutoScrollPhase = 'read' | 'vote' | 'result';
 
@@ -311,6 +319,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly qrDataUrl = signal('');
   readonly activeChannel = signal<SessionChannelTab>('quiz');
   readonly qaQuestions = signal<QaQuestionDTO[]>([]);
+  readonly qaSelectedAuthorNickname = signal<string | null>(null);
   readonly quickFeedbackResult = signal<QuickFeedbackResult | null>(null);
   readonly qaDraft = signal('');
   readonly qaSubmitting = signal(false);
@@ -421,6 +430,16 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return nick ? $localize`Du fragst als ${nick}` : $localize`Dein Tier-Icon`;
   });
 
+  readonly playerKindergartenSelectionAriaLabel = computed(() => {
+    const nick = this.playerNickname()?.trim();
+    if (!nick) {
+      return $localize`Dein Tier-Icon`;
+    }
+    return this.qaSelectedAuthorNickname() === nick
+      ? $localize`Auswahl für ${nick} aufheben`
+      : $localize`Alle Fragen von ${nick} hervorheben`;
+  });
+
   readonly playerBadgeAriaLabel = computed(() => {
     const nick = this.playerNickname()?.trim() ?? '';
     const team = this.playerTeamName()?.trim();
@@ -434,34 +453,183 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return typeof teamName === 'string' && edgeEmojiMarkerPosition(teamName) !== null;
   }
 
+  qaQuestionAuthorNickname(question: QaQuestionDTO): string | null {
+    const nickname = question.authorNickname ?? (question.isOwn ? this.playerNickname() : null);
+    const trimmedNickname = nickname?.trim();
+    return trimmedNickname ? trimmedNickname : null;
+  }
+
   qaAuthorKindergartenBadgeLabel(question: QaQuestionDTO): string | null {
     if (!this.usesKindergartenNicknames()) {
       return null;
     }
-    const nickname = question.authorNickname ?? (question.isOwn ? this.playerNickname() : null);
-    const trimmedNickname = nickname?.trim();
+    const trimmedNickname = this.qaQuestionAuthorNickname(question);
     return trimmedNickname ? findKindergartenNicknameBadgeLabel(trimmedNickname) : null;
   }
 
   qaAuthorKindergartenAriaLabel(question: QaQuestionDTO): string {
-    const nickname = question.authorNickname?.trim();
+    const nickname = this.qaQuestionAuthorNickname(question);
     if (nickname) {
       return $localize`Frage von ${nickname}`;
     }
     return question.isOwn ? $localize`Deine Frage` : $localize`Frage aus dem Publikum`;
   }
 
-  private buildAutoJoinNickname(): string {
+  qaAuthorSelectionAriaLabel(question: QaQuestionDTO): string {
+    const nickname = this.qaQuestionAuthorNickname(question);
+    if (!nickname) {
+      return this.qaAuthorKindergartenAriaLabel(question);
+    }
+    return this.qaSelectedAuthorNickname() === nickname
+      ? $localize`Auswahl für ${nickname} aufheben`
+      : $localize`Alle Fragen von ${nickname} hervorheben`;
+  }
+
+  toggleQaAuthorSelection(nickname: string | null | undefined): void {
+    const trimmedNickname = nickname?.trim();
+    if (!trimmedNickname) {
+      return;
+    }
+    this.qaSelectedAuthorNickname.update((current) =>
+      current === trimmedNickname ? null : trimmedNickname,
+    );
+  }
+
+  clearQaAuthorSelection(): void {
+    if (this.qaSelectedAuthorNickname() !== null) {
+      this.qaSelectedAuthorNickname.set(null);
+    }
+  }
+
+  isQaAuthorSelected(question: QaQuestionDTO): boolean {
+    const selectedNickname = this.qaSelectedAuthorNickname();
+    return (
+      selectedNickname !== null && this.qaQuestionAuthorNickname(question) === selectedNickname
+    );
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydownClearQaAuthorSelection(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.clearQaAuthorSelection();
+    }
+  }
+
+  private normalizeNicknameKey(nickname: string): string {
+    return nickname.trim().toLowerCase();
+  }
+
+  private buildGenericAutoJoinNicknameCandidates(
+    takenNicknames: ReadonlySet<string>,
+    participantCountHint: number,
+    limit = AUTO_JOIN_NICKNAME_CANDIDATE_LIMIT,
+  ): string[] {
+    const candidates: string[] = [];
+    let sequence = Math.max(1, participantCountHint + 1);
+
+    while (candidates.length < limit) {
+      const candidate = `Teilnehmende #${sequence}`;
+      sequence += 1;
+      if (takenNicknames.has(this.normalizeNicknameKey(candidate))) {
+        continue;
+      }
+      candidates.push(candidate);
+    }
+
+    return candidates;
+  }
+
+  private buildAutoJoinNicknameCandidates(
+    takenNicknames: ReadonlySet<string>,
+    participantCountHint: number,
+  ): string[] {
     const session = this.sessionSettings();
+    if (session.anonymousMode === true || session.allowCustomNicknames === true) {
+      return this.buildGenericAutoJoinNicknameCandidates(takenNicknames, participantCountHint);
+    }
+
     const theme = (session.nicknameTheme ?? 'HIGH_SCHOOL') as NicknameTheme;
-    if (session.anonymousMode !== true && session.allowCustomNicknames === false) {
-      const candidates = getNicknameList(theme, getEffectiveLocale());
-      if (candidates.length > 0) {
-        const base = candidates[Math.floor(Math.random() * candidates.length)]!;
-        return `${base} ${Math.floor(Math.random() * 9000) + 1000}`.slice(0, 30);
+    const locale = getEffectiveLocale();
+    const originalCandidates = getNicknameList(theme, locale);
+    if (originalCandidates.length === 0) {
+      return this.buildGenericAutoJoinNicknameCandidates(takenNicknames, participantCountHint);
+    }
+
+    if (!areOriginalNicknamesExhausted(theme, locale, takenNicknames)) {
+      return originalCandidates
+        .filter((nickname) => !takenNicknames.has(this.normalizeNicknameKey(nickname)))
+        .slice(0, AUTO_JOIN_NICKNAME_CANDIDATE_LIMIT);
+    }
+
+    const fallbackCandidates = getGeneratedNicknameFallbackList(
+      theme,
+      locale,
+      takenNicknames,
+      AUTO_JOIN_NICKNAME_CANDIDATE_LIMIT,
+    );
+    if (fallbackCandidates.length > 0) {
+      return fallbackCandidates;
+    }
+
+    return this.buildGenericAutoJoinNicknameCandidates(takenNicknames, participantCountHint);
+  }
+
+  private isSessionNicknameConflictError(error: unknown): boolean {
+    const message =
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof error.message === 'string'
+        ? error.message
+        : '';
+    return localizeKnownServerMessage(message) === SESSION_NICKNAME_CONFLICT_DE;
+  }
+
+  private async autoJoinParticipant(): Promise<{
+    participantId: string;
+    sessionId: string;
+    nickname: string;
+  }> {
+    let participantCountHint = Math.max(0, this.sessionSettings().participantCount ?? 0);
+    const takenNicknames = new Set<string>();
+
+    try {
+      const payload = await trpc.session.getParticipantNicknames.query({ code: this.code });
+      participantCountHint = Math.max(0, payload.participantCount);
+      for (const nickname of payload.nicknames) {
+        takenNicknames.add(this.normalizeNicknameKey(nickname));
+      }
+    } catch {
+      /* best effort */
+    }
+
+    const candidates = this.buildAutoJoinNicknameCandidates(takenNicknames, participantCountHint);
+    let lastError: unknown = null;
+
+    for (const nickname of candidates) {
+      try {
+        const join = await trpc.session.join.mutate({
+          code: this.code,
+          nickname,
+        });
+        return {
+          participantId: join.participantId,
+          sessionId: join.id,
+          nickname,
+        };
+      } catch (error) {
+        lastError = error;
+        if (!this.isSessionNicknameConflictError(error)) {
+          throw error;
+        }
+        takenNicknames.add(this.normalizeNicknameKey(nickname));
       }
     }
-    return `Teilnehmende #${Math.floor(Math.random() * 9000) + 1000}`;
+
+    throw (
+      lastError ??
+      new Error($localize`:@@sessionQa.autoJoinFailed:Teilnahme konnte nicht vorbereitet werden.`)
+    );
   }
 
   teamNameEmojiMarker(teamName: string | null | undefined): string | null {
@@ -553,6 +721,18 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       const sc = this.scorecard();
       const token = `${questionId}:${message}:${sc ? `${sc.questionOrder}:${sc.totalScore}:${sc.currentRank}` : 'pending'}`;
       this.scheduleResultContentScroll(token);
+    });
+    effect(() => {
+      const selectedNickname = this.qaSelectedAuthorNickname();
+      if (!selectedNickname) {
+        return;
+      }
+      const hasMatchingQuestion = this.qaQuestions().some(
+        (question) => this.qaQuestionAuthorNickname(question) === selectedNickname,
+      );
+      if (!hasMatchingQuestion) {
+        untracked(() => this.clearQaAuthorSelection());
+      }
     });
   }
 
@@ -697,6 +877,16 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.qaDraft().trim().length <= 500 &&
       !this.qaSubmitting(),
   );
+  readonly visibleQaQuestions = computed(() => {
+    const selectedNickname = this.qaSelectedAuthorNickname();
+    const questions = this.qaQuestions();
+    if (!selectedNickname) {
+      return questions;
+    }
+    return questions.filter(
+      (question) => this.qaQuestionAuthorNickname(question) === selectedNickname,
+    );
+  });
 
   private patchSessionChannels(channels: SessionChannelsDTO): void {
     this.sessionSettings.update((current) => ({ ...current, channels }));
@@ -2043,19 +2233,15 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
     if (!participantId && this.code) {
       try {
-        const autoNickname = this.buildAutoJoinNickname();
-        const join = await trpc.session.join.mutate({
-          code: this.code,
-          nickname: autoNickname,
-        });
+        const join = await this.autoJoinParticipant();
         participantId = join.participantId;
-        sessionId = join.id;
+        sessionId = join.sessionId;
         this.participantId.set(participantId);
         this.sessionId.set(sessionId);
-        this.playerNickname.set(autoNickname);
+        this.playerNickname.set(join.nickname);
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(`${PARTICIPANT_STORAGE_KEY}-${this.code}`, participantId);
-          localStorage.setItem(`${NICKNAME_STORAGE_KEY}-${this.code}`, autoNickname);
+          localStorage.setItem(`${NICKNAME_STORAGE_KEY}-${this.code}`, join.nickname);
         }
       } catch (error) {
         this.showQaError(

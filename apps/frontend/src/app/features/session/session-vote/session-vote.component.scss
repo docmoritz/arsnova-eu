@@ -721,6 +721,30 @@
   white-space: nowrap;
 }
 
+.session-qa-form__identity-badge--button {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  font: inherit;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-primary) 24%, transparent);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 16%, var(--mat-sys-surface));
+  }
+}
+
+.session-qa-form__identity-badge--selected {
+  background: color-mix(in srgb, var(--mat-sys-primary) 20%, var(--mat-sys-surface));
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 38%, transparent);
+  color: var(--mat-sys-primary);
+}
+
 .session-qa-form__textarea {
   width: 100%;
   min-height: 3.5rem;
@@ -951,6 +975,13 @@
   border-left: 3px solid var(--mat-sys-primary);
 }
 
+.session-qa-card--author-selected {
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 42%, var(--mat-sys-outline-variant));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+    0 0.75rem 1.5rem color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+}
+
 .session-qa-card--pinned {
   border: 1.5px solid color-mix(in srgb, var(--mat-sys-tertiary) 50%, transparent);
   background: linear-gradient(
@@ -992,6 +1023,37 @@
   line-height: 1;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  transition:
+    background 180ms,
+    border-color 180ms,
+    color 180ms,
+    box-shadow 180ms,
+    opacity 180ms;
+}
+
+.session-qa-card__author-icon--button {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-primary) 24%, transparent);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 14%, var(--mat-sys-surface));
+  }
+}
+
+.session-qa-card__author-icon--selected {
+  background: color-mix(in srgb, var(--mat-sys-primary) 20%, var(--mat-sys-surface));
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 38%, transparent);
+  color: var(--mat-sys-primary);
 }
 
 .session-qa-card__status {

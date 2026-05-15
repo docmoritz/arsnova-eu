@@ -21,6 +21,7 @@ const QA_SUBSCRIPTION_POLL_MS = 1000;
 const QA_PARTICIPANT_COUNT_CACHE_MS = 5000;
 const QA_WILSON_Z = 1.96;
 const QA_WILSON_Z_SQUARED = QA_WILSON_Z * QA_WILSON_Z;
+const QA_MAX_QUESTIONS_PER_PARTICIPANT = 10;
 const PARTICIPANT_VISIBLE_QA_STATUSES = ['ACTIVE', 'PINNED', 'ARCHIVED'] as const;
 
 type QaQuestionVoteRecord = {
@@ -670,10 +671,10 @@ export const qaRouter = router({
           participantId: input.participantId,
         },
       });
-      if (existingCount >= 3) {
+      if (existingCount >= QA_MAX_QUESTIONS_PER_PARTICIPANT) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'Du kannst pro Session maximal 3 Fragen einreichen.',
+          message: `Du kannst pro Session maximal ${QA_MAX_QUESTIONS_PER_PARTICIPANT} Fragen einreichen.`,
         });
       }
 

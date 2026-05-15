@@ -215,7 +215,7 @@ describe('qa router (Epic 8)', () => {
     expect(prismaMock.qaQuestion.create).not.toHaveBeenCalled();
   });
 
-  it('begrenzt Studierende auf maximal 3 Fragen pro Session', async () => {
+  it('begrenzt Studierende auf maximal 10 Fragen pro Session', async () => {
     prismaMock.participant.findUnique.mockResolvedValue({
       id: PARTICIPANT_ID,
       sessionId: SESSION_ID,
@@ -229,7 +229,7 @@ describe('qa router (Epic 8)', () => {
         status: 'ACTIVE',
       },
     });
-    prismaMock.qaQuestion.count.mockResolvedValue(3);
+    prismaMock.qaQuestion.count.mockResolvedValue(10);
 
     await expect(
       caller.submit({

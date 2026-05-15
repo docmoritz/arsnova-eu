@@ -1449,13 +1449,21 @@
                 <span class="session-qa-form__identity-text" i18n="@@sessionVote.qaIdentityHint"
                   >Du fragst als</span
                 >
-                <span
-                  class="session-qa-form__identity-badge"
-                  role="img"
-                  [attr.aria-label]="playerKindergartenBadgeAriaLabel()"
+                <button
+                  type="button"
+                  class="session-qa-form__identity-badge session-qa-form__identity-badge--button"
+                  [class.session-qa-form__identity-badge--selected]="
+                    qaSelectedAuthorNickname() === (playerNickname()?.trim() ?? null)
+                  "
+                  [attr.aria-label]="playerKindergartenSelectionAriaLabel()"
+                  [attr.aria-pressed]="
+                    qaSelectedAuthorNickname() === (playerNickname()?.trim() ?? null)
+                  "
                   [attr.title]="playerNickname() ?? null"
-                  >{{ ownBadge }}</span
+                  (click)="toggleQaAuthorSelection(playerNickname())"
                 >
+                  {{ ownBadge }}
+                </button>
               </div>
             }
             <textarea
@@ -1491,7 +1499,7 @@
             <p class="session-channel-card__info" role="status">{{ info }}</p>
           }
 
-          @if (qaQuestions().length === 0) {
+          @if (visibleQaQuestions().length === 0) {
             <div class="session-qa-empty">
               <mat-icon class="session-qa-empty__icon" aria-hidden="true"
                 >chat_bubble_outline</mat-icon
@@ -1500,11 +1508,12 @@
             </div>
           } @else {
             <div class="session-qa-list" role="list">
-              @for (question of qaQuestions(); track question.id) {
+              @for (question of visibleQaQuestions(); track question.id) {
                 <article
                   class="session-qa-card"
                   role="listitem"
                   [attr.data-qa-id]="question.id"
+                  [class.session-qa-card--author-selected]="isQaAuthorSelected(question)"
                   [class.session-qa-card--own]="question.isOwn"
                   [class.session-qa-card--pinned]="question.status === 'PINNED'"
                 >
@@ -1551,13 +1560,19 @@
                   <div class="session-qa-card__body">
                     <div class="session-qa-card__status-row">
                       @if (qaAuthorKindergartenBadgeLabel(question); as authorBadge) {
-                        <span
-                          class="session-qa-card__author-icon"
-                          [attr.aria-label]="qaAuthorKindergartenAriaLabel(question)"
-                          [attr.title]="question.authorNickname || null"
+                        <button
+                          type="button"
+                          class="session-qa-card__author-icon session-qa-card__author-icon--button"
+                          [class.session-qa-card__author-icon--selected]="
+                            isQaAuthorSelected(question)
+                          "
+                          [attr.aria-label]="qaAuthorSelectionAriaLabel(question)"
+                          [attr.aria-pressed]="isQaAuthorSelected(question)"
+                          [attr.title]="qaQuestionAuthorNickname(question)"
+                          (click)="toggleQaAuthorSelection(qaQuestionAuthorNickname(question))"
                         >
                           <span aria-hidden="true">{{ authorBadge }}</span>
-                        </span>
+                        </button>
                       }
                       @if (question.status !== 'ACTIVE') {
                         <span

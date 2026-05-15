@@ -1704,6 +1704,68 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('selektiert Host-Q&A-Fragen per Tier-Badge und hebt die Auswahl mit Escape wieder auf', () => {
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    component.session.set({
+      ...defaultSession,
+      status: 'ACTIVE',
+      nicknameTheme: 'KINDERGARTEN',
+      anonymousMode: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    component.activeChannel.set('qa');
+    component.qaQuestions.set([
+      {
+        id: 'question-1',
+        text: 'Kannst du das Beispiel noch einmal erklären?',
+        upvoteCount: 5,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:00:00.000Z',
+        authorNickname: 'Roter Drache 2',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+      {
+        id: 'question-2',
+        text: 'Gibt es die Folien später online?',
+        upvoteCount: 3,
+        status: 'ACTIVE',
+        createdAt: '2026-03-13T12:05:00.000Z',
+        authorNickname: 'Grüner Frosch',
+        myVote: null,
+        isOwn: false,
+        hasUpvoted: false,
+      },
+    ]);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const badges = host.querySelectorAll('.session-qa-card__author-icon');
+    (badges[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    let cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBe('Roter Drache 2');
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.className).toContain('session-qa-card--author-selected');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    cards = host.querySelectorAll('.session-qa-card');
+
+    expect(component.qaSelectedAuthorNickname()).toBeNull();
+    expect(cards).toHaveLength(2);
+    expect(cards[0]?.className).not.toContain('session-qa-card--author-selected');
+    fixture.destroy();
+  });
+
   it('zeigt bei aktiver reiner Q&A-Session das Fragen-Panel statt nur der Live-Karte', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,

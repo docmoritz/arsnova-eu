@@ -2062,10 +2062,11 @@
                   #qaListContainer
                   (scroll)="onQaListScroll($event)"
                 >
-                  @for (question of qaFilteredQuestions(); track question.id) {
+                  @for (question of qaVisibleQuestions(); track question.id) {
                     <article
                       class="session-qa-card"
                       [class.session-qa-card--highlight]="isQaQuestionHighlighted(question.id)"
+                      [class.session-qa-card--author-selected]="isQaAuthorSelected(question)"
                       [class.session-qa-card--pinned]="question.status === 'PINNED'"
                       [class.session-qa-card--pending]="question.status === 'PENDING'"
                       role="listitem"
@@ -2073,13 +2074,19 @@
                       <div class="session-qa-card__head">
                         <div class="session-qa-card__head-main">
                           @if (qaAuthorKindergartenBadgeLabel(question); as authorBadge) {
-                            <span
-                              class="session-qa-card__author-icon"
-                              [attr.aria-label]="qaAuthorKindergartenAriaLabel(question)"
-                              [attr.title]="question.authorNickname || null"
+                            <button
+                              type="button"
+                              class="session-qa-card__author-icon session-qa-card__author-icon--button"
+                              [class.session-qa-card__author-icon--selected]="
+                                isQaAuthorSelected(question)
+                              "
+                              [attr.aria-label]="qaAuthorSelectionAriaLabel(question)"
+                              [attr.aria-pressed]="isQaAuthorSelected(question)"
+                              [attr.title]="qaQuestionAuthorNickname(question)"
+                              (click)="toggleQaAuthorSelection(qaQuestionAuthorNickname(question))"
                             >
                               <span aria-hidden="true">{{ authorBadge }}</span>
-                            </span>
+                            </button>
                           }
                           @if (question.status !== 'ACTIVE') {
                             <span

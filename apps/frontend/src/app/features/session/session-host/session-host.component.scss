@@ -1434,6 +1434,13 @@
     0 0.9rem 1.8rem color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
 }
 
+.session-qa-card--author-selected {
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 42%, var(--mat-sys-outline-variant));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent),
+    0 0.6rem 1.2rem color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+}
+
 .session-qa-card__head {
   display: flex;
   align-items: center;
@@ -1464,6 +1471,37 @@
   flex-shrink: 0;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  transition:
+    background 180ms,
+    border-color 180ms,
+    color 180ms,
+    box-shadow 180ms,
+    opacity 180ms;
+}
+
+.session-qa-card__author-icon--button {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-primary) 24%, transparent);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--mat-sys-primary) 14%, var(--mat-sys-surface));
+  }
+}
+
+.session-qa-card__author-icon--selected {
+  background: color-mix(in srgb, var(--mat-sys-primary) 20%, var(--mat-sys-surface));
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 38%, transparent);
+  color: var(--mat-sys-primary);
 }
 
 .session-qa-card__status {

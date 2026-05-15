@@ -381,6 +381,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly hostSteeringCallout = signal<HostSteeringCalloutState | null>(null);
   readonly activeChannel = signal<SessionChannelTab>('quiz');
   readonly qaQuestions = signal<QaQuestionDTO[]>([]);
+  readonly qaSelectedAuthorNickname = signal<string | null>(null);
   readonly qaInfo = signal<string | null>(null);
   readonly qaPendingQuestionIds = signal<Set<string>>(new Set());
   readonly qaSeenQuestionIds = signal<Set<string>>(new Set());
@@ -796,6 +797,16 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const all = this.qaForumQuestions();
     return this.qaShowPinnedOnly() ? all.filter((q) => q.status === 'PINNED') : all;
   });
+  readonly qaVisibleQuestions = computed(() => {
+    const selectedNickname = this.qaSelectedAuthorNickname();
+    const questions = this.qaFilteredQuestions();
+    if (!selectedNickname) {
+      return questions;
+    }
+    return questions.filter(
+      (question) => this.qaQuestionAuthorNickname(question) === selectedNickname,
+    );
+  });
   readonly liveQaWordCloudQuestions = computed(() => {
     const visibleQuestions = this.qaQuestions().filter(
       (question) => question.status === 'PINNED' || question.status === 'ACTIVE',
@@ -1204,6 +1215,18 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
+      const selectedNickname = this.qaSelectedAuthorNickname();
+      if (!selectedNickname) {
+        return;
+      }
+      const hasMatchingQuestion = this.qaQuestions().some(
+        (question) => this.qaQuestionAuthorNickname(question) === selectedNickname,
+      );
+      if (!hasMatchingQuestion) {
+        untracked(() => this.clearQaAuthorSelection());
+      }
+    });
+    effect(() => {
       const result = this.quickFeedbackResult();
       if (!result) {
         this.quickFeedbackSeenVoteCount.set(0);
@@ -1468,10 +1491,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydownCloseJoinPopover(ev: KeyboardEvent): void {
-    if (ev.key !== 'Escape' || !this.joinInfoPopoverOpen()) {
+    if (ev.key !== 'Escape') {
       return;
     }
-    this.closeJoinInfoPopover();
+    if (this.joinInfoPopoverOpen()) {
+      this.closeJoinInfoPopover();
+    }
+    this.clearQaAuthorSelection();
   }
 
   /** Host der Beitritts-URL ohne Schema und ohne Pfad (Hostname, ggf. Port), für das Join-Menü. */
@@ -3423,7 +3449,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   qaAuthorKindergartenBadgeLabel(question: QaQuestionDTO): string | null {
-    const nickname = question.authorNickname?.trim();
+    const nickname = this.qaQuestionAuthorNickname(question);
     if (!nickname || this.session()?.nicknameTheme !== 'KINDERGARTEN') {
       return null;
     }
@@ -3431,8 +3457,46 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   qaAuthorKindergartenAriaLabel(question: QaQuestionDTO): string {
-    const nickname = question.authorNickname?.trim();
+    const nickname = this.qaQuestionAuthorNickname(question);
     return nickname ? $localize`Frage von ${nickname}` : $localize`Frage aus dem Publikum`;
+  }
+
+  qaQuestionAuthorNickname(question: QaQuestionDTO): string | null {
+    const nickname = question.authorNickname?.trim();
+    return nickname ? nickname : null;
+  }
+
+  qaAuthorSelectionAriaLabel(question: QaQuestionDTO): string {
+    const nickname = this.qaQuestionAuthorNickname(question);
+    if (!nickname) {
+      return this.qaAuthorKindergartenAriaLabel(question);
+    }
+    return this.qaSelectedAuthorNickname() === nickname
+      ? $localize`Auswahl für ${nickname} aufheben`
+      : $localize`Alle Fragen von ${nickname} hervorheben`;
+  }
+
+  toggleQaAuthorSelection(nickname: string | null | undefined): void {
+    const trimmedNickname = nickname?.trim();
+    if (!trimmedNickname) {
+      return;
+    }
+    this.qaSelectedAuthorNickname.update((current) =>
+      current === trimmedNickname ? null : trimmedNickname,
+    );
+  }
+
+  clearQaAuthorSelection(): void {
+    if (this.qaSelectedAuthorNickname() !== null) {
+      this.qaSelectedAuthorNickname.set(null);
+    }
+  }
+
+  isQaAuthorSelected(question: QaQuestionDTO): boolean {
+    const selectedNickname = this.qaSelectedAuthorNickname();
+    return (
+      selectedNickname !== null && this.qaQuestionAuthorNickname(question) === selectedNickname
+    );
   }
 
   qaStatusLabel(status: QaQuestionDTO['status']): string {
