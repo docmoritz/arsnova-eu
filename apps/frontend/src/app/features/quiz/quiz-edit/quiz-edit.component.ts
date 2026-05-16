@@ -44,23 +44,36 @@ import {
   DEFAULT_TEAM_COUNT,
   DEFAULT_TIMER_SECONDS,
   MOTIF_IMAGE_URL_MAX_LENGTH,
+  NUMERIC_DEFAULT_INPUT_KIND,
+  NUMERIC_DEFAULT_TOLERANCE_MODE,
+  NUMERIC_DEFAULT_UNIT_FAMILY,
   MotifImageUrlSchema,
   QUIZ_PRESETS,
   SC_FORMAT_PRESETS,
+  SHORT_TEXT_DEFAULT_EVALUATION_KIND,
   SHORT_TEXT_DEFAULT_MAX_LENGTH,
   SHORT_TEXT_DEFAULT_EVALUATION_MODE,
   SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL,
   SHORT_TEXT_MAX_LENGTH_LIMIT,
+  evaluateNumericAnswer,
   evaluateShortAnswer,
   normalizeShortTextValue,
+  resolveNumericQuestionEvaluationSettings,
+  resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
   type Difficulty,
   type NicknameTheme,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
   type QuizPreset,
   type ScFormat,
   type ShortAnswerEvaluationMode,
+  type ShortTextEvaluationKind,
   type TeamAssignment,
   type ToleranceLevel,
+  usesNumericShortTextEvaluation,
+  usesShortTextUnitEvaluation,
 } from '@arsnova/shared-types';
 import { mergeTimerPresetOptions } from '../default-timer-presets';
 import {
@@ -105,6 +118,7 @@ type QuestionFormGroup = FormGroup<{
   ratingMax: FormControl<number | null>;
   ratingLabelMin: FormControl<string>;
   ratingLabelMax: FormControl<string>;
+  shortTextEvaluationKind: FormControl<ShortTextEvaluationKind>;
   shortTextMaxLength: FormControl<number | null>;
   shortTextCaseSensitive: FormControl<boolean>;
   shortTextEvaluationMode: FormControl<ShortAnswerEvaluationMode>;
@@ -112,6 +126,13 @@ type QuestionFormGroup = FormGroup<{
   shortTextAllowPartialCredit: FormControl<boolean>;
   shortTextTrimWhitespace: FormControl<boolean>;
   shortTextNormalizeWhitespace: FormControl<boolean>;
+  numericInputKind: FormControl<NumericInputKind>;
+  numericToleranceMode: FormControl<NumericToleranceMode>;
+  numericAbsoluteTolerance: FormControl<number | null>;
+  numericRelativeTolerancePercent: FormControl<number | null>;
+  numericUnitFamily: FormControl<NumericUnitFamily>;
+  numericRequireUnit: FormControl<boolean>;
+  numericAcceptEquivalentUnits: FormControl<boolean>;
 }>;
 
 type ShortTextPreviewExample = {
@@ -120,6 +141,78 @@ type ShortTextPreviewExample = {
   outcome: string;
   tone: 'full' | 'partial' | 'rejected';
 };
+
+type ParsedNumericPreviewAnswer = {
+  value: number;
+  unit: string | null;
+  unitFamily: Exclude<NumericUnitFamily, 'none'> | null;
+  factor: number | null;
+  decimalSeparator: ',' | '.' | null;
+};
+
+const NUMERIC_PREVIEW_INPUT_REGEX = /^([+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+))(?:\s*([a-zA-Z]+))?$/;
+const NUMERIC_PREVIEW_UNIT_FACTORS: Record<
+  Exclude<NumericUnitFamily, 'none'>,
+  Record<string, number>
+> = {
+  length: { mm: 0.001, cm: 0.01, m: 1, km: 1000 },
+  mass: { mg: 0.001, g: 1, kg: 1000, t: 1_000_000 },
+  time: { ms: 0.001, s: 1, min: 60, h: 3600 },
+  volume: { ml: 0.001, l: 1 },
+};
+
+function previewUnitFamilyForUnit(unit: string): Exclude<NumericUnitFamily, 'none'> | null {
+  for (const [family, units] of Object.entries(NUMERIC_PREVIEW_UNIT_FACTORS)) {
+    if (unit in units) {
+      return family as Exclude<NumericUnitFamily, 'none'>;
+    }
+  }
+
+  return null;
+}
+
+function parseNumericPreviewAnswer(value: string): ParsedNumericPreviewAnswer | null {
+  const match = NUMERIC_PREVIEW_INPUT_REGEX.exec(value.trim().replace(/\s+/g, ' '));
+  if (!match?.[1]) {
+    return null;
+  }
+
+  const decimalSeparator = match[1].includes(',') ? ',' : match[1].includes('.') ? '.' : null;
+  const numericValue = Number(match[1].replace(',', '.'));
+  if (!Number.isFinite(numericValue)) {
+    return null;
+  }
+
+  const unit = match[2]?.toLowerCase() ?? null;
+  if (!unit) {
+    return {
+      value: numericValue,
+      unit: null,
+      unitFamily: null,
+      factor: null,
+      decimalSeparator,
+    };
+  }
+
+  const unitFamily = previewUnitFamilyForUnit(unit);
+  return {
+    value: numericValue,
+    unit,
+    unitFamily,
+    factor: unitFamily ? NUMERIC_PREVIEW_UNIT_FACTORS[unitFamily][unit] : null,
+    decimalSeparator,
+  };
+}
+
+function formatNumericPreviewValue(
+  value: number,
+  decimalSeparator: ',' | '.' | null,
+  preferredFractionDigits = 4,
+): string {
+  const rounded = Number(value.toFixed(preferredFractionDigits));
+  const normalized = Number.isInteger(rounded) ? String(rounded) : String(rounded);
+  return decimalSeparator === ',' ? normalized.replace('.', ',') : normalized;
+}
 
 type QuizSettingsFormGroup = FormGroup<{
   showLeaderboard: FormControl<boolean>;
@@ -274,6 +367,52 @@ export class QuizEditComponent implements OnDestroy {
     },
   ];
 
+  readonly shortTextEvaluationKindOptions: Array<{
+    value: ShortTextEvaluationKind;
+    label: string;
+    hint: string;
+  }> = [
+    {
+      value: 'text',
+      label: $localize`:@@quizEdit.shortTextEvaluationKindText:Mit Textähnlichkeit bewerten`,
+      hint: $localize`:@@quizEdit.shortTextEvaluationKindTextHint:Geeignet für Fachbegriffe und feste Schreibweisen mit kleinen Tippfehlern.`,
+    },
+    {
+      value: 'numeric',
+      label: $localize`:@@quizEdit.shortTextEvaluationKindNumeric:Zahlen bewerten`,
+      hint: $localize`:@@quizEdit.shortTextEvaluationKindNumericHint:Bewertet Zahlenwerte statt Zeichenähnlichkeit und unterstützt exakte, absolute oder relative Toleranzen.`,
+    },
+    {
+      value: 'numeric_unit',
+      label: $localize`:@@quizEdit.shortTextEvaluationKindNumericUnit:Zahlen und Einheiten bewerten`,
+      hint: $localize`:@@quizEdit.shortTextEvaluationKindNumericUnitHint:Prüft Zahlenwerte zusammen mit einer kuratierten Einheitenfamilie und erklärt fehlende oder abweichende Einheiten.`,
+    },
+  ];
+
+  readonly numericInputKindOptions: Array<{ value: NumericInputKind; label: string }> = [
+    { value: 'integer', label: $localize`:@@quizEdit.numericInputKindInteger:Ganzzahl` },
+    { value: 'decimal', label: $localize`:@@quizEdit.numericInputKindDecimal:Dezimalzahl` },
+  ];
+
+  readonly numericToleranceModeOptions: Array<{ value: NumericToleranceMode; label: string }> = [
+    { value: 'exact', label: $localize`:@@quizEdit.numericToleranceExact:Exakte Zahl` },
+    {
+      value: 'absolute',
+      label: $localize`:@@quizEdit.numericToleranceAbsolute:Absolute Toleranz`,
+    },
+    {
+      value: 'relative',
+      label: $localize`:@@quizEdit.numericToleranceRelative:Relative Toleranz (%)`,
+    },
+  ];
+
+  readonly numericUnitFamilyOptions: Array<{ value: NumericUnitFamily; label: string }> = [
+    { value: 'length', label: $localize`:@@quizEdit.numericUnitFamilyLength:Länge` },
+    { value: 'mass', label: $localize`:@@quizEdit.numericUnitFamilyMass:Masse` },
+    { value: 'time', label: $localize`:@@quizEdit.numericUnitFamilyTime:Zeit` },
+    { value: 'volume', label: $localize`:@@quizEdit.numericUnitFamilyVolume:Volumen` },
+  ];
+
   readonly shortTextToleranceOptions: Array<{ value: ToleranceLevel; label: string }> = [
     { value: 'none', label: $localize`:@@quizEdit.shortTextToleranceNone:Keine Toleranz` },
     { value: 'low', label: $localize`:@@quizEdit.shortTextToleranceLow:Niedrig` },
@@ -326,6 +465,9 @@ export class QuizEditComponent implements OnDestroy {
     ratingMax: this.formBuilder.control<number | null>(5),
     ratingLabelMin: this.formBuilder.control(''),
     ratingLabelMax: this.formBuilder.control(''),
+    shortTextEvaluationKind: this.formBuilder.control<ShortTextEvaluationKind>(
+      SHORT_TEXT_DEFAULT_EVALUATION_KIND,
+    ),
     shortTextMaxLength: this.formBuilder.control<number | null>(SHORT_TEXT_DEFAULT_MAX_LENGTH, {
       validators: [Validators.min(1), Validators.max(SHORT_TEXT_MAX_LENGTH_LIMIT)],
     }),
@@ -339,6 +481,19 @@ export class QuizEditComponent implements OnDestroy {
     shortTextAllowPartialCredit: this.formBuilder.control(true),
     shortTextTrimWhitespace: this.formBuilder.control(true),
     shortTextNormalizeWhitespace: this.formBuilder.control(true),
+    numericInputKind: this.formBuilder.control<NumericInputKind>(NUMERIC_DEFAULT_INPUT_KIND),
+    numericToleranceMode: this.formBuilder.control<NumericToleranceMode>(
+      NUMERIC_DEFAULT_TOLERANCE_MODE,
+    ),
+    numericAbsoluteTolerance: this.formBuilder.control<number | null>(null, {
+      validators: [Validators.min(0)],
+    }),
+    numericRelativeTolerancePercent: this.formBuilder.control<number | null>(null, {
+      validators: [Validators.min(0)],
+    }),
+    numericUnitFamily: this.formBuilder.control<NumericUnitFamily>(NUMERIC_DEFAULT_UNIT_FAMILY),
+    numericRequireUnit: this.formBuilder.control(false),
+    numericAcceptEquivalentUnits: this.formBuilder.control(true),
   });
 
   readonly settingsForm: QuizSettingsFormGroup = this.formBuilder.group({
@@ -616,6 +771,24 @@ export class QuizEditComponent implements OnDestroy {
     return this.isShortTextType();
   }
 
+  isShortTextNumericMode(): boolean {
+    return usesNumericShortTextEvaluation(this.form.controls.shortTextEvaluationKind.value);
+  }
+
+  isShortTextUnitMode(): boolean {
+    return usesShortTextUnitEvaluation(this.form.controls.shortTextEvaluationKind.value);
+  }
+
+  onShortTextEvaluationKindChanged(): void {
+    if (
+      this.form.controls.shortTextEvaluationKind.value === 'numeric_unit' &&
+      this.form.controls.numericUnitFamily.value === NUMERIC_DEFAULT_UNIT_FAMILY
+    ) {
+      this.form.controls.numericUnitFamily.setValue('length');
+    }
+    this.scheduleLivePreview();
+  }
+
   questionTypeHasCorrectAnswers(type: SupportedQuestionType): boolean {
     return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
   }
@@ -699,6 +872,16 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   shortTextSelectedEvaluationHint(): string {
+    const evaluationKind = resolveShortTextEvaluationKind(
+      this.form.controls.shortTextEvaluationKind.value,
+    );
+    if (evaluationKind !== 'text') {
+      return (
+        this.shortTextEvaluationKindOptions.find((option) => option.value === evaluationKind)
+          ?.hint ?? ''
+      );
+    }
+
     return (
       this.shortTextEvaluationModeOptions.find(
         (option) => option.value === this.form.controls.shortTextEvaluationMode.value,
@@ -706,9 +889,50 @@ export class QuizEditComponent implements OnDestroy {
     );
   }
 
+  shortTextEvaluationKindLabel(kind: ShortTextEvaluationKind | null | undefined): string {
+    return (
+      this.shortTextEvaluationKindOptions.find((option) => option.value === kind)?.label ??
+      this.shortTextEvaluationKindOptions.find(
+        (option) => option.value === SHORT_TEXT_DEFAULT_EVALUATION_KIND,
+      )?.label ??
+      kind ??
+      SHORT_TEXT_DEFAULT_EVALUATION_KIND
+    );
+  }
+
+  numericInputKindLabel(kind: NumericInputKind | null | undefined): string {
+    return (
+      this.numericInputKindOptions.find((option) => option.value === kind)?.label ??
+      this.numericInputKindOptions.find((option) => option.value === NUMERIC_DEFAULT_INPUT_KIND)
+        ?.label ??
+      kind ??
+      NUMERIC_DEFAULT_INPUT_KIND
+    );
+  }
+
+  numericToleranceModeLabel(mode: NumericToleranceMode | null | undefined): string {
+    return (
+      this.numericToleranceModeOptions.find((option) => option.value === mode)?.label ??
+      this.numericToleranceModeOptions.find(
+        (option) => option.value === NUMERIC_DEFAULT_TOLERANCE_MODE,
+      )?.label ??
+      mode ??
+      NUMERIC_DEFAULT_TOLERANCE_MODE
+    );
+  }
+
+  numericUnitFamilyLabel(family: NumericUnitFamily | null | undefined): string {
+    return (
+      this.numericUnitFamilyOptions.find((option) => option.value === family)?.label ??
+      family ??
+      NUMERIC_DEFAULT_UNIT_FAMILY
+    );
+  }
+
   shortTextConfigSummary(
     question: Pick<
       QuizQuestion,
+      | 'shortTextEvaluationKind'
       | 'shortTextMaxLength'
       | 'shortTextCaseSensitive'
       | 'shortTextEvaluationMode'
@@ -716,8 +940,69 @@ export class QuizEditComponent implements OnDestroy {
       | 'shortTextAllowPartialCredit'
       | 'shortTextTrimWhitespace'
       | 'shortTextNormalizeWhitespace'
+      | 'numericInputKind'
+      | 'numericToleranceMode'
+      | 'numericAbsoluteTolerance'
+      | 'numericRelativeTolerancePercent'
+      | 'numericUnitFamily'
+      | 'numericRequireUnit'
+      | 'numericAcceptEquivalentUnits'
     >,
   ): string {
+    const evaluationKind = resolveShortTextEvaluationKind(question.shortTextEvaluationKind);
+    if (evaluationKind !== 'text') {
+      const numericSettings = resolveNumericQuestionEvaluationSettings({
+        numericInputKind: question.numericInputKind ?? null,
+        numericToleranceMode: question.numericToleranceMode ?? null,
+        numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+        numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+        numericUnitFamily: question.numericUnitFamily ?? null,
+        numericRequireUnit: question.numericRequireUnit ?? false,
+        numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+      });
+      const parts = [
+        $localize`:@@quizEdit.shortTextMaxLengthSummary:Max. ${resolveShortTextMaxLength(question.shortTextMaxLength)}:maxLength: Zeichen`,
+        this.shortTextEvaluationKindLabel(evaluationKind),
+        this.numericInputKindLabel(numericSettings.inputKind),
+        this.numericToleranceModeLabel(numericSettings.toleranceMode),
+      ];
+
+      if (
+        numericSettings.toleranceMode === 'absolute' &&
+        numericSettings.absoluteTolerance !== null
+      ) {
+        parts.push(
+          $localize`:@@quizEdit.numericToleranceAbsoluteSummary:±${numericSettings.absoluteTolerance}:tolerance: absolut`,
+        );
+      }
+      if (
+        numericSettings.toleranceMode === 'relative' &&
+        numericSettings.relativeTolerancePercent !== null
+      ) {
+        parts.push(
+          $localize`:@@quizEdit.numericToleranceRelativeSummary:±${numericSettings.relativeTolerancePercent}:tolerance: % relativ`,
+        );
+      }
+
+      if (evaluationKind === 'numeric_unit') {
+        parts.push(
+          $localize`:@@quizEdit.numericUnitFamilySummary:Einheiten: ${this.numericUnitFamilyLabel(numericSettings.unitFamily)}:unitFamily:`,
+        );
+        parts.push(
+          numericSettings.requireUnit
+            ? $localize`:@@quizEdit.numericRequireUnitSummary:Einheit erforderlich`
+            : $localize`:@@quizEdit.numericUnitOptionalSummary:Einheit optional`,
+        );
+        parts.push(
+          numericSettings.acceptEquivalentUnits
+            ? $localize`:@@quizEdit.numericEquivalentUnitsSummary:Äquivalente Einheiten erlaubt`
+            : $localize`:@@quizEdit.numericExactUnitsSummary:Nur exakt angegebene Einheit`,
+        );
+      }
+
+      return parts.join(' · ');
+    }
+
     const parts = [
       $localize`:@@quizEdit.shortTextMaxLengthSummary:Max. ${resolveShortTextMaxLength(question.shortTextMaxLength)}:maxLength: Zeichen`,
       this.shortTextEvaluationModeLabel(question.shortTextEvaluationMode),
@@ -745,7 +1030,25 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   shortTextDidacticWarning(): string {
+    if (this.isShortTextNumericMode()) {
+      return this.isShortTextUnitMode()
+        ? $localize`:@@quizEdit.shortTextDidacticWarningNumericUnit:Lege mindestens eine Referenzlösung mit Einheit fest, halte das Einheitenset klein und aktiviere Pflicht-Einheiten nur, wenn die Einheit fachlich wirklich bewertet werden soll.`
+        : $localize`:@@quizEdit.shortTextDidacticWarningNumeric:Lege mindestens eine klare Referenzzahl fest und wähle die Toleranz so, dass sie Rechenungenauigkeit erlaubt, aber fachlich falsche Werte klar ausschließt.`;
+    }
+
     return $localize`:@@quizEdit.shortTextDidacticWarning:Verwende tolerante Bewertung nur bei eindeutigen Fachbegriffen. Für offene Formulierungen sind mehrere Musterlösungen meist fairer als hohe Toleranz.`;
+  }
+
+  shortTextSolutionsHint(): string {
+    if (!this.isShortTextType()) {
+      return '';
+    }
+
+    return this.isShortTextNumericMode()
+      ? this.isShortTextUnitMode()
+        ? $localize`:@@quizEdit.shortTextSolutionsHintNumericUnit:Hinterlege mindestens eine und höchstens zehn Referenzlösungen mit unterstützter Einheit, zum Beispiel „2 m“.`
+        : $localize`:@@quizEdit.shortTextSolutionsHintNumeric:Hinterlege mindestens eine und höchstens zehn Referenzlösungen als Zahl, zum Beispiel „3,5“.`
+      : $localize`:@@quizEdit.shortTextSolutionsHint:Hinterlege mindestens eine und höchstens zehn Musterlösungen. Alle Varianten gelten als richtige Kurzantwort.`;
   }
 
   shortTextPreviewExamples(): ShortTextPreviewExample[] {
@@ -758,6 +1061,10 @@ export class QuizEditComponent implements OnDestroy {
       .filter((answer) => answer.length > 0);
     if (modelAnswers.length === 0) {
       return [];
+    }
+
+    if (this.isShortTextNumericMode()) {
+      return this.numericShortTextPreviewExamples(modelAnswers);
     }
 
     const baseAnswer = modelAnswers[0]!;
@@ -830,6 +1137,183 @@ export class QuizEditComponent implements OnDestroy {
       });
   }
 
+  private numericShortTextPreviewExamples(modelAnswers: string[]): ShortTextPreviewExample[] {
+    const baseAnswer = modelAnswers[0]!;
+    const parsedBase = parseNumericPreviewAnswer(baseAnswer);
+    if (!parsedBase) {
+      return [];
+    }
+
+    const examples: Array<{ label: string; studentAnswer: string }> = [
+      {
+        label: $localize`:@@quizEdit.shortTextPreviewExactLabel:Exakte Eingabe`,
+        studentAnswer: baseAnswer,
+      },
+    ];
+
+    const withinTolerance = this.createNumericTolerancePreview(parsedBase);
+    if (withinTolerance && withinTolerance !== baseAnswer) {
+      examples.push({
+        label: $localize`:@@quizEdit.shortTextPreviewNumericToleranceLabel:Innerhalb der Toleranz`,
+        studentAnswer: withinTolerance,
+      });
+    }
+
+    if (this.isShortTextUnitMode()) {
+      const equivalentUnit = this.createEquivalentUnitPreview(parsedBase);
+      if (equivalentUnit && equivalentUnit !== baseAnswer) {
+        examples.push({
+          label: $localize`:@@quizEdit.shortTextPreviewEquivalentUnitLabel:Äquivalente Einheit`,
+          studentAnswer: equivalentUnit,
+        });
+      }
+
+      examples.push({
+        label: $localize`:@@quizEdit.shortTextPreviewMissingUnitLabel:Fehlende Einheit`,
+        studentAnswer: formatNumericPreviewValue(parsedBase.value, parsedBase.decimalSeparator),
+      });
+    }
+
+    examples.push({
+      label: $localize`:@@quizEdit.shortTextPreviewWrongLabel:Klar falscher Wert`,
+      studentAnswer: this.createWrongNumericPreview(parsedBase),
+    });
+
+    const settings = this.resolveCurrentNumericPreviewSettings();
+    return examples.map((example) => {
+      const result = evaluateNumericAnswer({
+        modelAnswers,
+        studentAnswer: example.studentAnswer,
+        maxPoints: 100,
+        settings,
+      });
+
+      let outcome: string;
+      let tone: ShortTextPreviewExample['tone'];
+      if (result.points >= result.maxPoints && result.maxPoints > 0) {
+        outcome =
+          result.feedbackCategory === 'exact_match'
+            ? $localize`:@@quizEdit.shortTextPreviewOutcomeFull:Volle Punkte`
+            : $localize`:@@quizEdit.shortTextPreviewOutcomeAccepted:Akzeptiert`;
+        tone = 'full';
+      } else if (result.points > 0) {
+        outcome = $localize`:@@quizEdit.shortTextPreviewOutcomePartial:Teilpunkte (${result.points}:points: %) `;
+        tone = 'partial';
+      } else {
+        outcome = $localize`:@@quizEdit.shortTextPreviewOutcomeRejected:Nicht akzeptiert`;
+        tone = 'rejected';
+      }
+
+      return {
+        label: example.label,
+        studentAnswer: example.studentAnswer,
+        outcome: outcome.trim(),
+        tone,
+      };
+    });
+  }
+
+  private resolveCurrentNumericPreviewSettings() {
+    const evaluationKind = resolveShortTextEvaluationKind(
+      this.form.controls.shortTextEvaluationKind.value,
+    );
+    const numericSettings = resolveNumericQuestionEvaluationSettings({
+      numericInputKind: this.form.controls.numericInputKind.value,
+      numericToleranceMode: this.form.controls.numericToleranceMode.value,
+      numericAbsoluteTolerance: this.form.controls.numericAbsoluteTolerance.value,
+      numericRelativeTolerancePercent: this.form.controls.numericRelativeTolerancePercent.value,
+      numericUnitFamily: this.form.controls.numericUnitFamily.value,
+      numericRequireUnit: this.form.controls.numericRequireUnit.value,
+      numericAcceptEquivalentUnits: this.form.controls.numericAcceptEquivalentUnits.value,
+    });
+
+    return {
+      inputKind: numericSettings.inputKind,
+      toleranceMode: numericSettings.toleranceMode,
+      absoluteTolerance: numericSettings.absoluteTolerance,
+      relativeTolerancePercent: numericSettings.relativeTolerancePercent,
+      unitFamily: evaluationKind === 'numeric_unit' ? numericSettings.unitFamily : 'none',
+      requireUnit: evaluationKind === 'numeric_unit' ? numericSettings.requireUnit : false,
+      acceptEquivalentUnits:
+        evaluationKind === 'numeric_unit' ? numericSettings.acceptEquivalentUnits : true,
+    };
+  }
+
+  private createNumericTolerancePreview(parsedBase: ParsedNumericPreviewAnswer): string | null {
+    const toleranceMode = this.form.controls.numericToleranceMode.value;
+    let nextValue = parsedBase.value;
+
+    if (toleranceMode === 'absolute') {
+      const tolerance = this.form.controls.numericAbsoluteTolerance.value ?? 0;
+      if (tolerance <= 0) {
+        return null;
+      }
+      nextValue += tolerance / 2;
+    } else if (toleranceMode === 'relative') {
+      const relativeTolerance = this.form.controls.numericRelativeTolerancePercent.value ?? 0;
+      if (relativeTolerance <= 0) {
+        return null;
+      }
+      const delta = Math.max(Math.abs(parsedBase.value) * (relativeTolerance / 200), 0.1);
+      nextValue += delta;
+    } else {
+      return null;
+    }
+
+    return this.formatNumericPreviewAnswer(nextValue, parsedBase.unit, parsedBase.decimalSeparator);
+  }
+
+  private createEquivalentUnitPreview(parsedBase: ParsedNumericPreviewAnswer): string | null {
+    if (!parsedBase.unitFamily || !parsedBase.unit || !parsedBase.factor) {
+      return null;
+    }
+
+    const unitEntries = Object.entries(NUMERIC_PREVIEW_UNIT_FACTORS[parsedBase.unitFamily]).filter(
+      ([unit]) => unit !== parsedBase.unit,
+    );
+    const canonicalValue = parsedBase.value * parsedBase.factor;
+    for (const [unit, factor] of unitEntries) {
+      const converted = canonicalValue / factor;
+      if (!Number.isFinite(converted)) {
+        continue;
+      }
+      if (Math.abs(converted) >= 0.1 && Math.abs(converted) < 10_000) {
+        return this.formatNumericPreviewAnswer(converted, unit, parsedBase.decimalSeparator);
+      }
+    }
+
+    return null;
+  }
+
+  private createWrongNumericPreview(parsedBase: ParsedNumericPreviewAnswer): string {
+    const toleranceMode = this.form.controls.numericToleranceMode.value;
+    let nextValue: number;
+
+    if (toleranceMode === 'absolute') {
+      const tolerance = this.form.controls.numericAbsoluteTolerance.value ?? 0;
+      nextValue = parsedBase.value + Math.max(tolerance + Math.max(tolerance / 2, 0.5), 1);
+    } else if (toleranceMode === 'relative') {
+      const relativeTolerance = this.form.controls.numericRelativeTolerancePercent.value ?? 0;
+      const delta = Math.max(Math.abs(parsedBase.value) * ((relativeTolerance + 20) / 100), 1);
+      nextValue = parsedBase.value + delta;
+    } else if (this.form.controls.numericInputKind.value === 'integer') {
+      nextValue = parsedBase.value + 1;
+    } else {
+      nextValue = parsedBase.value + 0.5;
+    }
+
+    return this.formatNumericPreviewAnswer(nextValue, parsedBase.unit, parsedBase.decimalSeparator);
+  }
+
+  private formatNumericPreviewAnswer(
+    value: number,
+    unit: string | null,
+    decimalSeparator: ',' | '.' | null,
+  ): string {
+    const formattedValue = formatNumericPreviewValue(value, decimalSeparator);
+    return unit ? `${formattedValue} ${unit}` : formattedValue;
+  }
+
   private createShortTextTranspositionExample(value: string): string {
     if (value.length < 2) {
       return value;
@@ -876,6 +1360,7 @@ export class QuizEditComponent implements OnDestroy {
 
   private resolveShortTextQuestionSettings(question: {
     type: string;
+    shortTextEvaluationKind?: ShortTextEvaluationKind | null;
     shortTextMaxLength?: number | null;
     shortTextCaseSensitive?: boolean | null;
     shortTextEvaluationMode?: ShortAnswerEvaluationMode | null;
@@ -883,7 +1368,15 @@ export class QuizEditComponent implements OnDestroy {
     shortTextAllowPartialCredit?: boolean | null;
     shortTextTrimWhitespace?: boolean | null;
     shortTextNormalizeWhitespace?: boolean | null;
+    numericInputKind?: NumericInputKind | null;
+    numericToleranceMode?: NumericToleranceMode | null;
+    numericAbsoluteTolerance?: number | null;
+    numericRelativeTolerancePercent?: number | null;
+    numericUnitFamily?: NumericUnitFamily | null;
+    numericRequireUnit?: boolean | null;
+    numericAcceptEquivalentUnits?: boolean | null;
   }): {
+    shortTextEvaluationKind: ShortTextEvaluationKind | null;
     shortTextMaxLength: number | null;
     shortTextCaseSensitive: boolean | null;
     shortTextEvaluationMode: ShortAnswerEvaluationMode | null;
@@ -891,9 +1384,17 @@ export class QuizEditComponent implements OnDestroy {
     shortTextAllowPartialCredit: boolean | null;
     shortTextTrimWhitespace: boolean | null;
     shortTextNormalizeWhitespace: boolean | null;
+    numericInputKind: NumericInputKind | null;
+    numericToleranceMode: NumericToleranceMode | null;
+    numericAbsoluteTolerance: number | null;
+    numericRelativeTolerancePercent: number | null;
+    numericUnitFamily: NumericUnitFamily | null;
+    numericRequireUnit: boolean | null;
+    numericAcceptEquivalentUnits: boolean | null;
   } {
     if (question.type !== 'SHORT_TEXT') {
       return {
+        shortTextEvaluationKind: null,
         shortTextMaxLength: null,
         shortTextCaseSensitive: null,
         shortTextEvaluationMode: null,
@@ -901,10 +1402,30 @@ export class QuizEditComponent implements OnDestroy {
         shortTextAllowPartialCredit: null,
         shortTextTrimWhitespace: null,
         shortTextNormalizeWhitespace: null,
+        numericInputKind: null,
+        numericToleranceMode: null,
+        numericAbsoluteTolerance: null,
+        numericRelativeTolerancePercent: null,
+        numericUnitFamily: null,
+        numericRequireUnit: null,
+        numericAcceptEquivalentUnits: null,
       };
     }
 
+    const numericSettings = resolveNumericQuestionEvaluationSettings({
+      numericInputKind: question.numericInputKind ?? null,
+      numericToleranceMode: question.numericToleranceMode ?? null,
+      numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+      numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+      numericUnitFamily: question.numericUnitFamily ?? null,
+      numericRequireUnit: question.numericRequireUnit ?? false,
+      numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+    });
+
     return {
+      shortTextEvaluationKind: resolveShortTextEvaluationKind(
+        question.shortTextEvaluationKind ?? SHORT_TEXT_DEFAULT_EVALUATION_KIND,
+      ),
       shortTextMaxLength: resolveShortTextMaxLength(question.shortTextMaxLength),
       shortTextCaseSensitive: question.shortTextCaseSensitive ?? false,
       shortTextEvaluationMode:
@@ -914,6 +1435,13 @@ export class QuizEditComponent implements OnDestroy {
       shortTextAllowPartialCredit: question.shortTextAllowPartialCredit ?? true,
       shortTextTrimWhitespace: question.shortTextTrimWhitespace ?? true,
       shortTextNormalizeWhitespace: question.shortTextNormalizeWhitespace ?? true,
+      numericInputKind: numericSettings.inputKind,
+      numericToleranceMode: numericSettings.toleranceMode,
+      numericAbsoluteTolerance: numericSettings.absoluteTolerance,
+      numericRelativeTolerancePercent: numericSettings.relativeTolerancePercent,
+      numericUnitFamily: numericSettings.unitFamily,
+      numericRequireUnit: numericSettings.requireUnit,
+      numericAcceptEquivalentUnits: numericSettings.acceptEquivalentUnits,
     };
   }
 
@@ -1544,13 +2072,21 @@ export class QuizEditComponent implements OnDestroy {
     }
 
     if (
+      this.form.controls.shortTextEvaluationKind.value !== SHORT_TEXT_DEFAULT_EVALUATION_KIND ||
       this.form.controls.shortTextMaxLength.value !== SHORT_TEXT_DEFAULT_MAX_LENGTH ||
       this.form.controls.shortTextCaseSensitive.value !== false ||
       this.form.controls.shortTextEvaluationMode.value !== SHORT_TEXT_DEFAULT_EVALUATION_MODE ||
       this.form.controls.shortTextToleranceLevel.value !== SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL ||
       this.form.controls.shortTextAllowPartialCredit.value !== true ||
       this.form.controls.shortTextTrimWhitespace.value !== true ||
-      this.form.controls.shortTextNormalizeWhitespace.value !== true
+      this.form.controls.shortTextNormalizeWhitespace.value !== true ||
+      this.form.controls.numericInputKind.value !== NUMERIC_DEFAULT_INPUT_KIND ||
+      this.form.controls.numericToleranceMode.value !== NUMERIC_DEFAULT_TOLERANCE_MODE ||
+      this.form.controls.numericAbsoluteTolerance.value !== null ||
+      this.form.controls.numericRelativeTolerancePercent.value !== null ||
+      this.form.controls.numericUnitFamily.value !== NUMERIC_DEFAULT_UNIT_FAMILY ||
+      this.form.controls.numericRequireUnit.value !== false ||
+      this.form.controls.numericAcceptEquivalentUnits.value !== true
     ) {
       return true;
     }
@@ -1618,6 +2154,39 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   private buildQuestionInputFromForm(): AddQuizQuestionInput {
+    const shortTextEvaluationKind = resolveShortTextEvaluationKind(
+      this.form.controls.shortTextEvaluationKind.value,
+    );
+    const shortTextInput = !this.isShortTextType()
+      ? {}
+      : shortTextEvaluationKind === 'text'
+        ? {
+            shortTextMaxLength: this.form.controls.shortTextMaxLength.value,
+            shortTextCaseSensitive: this.form.controls.shortTextCaseSensitive.value,
+            shortTextEvaluationMode: this.form.controls.shortTextEvaluationMode.value,
+            shortTextToleranceLevel: this.form.controls.shortTextToleranceLevel.value,
+            shortTextAllowPartialCredit: this.form.controls.shortTextAllowPartialCredit.value,
+            shortTextTrimWhitespace: this.form.controls.shortTextTrimWhitespace.value,
+            shortTextNormalizeWhitespace: this.form.controls.shortTextNormalizeWhitespace.value,
+          }
+        : {
+            shortTextEvaluationKind,
+            shortTextMaxLength: this.form.controls.shortTextMaxLength.value,
+            numericInputKind: this.form.controls.numericInputKind.value,
+            numericToleranceMode: this.form.controls.numericToleranceMode.value,
+            numericAbsoluteTolerance: this.form.controls.numericAbsoluteTolerance.value,
+            numericRelativeTolerancePercent:
+              this.form.controls.numericRelativeTolerancePercent.value,
+            ...(shortTextEvaluationKind === 'numeric_unit'
+              ? {
+                  numericUnitFamily: this.form.controls.numericUnitFamily.value,
+                  numericRequireUnit: this.form.controls.numericRequireUnit.value,
+                  numericAcceptEquivalentUnits:
+                    this.form.controls.numericAcceptEquivalentUnits.value,
+                }
+              : {}),
+          };
+
     return {
       text: this.textControl.value,
       type: this.typeControl.value,
@@ -1633,17 +2202,7 @@ export class QuizEditComponent implements OnDestroy {
             ratingLabelMax: this.form.controls.ratingLabelMax.value,
           }
         : {}),
-      ...(this.isShortTextType()
-        ? {
-            shortTextMaxLength: this.form.controls.shortTextMaxLength.value,
-            shortTextCaseSensitive: this.form.controls.shortTextCaseSensitive.value,
-            shortTextEvaluationMode: this.form.controls.shortTextEvaluationMode.value,
-            shortTextToleranceLevel: this.form.controls.shortTextToleranceLevel.value,
-            shortTextAllowPartialCredit: this.form.controls.shortTextAllowPartialCredit.value,
-            shortTextTrimWhitespace: this.form.controls.shortTextTrimWhitespace.value,
-            shortTextNormalizeWhitespace: this.form.controls.shortTextNormalizeWhitespace.value,
-          }
-        : {}),
+      ...shortTextInput,
     };
   }
 
@@ -1661,6 +2220,7 @@ export class QuizEditComponent implements OnDestroy {
           ratingMax?: number | null;
           ratingLabelMin?: string | null;
           ratingLabelMax?: string | null;
+          shortTextEvaluationKind?: ShortTextEvaluationKind | null;
           shortTextMaxLength?: number | null;
           shortTextCaseSensitive?: boolean | null;
           shortTextEvaluationMode?: ShortAnswerEvaluationMode | null;
@@ -1668,6 +2228,13 @@ export class QuizEditComponent implements OnDestroy {
           shortTextAllowPartialCredit?: boolean | null;
           shortTextTrimWhitespace?: boolean | null;
           shortTextNormalizeWhitespace?: boolean | null;
+          numericInputKind?: NumericInputKind | null;
+          numericToleranceMode?: NumericToleranceMode | null;
+          numericAbsoluteTolerance?: number | null;
+          numericRelativeTolerancePercent?: number | null;
+          numericUnitFamily?: NumericUnitFamily | null;
+          numericRequireUnit?: boolean | null;
+          numericAcceptEquivalentUnits?: boolean | null;
         },
   ): AddQuizQuestionInput {
     const shortTextSettings = this.resolveShortTextQuestionSettings(question);
@@ -1707,6 +2274,9 @@ export class QuizEditComponent implements OnDestroy {
     this.form.controls.ratingLabelMin.setValue(question.ratingLabelMin ?? '');
     this.form.controls.ratingLabelMax.setValue(question.ratingLabelMax ?? '');
     const shortTextSettings = this.resolveShortTextQuestionSettings(question);
+    this.form.controls.shortTextEvaluationKind.setValue(
+      shortTextSettings.shortTextEvaluationKind ?? SHORT_TEXT_DEFAULT_EVALUATION_KIND,
+    );
     this.form.controls.shortTextMaxLength.setValue(shortTextSettings.shortTextMaxLength);
     this.form.controls.shortTextCaseSensitive.setValue(
       shortTextSettings.shortTextCaseSensitive ?? false,
@@ -1725,6 +2295,25 @@ export class QuizEditComponent implements OnDestroy {
     );
     this.form.controls.shortTextNormalizeWhitespace.setValue(
       shortTextSettings.shortTextNormalizeWhitespace ?? true,
+    );
+    this.form.controls.numericInputKind.setValue(
+      shortTextSettings.numericInputKind ?? NUMERIC_DEFAULT_INPUT_KIND,
+    );
+    this.form.controls.numericToleranceMode.setValue(
+      shortTextSettings.numericToleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE,
+    );
+    this.form.controls.numericAbsoluteTolerance.setValue(
+      shortTextSettings.numericAbsoluteTolerance,
+    );
+    this.form.controls.numericRelativeTolerancePercent.setValue(
+      shortTextSettings.numericRelativeTolerancePercent,
+    );
+    this.form.controls.numericUnitFamily.setValue(
+      shortTextSettings.numericUnitFamily ?? NUMERIC_DEFAULT_UNIT_FAMILY,
+    );
+    this.form.controls.numericRequireUnit.setValue(shortTextSettings.numericRequireUnit ?? false);
+    this.form.controls.numericAcceptEquivalentUnits.setValue(
+      shortTextSettings.numericAcceptEquivalentUnits ?? true,
     );
     this.form.controls.questionTimer.setValue(question.timer ?? null);
     this.form.controls.questionSkipReadingPhase.setValue(question.skipReadingPhase ?? false);
@@ -1766,6 +2355,7 @@ export class QuizEditComponent implements OnDestroy {
     this.form.controls.ratingMax.reset(5);
     this.form.controls.ratingLabelMin.reset('');
     this.form.controls.ratingLabelMax.reset('');
+    this.form.controls.shortTextEvaluationKind.reset(SHORT_TEXT_DEFAULT_EVALUATION_KIND);
     this.form.controls.shortTextMaxLength.reset(SHORT_TEXT_DEFAULT_MAX_LENGTH);
     this.form.controls.shortTextCaseSensitive.reset(false);
     this.form.controls.shortTextEvaluationMode.reset(SHORT_TEXT_DEFAULT_EVALUATION_MODE);
@@ -1773,6 +2363,13 @@ export class QuizEditComponent implements OnDestroy {
     this.form.controls.shortTextAllowPartialCredit.reset(true);
     this.form.controls.shortTextTrimWhitespace.reset(true);
     this.form.controls.shortTextNormalizeWhitespace.reset(true);
+    this.form.controls.numericInputKind.reset(NUMERIC_DEFAULT_INPUT_KIND);
+    this.form.controls.numericToleranceMode.reset(NUMERIC_DEFAULT_TOLERANCE_MODE);
+    this.form.controls.numericAbsoluteTolerance.reset(null);
+    this.form.controls.numericRelativeTolerancePercent.reset(null);
+    this.form.controls.numericUnitFamily.reset(NUMERIC_DEFAULT_UNIT_FAMILY);
+    this.form.controls.numericRequireUnit.reset(false);
+    this.form.controls.numericAcceptEquivalentUnits.reset(true);
 
     this.submitError.set(null);
     this.form.markAsPristine();

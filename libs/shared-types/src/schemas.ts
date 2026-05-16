@@ -98,14 +98,30 @@ export type ShortAnswerEvaluationMode = z.infer<typeof ShortAnswerEvaluationMode
 export const ToleranceLevelEnum = z.enum(['none', 'low', 'medium', 'high']);
 export type ToleranceLevel = z.infer<typeof ToleranceLevelEnum>;
 
+export const ShortTextEvaluationKindEnum = z.enum(['text', 'numeric', 'numeric_unit']);
+export type ShortTextEvaluationKind = z.infer<typeof ShortTextEvaluationKindEnum>;
+
+export const NumericInputKindEnum = z.enum(['integer', 'decimal']);
+export type NumericInputKind = z.infer<typeof NumericInputKindEnum>;
+
+export const NumericToleranceModeEnum = z.enum(['exact', 'absolute', 'relative']);
+export type NumericToleranceMode = z.infer<typeof NumericToleranceModeEnum>;
+
+export const NumericUnitFamilyEnum = z.enum(['none', 'length', 'mass', 'time', 'volume']);
+export type NumericUnitFamily = z.infer<typeof NumericUnitFamilyEnum>;
+
 export const SHORT_TEXT_DEFAULT_EVALUATION_MODE: ShortAnswerEvaluationMode = 'auto';
 export const SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL: ToleranceLevel = 'low';
+export const SHORT_TEXT_DEFAULT_EVALUATION_KIND: ShortTextEvaluationKind = 'text';
 export const SHORT_TEXT_TOLERANCE_THRESHOLDS: Record<ToleranceLevel, number> = {
   none: 0,
   low: 0.1,
   medium: 0.2,
   high: 0.3,
 };
+export const NUMERIC_DEFAULT_INPUT_KIND: NumericInputKind = 'decimal';
+export const NUMERIC_DEFAULT_TOLERANCE_MODE: NumericToleranceMode = 'exact';
+export const NUMERIC_DEFAULT_UNIT_FAMILY: NumericUnitFamily = 'none';
 
 type ShortTextNormalizationOptions = {
   caseSensitive?: boolean;
@@ -118,6 +134,26 @@ export type ShortTextEvaluationOptions = ShortTextNormalizationOptions & {
   evaluationMode?: ShortAnswerEvaluationMode;
   toleranceLevel?: ToleranceLevel;
   allowPartialCredit?: boolean;
+};
+
+export type NumericEvaluationOptions = {
+  inputKind?: NumericInputKind;
+  toleranceMode?: NumericToleranceMode;
+  absoluteTolerance?: number | null;
+  relativeTolerancePercent?: number | null;
+  unitFamily?: NumericUnitFamily;
+  requireUnit?: boolean;
+  acceptEquivalentUnits?: boolean;
+};
+
+export type NumericQuestionEvaluationOptions = {
+  numericInputKind?: NumericInputKind | null;
+  numericToleranceMode?: NumericToleranceMode | null;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily | null;
+  numericRequireUnit?: boolean | null;
+  numericAcceptEquivalentUnits?: boolean | null;
 };
 
 export const ShortAnswerEvaluationSettingsSchema = z.object({
@@ -138,6 +174,66 @@ export const DEFAULT_SHORT_ANSWER_EVALUATION_SETTINGS: ShortAnswerEvaluationSett
   trimWhitespace: true,
   normalizeWhitespace: true,
 };
+
+export const NumericEvaluationSettingsSchema = z.object({
+  inputKind: NumericInputKindEnum.default(NUMERIC_DEFAULT_INPUT_KIND),
+  toleranceMode: NumericToleranceModeEnum.default(NUMERIC_DEFAULT_TOLERANCE_MODE),
+  absoluteTolerance: z.number().min(0).nullable().default(null),
+  relativeTolerancePercent: z.number().min(0).nullable().default(null),
+  unitFamily: NumericUnitFamilyEnum.default(NUMERIC_DEFAULT_UNIT_FAMILY),
+  requireUnit: z.boolean().default(false),
+  acceptEquivalentUnits: z.boolean().default(true),
+});
+export type NumericEvaluationSettings = z.infer<typeof NumericEvaluationSettingsSchema>;
+
+export const DEFAULT_NUMERIC_EVALUATION_SETTINGS: NumericEvaluationSettings = {
+  inputKind: NUMERIC_DEFAULT_INPUT_KIND,
+  toleranceMode: NUMERIC_DEFAULT_TOLERANCE_MODE,
+  absoluteTolerance: null,
+  relativeTolerancePercent: null,
+  unitFamily: NUMERIC_DEFAULT_UNIT_FAMILY,
+  requireUnit: false,
+  acceptEquivalentUnits: true,
+};
+
+type NumericUnitStatus =
+  | 'not_applicable'
+  | 'exact'
+  | 'equivalent'
+  | 'missing_optional'
+  | 'missing_required'
+  | 'equivalent_not_accepted'
+  | 'wrong_family'
+  | 'unsupported';
+type NumericFeedbackCategory =
+  | 'exact_match'
+  | 'within_tolerance'
+  | 'unit_partial'
+  | 'invalid_input'
+  | 'no_match';
+
+export interface EvaluateNumericAnswerInput {
+  modelAnswers: string[];
+  studentAnswer: string;
+  maxPoints: number;
+  settings?: NumericEvaluationOptions | null;
+}
+
+export interface EvaluateNumericAnswerResult {
+  points: number;
+  maxPoints: number;
+  matchedModelAnswer: string | null;
+  parsedStudentValue: number | null;
+  parsedStudentUnit: string | null;
+  parsedReferenceValue: number | null;
+  parsedReferenceUnit: string | null;
+  acceptedRange: { min: number; max: number } | null;
+  distance: number | null;
+  normalizedDistance: number | null;
+  unitStatus: NumericUnitStatus;
+  feedbackCategory: NumericFeedbackCategory;
+  explanation: string;
+}
 
 type ShortAnswerEvaluationMethod =
   | 'exact'
@@ -192,6 +288,48 @@ export function resolveShortAnswerEvaluationSettings(
     trimWhitespace: options?.trimWhitespace ?? true,
     normalizeWhitespace: options?.normalizeWhitespace ?? true,
   };
+}
+
+export function resolveShortTextEvaluationKind(
+  kind?: ShortTextEvaluationKind | null,
+): ShortTextEvaluationKind {
+  return kind ?? SHORT_TEXT_DEFAULT_EVALUATION_KIND;
+}
+
+export function usesNumericShortTextEvaluation(kind?: ShortTextEvaluationKind | null): boolean {
+  return resolveShortTextEvaluationKind(kind) !== 'text';
+}
+
+export function usesShortTextUnitEvaluation(kind?: ShortTextEvaluationKind | null): boolean {
+  return resolveShortTextEvaluationKind(kind) === 'numeric_unit';
+}
+
+export function resolveNumericEvaluationSettings(
+  options?: NumericEvaluationOptions | null,
+): NumericEvaluationSettings {
+  return {
+    inputKind: options?.inputKind ?? NUMERIC_DEFAULT_INPUT_KIND,
+    toleranceMode: options?.toleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE,
+    absoluteTolerance: options?.absoluteTolerance ?? null,
+    relativeTolerancePercent: options?.relativeTolerancePercent ?? null,
+    unitFamily: options?.unitFamily ?? NUMERIC_DEFAULT_UNIT_FAMILY,
+    requireUnit: options?.requireUnit ?? false,
+    acceptEquivalentUnits: options?.acceptEquivalentUnits ?? true,
+  };
+}
+
+export function resolveNumericQuestionEvaluationSettings(
+  options?: NumericQuestionEvaluationOptions | null,
+): NumericEvaluationSettings {
+  return resolveNumericEvaluationSettings({
+    inputKind: options?.numericInputKind ?? undefined,
+    toleranceMode: options?.numericToleranceMode ?? undefined,
+    absoluteTolerance: options?.numericAbsoluteTolerance ?? undefined,
+    relativeTolerancePercent: options?.numericRelativeTolerancePercent ?? undefined,
+    unitFamily: options?.numericUnitFamily ?? undefined,
+    requireUnit: options?.numericRequireUnit ?? undefined,
+    acceptEquivalentUnits: options?.numericAcceptEquivalentUnits ?? undefined,
+  });
 }
 
 export function resolveShortTextMaxLength(maxLength: number | null | undefined): number {
@@ -616,6 +754,334 @@ export function isShortTextCorrect(
   );
 }
 
+type ParsedNumericAnswer = {
+  normalizedInput: string;
+  value: number;
+  unit: string | null;
+  unitFamily: NumericUnitFamily | null;
+  factor: number | null;
+};
+
+const NUMERIC_UNIT_FACTORS: Record<Exclude<NumericUnitFamily, 'none'>, Record<string, number>> = {
+  length: {
+    mm: 0.001,
+    cm: 0.01,
+    m: 1,
+    km: 1000,
+  },
+  mass: {
+    mg: 0.001,
+    g: 1,
+    kg: 1000,
+    t: 1_000_000,
+  },
+  time: {
+    ms: 0.001,
+    s: 1,
+    min: 60,
+    h: 3600,
+  },
+  volume: {
+    ml: 0.001,
+    l: 1,
+  },
+};
+
+const NUMERIC_UNIT_STATUS_PRIORITY: Record<NumericUnitStatus, number> = {
+  not_applicable: 0,
+  exact: 0,
+  equivalent: 1,
+  missing_optional: 2,
+  missing_required: 3,
+  equivalent_not_accepted: 4,
+  wrong_family: 5,
+  unsupported: 6,
+};
+
+const NUMERIC_UNIT_PARTIAL_CREDIT_RATIO = 0.5;
+const NUMERIC_INPUT_REGEX = /^([+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+))(?:\s*([a-zA-Z]+))?$/;
+
+function getNumericUnitFamilyForUnit(unit: string): Exclude<NumericUnitFamily, 'none'> | null {
+  for (const [family, units] of Object.entries(NUMERIC_UNIT_FACTORS)) {
+    if (unit in units) {
+      return family as Exclude<NumericUnitFamily, 'none'>;
+    }
+  }
+
+  return null;
+}
+
+function parseNumericAnswer(
+  input: string,
+  settings: NumericEvaluationSettings,
+): ParsedNumericAnswer | null {
+  const normalizedInput = input.trim().replace(/\s+/g, ' ');
+  if (!normalizedInput) {
+    return null;
+  }
+
+  const match = NUMERIC_INPUT_REGEX.exec(normalizedInput);
+  if (!match) {
+    return null;
+  }
+
+  const numericPart = match[1]?.replace(',', '.');
+  if (!numericPart) {
+    return null;
+  }
+
+  const value = Number(numericPart);
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  if (settings.inputKind === 'integer' && !Number.isInteger(value)) {
+    return null;
+  }
+
+  const unit = match[2]?.toLowerCase() ?? null;
+  if (!unit) {
+    return {
+      normalizedInput,
+      value,
+      unit: null,
+      unitFamily: null,
+      factor: null,
+    };
+  }
+
+  const unitFamily = getNumericUnitFamilyForUnit(unit);
+  if (!unitFamily) {
+    return {
+      normalizedInput,
+      value,
+      unit,
+      unitFamily: null,
+      factor: null,
+    };
+  }
+
+  return {
+    normalizedInput,
+    value,
+    unit,
+    unitFamily,
+    factor: NUMERIC_UNIT_FACTORS[unitFamily][unit],
+  };
+}
+
+function resolveNumericAcceptedRange(
+  referenceValue: number,
+  settings: NumericEvaluationSettings,
+): { min: number; max: number } {
+  switch (settings.toleranceMode) {
+    case 'absolute': {
+      const tolerance = settings.absoluteTolerance ?? 0;
+      return { min: referenceValue - tolerance, max: referenceValue + tolerance };
+    }
+    case 'relative': {
+      const tolerance = Math.abs(referenceValue) * ((settings.relativeTolerancePercent ?? 0) / 100);
+      return { min: referenceValue - tolerance, max: referenceValue + tolerance };
+    }
+    case 'exact':
+      return { min: referenceValue, max: referenceValue };
+  }
+}
+
+function createZeroNumericAnswerResult(
+  maxPoints: number,
+  overrides?: Partial<
+    Pick<EvaluateNumericAnswerResult, 'feedbackCategory' | 'explanation' | 'unitStatus'>
+  >,
+): EvaluateNumericAnswerResult {
+  return {
+    points: 0,
+    maxPoints,
+    matchedModelAnswer: null,
+    parsedStudentValue: null,
+    parsedStudentUnit: null,
+    parsedReferenceValue: null,
+    parsedReferenceUnit: null,
+    acceptedRange: null,
+    distance: null,
+    normalizedDistance: null,
+    unitStatus: overrides?.unitStatus ?? 'not_applicable',
+    feedbackCategory: overrides?.feedbackCategory ?? 'no_match',
+    explanation:
+      overrides?.explanation ?? 'No numeric model answer matched within the configured tolerance.',
+  };
+}
+
+function createNumericEvaluationExplanation(input: {
+  points: number;
+  maxPoints: number;
+  unitStatus: NumericUnitStatus;
+  toleranceMode: NumericToleranceMode;
+  normalizedDistance: number | null;
+}): string {
+  if (input.points <= 0) {
+    return input.toleranceMode === 'exact'
+      ? 'Numeric value did not exactly match any configured solution.'
+      : 'Numeric value stayed outside the configured tolerance.';
+  }
+
+  if (input.points < input.maxPoints) {
+    switch (input.unitStatus) {
+      case 'missing_required':
+        return 'Numeric value matched, but the required unit was missing.';
+      case 'equivalent_not_accepted':
+        return 'Numeric value matched after conversion, but only the configured unit is accepted.';
+      case 'wrong_family':
+        return 'Numeric value matched, but the unit belongs to a different quantity family.';
+      case 'unsupported':
+        return 'Numeric value matched, but the submitted unit is outside the supported unit set.';
+      default:
+        return 'Numeric value matched, but the unit handling prevented full credit.';
+    }
+  }
+
+  if (input.unitStatus === 'equivalent') {
+    return 'Numeric value matched after converting an equivalent unit.';
+  }
+  if (input.normalizedDistance === 0) {
+    return 'Exact numeric match.';
+  }
+
+  return 'Numeric value matched within the configured tolerance.';
+}
+
+function isBetterNumericAnswerResult(
+  candidate: EvaluateNumericAnswerResult,
+  current: EvaluateNumericAnswerResult,
+): boolean {
+  if (candidate.points !== current.points) {
+    return candidate.points > current.points;
+  }
+
+  const candidateStatusPriority = NUMERIC_UNIT_STATUS_PRIORITY[candidate.unitStatus];
+  const currentStatusPriority = NUMERIC_UNIT_STATUS_PRIORITY[current.unitStatus];
+  if (candidateStatusPriority !== currentStatusPriority) {
+    return candidateStatusPriority < currentStatusPriority;
+  }
+
+  const candidateDistance = candidate.normalizedDistance ?? Number.POSITIVE_INFINITY;
+  const currentDistance = current.normalizedDistance ?? Number.POSITIVE_INFINITY;
+  return candidateDistance < currentDistance;
+}
+
+export function evaluateNumericAnswer(
+  input: EvaluateNumericAnswerInput,
+): EvaluateNumericAnswerResult {
+  const maxPoints = Math.max(0, input.maxPoints);
+  const settings = resolveNumericEvaluationSettings(input.settings);
+  const student = parseNumericAnswer(input.studentAnswer, settings);
+
+  if (!student) {
+    return createZeroNumericAnswerResult(maxPoints, {
+      feedbackCategory: 'invalid_input',
+      explanation: 'Submitted answer is not a supported numeric value.',
+    });
+  }
+
+  let bestResult = createZeroNumericAnswerResult(maxPoints, {
+    parsedStudentValue: undefined,
+  } as never);
+
+  for (const modelAnswer of input.modelAnswers) {
+    const reference = parseNumericAnswer(modelAnswer, settings);
+    if (!reference) {
+      continue;
+    }
+
+    const unitMode = settings.unitFamily !== 'none';
+    let comparisonStudentValue = student.value;
+    let comparisonReferenceValue = reference.value;
+    let unitStatus: NumericUnitStatus = unitMode ? 'exact' : 'not_applicable';
+
+    if (unitMode) {
+      if (!reference.unit || reference.unitFamily !== settings.unitFamily || !reference.factor) {
+        continue;
+      }
+
+      if (!student.unit) {
+        unitStatus = settings.requireUnit ? 'missing_required' : 'missing_optional';
+      } else if (student.unitFamily === settings.unitFamily && student.factor) {
+        comparisonStudentValue = student.value * student.factor;
+        comparisonReferenceValue = reference.value * reference.factor;
+
+        if (student.unit === reference.unit) {
+          unitStatus = 'exact';
+        } else {
+          unitStatus = settings.acceptEquivalentUnits ? 'equivalent' : 'equivalent_not_accepted';
+        }
+      } else if (student.unitFamily === null) {
+        unitStatus = 'unsupported';
+      } else {
+        unitStatus = 'wrong_family';
+      }
+    }
+
+    const acceptedRange = resolveNumericAcceptedRange(comparisonReferenceValue, settings);
+    const numericMatch =
+      comparisonStudentValue >= acceptedRange.min && comparisonStudentValue <= acceptedRange.max;
+    if (!numericMatch) {
+      continue;
+    }
+
+    const distance = Math.abs(comparisonStudentValue - comparisonReferenceValue);
+    const normalizedDistance = distance / Math.max(Math.abs(comparisonReferenceValue), 1);
+    const awardsFullPoints =
+      unitStatus === 'not_applicable' ||
+      unitStatus === 'exact' ||
+      unitStatus === 'equivalent' ||
+      unitStatus === 'missing_optional';
+    const points = awardsFullPoints
+      ? Math.round(maxPoints)
+      : Math.round(maxPoints * NUMERIC_UNIT_PARTIAL_CREDIT_RATIO);
+    const feedbackCategory: NumericFeedbackCategory =
+      points <= 0
+        ? 'no_match'
+        : points < maxPoints
+          ? 'unit_partial'
+          : normalizedDistance === 0
+            ? 'exact_match'
+            : 'within_tolerance';
+
+    const result: EvaluateNumericAnswerResult = {
+      points,
+      maxPoints,
+      matchedModelAnswer: modelAnswer,
+      parsedStudentValue: student.value,
+      parsedStudentUnit: student.unit,
+      parsedReferenceValue: reference.value,
+      parsedReferenceUnit: reference.unit,
+      acceptedRange,
+      distance,
+      normalizedDistance,
+      unitStatus,
+      feedbackCategory,
+      explanation: createNumericEvaluationExplanation({
+        points,
+        maxPoints,
+        unitStatus,
+        toleranceMode: settings.toleranceMode,
+        normalizedDistance,
+      }),
+    };
+
+    if (isBetterNumericAnswerResult(result, bestResult)) {
+      bestResult = result;
+    }
+  }
+
+  if (bestResult.matchedModelAnswer) {
+    return bestResult;
+  }
+
+  return createZeroNumericAnswerResult(maxPoints, {
+    parsedStudentValue: undefined,
+  } as never);
+}
+
 /** Streak-Multiplikatoren für aufeinanderfolgende richtige Antworten (Story 5.5) */
 export const STREAK_MULTIPLIER: Record<number, number> = {
   0: 1.0,
@@ -777,6 +1243,7 @@ export const AddQuestionInputSchema = z
     ratingMax: z.number().int().min(1).max(10).optional(), // Nur bei RATING
     ratingLabelMin: z.string().max(50).optional(), // Nur bei RATING
     ratingLabelMax: z.string().max(50).optional(), // Nur bei RATING
+    shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
     shortTextMaxLength: z.number().int().min(1).max(SHORT_TEXT_MAX_LENGTH_LIMIT).optional(),
     shortTextCaseSensitive: z.boolean().optional(),
     shortTextEvaluationMode: ShortAnswerEvaluationModeEnum.optional(),
@@ -784,9 +1251,17 @@ export const AddQuestionInputSchema = z
     shortTextAllowPartialCredit: z.boolean().optional(),
     shortTextTrimWhitespace: z.boolean().optional(),
     shortTextNormalizeWhitespace: z.boolean().optional(),
+    numericInputKind: NumericInputKindEnum.optional(),
+    numericToleranceMode: NumericToleranceModeEnum.optional(),
+    numericAbsoluteTolerance: z.number().min(0).optional(),
+    numericRelativeTolerancePercent: z.number().min(0).optional(),
+    numericUnitFamily: NumericUnitFamilyEnum.optional(),
+    numericRequireUnit: z.boolean().optional(),
+    numericAcceptEquivalentUnits: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     const hasShortTextConfig =
+      value.shortTextEvaluationKind !== undefined ||
       value.shortTextMaxLength !== undefined ||
       value.shortTextCaseSensitive !== undefined ||
       value.shortTextEvaluationMode !== undefined ||
@@ -794,9 +1269,17 @@ export const AddQuestionInputSchema = z
       value.shortTextAllowPartialCredit !== undefined ||
       value.shortTextTrimWhitespace !== undefined ||
       value.shortTextNormalizeWhitespace !== undefined;
+    const hasNumericConfig =
+      value.numericInputKind !== undefined ||
+      value.numericToleranceMode !== undefined ||
+      value.numericAbsoluteTolerance !== undefined ||
+      value.numericRelativeTolerancePercent !== undefined ||
+      value.numericUnitFamily !== undefined ||
+      value.numericRequireUnit !== undefined ||
+      value.numericAcceptEquivalentUnits !== undefined;
 
     if (value.type !== 'SHORT_TEXT') {
-      if (hasShortTextConfig) {
+      if (hasShortTextConfig || hasNumericConfig) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['shortTextMaxLength'],
@@ -812,6 +1295,106 @@ export const AddQuestionInputSchema = z
         path: ['answers'],
         message: 'Kurzantwort-Fragen benötigen mindestens eine Musterlösung.',
       });
+    }
+
+    const evaluationKind = resolveShortTextEvaluationKind(value.shortTextEvaluationKind);
+    if (usesNumericShortTextEvaluation(evaluationKind)) {
+      const numericSettings = resolveNumericQuestionEvaluationSettings({
+        numericInputKind: value.numericInputKind,
+        numericToleranceMode: value.numericToleranceMode,
+        numericAbsoluteTolerance: value.numericAbsoluteTolerance,
+        numericRelativeTolerancePercent: value.numericRelativeTolerancePercent,
+        numericUnitFamily: value.numericUnitFamily,
+        numericRequireUnit: value.numericRequireUnit,
+        numericAcceptEquivalentUnits: value.numericAcceptEquivalentUnits,
+      });
+
+      if (
+        numericSettings.toleranceMode === 'absolute' &&
+        value.numericAbsoluteTolerance === undefined
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['numericAbsoluteTolerance'],
+          message: 'Absolute Toleranz benötigt einen Zahlenwert.',
+        });
+      }
+
+      if (
+        numericSettings.toleranceMode === 'relative' &&
+        value.numericRelativeTolerancePercent === undefined
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['numericRelativeTolerancePercent'],
+          message: 'Relative Toleranz benötigt einen Prozentwert.',
+        });
+      }
+
+      if (usesShortTextUnitEvaluation(evaluationKind) && numericSettings.unitFamily === 'none') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['numericUnitFamily'],
+          message: 'Einheitenbewertung benötigt eine unterstützte Einheitenfamilie.',
+        });
+      }
+
+      const seenNumericSolutions = new Set<string>();
+      for (const [index, answer] of value.answers.entries()) {
+        if (!answer.isCorrect) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['answers', index, 'isCorrect'],
+            message: 'Kurzantwort-Musterlösungen müssen als gültige Lösung markiert sein.',
+          });
+        }
+
+        const parsedAnswer = parseNumericAnswer(answer.text, numericSettings);
+        if (!parsedAnswer) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['answers', index, 'text'],
+            message: 'Musterlösungen müssen in diesem Modus als unterstützte Zahl parsebar sein.',
+          });
+          continue;
+        }
+
+        if (usesShortTextUnitEvaluation(evaluationKind)) {
+          if (!parsedAnswer.unit) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['answers', index, 'text'],
+              message:
+                'Bei Einheitenbewertung muss jede Musterlösung eine unterstützte Einheit enthalten.',
+            });
+            continue;
+          }
+
+          if (parsedAnswer.unitFamily !== numericSettings.unitFamily || !parsedAnswer.factor) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['answers', index, 'text'],
+              message: 'Die Einheit der Musterlösung passt nicht zur gewählten Einheitenfamilie.',
+            });
+            continue;
+          }
+        }
+
+        const canonicalKey =
+          usesShortTextUnitEvaluation(evaluationKind) && parsedAnswer.factor
+            ? `${parsedAnswer.value * parsedAnswer.factor}|${parsedAnswer.unitFamily}`
+            : `${parsedAnswer.value}`;
+        if (seenNumericSolutions.has(canonicalKey)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['answers', index, 'text'],
+            message: 'Musterlösungen müssen nach numerischer Normalisierung eindeutig sein.',
+          });
+        }
+        seenNumericSolutions.add(canonicalKey);
+      }
+
+      return;
     }
 
     const maxLength = resolveShortTextMaxLength(value.shortTextMaxLength);
@@ -943,6 +1526,7 @@ type QuizHistoryAccessMaterial = {
     ratingMax: number | null;
     ratingLabelMin: string | null;
     ratingLabelMax: string | null;
+    shortTextEvaluationKind: ShortTextEvaluationKind;
     shortTextMaxLength: number | null;
     shortTextCaseSensitive: boolean;
     shortTextEvaluationMode: ShortAnswerEvaluationMode;
@@ -950,6 +1534,13 @@ type QuizHistoryAccessMaterial = {
     shortTextAllowPartialCredit: boolean;
     shortTextTrimWhitespace: boolean;
     shortTextNormalizeWhitespace: boolean;
+    numericInputKind: NumericInputKind;
+    numericToleranceMode: NumericToleranceMode;
+    numericAbsoluteTolerance: number | null;
+    numericRelativeTolerancePercent: number | null;
+    numericUnitFamily: NumericUnitFamily;
+    numericRequireUnit: boolean;
+    numericAcceptEquivalentUnits: boolean;
     answers: Array<{
       text: string;
       isCorrect: boolean;
@@ -1001,6 +1592,10 @@ function buildQuizHistoryAccessMaterial(input: QuizUploadInput): QuizHistoryAcce
         ratingMax: question.ratingMax ?? null,
         ratingLabelMin: question.ratingLabelMin ?? null,
         ratingLabelMax: question.ratingLabelMax ?? null,
+        shortTextEvaluationKind:
+          question.type === 'SHORT_TEXT'
+            ? resolveShortTextEvaluationKind(question.shortTextEvaluationKind)
+            : SHORT_TEXT_DEFAULT_EVALUATION_KIND,
         shortTextMaxLength:
           question.type === 'SHORT_TEXT'
             ? resolveShortTextMaxLength(question.shortTextMaxLength)
@@ -1021,6 +1616,28 @@ function buildQuizHistoryAccessMaterial(input: QuizUploadInput): QuizHistoryAcce
           question.type === 'SHORT_TEXT' ? (question.shortTextTrimWhitespace ?? true) : true,
         shortTextNormalizeWhitespace:
           question.type === 'SHORT_TEXT' ? (question.shortTextNormalizeWhitespace ?? true) : true,
+        numericInputKind:
+          question.type === 'SHORT_TEXT'
+            ? (question.numericInputKind ?? NUMERIC_DEFAULT_INPUT_KIND)
+            : NUMERIC_DEFAULT_INPUT_KIND,
+        numericToleranceMode:
+          question.type === 'SHORT_TEXT'
+            ? (question.numericToleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE)
+            : NUMERIC_DEFAULT_TOLERANCE_MODE,
+        numericAbsoluteTolerance:
+          question.type === 'SHORT_TEXT' ? (question.numericAbsoluteTolerance ?? null) : null,
+        numericRelativeTolerancePercent:
+          question.type === 'SHORT_TEXT'
+            ? (question.numericRelativeTolerancePercent ?? null)
+            : null,
+        numericUnitFamily:
+          question.type === 'SHORT_TEXT'
+            ? (question.numericUnitFamily ?? NUMERIC_DEFAULT_UNIT_FAMILY)
+            : NUMERIC_DEFAULT_UNIT_FAMILY,
+        numericRequireUnit:
+          question.type === 'SHORT_TEXT' ? (question.numericRequireUnit ?? false) : false,
+        numericAcceptEquivalentUnits:
+          question.type === 'SHORT_TEXT' ? (question.numericAcceptEquivalentUnits ?? true) : true,
         answers: [...question.answers]
           .map((answer) => ({ text: answer.text, isCorrect: answer.isCorrect }))
           .sort(
@@ -1268,6 +1885,7 @@ export const HostCurrentQuestionDTOSchema = z.object({
   ratingMax: z.number().nullable().optional(),
   ratingLabelMin: z.string().nullable().optional(),
   ratingLabelMax: z.string().nullable().optional(),
+  shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
   shortTextMaxLength: z
     .number()
     .int()
@@ -1281,6 +1899,13 @@ export const HostCurrentQuestionDTOSchema = z.object({
   shortTextAllowPartialCredit: z.boolean().optional(),
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
+  numericInputKind: NumericInputKindEnum.optional(),
+  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericAbsoluteTolerance: z.number().nullable().optional(),
+  numericRelativeTolerancePercent: z.number().nullable().optional(),
+  numericUnitFamily: NumericUnitFamilyEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   ratingAvg: z.number().nullable().optional(),
   ratingCount: z.number().int().optional(),
   ratingDistribution: z.record(z.string(), z.number()).optional(),
@@ -1381,6 +2006,7 @@ export const QuestionRevealedDTOSchema = z.object({
   answers: z.array(AnswerOptionRevealedDTOSchema),
   freeTextResponses: z.array(z.string()).optional(), // Nur bei FREETEXT-Fragen
   incorrectFreeTextResponses: z.array(z.string()).optional(),
+  shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
   shortTextMaxLength: z
     .number()
     .int()
@@ -1394,6 +2020,13 @@ export const QuestionRevealedDTOSchema = z.object({
   shortTextAllowPartialCredit: z.boolean().optional(),
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
+  numericInputKind: NumericInputKindEnum.optional(),
+  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericAbsoluteTolerance: z.number().nullable().optional(),
+  numericRelativeTolerancePercent: z.number().nullable().optional(),
+  numericUnitFamily: NumericUnitFamilyEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   correctVoterCount: z.number().int().optional(),
   incorrectVoterCount: z.number().int().optional(),
   totalVotes: z.number(),
@@ -1417,6 +2050,7 @@ export const QuestionStudentDTOSchema = z.object({
   ratingMax: z.number().nullable().optional(),
   ratingLabelMin: z.string().nullable().optional(),
   ratingLabelMax: z.string().nullable().optional(),
+  shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
   shortTextMaxLength: z
     .number()
     .int()
@@ -1430,6 +2064,13 @@ export const QuestionStudentDTOSchema = z.object({
   shortTextAllowPartialCredit: z.boolean().optional(),
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
+  numericInputKind: NumericInputKindEnum.optional(),
+  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericAbsoluteTolerance: z.number().nullable().optional(),
+  numericRelativeTolerancePercent: z.number().nullable().optional(),
+  numericUnitFamily: NumericUnitFamilyEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   participantCount: z.number().int().min(0).optional(),
   totalVotes: z.number().int().min(0).optional(),
   currentRound: z.number().int().min(1).max(2).optional(),
@@ -1454,6 +2095,7 @@ export const QuestionPreviewDTOSchema = z.object({
   ratingMax: z.number().nullable().optional(), // Nur bei RATING
   ratingLabelMin: z.string().nullable().optional(), // Nur bei RATING
   ratingLabelMax: z.string().nullable().optional(), // Nur bei RATING
+  shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
   shortTextMaxLength: z
     .number()
     .int()
@@ -1467,6 +2109,13 @@ export const QuestionPreviewDTOSchema = z.object({
   shortTextAllowPartialCredit: z.boolean().optional(),
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
+  numericInputKind: NumericInputKindEnum.optional(),
+  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericAbsoluteTolerance: z.number().nullable().optional(),
+  numericRelativeTolerancePercent: z.number().nullable().optional(),
+  numericUnitFamily: NumericUnitFamilyEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   participantReady: z.boolean().optional(),
 });
 export type QuestionPreviewDTO = z.infer<typeof QuestionPreviewDTOSchema>;
@@ -1848,6 +2497,7 @@ const ExportedQuestionSchema = z.object({
   ratingMax: z.number().nullable().optional(), // Nur bei RATING
   ratingLabelMin: z.string().nullable().optional(), // Nur bei RATING
   ratingLabelMax: z.string().nullable().optional(), // Nur bei RATING
+  shortTextEvaluationKind: ShortTextEvaluationKindEnum.optional(),
   shortTextMaxLength: z
     .number()
     .int()
@@ -1861,6 +2511,13 @@ const ExportedQuestionSchema = z.object({
   shortTextAllowPartialCredit: z.boolean().optional(),
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
+  numericInputKind: NumericInputKindEnum.optional(),
+  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericAbsoluteTolerance: z.number().nullable().optional(),
+  numericRelativeTolerancePercent: z.number().nullable().optional(),
+  numericUnitFamily: NumericUnitFamilyEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   /** false = in lokaler Bibliothek behalten, aber nicht in Live/Vorschau */
   enabled: z.boolean().optional().default(true),
 });

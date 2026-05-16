@@ -40,8 +40,11 @@ import { ThemePresetService } from '../../../core/theme-preset.service';
 import * as vpc from './session-vote-participant-copy';
 import { localizePath, resolveLocalizedJoinUrl } from '../../../core/locale-router';
 import {
+  evaluateNumericAnswer,
   evaluateShortAnswer,
   normalizeShortTextValue,
+  resolveNumericQuestionEvaluationSettings,
+  resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
   type NicknameTheme,
   type ParticipantDTO,
@@ -57,6 +60,7 @@ import {
   type SessionStatus,
   type TeamDTO,
   type TeamLeaderboardEntryDTO,
+  usesNumericShortTextEvaluation,
 } from '@arsnova/shared-types';
 import { CountdownFingersComponent } from '../../../shared/countdown-fingers/countdown-fingers.component';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
@@ -110,6 +114,9 @@ type CurrentQuestion = QuestionStudentDTO | QuestionPreviewDTO | QuestionReveale
 type SessionChannelTab = 'quiz' | 'qa' | 'quickFeedback';
 type ParticipantLiveChannelTab = Extract<SessionChannelTab, 'qa' | 'quickFeedback'>;
 type QuickFeedbackPhaseKey = string | null;
+type ShortTextEvaluationResult =
+  | ReturnType<typeof evaluateShortAnswer>
+  | ReturnType<typeof evaluateNumericAnswer>;
 type StoredVoteResponse = {
   answerIds?: string[];
   freeText?: string;
@@ -171,6 +178,12 @@ function pickRandom(arr: string[]): string {
 
 function isScoredQuestionType(type: CurrentQuestion['type'] | null | undefined): boolean {
   return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE' || type === 'SHORT_TEXT';
+}
+
+function isNumericShortTextEvaluationResult(
+  result: ShortTextEvaluationResult | null | undefined,
+): result is ReturnType<typeof evaluateNumericAnswer> {
+  return !!result && 'unitStatus' in result;
 }
 
 export function anchorCandidatesForPhase(
@@ -1063,9 +1076,21 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
 
     const value = this.shortTextNormalizedValue();
+    if (value.trim().length === 0) {
+      return null;
+    }
+
     const maxLength = this.shortTextMaxLength();
     if (value.length > maxLength) {
       return $localize`:@@sessionVote.shortTextTooLong:Maximal ${maxLength}:maxLength: Zeichen erlaubt.`;
+    }
+
+    const evaluation = this.shortTextEvaluationResult();
+    if (
+      isNumericShortTextEvaluationResult(evaluation) &&
+      evaluation.feedbackCategory === 'invalid_input'
+    ) {
+      return $localize`:@@sessionVote.shortTextNumericInvalid:Kurzantwort muss als Zahl im unterstützten Format eingegeben werden.`;
     }
 
     return null;
@@ -1076,20 +1101,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    return evaluateShortAnswer({
-      modelAnswers: q.answers.map((answer) => answer.text),
-      studentAnswer: this.freeTextValue(),
-      maxPoints: 100,
-      maxLength: resolveShortTextMaxLength(q.shortTextMaxLength),
-      settings: {
-        caseSensitive: q.shortTextCaseSensitive ?? false,
-        evaluationMode: q.shortTextEvaluationMode ?? undefined,
-        toleranceLevel: q.shortTextToleranceLevel ?? undefined,
-        allowPartialCredit: q.shortTextAllowPartialCredit ?? undefined,
-        trimWhitespace: q.shortTextTrimWhitespace ?? undefined,
-        normalizeWhitespace: q.shortTextNormalizeWhitespace ?? undefined,
-      },
-    });
+    return this.evaluateShortTextResponse(q);
   });
   readonly shortTextResponseCorrect = computed(() => {
     return (this.shortTextEvaluationResult()?.points ?? 0) > 0;
@@ -1127,6 +1139,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       return null;
     }
 
+    if (isNumericShortTextEvaluationResult(result) && result.feedbackCategory === 'invalid_input') {
+      return $localize`:@@sessionVote.shortTextResultInvalid:Ungültiges Zahlenformat`;
+    }
+
     if (result.points >= result.maxPoints && result.maxPoints > 0) {
       return result.normalizedDistance === 0
         ? $localize`:@@sessionVote.shortTextResultFull:Voll gewertet`
@@ -1144,6 +1160,23 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     const result = this.shortTextEvaluationResult();
     if (!result) {
       return null;
+    }
+
+    if (isNumericShortTextEvaluationResult(result)) {
+      if (result.feedbackCategory === 'invalid_input') {
+        return $localize`:@@sessionVote.shortTextNumericInvalid:Kurzantwort muss als Zahl im unterstützten Format eingegeben werden.`;
+      }
+
+      if (result.points <= 0) {
+        return $localize`:@@sessionVote.shortTextNumericNoMatch:Keine Referenzlösung lag innerhalb der eingestellten Zahltoleranz.`;
+      }
+
+      const matchedSolution = result.matchedModelAnswer
+        ? $localize`:@@sessionVote.shortTextResultMatchedSolution:Gewertet als Musterlösung „${result.matchedModelAnswer}:matchedModelAnswer:“.`
+        : null;
+      const reason = this.shortTextNumericResultReason(result);
+
+      return matchedSolution ? `${matchedSolution} ${reason}` : reason;
     }
 
     if (result.points <= 0) {
@@ -1175,9 +1208,74 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
   }
 
-  private evaluateShortTextResponse(question: CurrentQuestion) {
+  private shortTextNumericResultReason(result: ReturnType<typeof evaluateNumericAnswer>): string {
+    if (result.points < result.maxPoints) {
+      switch (result.unitStatus) {
+        case 'missing_required':
+          return $localize`:@@sessionVote.shortTextNumericReasonMissingRequired:Der Zahlenwert stimmte, aber die verlangte Einheit fehlte.`;
+        case 'equivalent_not_accepted':
+          return $localize`:@@sessionVote.shortTextNumericReasonEquivalentRejected:Der Zahlenwert stimmte nach Umrechnung, aber nur die hinterlegte Einheit ist zugelassen.`;
+        case 'wrong_family':
+          return $localize`:@@sessionVote.shortTextNumericReasonWrongFamily:Der Zahlenwert passte, aber die Einheit gehört zu einer anderen Größenfamilie.`;
+        case 'unsupported':
+          return $localize`:@@sessionVote.shortTextNumericReasonUnsupportedUnit:Der Zahlenwert passte, aber die eingegebene Einheit liegt außerhalb des unterstützten Einheitensets.`;
+        default:
+          return $localize`:@@sessionVote.shortTextNumericReasonPartial:Der Zahlenwert passte, aber die Einheit verhinderte die volle Wertung.`;
+      }
+    }
+
+    if (result.unitStatus === 'equivalent') {
+      return $localize`:@@sessionVote.shortTextNumericReasonEquivalent:Zahlenwert und äquivalente Einheit wurden korrekt umgerechnet.`;
+    }
+    if (result.unitStatus === 'missing_optional') {
+      return $localize`:@@sessionVote.shortTextNumericReasonMissingOptional:Der Zahlenwert passte; die Einheit war in dieser Frage optional.`;
+    }
+    if (result.feedbackCategory === 'within_tolerance') {
+      return $localize`:@@sessionVote.shortTextNumericReasonTolerance:Der Zahlenwert lag innerhalb der eingestellten Toleranz.`;
+    }
+
+    return $localize`:@@sessionVote.shortTextNumericReasonExact:Zahlenwert und Einheit stimmen exakt mit einer Musterlösung überein.`;
+  }
+
+  private evaluateShortTextResponse(question: CurrentQuestion): ShortTextEvaluationResult | null {
     if (!('type' in question) || question.type !== 'SHORT_TEXT' || !('answers' in question)) {
       return null;
+    }
+
+    if (usesNumericShortTextEvaluation(question.shortTextEvaluationKind)) {
+      const numericSettings = resolveNumericQuestionEvaluationSettings({
+        numericInputKind: question.numericInputKind ?? null,
+        numericToleranceMode: question.numericToleranceMode ?? null,
+        numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+        numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+        numericUnitFamily: question.numericUnitFamily ?? null,
+        numericRequireUnit: question.numericRequireUnit ?? false,
+        numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+      });
+
+      return evaluateNumericAnswer({
+        modelAnswers: question.answers.map((answer) => answer.text),
+        studentAnswer: this.freeTextValue(),
+        maxPoints: 100,
+        settings: {
+          inputKind: numericSettings.inputKind,
+          toleranceMode: numericSettings.toleranceMode,
+          absoluteTolerance: numericSettings.absoluteTolerance,
+          relativeTolerancePercent: numericSettings.relativeTolerancePercent,
+          unitFamily:
+            resolveShortTextEvaluationKind(question.shortTextEvaluationKind) === 'numeric_unit'
+              ? numericSettings.unitFamily
+              : 'none',
+          requireUnit:
+            resolveShortTextEvaluationKind(question.shortTextEvaluationKind) === 'numeric_unit'
+              ? numericSettings.requireUnit
+              : false,
+          acceptEquivalentUnits:
+            resolveShortTextEvaluationKind(question.shortTextEvaluationKind) === 'numeric_unit'
+              ? numericSettings.acceptEquivalentUnits
+              : true,
+        },
+      });
     }
 
     return evaluateShortAnswer({
@@ -2956,9 +3054,12 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     const q = this.currentQuestion();
     if (!q || !('id' in q)) return;
 
+    const shortTextEvaluationKind =
+      q.type === 'SHORT_TEXT' ? resolveShortTextEvaluationKind(q.shortTextEvaluationKind) : null;
     const answerIds = overrideIds ?? [...this.selectedAnswerIds()];
     const preserveShortTextWhitespace =
       q.type === 'SHORT_TEXT' &&
+      shortTextEvaluationKind === 'text' &&
       ((q.shortTextTrimWhitespace ?? true) === false ||
         (q.shortTextNormalizeWhitespace ?? true) === false);
     const freeText =

@@ -335,6 +335,94 @@ describe('QuizEditComponent', () => {
     ).toContain('Toleranz: Mittel');
   });
 
+  it('erzeugt fuer numerische SHORT_TEXT-Vorschauen Toleranz- und Einheitbeispiele', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('SHORT_TEXT');
+    component.onTypeChanged();
+    component.form.controls.shortTextEvaluationKind.setValue('numeric_unit');
+    component.onShortTextEvaluationKindChanged();
+    component.form.controls.numericToleranceMode.setValue('absolute');
+    component.form.controls.numericAbsoluteTolerance.setValue(0.5);
+    component.form.controls.numericUnitFamily.setValue('length');
+    component.form.controls.numericRequireUnit.setValue(true);
+    component.form.controls.numericAcceptEquivalentUnits.setValue(true);
+    component.answersArray.at(0).controls.text.setValue('2 m');
+
+    const examples = component.shortTextPreviewExamples();
+
+    expect(examples.map((example) => example.label)).toEqual(
+      expect.arrayContaining([
+        'Exakte Eingabe',
+        'Innerhalb der Toleranz',
+        'Äquivalente Einheit',
+        'Fehlende Einheit',
+        'Klar falscher Wert',
+      ]),
+    );
+    expect(
+      examples.find((example) => example.label === 'Äquivalente Einheit')?.studentAnswer,
+    ).toMatch(/^(2000 mm|200 cm|0,002 km|0.002 km)$/);
+    expect(examples.find((example) => example.label === 'Fehlende Einheit')?.outcome).toContain(
+      'Teilpunkte',
+    );
+    expect(
+      component.shortTextConfigSummary({
+        shortTextEvaluationKind: 'numeric_unit',
+        shortTextMaxLength: 120,
+        shortTextCaseSensitive: false,
+        shortTextEvaluationMode: 'auto',
+        shortTextToleranceLevel: 'low',
+        shortTextAllowPartialCredit: true,
+        shortTextTrimWhitespace: true,
+        shortTextNormalizeWhitespace: true,
+        numericInputKind: 'decimal',
+        numericToleranceMode: 'absolute',
+        numericAbsoluteTolerance: 0.5,
+        numericRelativeTolerancePercent: null,
+        numericUnitFamily: 'length',
+        numericRequireUnit: true,
+        numericAcceptEquivalentUnits: true,
+      }),
+    ).toContain('Zahlen und Einheiten bewerten');
+  });
+
+  it('speichert numerische SHORT_TEXT-Bewertung mit Einheitenkonfiguration', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('SHORT_TEXT');
+    component.onTypeChanged();
+    component.form.controls.text.setValue('Wie lang ist die Strecke?');
+    component.form.controls.shortTextEvaluationKind.setValue('numeric_unit');
+    component.onShortTextEvaluationKindChanged();
+    component.form.controls.numericInputKind.setValue('decimal');
+    component.form.controls.numericToleranceMode.setValue('absolute');
+    component.form.controls.numericAbsoluteTolerance.setValue(0.5);
+    component.form.controls.numericUnitFamily.setValue('length');
+    component.form.controls.numericRequireUnit.setValue(true);
+    component.form.controls.numericAcceptEquivalentUnits.setValue(true);
+    component.answersArray.at(0).controls.text.setValue('2 m');
+
+    component.addQuestion();
+
+    expect(mockStore.addQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        type: 'SHORT_TEXT',
+        shortTextEvaluationKind: 'numeric_unit',
+        shortTextMaxLength: 120,
+        numericInputKind: 'decimal',
+        numericToleranceMode: 'absolute',
+        numericAbsoluteTolerance: 0.5,
+        numericUnitFamily: 'length',
+        numericRequireUnit: true,
+        numericAcceptEquivalentUnits: true,
+      }),
+    );
+  });
+
   it('speichert eine FREETEXT-Frage ohne Antwortoptionen', () => {
     const fixture = TestBed.createComponent(QuizEditComponent);
     const component = fixture.componentInstance;

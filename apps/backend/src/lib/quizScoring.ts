@@ -3,9 +3,16 @@ import {
   MAX_BASE_POINTS,
   STREAK_MULTIPLIER,
   STREAK_MULTIPLIER_MAX,
+  evaluateNumericAnswer,
   evaluateShortAnswer,
+  resolveShortTextEvaluationKind,
+  usesNumericShortTextEvaluation,
   type Difficulty,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
   type QuestionType,
+  type ShortTextEvaluationKind,
   type ShortAnswerEvaluationMode,
   type ToleranceLevel,
 } from '@arsnova/shared-types';
@@ -41,6 +48,7 @@ interface CalculateVoteScoreInput {
   correctAnswerIds: string[];
   freeText?: string | null;
   correctShortTextAnswers?: string[];
+  shortTextEvaluationKind?: ShortTextEvaluationKind;
   shortTextMaxLength?: number | null;
   shortTextCaseSensitive?: boolean;
   shortTextEvaluationMode?: ShortAnswerEvaluationMode;
@@ -48,6 +56,13 @@ interface CalculateVoteScoreInput {
   shortTextAllowPartialCredit?: boolean;
   shortTextTrimWhitespace?: boolean;
   shortTextNormalizeWhitespace?: boolean;
+  numericInputKind?: NumericInputKind;
+  numericToleranceMode?: NumericToleranceMode;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily;
+  numericRequireUnit?: boolean;
+  numericAcceptEquivalentUnits?: boolean;
   responseTimeMs?: number | null;
   timerDurationMs?: number | null;
 }
@@ -76,20 +91,37 @@ export function calculateVoteScore(input: CalculateVoteScoreInput): number {
   let basePoints = MAX_BASE_POINTS;
 
   if (input.type === 'SHORT_TEXT') {
-    const shortTextEvaluation = evaluateShortAnswer({
-      modelAnswers: input.correctShortTextAnswers ?? [],
-      studentAnswer: input.freeText ?? '',
-      maxPoints: MAX_BASE_POINTS,
-      maxLength: input.shortTextMaxLength,
-      settings: {
-        caseSensitive: input.shortTextCaseSensitive,
-        evaluationMode: input.shortTextEvaluationMode,
-        toleranceLevel: input.shortTextToleranceLevel,
-        allowPartialCredit: input.shortTextAllowPartialCredit,
-        trimWhitespace: input.shortTextTrimWhitespace,
-        normalizeWhitespace: input.shortTextNormalizeWhitespace,
-      },
-    });
+    const evaluationKind = resolveShortTextEvaluationKind(input.shortTextEvaluationKind);
+    const shortTextEvaluation = usesNumericShortTextEvaluation(evaluationKind)
+      ? evaluateNumericAnswer({
+          modelAnswers: input.correctShortTextAnswers ?? [],
+          studentAnswer: input.freeText ?? '',
+          maxPoints: MAX_BASE_POINTS,
+          settings: {
+            inputKind: input.numericInputKind,
+            toleranceMode: input.numericToleranceMode,
+            absoluteTolerance: input.numericAbsoluteTolerance,
+            relativeTolerancePercent: input.numericRelativeTolerancePercent,
+            unitFamily: evaluationKind === 'numeric_unit' ? input.numericUnitFamily : 'none',
+            requireUnit: evaluationKind === 'numeric_unit' ? input.numericRequireUnit : false,
+            acceptEquivalentUnits:
+              evaluationKind === 'numeric_unit' ? input.numericAcceptEquivalentUnits : true,
+          },
+        })
+      : evaluateShortAnswer({
+          modelAnswers: input.correctShortTextAnswers ?? [],
+          studentAnswer: input.freeText ?? '',
+          maxPoints: MAX_BASE_POINTS,
+          maxLength: input.shortTextMaxLength,
+          settings: {
+            caseSensitive: input.shortTextCaseSensitive,
+            evaluationMode: input.shortTextEvaluationMode,
+            toleranceLevel: input.shortTextToleranceLevel,
+            allowPartialCredit: input.shortTextAllowPartialCredit,
+            trimWhitespace: input.shortTextTrimWhitespace,
+            normalizeWhitespace: input.shortTextNormalizeWhitespace,
+          },
+        });
 
     if (shortTextEvaluation.points <= 0) {
       return 0;

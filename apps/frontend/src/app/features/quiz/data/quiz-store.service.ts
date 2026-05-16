@@ -21,18 +21,26 @@ import {
   QuizExportSchema,
   QuizUploadInputSchema,
   QUIZ_EXPORT_VERSION,
+  SHORT_TEXT_DEFAULT_EVALUATION_KIND,
   SHORT_TEXT_DEFAULT_EVALUATION_MODE,
   SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL,
   normalizeShortTextValue,
+  resolveNumericQuestionEvaluationSettings,
   resolveShortAnswerEvaluationSettings,
+  resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
+  usesNumericShortTextEvaluation,
   type Difficulty,
   type AddQuestionInput,
   type NicknameTheme,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
   type QuizPreset,
   type QuizExport,
   type QuizUploadInput,
   type ShortAnswerEvaluationMode,
+  type ShortTextEvaluationKind,
   type TeamAssignment,
   type ToleranceLevel,
 } from '@arsnova/shared-types';
@@ -87,6 +95,7 @@ export interface QuizQuestion {
   ratingMax: number | null;
   ratingLabelMin: string | null;
   ratingLabelMax: string | null;
+  shortTextEvaluationKind?: ShortTextEvaluationKind | null;
   shortTextMaxLength?: number | null;
   shortTextCaseSensitive?: boolean | null;
   shortTextEvaluationMode?: ShortAnswerEvaluationMode | null;
@@ -94,6 +103,13 @@ export interface QuizQuestion {
   shortTextAllowPartialCredit?: boolean | null;
   shortTextTrimWhitespace?: boolean | null;
   shortTextNormalizeWhitespace?: boolean | null;
+  numericInputKind?: NumericInputKind | null;
+  numericToleranceMode?: NumericToleranceMode | null;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily | null;
+  numericRequireUnit?: boolean | null;
+  numericAcceptEquivalentUnits?: boolean | null;
 }
 
 export interface QuizSettings {
@@ -228,6 +244,7 @@ export interface AddQuizQuestionInput {
   ratingMax?: number | null;
   ratingLabelMin?: string | null;
   ratingLabelMax?: string | null;
+  shortTextEvaluationKind?: ShortTextEvaluationKind | null;
   shortTextMaxLength?: number | null;
   shortTextCaseSensitive?: boolean | null;
   shortTextEvaluationMode?: ShortAnswerEvaluationMode | null;
@@ -235,6 +252,13 @@ export interface AddQuizQuestionInput {
   shortTextAllowPartialCredit?: boolean | null;
   shortTextTrimWhitespace?: boolean | null;
   shortTextNormalizeWhitespace?: boolean | null;
+  numericInputKind?: NumericInputKind | null;
+  numericToleranceMode?: NumericToleranceMode | null;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily | null;
+  numericRequireUnit?: boolean | null;
+  numericAcceptEquivalentUnits?: boolean | null;
 }
 
 export interface CreateQuizDocumentInput {
@@ -257,6 +281,7 @@ type ValidatedQuestionInput = {
   ratingMax: number | null;
   ratingLabelMin: string | null;
   ratingLabelMax: string | null;
+  shortTextEvaluationKind: ShortTextEvaluationKind | null;
   shortTextMaxLength: number | null;
   shortTextCaseSensitive: boolean | null;
   shortTextEvaluationMode: ShortAnswerEvaluationMode | null;
@@ -264,10 +289,18 @@ type ValidatedQuestionInput = {
   shortTextAllowPartialCredit: boolean | null;
   shortTextTrimWhitespace: boolean | null;
   shortTextNormalizeWhitespace: boolean | null;
+  numericInputKind: NumericInputKind | null;
+  numericToleranceMode: NumericToleranceMode | null;
+  numericAbsoluteTolerance: number | null;
+  numericRelativeTolerancePercent: number | null;
+  numericUnitFamily: NumericUnitFamily | null;
+  numericRequireUnit: boolean | null;
+  numericAcceptEquivalentUnits: boolean | null;
 };
 
 type ShortTextQuestionSettingsInput = {
   type: string;
+  shortTextEvaluationKind?: ShortTextEvaluationKind | null;
   shortTextMaxLength?: number | null;
   shortTextCaseSensitive?: boolean | null;
   shortTextEvaluationMode?: ShortAnswerEvaluationMode | null;
@@ -275,9 +308,17 @@ type ShortTextQuestionSettingsInput = {
   shortTextAllowPartialCredit?: boolean | null;
   shortTextTrimWhitespace?: boolean | null;
   shortTextNormalizeWhitespace?: boolean | null;
+  numericInputKind?: NumericInputKind | null;
+  numericToleranceMode?: NumericToleranceMode | null;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily | null;
+  numericRequireUnit?: boolean | null;
+  numericAcceptEquivalentUnits?: boolean | null;
 };
 
 type ResolvedShortTextQuestionSettings = {
+  shortTextEvaluationKind: ShortTextEvaluationKind | null;
   shortTextMaxLength: number | null;
   shortTextCaseSensitive: boolean | null;
   shortTextEvaluationMode: ShortAnswerEvaluationMode | null;
@@ -285,6 +326,13 @@ type ResolvedShortTextQuestionSettings = {
   shortTextAllowPartialCredit: boolean | null;
   shortTextTrimWhitespace: boolean | null;
   shortTextNormalizeWhitespace: boolean | null;
+  numericInputKind: NumericInputKind | null;
+  numericToleranceMode: NumericToleranceMode | null;
+  numericAbsoluteTolerance: number | null;
+  numericRelativeTolerancePercent: number | null;
+  numericUnitFamily: NumericUnitFamily | null;
+  numericRequireUnit: boolean | null;
+  numericAcceptEquivalentUnits: boolean | null;
 };
 
 function resolveQuestionShortTextSettings(
@@ -292,6 +340,7 @@ function resolveQuestionShortTextSettings(
 ): ResolvedShortTextQuestionSettings {
   if (question.type !== 'SHORT_TEXT') {
     return {
+      shortTextEvaluationKind: null,
       shortTextMaxLength: null,
       shortTextCaseSensitive: null,
       shortTextEvaluationMode: null,
@@ -299,6 +348,13 @@ function resolveQuestionShortTextSettings(
       shortTextAllowPartialCredit: null,
       shortTextTrimWhitespace: null,
       shortTextNormalizeWhitespace: null,
+      numericInputKind: null,
+      numericToleranceMode: null,
+      numericAbsoluteTolerance: null,
+      numericRelativeTolerancePercent: null,
+      numericUnitFamily: null,
+      numericRequireUnit: null,
+      numericAcceptEquivalentUnits: null,
     };
   }
 
@@ -310,8 +366,20 @@ function resolveQuestionShortTextSettings(
     trimWhitespace: question.shortTextTrimWhitespace ?? true,
     normalizeWhitespace: question.shortTextNormalizeWhitespace ?? true,
   });
+  const numericSettings = resolveNumericQuestionEvaluationSettings({
+    numericInputKind: question.numericInputKind ?? null,
+    numericToleranceMode: question.numericToleranceMode ?? null,
+    numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+    numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+    numericUnitFamily: question.numericUnitFamily ?? null,
+    numericRequireUnit: question.numericRequireUnit ?? false,
+    numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+  });
 
   return {
+    shortTextEvaluationKind: resolveShortTextEvaluationKind(
+      question.shortTextEvaluationKind ?? SHORT_TEXT_DEFAULT_EVALUATION_KIND,
+    ),
     shortTextMaxLength: resolveShortTextMaxLength(question.shortTextMaxLength),
     shortTextCaseSensitive: settings.caseSensitive,
     shortTextEvaluationMode: settings.evaluationMode,
@@ -319,6 +387,13 @@ function resolveQuestionShortTextSettings(
     shortTextAllowPartialCredit: settings.allowPartialCredit,
     shortTextTrimWhitespace: settings.trimWhitespace,
     shortTextNormalizeWhitespace: settings.normalizeWhitespace,
+    numericInputKind: numericSettings.inputKind,
+    numericToleranceMode: numericSettings.toleranceMode,
+    numericAbsoluteTolerance: numericSettings.absoluteTolerance,
+    numericRelativeTolerancePercent: numericSettings.relativeTolerancePercent,
+    numericUnitFamily: numericSettings.unitFamily,
+    numericRequireUnit: numericSettings.requireUnit,
+    numericAcceptEquivalentUnits: numericSettings.acceptEquivalentUnits,
   };
 }
 
@@ -420,13 +495,21 @@ function getLocalQuestionValidationIssues(
     normalizedRatingLabelMin !== undefined ||
     normalizedRatingLabelMax !== undefined;
   const hasShortTextConfig =
+    value.shortTextEvaluationKind !== undefined ||
     value.shortTextMaxLength !== undefined ||
     value.shortTextCaseSensitive !== undefined ||
     value.shortTextEvaluationMode !== undefined ||
     value.shortTextToleranceLevel !== undefined ||
     value.shortTextAllowPartialCredit !== undefined ||
     value.shortTextTrimWhitespace !== undefined ||
-    value.shortTextNormalizeWhitespace !== undefined;
+    value.shortTextNormalizeWhitespace !== undefined ||
+    value.numericInputKind !== undefined ||
+    value.numericToleranceMode !== undefined ||
+    value.numericAbsoluteTolerance !== undefined ||
+    value.numericRelativeTolerancePercent !== undefined ||
+    value.numericUnitFamily !== undefined ||
+    value.numericRequireUnit !== undefined ||
+    value.numericAcceptEquivalentUnits !== undefined;
 
   if (value.type !== 'RATING' && hasRatingConfig) {
     issues.push({
@@ -461,9 +544,14 @@ function getLocalQuestionValidationIssues(
       return issues;
     }
 
+    if (usesNumericShortTextEvaluation(value.shortTextEvaluationKind)) {
+      return issues;
+    }
+
     const seenSolutions = new Set<string>();
     const shortTextSettings = resolveQuestionShortTextSettings({
       type: value.type,
+      shortTextEvaluationKind: value.shortTextEvaluationKind,
       shortTextMaxLength: value.shortTextMaxLength,
       shortTextCaseSensitive: value.shortTextCaseSensitive,
       shortTextEvaluationMode: value.shortTextEvaluationMode,
@@ -471,6 +559,13 @@ function getLocalQuestionValidationIssues(
       shortTextAllowPartialCredit: value.shortTextAllowPartialCredit,
       shortTextTrimWhitespace: value.shortTextTrimWhitespace,
       shortTextNormalizeWhitespace: value.shortTextNormalizeWhitespace,
+      numericInputKind: value.numericInputKind,
+      numericToleranceMode: value.numericToleranceMode,
+      numericAbsoluteTolerance: value.numericAbsoluteTolerance,
+      numericRelativeTolerancePercent: value.numericRelativeTolerancePercent,
+      numericUnitFamily: value.numericUnitFamily,
+      numericRequireUnit: value.numericRequireUnit,
+      numericAcceptEquivalentUnits: value.numericAcceptEquivalentUnits,
     });
 
     for (const [index, answer] of value.answers.entries()) {
@@ -920,6 +1015,7 @@ export class QuizStoreService implements OnDestroy {
             ratingLabelMax: question.ratingLabelMax,
             ...(question.type === 'SHORT_TEXT'
               ? {
+                  shortTextEvaluationKind: shortTextSettings.shortTextEvaluationKind ?? undefined,
                   shortTextMaxLength: shortTextSettings.shortTextMaxLength ?? undefined,
                   shortTextCaseSensitive: shortTextSettings.shortTextCaseSensitive ?? undefined,
                   shortTextEvaluationMode: shortTextSettings.shortTextEvaluationMode ?? undefined,
@@ -929,6 +1025,15 @@ export class QuizStoreService implements OnDestroy {
                   shortTextTrimWhitespace: shortTextSettings.shortTextTrimWhitespace ?? undefined,
                   shortTextNormalizeWhitespace:
                     shortTextSettings.shortTextNormalizeWhitespace ?? undefined,
+                  numericInputKind: shortTextSettings.numericInputKind ?? undefined,
+                  numericToleranceMode: shortTextSettings.numericToleranceMode ?? undefined,
+                  numericAbsoluteTolerance: shortTextSettings.numericAbsoluteTolerance ?? undefined,
+                  numericRelativeTolerancePercent:
+                    shortTextSettings.numericRelativeTolerancePercent ?? undefined,
+                  numericUnitFamily: shortTextSettings.numericUnitFamily ?? undefined,
+                  numericRequireUnit: shortTextSettings.numericRequireUnit ?? undefined,
+                  numericAcceptEquivalentUnits:
+                    shortTextSettings.numericAcceptEquivalentUnits ?? undefined,
                 }
               : {}),
             enabled: question.enabled !== false,
@@ -1058,6 +1163,7 @@ export class QuizStoreService implements OnDestroy {
         ratingMax: q.ratingMax ?? undefined,
         ratingLabelMin: q.ratingLabelMin ?? undefined,
         ratingLabelMax: q.ratingLabelMax ?? undefined,
+        shortTextEvaluationKind: q.shortTextEvaluationKind ?? undefined,
         shortTextMaxLength: q.shortTextMaxLength ?? undefined,
         shortTextCaseSensitive: q.shortTextCaseSensitive ?? undefined,
         shortTextEvaluationMode: q.shortTextEvaluationMode ?? undefined,
@@ -1065,6 +1171,13 @@ export class QuizStoreService implements OnDestroy {
         shortTextAllowPartialCredit: q.shortTextAllowPartialCredit ?? undefined,
         shortTextTrimWhitespace: q.shortTextTrimWhitespace ?? undefined,
         shortTextNormalizeWhitespace: q.shortTextNormalizeWhitespace ?? undefined,
+        numericInputKind: q.numericInputKind ?? undefined,
+        numericToleranceMode: q.numericToleranceMode ?? undefined,
+        numericAbsoluteTolerance: q.numericAbsoluteTolerance ?? undefined,
+        numericRelativeTolerancePercent: q.numericRelativeTolerancePercent ?? undefined,
+        numericUnitFamily: q.numericUnitFamily ?? undefined,
+        numericRequireUnit: q.numericRequireUnit ?? undefined,
+        numericAcceptEquivalentUnits: q.numericAcceptEquivalentUnits ?? undefined,
       })),
     };
 
@@ -1211,13 +1324,7 @@ export class QuizStoreService implements OnDestroy {
       ratingMax: parsed.ratingMax,
       ratingLabelMin: parsed.ratingLabelMin,
       ratingLabelMax: parsed.ratingLabelMax,
-      shortTextMaxLength: parsed.shortTextMaxLength,
-      shortTextCaseSensitive: parsed.shortTextCaseSensitive,
-      shortTextEvaluationMode: parsed.shortTextEvaluationMode,
-      shortTextToleranceLevel: parsed.shortTextToleranceLevel,
-      shortTextAllowPartialCredit: parsed.shortTextAllowPartialCredit,
-      shortTextTrimWhitespace: parsed.shortTextTrimWhitespace,
-      shortTextNormalizeWhitespace: parsed.shortTextNormalizeWhitespace,
+      ...resolveQuestionShortTextSettings(parsed),
     };
 
     const updatedAt = new Date().toISOString();
@@ -1268,13 +1375,7 @@ export class QuizStoreService implements OnDestroy {
       ratingMax: parsed.ratingMax,
       ratingLabelMin: parsed.ratingLabelMin,
       ratingLabelMax: parsed.ratingLabelMax,
-      shortTextMaxLength: parsed.shortTextMaxLength,
-      shortTextCaseSensitive: parsed.shortTextCaseSensitive,
-      shortTextEvaluationMode: parsed.shortTextEvaluationMode,
-      shortTextToleranceLevel: parsed.shortTextToleranceLevel,
-      shortTextAllowPartialCredit: parsed.shortTextAllowPartialCredit,
-      shortTextTrimWhitespace: parsed.shortTextTrimWhitespace,
-      shortTextNormalizeWhitespace: parsed.shortTextNormalizeWhitespace,
+      ...resolveQuestionShortTextSettings(parsed),
     };
 
     const updatedAt = new Date().toISOString();
@@ -2251,6 +2352,7 @@ function validateQuestionInput(input: AddQuizQuestionInput): ValidatedQuestionIn
     ratingMax: input.ratingMax ?? undefined,
     ratingLabelMin: normalizeNullableLabel(input.ratingLabelMin),
     ratingLabelMax: normalizeNullableLabel(input.ratingLabelMax),
+    shortTextEvaluationKind: input.shortTextEvaluationKind ?? undefined,
     shortTextMaxLength: input.shortTextMaxLength ?? undefined,
     shortTextCaseSensitive: input.shortTextCaseSensitive ?? undefined,
     shortTextEvaluationMode: input.shortTextEvaluationMode ?? undefined,
@@ -2258,6 +2360,13 @@ function validateQuestionInput(input: AddQuizQuestionInput): ValidatedQuestionIn
     shortTextAllowPartialCredit: input.shortTextAllowPartialCredit ?? undefined,
     shortTextTrimWhitespace: input.shortTextTrimWhitespace ?? undefined,
     shortTextNormalizeWhitespace: input.shortTextNormalizeWhitespace ?? undefined,
+    numericInputKind: input.numericInputKind ?? undefined,
+    numericToleranceMode: input.numericToleranceMode ?? undefined,
+    numericAbsoluteTolerance: input.numericAbsoluteTolerance ?? undefined,
+    numericRelativeTolerancePercent: input.numericRelativeTolerancePercent ?? undefined,
+    numericUnitFamily: input.numericUnitFamily ?? undefined,
+    numericRequireUnit: input.numericRequireUnit ?? undefined,
+    numericAcceptEquivalentUnits: input.numericAcceptEquivalentUnits ?? undefined,
     timer: input.timer === undefined ? undefined : input.timer,
   });
 
@@ -2339,6 +2448,7 @@ function normalizeStoredQuestion(value: unknown, fallbackOrder: number): QuizQue
     ratingMax: readNumberOrNull(candidate['ratingMax']) ?? undefined,
     ratingLabelMin: readStringOrNull(candidate['ratingLabelMin']) ?? undefined,
     ratingLabelMax: readStringOrNull(candidate['ratingLabelMax']) ?? undefined,
+    shortTextEvaluationKind: readStringOrNull(candidate['shortTextEvaluationKind']) ?? undefined,
     shortTextMaxLength: readNumberOrNull(candidate['shortTextMaxLength']) ?? undefined,
     shortTextCaseSensitive: readBoolean(candidate['shortTextCaseSensitive']) ?? undefined,
     shortTextEvaluationMode: readStringOrNull(candidate['shortTextEvaluationMode']) ?? undefined,
@@ -2347,6 +2457,15 @@ function normalizeStoredQuestion(value: unknown, fallbackOrder: number): QuizQue
     shortTextTrimWhitespace: readBoolean(candidate['shortTextTrimWhitespace']) ?? undefined,
     shortTextNormalizeWhitespace:
       readBoolean(candidate['shortTextNormalizeWhitespace']) ?? undefined,
+    numericInputKind: readStringOrNull(candidate['numericInputKind']) ?? undefined,
+    numericToleranceMode: readStringOrNull(candidate['numericToleranceMode']) ?? undefined,
+    numericAbsoluteTolerance: readNumberOrNull(candidate['numericAbsoluteTolerance']) ?? undefined,
+    numericRelativeTolerancePercent:
+      readNumberOrNull(candidate['numericRelativeTolerancePercent']) ?? undefined,
+    numericUnitFamily: readStringOrNull(candidate['numericUnitFamily']) ?? undefined,
+    numericRequireUnit: readBoolean(candidate['numericRequireUnit']) ?? undefined,
+    numericAcceptEquivalentUnits:
+      readBoolean(candidate['numericAcceptEquivalentUnits']) ?? undefined,
     timer: readNumberOrNull(candidate['timer']) ?? undefined,
   });
   if (!parsed.success) return null;

@@ -69,6 +69,10 @@ import {
   type ToleranceLevel,
   type RoundComparisonDTO,
   type RoundDistributionEntry,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
+  type ShortTextEvaluationKind,
   type ShortAnswerEvaluationMode,
   type VoterMigrationEntry,
   UpdateSessionPresetInputSchema,
@@ -84,10 +88,15 @@ import {
   SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL,
   createQuizHistoryAccessProof,
   createLegacyQuizHistoryAccessProof,
+  evaluateNumericAnswer,
   evaluateShortAnswer,
   normalizeShortTextValue,
   resolveEffectiveQuestionTimer,
+  resolveNumericQuestionEvaluationSettings,
+  resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
+  usesNumericShortTextEvaluation,
+  usesShortTextUnitEvaluation,
 } from '@arsnova/shared-types';
 import {
   isExactCorrectSelection,
@@ -702,6 +711,7 @@ async function getVoteCountCached(
 }
 
 type ShortTextQuestionConfig = {
+  shortTextEvaluationKind?: string | null;
   shortTextMaxLength?: number | null;
   shortTextCaseSensitive?: boolean | null;
   shortTextEvaluationMode?: string | null;
@@ -709,12 +719,33 @@ type ShortTextQuestionConfig = {
   shortTextAllowPartialCredit?: boolean | null;
   shortTextTrimWhitespace?: boolean | null;
   shortTextNormalizeWhitespace?: boolean | null;
+  numericInputKind?: string | null;
+  numericToleranceMode?: string | null;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: string | null;
+  numericRequireUnit?: boolean | null;
+  numericAcceptEquivalentUnits?: boolean | null;
 };
 
 type ShortTextAnswerOption = { id: string; text: string; isCorrect: boolean };
 
 function resolveShortTextQuestionConfig(config?: ShortTextQuestionConfig) {
+  const numericSettings = resolveNumericQuestionEvaluationSettings({
+    numericInputKind: (config?.numericInputKind as NumericInputKind | null | undefined) ?? null,
+    numericToleranceMode:
+      (config?.numericToleranceMode as NumericToleranceMode | null | undefined) ?? null,
+    numericAbsoluteTolerance: config?.numericAbsoluteTolerance ?? null,
+    numericRelativeTolerancePercent: config?.numericRelativeTolerancePercent ?? null,
+    numericUnitFamily: (config?.numericUnitFamily as NumericUnitFamily | null | undefined) ?? null,
+    numericRequireUnit: config?.numericRequireUnit ?? false,
+    numericAcceptEquivalentUnits: config?.numericAcceptEquivalentUnits ?? true,
+  });
+
   return {
+    shortTextEvaluationKind: resolveShortTextEvaluationKind(
+      (config?.shortTextEvaluationKind as ShortTextEvaluationKind | null | undefined) ?? undefined,
+    ),
     shortTextMaxLength: config?.shortTextMaxLength ?? null,
     shortTextCaseSensitive: config?.shortTextCaseSensitive ?? false,
     shortTextEvaluationMode:
@@ -726,6 +757,13 @@ function resolveShortTextQuestionConfig(config?: ShortTextQuestionConfig) {
     shortTextAllowPartialCredit: config?.shortTextAllowPartialCredit ?? true,
     shortTextTrimWhitespace: config?.shortTextTrimWhitespace ?? true,
     shortTextNormalizeWhitespace: config?.shortTextNormalizeWhitespace ?? true,
+    numericInputKind: numericSettings.inputKind,
+    numericToleranceMode: numericSettings.toleranceMode,
+    numericAbsoluteTolerance: numericSettings.absoluteTolerance,
+    numericRelativeTolerancePercent: numericSettings.relativeTolerancePercent,
+    numericUnitFamily: numericSettings.unitFamily,
+    numericRequireUnit: numericSettings.requireUnit,
+    numericAcceptEquivalentUnits: numericSettings.acceptEquivalentUnits,
   };
 }
 
@@ -733,6 +771,7 @@ function getShortTextDtoFields(
   questionType: string,
   config?: ShortTextQuestionConfig,
 ): {
+  shortTextEvaluationKind?: ShortTextEvaluationKind;
   shortTextMaxLength: number | null;
   shortTextCaseSensitive?: boolean;
   shortTextEvaluationMode?: ShortAnswerEvaluationMode;
@@ -740,9 +779,17 @@ function getShortTextDtoFields(
   shortTextAllowPartialCredit?: boolean;
   shortTextTrimWhitespace?: boolean;
   shortTextNormalizeWhitespace?: boolean;
+  numericInputKind?: NumericInputKind;
+  numericToleranceMode?: NumericToleranceMode;
+  numericAbsoluteTolerance?: number | null;
+  numericRelativeTolerancePercent?: number | null;
+  numericUnitFamily?: NumericUnitFamily;
+  numericRequireUnit?: boolean;
+  numericAcceptEquivalentUnits?: boolean;
 } {
   if (questionType !== 'SHORT_TEXT') {
     return {
+      shortTextEvaluationKind: undefined,
       shortTextMaxLength: null,
       shortTextCaseSensitive: undefined,
       shortTextEvaluationMode: undefined,
@@ -750,11 +797,19 @@ function getShortTextDtoFields(
       shortTextAllowPartialCredit: undefined,
       shortTextTrimWhitespace: undefined,
       shortTextNormalizeWhitespace: undefined,
+      numericInputKind: undefined,
+      numericToleranceMode: undefined,
+      numericAbsoluteTolerance: undefined,
+      numericRelativeTolerancePercent: undefined,
+      numericUnitFamily: undefined,
+      numericRequireUnit: undefined,
+      numericAcceptEquivalentUnits: undefined,
     };
   }
 
   const resolved = resolveShortTextQuestionConfig(config);
   return {
+    shortTextEvaluationKind: resolved.shortTextEvaluationKind,
     shortTextMaxLength: resolveShortTextMaxLength(resolved.shortTextMaxLength),
     shortTextCaseSensitive: resolved.shortTextCaseSensitive,
     shortTextEvaluationMode: resolved.shortTextEvaluationMode,
@@ -762,6 +817,13 @@ function getShortTextDtoFields(
     shortTextAllowPartialCredit: resolved.shortTextAllowPartialCredit,
     shortTextTrimWhitespace: resolved.shortTextTrimWhitespace,
     shortTextNormalizeWhitespace: resolved.shortTextNormalizeWhitespace,
+    numericInputKind: resolved.numericInputKind,
+    numericToleranceMode: resolved.numericToleranceMode,
+    numericAbsoluteTolerance: resolved.numericAbsoluteTolerance,
+    numericRelativeTolerancePercent: resolved.numericRelativeTolerancePercent,
+    numericUnitFamily: resolved.numericUnitFamily,
+    numericRequireUnit: resolved.numericRequireUnit,
+    numericAcceptEquivalentUnits: resolved.numericAcceptEquivalentUnits,
   };
 }
 
@@ -784,20 +846,41 @@ function getShortTextMatchedAnswerId(
   }
 
   const resolved = resolveShortTextQuestionConfig(options);
-  const evaluation = evaluateShortAnswer({
-    modelAnswers: answers.filter((answer) => answer.isCorrect).map((answer) => answer.text),
-    studentAnswer: value,
-    maxPoints: 1,
-    maxLength: resolved.shortTextMaxLength,
-    settings: {
-      caseSensitive: resolved.shortTextCaseSensitive,
-      evaluationMode: resolved.shortTextEvaluationMode,
-      toleranceLevel: resolved.shortTextToleranceLevel,
-      allowPartialCredit: resolved.shortTextAllowPartialCredit,
-      trimWhitespace: resolved.shortTextTrimWhitespace,
-      normalizeWhitespace: resolved.shortTextNormalizeWhitespace,
-    },
-  });
+  const evaluation = usesNumericShortTextEvaluation(resolved.shortTextEvaluationKind)
+    ? evaluateNumericAnswer({
+        modelAnswers: answers.filter((answer) => answer.isCorrect).map((answer) => answer.text),
+        studentAnswer: value,
+        maxPoints: 1,
+        settings: {
+          inputKind: resolved.numericInputKind,
+          toleranceMode: resolved.numericToleranceMode,
+          absoluteTolerance: resolved.numericAbsoluteTolerance,
+          relativeTolerancePercent: resolved.numericRelativeTolerancePercent,
+          unitFamily: usesShortTextUnitEvaluation(resolved.shortTextEvaluationKind)
+            ? resolved.numericUnitFamily
+            : 'none',
+          requireUnit: usesShortTextUnitEvaluation(resolved.shortTextEvaluationKind)
+            ? resolved.numericRequireUnit
+            : false,
+          acceptEquivalentUnits: usesShortTextUnitEvaluation(resolved.shortTextEvaluationKind)
+            ? resolved.numericAcceptEquivalentUnits
+            : true,
+        },
+      })
+    : evaluateShortAnswer({
+        modelAnswers: answers.filter((answer) => answer.isCorrect).map((answer) => answer.text),
+        studentAnswer: value,
+        maxPoints: 1,
+        maxLength: resolved.shortTextMaxLength,
+        settings: {
+          caseSensitive: resolved.shortTextCaseSensitive,
+          evaluationMode: resolved.shortTextEvaluationMode,
+          toleranceLevel: resolved.shortTextToleranceLevel,
+          allowPartialCredit: resolved.shortTextAllowPartialCredit,
+          trimWhitespace: resolved.shortTextTrimWhitespace,
+          normalizeWhitespace: resolved.shortTextNormalizeWhitespace,
+        },
+      });
 
   if (evaluation.points <= 0 || !evaluation.matchedModelAnswer) {
     return undefined;
@@ -993,6 +1076,7 @@ interface QuestionWithAnswersForExport {
   order: number;
   text: string;
   type: string;
+  shortTextEvaluationKind: string;
   shortTextMaxLength: number | null;
   shortTextCaseSensitive: boolean;
   shortTextEvaluationMode: string;
@@ -1000,6 +1084,13 @@ interface QuestionWithAnswersForExport {
   shortTextAllowPartialCredit: boolean;
   shortTextTrimWhitespace: boolean;
   shortTextNormalizeWhitespace: boolean;
+  numericInputKind: string | null;
+  numericToleranceMode: string | null;
+  numericAbsoluteTolerance: number | null;
+  numericRelativeTolerancePercent: number | null;
+  numericUnitFamily: string | null;
+  numericRequireUnit: boolean;
+  numericAcceptEquivalentUnits: boolean;
   answers: Array<{ id: string; text: string; isCorrect: boolean }>;
 }
 interface VoteForExport {
@@ -2024,6 +2115,7 @@ type HostCurrentQuestionSession = {
       ratingMax: number | null;
       ratingLabelMin: string | null;
       ratingLabelMax: string | null;
+      shortTextEvaluationKind: string;
       shortTextMaxLength: number | null;
       shortTextCaseSensitive: boolean;
       shortTextEvaluationMode: string;
@@ -2031,6 +2123,13 @@ type HostCurrentQuestionSession = {
       shortTextAllowPartialCredit: boolean;
       shortTextTrimWhitespace: boolean;
       shortTextNormalizeWhitespace: boolean;
+      numericInputKind: string | null;
+      numericToleranceMode: string | null;
+      numericAbsoluteTolerance: number | null;
+      numericRelativeTolerancePercent: number | null;
+      numericUnitFamily: string | null;
+      numericRequireUnit: boolean;
+      numericAcceptEquivalentUnits: boolean;
       answers: Array<{ id: string; text: string; isCorrect: boolean }>;
     }>;
   } | null;
@@ -2264,6 +2363,7 @@ async function fetchHostCurrentQuestion(
               ratingMax: true,
               ratingLabelMin: true,
               ratingLabelMax: true,
+              shortTextEvaluationKind: true,
               shortTextMaxLength: true,
               shortTextCaseSensitive: true,
               shortTextEvaluationMode: true,
@@ -2271,6 +2371,13 @@ async function fetchHostCurrentQuestion(
               shortTextAllowPartialCredit: true,
               shortTextTrimWhitespace: true,
               shortTextNormalizeWhitespace: true,
+              numericInputKind: true,
+              numericToleranceMode: true,
+              numericAbsoluteTolerance: true,
+              numericRelativeTolerancePercent: true,
+              numericUnitFamily: true,
+              numericRequireUnit: true,
+              numericAcceptEquivalentUnits: true,
               answers: { select: { id: true, text: true, isCorrect: true } },
             },
           },

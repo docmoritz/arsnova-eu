@@ -1030,6 +1030,7 @@ export const adminRouter = router({
                   ratingMax: true,
                   ratingLabelMin: true,
                   ratingLabelMax: true,
+                  shortTextEvaluationKind: true,
                   shortTextMaxLength: true,
                   shortTextCaseSensitive: true,
                   shortTextEvaluationMode: true,
@@ -1037,6 +1038,13 @@ export const adminRouter = router({
                   shortTextAllowPartialCredit: true,
                   shortTextTrimWhitespace: true,
                   shortTextNormalizeWhitespace: true,
+                  numericInputKind: true,
+                  numericToleranceMode: true,
+                  numericAbsoluteTolerance: true,
+                  numericRelativeTolerancePercent: true,
+                  numericUnitFamily: true,
+                  numericRequireUnit: true,
+                  numericAcceptEquivalentUnits: true,
                   answers: {
                     orderBy: { id: 'asc' },
                     select: { text: true, isCorrect: true },
@@ -1108,6 +1116,7 @@ export const adminRouter = router({
             ratingLabelMax: question.ratingLabelMax ?? null,
             ...(question.type === 'SHORT_TEXT'
               ? {
+                  shortTextEvaluationKind: question.shortTextEvaluationKind ?? 'text',
                   shortTextMaxLength: resolveShortTextMaxLength(question.shortTextMaxLength),
                   shortTextCaseSensitive: question.shortTextCaseSensitive ?? false,
                   shortTextEvaluationMode: question.shortTextEvaluationMode,
@@ -1115,6 +1124,13 @@ export const adminRouter = router({
                   shortTextAllowPartialCredit: question.shortTextAllowPartialCredit,
                   shortTextTrimWhitespace: question.shortTextTrimWhitespace,
                   shortTextNormalizeWhitespace: question.shortTextNormalizeWhitespace,
+                  numericInputKind: question.numericInputKind ?? 'decimal',
+                  numericToleranceMode: question.numericToleranceMode ?? 'exact',
+                  numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+                  numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+                  numericUnitFamily: question.numericUnitFamily ?? 'none',
+                  numericRequireUnit: question.numericRequireUnit ?? false,
+                  numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
                 }
               : {}),
             enabled: true,

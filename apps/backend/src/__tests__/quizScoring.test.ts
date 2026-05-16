@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateShortAnswer } from '@arsnova/shared-types';
+import { evaluateNumericAnswer, evaluateShortAnswer } from '@arsnova/shared-types';
 import {
   calculateVoteScore,
   getStreakMultiplier,
@@ -133,6 +133,87 @@ describe('quizScoring', () => {
         shortTextAllowPartialCredit: false,
       }),
     ).toBe(2000);
+  });
+
+  it('bewertet numerische Kurzantworten ueber geparste Zahlen statt Zeichenähnlichkeit', () => {
+    expect(
+      calculateVoteScore({
+        type: 'SHORT_TEXT',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: [],
+        correctAnswerIds: [],
+        freeText: '12.5',
+        correctShortTextAnswers: ['12,5'],
+        shortTextEvaluationKind: 'numeric',
+        numericToleranceMode: 'exact',
+      }),
+    ).toBe(2000);
+  });
+
+  it('akzeptiert absolute und relative Toleranzen für numerische Kurzantworten', () => {
+    expect(
+      calculateVoteScore({
+        type: 'SHORT_TEXT',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: [],
+        correctAnswerIds: [],
+        freeText: '10.4',
+        correctShortTextAnswers: ['10'],
+        shortTextEvaluationKind: 'numeric',
+        numericToleranceMode: 'absolute',
+        numericAbsoluteTolerance: 0.5,
+      }),
+    ).toBe(2000);
+
+    expect(
+      calculateVoteScore({
+        type: 'SHORT_TEXT',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: [],
+        correctAnswerIds: [],
+        freeText: '109',
+        correctShortTextAnswers: ['100'],
+        shortTextEvaluationKind: 'numeric',
+        numericToleranceMode: 'relative',
+        numericRelativeTolerancePercent: 10,
+      }),
+    ).toBe(2000);
+  });
+
+  it('vergibt bei korrektem Zahlenwert aber fehlender Pflicht-Einheit Teilpunkte', () => {
+    expect(
+      calculateVoteScore({
+        type: 'SHORT_TEXT',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: [],
+        correctAnswerIds: [],
+        freeText: '2',
+        correctShortTextAnswers: ['2 m'],
+        shortTextEvaluationKind: 'numeric_unit',
+        numericToleranceMode: 'exact',
+        numericUnitFamily: 'length',
+        numericRequireUnit: true,
+        numericAcceptEquivalentUnits: true,
+      }),
+    ).toBe(1000);
+  });
+
+  it('erkennt äquivalente Einheiten im numerischen Einheitenmodus', () => {
+    const result = evaluateNumericAnswer({
+      modelAnswers: ['2 m'],
+      studentAnswer: '200 cm',
+      maxPoints: 100,
+      settings: {
+        toleranceMode: 'exact',
+        unitFamily: 'length',
+        requireUnit: true,
+        acceptEquivalentUnits: true,
+      },
+    });
+
+    expect(result.points).toBe(100);
+    expect(result.unitStatus).toBe('equivalent');
+    expect(result.explanation).toContain('converting an equivalent unit');
   });
 
   it('erkennt benachbarte Buchstabendreher deterministisch im Auto-Modus', () => {

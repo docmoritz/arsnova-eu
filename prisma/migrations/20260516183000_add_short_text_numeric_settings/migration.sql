@@ -1,0 +1,9 @@
+ALTER TABLE "Question"
+ADD COLUMN IF NOT EXISTS "shortTextEvaluationKind" TEXT NOT NULL DEFAULT 'text',
+ADD COLUMN IF NOT EXISTS "numericInputKind" TEXT,
+ADD COLUMN IF NOT EXISTS "numericToleranceMode" TEXT,
+ADD COLUMN IF NOT EXISTS "numericAbsoluteTolerance" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "numericRelativeTolerancePercent" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "numericUnitFamily" TEXT,
+ADD COLUMN IF NOT EXISTS "numericRequireUnit" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "numericAcceptEquivalentUnits" BOOLEAN NOT NULL DEFAULT true;

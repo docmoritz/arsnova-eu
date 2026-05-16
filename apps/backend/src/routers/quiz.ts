@@ -3,13 +3,21 @@
  * quiz.upload: Quiz-Daten beim Live-Schalten an den Server übertragen und in PostgreSQL speichern.
  */
 import {
+  NUMERIC_DEFAULT_INPUT_KIND,
+  NUMERIC_DEFAULT_TOLERANCE_MODE,
+  NUMERIC_DEFAULT_UNIT_FAMILY,
+  SHORT_TEXT_DEFAULT_EVALUATION_KIND,
   QuizUploadInputSchema,
   QuizUploadOutputSchema,
   SHORT_TEXT_DEFAULT_EVALUATION_MODE,
   SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL,
   createLegacyQuizHistoryAccessProof,
   resolveShortTextMaxLength,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
   type QuizUploadInput,
+  type ShortTextEvaluationKind,
   type ShortAnswerEvaluationMode,
   type ToleranceLevel,
 } from '@arsnova/shared-types';
@@ -51,6 +59,7 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
     ratingMax: number | null;
     ratingLabelMin: string | null;
     ratingLabelMax: string | null;
+    shortTextEvaluationKind: string;
     shortTextMaxLength: number | null;
     shortTextCaseSensitive: boolean;
     shortTextEvaluationMode: string;
@@ -58,6 +67,13 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
     shortTextAllowPartialCredit: boolean;
     shortTextTrimWhitespace: boolean;
     shortTextNormalizeWhitespace: boolean;
+    numericInputKind: string | null;
+    numericToleranceMode: string | null;
+    numericAbsoluteTolerance: number | null;
+    numericRelativeTolerancePercent: number | null;
+    numericUnitFamily: string | null;
+    numericRequireUnit: boolean;
+    numericAcceptEquivalentUnits: boolean;
     answers: Array<{
       text: string;
       isCorrect: boolean;
@@ -101,6 +117,9 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
       ratingLabelMax: question.ratingLabelMax ?? undefined,
       ...(question.type === 'SHORT_TEXT'
         ? {
+            shortTextEvaluationKind:
+              (question.shortTextEvaluationKind as ShortTextEvaluationKind | undefined) ??
+              SHORT_TEXT_DEFAULT_EVALUATION_KIND,
             shortTextMaxLength: resolveShortTextMaxLength(question.shortTextMaxLength),
             shortTextCaseSensitive: question.shortTextCaseSensitive ?? false,
             shortTextEvaluationMode:
@@ -112,6 +131,19 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
             shortTextAllowPartialCredit: question.shortTextAllowPartialCredit ?? true,
             shortTextTrimWhitespace: question.shortTextTrimWhitespace ?? true,
             shortTextNormalizeWhitespace: question.shortTextNormalizeWhitespace ?? true,
+            numericInputKind:
+              (question.numericInputKind as NumericInputKind | undefined) ??
+              NUMERIC_DEFAULT_INPUT_KIND,
+            numericToleranceMode:
+              (question.numericToleranceMode as NumericToleranceMode | undefined) ??
+              NUMERIC_DEFAULT_TOLERANCE_MODE,
+            numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? undefined,
+            numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? undefined,
+            numericUnitFamily:
+              (question.numericUnitFamily as NumericUnitFamily | undefined) ??
+              NUMERIC_DEFAULT_UNIT_FAMILY,
+            numericRequireUnit: question.numericRequireUnit ?? false,
+            numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
           }
         : {}),
       answers: question.answers.map((answer) => ({
@@ -169,6 +201,10 @@ export const quizRouter = router({
               ratingMax: q.ratingMax ?? null,
               ratingLabelMin: q.ratingLabelMin ?? null,
               ratingLabelMax: q.ratingLabelMax ?? null,
+              shortTextEvaluationKind:
+                q.type === 'SHORT_TEXT'
+                  ? (q.shortTextEvaluationKind ?? SHORT_TEXT_DEFAULT_EVALUATION_KIND)
+                  : SHORT_TEXT_DEFAULT_EVALUATION_KIND,
               shortTextMaxLength:
                 q.type === 'SHORT_TEXT' ? resolveShortTextMaxLength(q.shortTextMaxLength) : null,
               shortTextCaseSensitive:
@@ -187,6 +223,23 @@ export const quizRouter = router({
                 q.type === 'SHORT_TEXT' ? (q.shortTextTrimWhitespace ?? true) : true,
               shortTextNormalizeWhitespace:
                 q.type === 'SHORT_TEXT' ? (q.shortTextNormalizeWhitespace ?? true) : true,
+              numericInputKind:
+                q.type === 'SHORT_TEXT' ? (q.numericInputKind ?? NUMERIC_DEFAULT_INPUT_KIND) : null,
+              numericToleranceMode:
+                q.type === 'SHORT_TEXT'
+                  ? (q.numericToleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE)
+                  : null,
+              numericAbsoluteTolerance:
+                q.type === 'SHORT_TEXT' ? (q.numericAbsoluteTolerance ?? null) : null,
+              numericRelativeTolerancePercent:
+                q.type === 'SHORT_TEXT' ? (q.numericRelativeTolerancePercent ?? null) : null,
+              numericUnitFamily:
+                q.type === 'SHORT_TEXT'
+                  ? (q.numericUnitFamily ?? NUMERIC_DEFAULT_UNIT_FAMILY)
+                  : null,
+              numericRequireUnit: q.type === 'SHORT_TEXT' ? (q.numericRequireUnit ?? false) : false,
+              numericAcceptEquivalentUnits:
+                q.type === 'SHORT_TEXT' ? (q.numericAcceptEquivalentUnits ?? true) : true,
               answers: {
                 create: q.answers.map((a) => ({
                   text: a.text,
@@ -244,6 +297,7 @@ export const quizRouter = router({
                 ratingMax: true,
                 ratingLabelMin: true,
                 ratingLabelMax: true,
+                shortTextEvaluationKind: true,
                 shortTextMaxLength: true,
                 shortTextCaseSensitive: true,
                 shortTextEvaluationMode: true,
@@ -251,6 +305,13 @@ export const quizRouter = router({
                 shortTextAllowPartialCredit: true,
                 shortTextTrimWhitespace: true,
                 shortTextNormalizeWhitespace: true,
+                numericInputKind: true,
+                numericToleranceMode: true,
+                numericAbsoluteTolerance: true,
+                numericRelativeTolerancePercent: true,
+                numericUnitFamily: true,
+                numericRequireUnit: true,
+                numericAcceptEquivalentUnits: true,
                 answers: {
                   select: {
                     text: true,

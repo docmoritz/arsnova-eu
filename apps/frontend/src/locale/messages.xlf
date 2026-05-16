@@ -4939,6 +4939,126 @@
           <context context-type="linenumber">662</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindFieldLabel" datatype="html">
+        <source>Antworttyp</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindText" datatype="html">
+        <source>Mit Textähnlichkeit bewerten</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindTextHint" datatype="html">
+        <source>Geeignet für Fachbegriffe und feste Schreibweisen mit kleinen Tippfehlern.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindNumeric" datatype="html">
+        <source>Zahlen bewerten</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindNumericHint" datatype="html">
+        <source>Bewertet Zahlenwerte statt Zeichenähnlichkeit und unterstützt exakte, absolute oder relative Toleranzen.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindNumericUnit" datatype="html">
+        <source>Zahlen und Einheiten bewerten</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextEvaluationKindNumericUnitHint" datatype="html">
+        <source>Prüft Zahlenwerte zusammen mit einer kuratierten Einheitenfamilie und erklärt fehlende oder abweichende Einheiten.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericInputKindInteger" datatype="html">
+        <source>Ganzzahl</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericInputKindDecimal" datatype="html">
+        <source>Dezimalzahl</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceExact" datatype="html">
+        <source>Exakte Zahl</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceAbsolute" datatype="html">
+        <source>Absolute Toleranz</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceRelative" datatype="html">
+        <source>Relative Toleranz (%)</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilyLength" datatype="html">
+        <source>Länge</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilyMass" datatype="html">
+        <source>Masse</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilyTime" datatype="html">
+        <source>Zeit</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilyVolume" datatype="html">
+        <source>Volumen</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceAbsoluteSummary" datatype="html">
+        <source>±{$tolerance} absolut</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceRelativeSummary" datatype="html">
+        <source>±{$tolerance} % relativ</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilySummary" datatype="html">
+        <source>Einheiten: {$unitFamily}</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericRequireUnitSummary" datatype="html">
+        <source>Einheit erforderlich</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitOptionalSummary" datatype="html">
+        <source>Einheit optional</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericInputKindFieldLabel" datatype="html">
+        <source>Zahlenformat</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceModeFieldLabel" datatype="html">
+        <source>Zahltoleranz</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericToleranceModeHint" datatype="html">
+        <source>Exakt verlangt denselben Zahlenwert. Absolute Toleranz arbeitet mit einer festen ±-Spanne, relative Toleranz mit Prozent um die Musterlösung.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericAbsoluteToleranceFieldLabel" datatype="html">
+        <source>Absolute Toleranz (±)</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericAbsoluteToleranceHint" datatype="html">
+        <source>Beispiel: Bei 10 und ±0,5 gelten Antworten von 9,5 bis 10,5.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericRelativeToleranceFieldLabel" datatype="html">
+        <source>Relative Toleranz (%)</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericRelativeToleranceHint" datatype="html">
+        <source>Beispiel: Bei 200 und 5 % gelten Antworten von 190 bis 210.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericUnitFamilyFieldLabel" datatype="html">
+        <source>Einheitenfamilie</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericRequireUnitToggle" datatype="html">
+        <source> Einheit verpflichtend machen </source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericAcceptEquivalentUnitsToggle" datatype="html">
+        <source> Äquivalente Einheiten akzeptieren </source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextPreviewNumericToleranceLabel" datatype="html">
+        <source>Innerhalb der Toleranz</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextPreviewEquivalentUnitLabel" datatype="html">
+        <source>Äquivalente Einheit</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextPreviewMissingUnitLabel" datatype="html">
+        <source>Fehlende Einheit</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextDidacticWarningNumeric" datatype="html">
+        <source>Lege mindestens eine klare Referenzzahl fest und wähle die Toleranz so, dass sie Rechenungenauigkeit erlaubt, aber fachlich falsche Werte klar ausschließt.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextDidacticWarningNumericUnit" datatype="html">
+        <source>Lege mindestens eine Referenzlösung mit Einheit fest, halte das Einheitenset klein und aktiviere Pflicht-Einheiten nur, wenn die Einheit fachlich wirklich bewertet werden soll.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextSolutionsHintNumeric" datatype="html">
+        <source>Hinterlege mindestens eine und höchstens zehn Referenzlösungen als Zahl, zum Beispiel „3,5“.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.shortTextSolutionsHintNumericUnit" datatype="html">
+        <source>Hinterlege mindestens eine und höchstens zehn Referenzlösungen mit unterstützter Einheit, zum Beispiel „2 m“.</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericEquivalentUnitsSummary" datatype="html">
+        <source>Äquivalente Einheiten erlaubt</source>
+      </trans-unit>
+      <trans-unit id="quizEdit.numericExactUnitsSummary" datatype="html">
+        <source>Nur exakt angegebene Einheit</source>
+      </trans-unit>
       <trans-unit id="quizEdit.shortTextMaxLengthFieldLabel" datatype="html">
         <source>Maximale Antwortlänge</source>
         <context-group purpose="location">
@@ -10142,6 +10262,42 @@
       </trans-unit>
       <trans-unit id="sessionVote.shortTextResultReasonNoMatch" datatype="html">
         <source>Keine Musterlösung lag innerhalb der eingestellten Toleranz.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericInvalid" datatype="html">
+        <source>Kurzantwort muss als Zahl im unterstützten Format eingegeben werden.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextResultInvalid" datatype="html">
+        <source>Ungültiges Zahlenformat</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericNoMatch" datatype="html">
+        <source>Keine Referenzlösung lag innerhalb der eingestellten Zahltoleranz.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonMissingRequired" datatype="html">
+        <source>Der Zahlenwert stimmte, aber die verlangte Einheit fehlte.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonEquivalentRejected" datatype="html">
+        <source>Der Zahlenwert stimmte nach Umrechnung, aber nur die hinterlegte Einheit ist zugelassen.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonWrongFamily" datatype="html">
+        <source>Der Zahlenwert passte, aber die Einheit gehört zu einer anderen Größenfamilie.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonUnsupportedUnit" datatype="html">
+        <source>Der Zahlenwert passte, aber die eingegebene Einheit liegt außerhalb des unterstützten Einheitensets.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonPartial" datatype="html">
+        <source>Der Zahlenwert passte, aber die Einheit verhinderte die volle Wertung.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonEquivalent" datatype="html">
+        <source>Zahlenwert und äquivalente Einheit wurden korrekt umgerechnet.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonMissingOptional" datatype="html">
+        <source>Der Zahlenwert passte; die Einheit war in dieser Frage optional.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonTolerance" datatype="html">
+        <source>Der Zahlenwert lag innerhalb der eingestellten Toleranz.</source>
+      </trans-unit>
+      <trans-unit id="sessionVote.shortTextNumericReasonExact" datatype="html">
+        <source>Zahlenwert und Einheit stimmen exakt mit einer Musterlösung überein.</source>
       </trans-unit>
       <trans-unit id="sessionVote.shortTextResultMatchedSolution" datatype="html">
         <source>Gewertet als Musterlösung „<x id="matchedModelAnswer" equiv-text="result.matchedModelAnswer"/>“.</source>

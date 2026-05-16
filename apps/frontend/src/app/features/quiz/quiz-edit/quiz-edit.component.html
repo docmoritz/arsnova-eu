@@ -657,34 +657,28 @@
         @if (hasShortTextConfig()) {
           <fieldset class="quiz-edit-form__fieldset">
             <legend class="quiz-edit-form__legend" i18n="@@quizEdit.shortTextConfigLegend">
-              Tippfehler und Schreibvarianten
+              Antwortbewertung
             </legend>
+            <p class="quiz-edit-form__fieldset-hint">
+              {{ shortTextSelectedEvaluationHint() }}
+            </p>
             <p class="quiz-edit-form__fieldset-hint" i18n="@@quizEdit.shortTextConfigHint">
-              Lege fest, welche Tippfehler noch zählen. Die Vorschau unten zeigt, ob daraus volle
-              Punkte, Teilpunkte oder keine Wertung werden.
+              Die Vorschau unten zeigt, ob daraus volle Punkte, Teilpunkte oder keine Wertung
+              werden.
             </p>
             <div class="quiz-edit-form__grid">
               <mat-form-field appearance="outline">
-                <mat-label i18n="@@quizEdit.shortTextEvaluationModeFieldLabel">Bewertung</mat-label>
-                <mat-select formControlName="shortTextEvaluationMode">
-                  @for (option of shortTextEvaluationModeOptions; track option.value) {
-                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
-                  }
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" subscriptSizing="dynamic">
-                <mat-label i18n="@@quizEdit.shortTextToleranceFieldLabel">Toleranz</mat-label>
-                <mat-select formControlName="shortTextToleranceLevel">
-                  @for (option of shortTextToleranceOptions; track option.value) {
-                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
-                  }
-                </mat-select>
-                <mat-hint i18n="@@quizEdit.shortTextToleranceHint"
-                  >Die Prozentwerte beschreiben die erlaubte Abweichung zur Musterlösung, nicht die
-                  Punktzahl. Niedrig ≈ 10 %, Mittel ≈ 20 %, Großzügig ≈ 30 %. Bei kurzen Begriffen
-                  wirkt dieselbe Stufe strenger.</mat-hint
+                <mat-label i18n="@@quizEdit.shortTextEvaluationKindFieldLabel"
+                  >Antworttyp</mat-label
                 >
+                <mat-select
+                  formControlName="shortTextEvaluationKind"
+                  (selectionChange)="onShortTextEvaluationKindChanged()"
+                >
+                  @for (option of shortTextEvaluationKindOptions; track option.value) {
+                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -701,23 +695,136 @@
                 <mat-hint i18n="@@quizEdit.shortTextMaxLengthHint">1 bis 500 Zeichen</mat-hint>
               </mat-form-field>
 
-              <div class="quiz-edit-form__short-text-toggle">
-                <mat-checkbox
-                  formControlName="shortTextAllowPartialCredit"
-                  i18n="@@quizEdit.shortTextAllowPartialCreditToggle"
-                >
-                  Teilpunkte vergeben
-                </mat-checkbox>
-                <mat-checkbox
-                  formControlName="shortTextCaseSensitive"
-                  i18n="@@quizEdit.shortTextCaseSensitiveToggle"
-                >
-                  Groß- und Kleinschreibung beachten
-                </mat-checkbox>
-              </div>
-            </div>
+              @if (!isShortTextNumericMode()) {
+                <mat-form-field appearance="outline">
+                  <mat-label i18n="@@quizEdit.shortTextEvaluationModeFieldLabel"
+                    >Bewertung</mat-label
+                  >
+                  <mat-select formControlName="shortTextEvaluationMode">
+                    @for (option of shortTextEvaluationModeOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
 
-            <p class="quiz-edit-form__fieldset-hint">{{ shortTextSelectedEvaluationHint() }}</p>
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label i18n="@@quizEdit.shortTextToleranceFieldLabel">Toleranz</mat-label>
+                  <mat-select formControlName="shortTextToleranceLevel">
+                    @for (option of shortTextToleranceOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint i18n="@@quizEdit.shortTextToleranceHint"
+                    >Die Prozentwerte beschreiben die erlaubte Abweichung zur Musterlösung, nicht
+                    die Punktzahl. Niedrig ≈ 10 %, Mittel ≈ 20 %, Großzügig ≈ 30 %. Bei kurzen
+                    Begriffen wirkt dieselbe Stufe strenger.</mat-hint
+                  >
+                </mat-form-field>
+
+                <div class="quiz-edit-form__short-text-toggle">
+                  <mat-checkbox
+                    formControlName="shortTextAllowPartialCredit"
+                    i18n="@@quizEdit.shortTextAllowPartialCreditToggle"
+                  >
+                    Teilpunkte vergeben
+                  </mat-checkbox>
+                  <mat-checkbox
+                    formControlName="shortTextCaseSensitive"
+                    i18n="@@quizEdit.shortTextCaseSensitiveToggle"
+                  >
+                    Groß- und Kleinschreibung beachten
+                  </mat-checkbox>
+                </div>
+              } @else {
+                <mat-form-field appearance="outline">
+                  <mat-label i18n="@@quizEdit.numericInputKindFieldLabel">Zahlenformat</mat-label>
+                  <mat-select formControlName="numericInputKind">
+                    @for (option of numericInputKindOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label i18n="@@quizEdit.numericToleranceModeFieldLabel"
+                    >Zahltoleranz</mat-label
+                  >
+                  <mat-select formControlName="numericToleranceMode">
+                    @for (option of numericToleranceModeOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint i18n="@@quizEdit.numericToleranceModeHint"
+                    >Exakt verlangt denselben Zahlenwert. Absolute Toleranz arbeitet mit einer
+                    festen ±-Spanne, relative Toleranz mit Prozent um die Musterlösung.</mat-hint
+                  >
+                </mat-form-field>
+
+                @if (form.controls.numericToleranceMode.value === 'absolute') {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label i18n="@@quizEdit.numericAbsoluteToleranceFieldLabel"
+                      >Absolute Toleranz (±)</mat-label
+                    >
+                    <input
+                      matInput
+                      type="number"
+                      formControlName="numericAbsoluteTolerance"
+                      min="0"
+                      step="0.01"
+                    />
+                    <mat-hint i18n="@@quizEdit.numericAbsoluteToleranceHint"
+                      >Beispiel: Bei 10 und ±0,5 gelten Antworten von 9,5 bis 10,5.</mat-hint
+                    >
+                  </mat-form-field>
+                }
+
+                @if (form.controls.numericToleranceMode.value === 'relative') {
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label i18n="@@quizEdit.numericRelativeToleranceFieldLabel"
+                      >Relative Toleranz (%)</mat-label
+                    >
+                    <input
+                      matInput
+                      type="number"
+                      formControlName="numericRelativeTolerancePercent"
+                      min="0"
+                      step="0.1"
+                    />
+                    <mat-hint i18n="@@quizEdit.numericRelativeToleranceHint"
+                      >Beispiel: Bei 200 und 5 % gelten Antworten von 190 bis 210.</mat-hint
+                    >
+                  </mat-form-field>
+                }
+
+                @if (isShortTextUnitMode()) {
+                  <mat-form-field appearance="outline">
+                    <mat-label i18n="@@quizEdit.numericUnitFamilyFieldLabel"
+                      >Einheitenfamilie</mat-label
+                    >
+                    <mat-select formControlName="numericUnitFamily">
+                      @for (option of numericUnitFamilyOptions; track option.value) {
+                        <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="quiz-edit-form__short-text-toggle">
+                    <mat-checkbox
+                      formControlName="numericRequireUnit"
+                      i18n="@@quizEdit.numericRequireUnitToggle"
+                    >
+                      Einheit verpflichtend machen
+                    </mat-checkbox>
+                    <mat-checkbox
+                      formControlName="numericAcceptEquivalentUnits"
+                      i18n="@@quizEdit.numericAcceptEquivalentUnitsToggle"
+                    >
+                      Äquivalente Einheiten akzeptieren
+                    </mat-checkbox>
+                  </div>
+                }
+              }
+            </div>
 
             <div class="quiz-edit-form__preview-block">
               <p class="quiz-edit-form__preview-label" i18n="@@quizEdit.shortTextPreviewLegend">
@@ -726,6 +833,7 @@
               <p class="quiz-edit-form__fieldset-hint">
                 {{
                   shortTextConfigSummary({
+                    shortTextEvaluationKind: form.controls.shortTextEvaluationKind.value,
                     shortTextMaxLength: shortTextMaxLengthControl.value,
                     shortTextCaseSensitive: form.controls.shortTextCaseSensitive.value,
                     shortTextEvaluationMode: form.controls.shortTextEvaluationMode.value,
@@ -733,6 +841,14 @@
                     shortTextAllowPartialCredit: form.controls.shortTextAllowPartialCredit.value,
                     shortTextTrimWhitespace: form.controls.shortTextTrimWhitespace.value,
                     shortTextNormalizeWhitespace: form.controls.shortTextNormalizeWhitespace.value,
+                    numericInputKind: form.controls.numericInputKind.value,
+                    numericToleranceMode: form.controls.numericToleranceMode.value,
+                    numericAbsoluteTolerance: form.controls.numericAbsoluteTolerance.value,
+                    numericRelativeTolerancePercent:
+                      form.controls.numericRelativeTolerancePercent.value,
+                    numericUnitFamily: form.controls.numericUnitFamily.value,
+                    numericRequireUnit: form.controls.numericRequireUnit.value,
+                    numericAcceptEquivalentUnits: form.controls.numericAcceptEquivalentUnits.value,
                   })
                 }}
               </p>
@@ -761,47 +877,46 @@
               {{ shortTextDidacticWarning() }}
             </p>
 
-            <mat-accordion>
-              <mat-expansion-panel>
-                <mat-expansion-panel-header>
-                  <mat-panel-title i18n="@@quizEdit.shortTextTechnicalDetailsToggle">
-                    Technische Details anzeigen
-                  </mat-panel-title>
-                </mat-expansion-panel-header>
-                <p
-                  class="quiz-edit-form__fieldset-hint"
-                  i18n="@@quizEdit.shortTextTechnicalDetailsIntro"
-                >
-                  Auto kombiniert exakte Treffer, Hamming, Damerau-Levenshtein und Levenshtein.
-                  Hamming eignet sich für einzelne falsche Zeichen bei gleicher Länge,
-                  Damerau-Levenshtein zusätzlich für vertauschte Nachbarbuchstaben, Levenshtein
-                  außerdem für fehlende oder extra Zeichen.
-                </p>
-                <div class="quiz-edit-form__short-text-toggle">
-                  <mat-checkbox
-                    formControlName="shortTextTrimWhitespace"
-                    i18n="@@quizEdit.shortTextTrimWhitespaceToggle"
+            @if (!isShortTextNumericMode()) {
+              <mat-accordion>
+                <mat-expansion-panel>
+                  <mat-expansion-panel-header>
+                    <mat-panel-title i18n="@@quizEdit.shortTextTechnicalDetailsToggle">
+                      Technische Details anzeigen
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <p
+                    class="quiz-edit-form__fieldset-hint"
+                    i18n="@@quizEdit.shortTextTechnicalDetailsIntro"
                   >
-                    Leerzeichen am Anfang und Ende ignorieren
-                  </mat-checkbox>
-                  <mat-checkbox
-                    formControlName="shortTextNormalizeWhitespace"
-                    i18n="@@quizEdit.shortTextNormalizeWhitespaceToggle"
-                  >
-                    Mehrfache Leerzeichen zusammenfassen
-                  </mat-checkbox>
-                </div>
-              </mat-expansion-panel>
-            </mat-accordion>
+                    Auto kombiniert exakte Treffer, Hamming, Damerau-Levenshtein und Levenshtein.
+                    Hamming eignet sich für einzelne falsche Zeichen bei gleicher Länge,
+                    Damerau-Levenshtein zusätzlich für vertauschte Nachbarbuchstaben, Levenshtein
+                    außerdem für fehlende oder extra Zeichen.
+                  </p>
+                  <div class="quiz-edit-form__short-text-toggle">
+                    <mat-checkbox
+                      formControlName="shortTextTrimWhitespace"
+                      i18n="@@quizEdit.shortTextTrimWhitespaceToggle"
+                    >
+                      Leerzeichen am Anfang und Ende ignorieren
+                    </mat-checkbox>
+                    <mat-checkbox
+                      formControlName="shortTextNormalizeWhitespace"
+                      i18n="@@quizEdit.shortTextNormalizeWhitespaceToggle"
+                    >
+                      Mehrfache Leerzeichen zusammenfassen
+                    </mat-checkbox>
+                  </div>
+                </mat-expansion-panel>
+              </mat-accordion>
+            }
           </fieldset>
         }
 
         @if (hasAnswerOptions()) {
           @if (isShortTextType()) {
-            <p class="quiz-edit-form__fieldset-hint" i18n="@@quizEdit.shortTextSolutionsHint">
-              Hinterlege mindestens eine und höchstens zehn Musterlösungen. Alle Varianten gelten
-              als richtige Kurzantwort.
-            </p>
+            <p class="quiz-edit-form__fieldset-hint">{{ shortTextSolutionsHint() }}</p>
           }
           <div formArrayName="answers" class="quiz-edit-answers l-stack l-stack--md">
             @for (answer of answersArray.controls; track $index; let i = $index) {
@@ -923,6 +1038,7 @@
                   <p class="quiz-edit-form__fieldset-hint">
                     {{
                       shortTextConfigSummary({
+                        shortTextEvaluationKind: form.controls.shortTextEvaluationKind.value,
                         shortTextMaxLength: shortTextMaxLengthControl.value,
                         shortTextCaseSensitive: form.controls.shortTextCaseSensitive.value,
                         shortTextEvaluationMode: form.controls.shortTextEvaluationMode.value,
@@ -932,6 +1048,15 @@
                         shortTextTrimWhitespace: form.controls.shortTextTrimWhitespace.value,
                         shortTextNormalizeWhitespace:
                           form.controls.shortTextNormalizeWhitespace.value,
+                        numericInputKind: form.controls.numericInputKind.value,
+                        numericToleranceMode: form.controls.numericToleranceMode.value,
+                        numericAbsoluteTolerance: form.controls.numericAbsoluteTolerance.value,
+                        numericRelativeTolerancePercent:
+                          form.controls.numericRelativeTolerancePercent.value,
+                        numericUnitFamily: form.controls.numericUnitFamily.value,
+                        numericRequireUnit: form.controls.numericRequireUnit.value,
+                        numericAcceptEquivalentUnits:
+                          form.controls.numericAcceptEquivalentUnits.value,
                       })
                     }}
                   </p>

@@ -1583,6 +1583,118 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('blockiert numerische SHORT_TEXT-Eingaben mit ungueltigem Format bereits im Client', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'short-text-numeric-invalid',
+      text: 'Wie groß ist die Beschleunigung?',
+      type: 'SHORT_TEXT',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [{ id: 's1', text: '9.81', isCorrect: true, voteCount: 0, votePercentage: 0 }],
+      currentRound: 1,
+      shortTextEvaluationKind: 'numeric',
+      shortTextMaxLength: 20,
+      numericInputKind: 'decimal',
+      numericToleranceMode: 'absolute',
+      numericAbsoluteTolerance: 0.1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.onTextVoteInput('neun komma acht');
+    fixture.detectChanges();
+
+    expect(component.shortTextValidationError()).toContain('Zahl im unterstützten Format');
+
+    await component.submitVote();
+
+    expect(voteSubmitMutateMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('zeigt bei numerischen SHORT_TEXT-Ergebnissen Teilpunkte fuer fehlende Pflicht-Einheiten', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'RESULTS',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'short-text-numeric-unit-results',
+      text: 'Wie lang ist die Strecke?',
+      type: 'SHORT_TEXT',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [{ id: 's1', text: '2 m', isCorrect: true, voteCount: 1, votePercentage: 100 }],
+      totalVotes: 1,
+      shortTextEvaluationKind: 'numeric_unit',
+      shortTextMaxLength: 20,
+      numericInputKind: 'decimal',
+      numericToleranceMode: 'exact',
+      numericUnitFamily: 'length',
+      numericRequireUnit: true,
+      numericAcceptEquivalentUnits: true,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    vi.spyOn(fixture.componentInstance, 'loadScorecard').mockResolvedValue(undefined);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.voteSent.set(true);
+    component.freeTextValue.set('2');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.vote-freetext__own--partial')).not.toBeNull();
+    expect(host.textContent).toContain('Teilweise gewertet');
+    expect(host.textContent).toContain('Gewertet als Musterlösung „2 m“.');
+    expect(host.textContent).toContain('die verlangte Einheit fehlte');
+    fixture.destroy();
+  });
+
   it('leitet nach Session-Ende (FINISHED) zur Startseite um', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',

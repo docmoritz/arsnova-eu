@@ -6,13 +6,22 @@ import { TRPCError } from '@trpc/server';
 import {
   SubmitVoteInputSchema,
   SubmitVoteOutputSchema,
+  evaluateNumericAnswer,
   evaluateShortAnswer,
   normalizeShortTextValue,
   resolveEffectiveQuestionTimer,
+  resolveNumericQuestionEvaluationSettings,
+  resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
+  usesNumericShortTextEvaluation,
+  usesShortTextUnitEvaluation,
   type QuestionType,
   type Difficulty,
+  type NumericInputKind,
+  type NumericToleranceMode,
+  type NumericUnitFamily,
   type ShortAnswerEvaluationMode,
+  type ShortTextEvaluationKind,
   type ToleranceLevel,
 } from '@arsnova/shared-types';
 import { publicProcedure, router } from '../trpc';
@@ -91,6 +100,10 @@ export const voteRouter = router({
       const allowedAnswerIds = new Set(question.answers.map((answer) => answer.id));
       const hasInvalidAnswerId = answerIds.some((answerId) => !allowedAnswerIds.has(answerId));
       const trimmedFreeText = input.freeText?.trim() ?? null;
+      const shortTextEvaluationKind = resolveShortTextEvaluationKind(
+        (question.shortTextEvaluationKind as ShortTextEvaluationKind | null | undefined) ??
+          undefined,
+      );
       const shortTextSettings = {
         caseSensitive: question.shortTextCaseSensitive ?? false,
         evaluationMode:
@@ -102,6 +115,18 @@ export const voteRouter = router({
         trimWhitespace: question.shortTextTrimWhitespace ?? true,
         normalizeWhitespace: question.shortTextNormalizeWhitespace ?? true,
       };
+      const numericSettings = resolveNumericQuestionEvaluationSettings({
+        numericInputKind:
+          (question.numericInputKind as NumericInputKind | null | undefined) ?? null,
+        numericToleranceMode:
+          (question.numericToleranceMode as NumericToleranceMode | null | undefined) ?? null,
+        numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
+        numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
+        numericUnitFamily:
+          (question.numericUnitFamily as NumericUnitFamily | null | undefined) ?? null,
+        numericRequireUnit: question.numericRequireUnit ?? false,
+        numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+      });
       const normalizedShortText = input.freeText
         ? normalizeShortTextValue(input.freeText, {
             caseSensitive: true,
@@ -110,6 +135,31 @@ export const voteRouter = router({
           })
         : null;
       const freeText = questionType === 'SHORT_TEXT' ? normalizedShortText : trimmedFreeText;
+      const numericShortTextEvaluation =
+        questionType === 'SHORT_TEXT' && usesNumericShortTextEvaluation(shortTextEvaluationKind)
+          ? evaluateNumericAnswer({
+              modelAnswers: question.answers
+                .filter((answer) => answer.isCorrect)
+                .map((answer) => answer.text),
+              studentAnswer: freeText ?? '',
+              maxPoints: 1,
+              settings: {
+                inputKind: numericSettings.inputKind,
+                toleranceMode: numericSettings.toleranceMode,
+                absoluteTolerance: numericSettings.absoluteTolerance,
+                relativeTolerancePercent: numericSettings.relativeTolerancePercent,
+                unitFamily: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+                  ? numericSettings.unitFamily
+                  : 'none',
+                requireUnit: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+                  ? numericSettings.requireUnit
+                  : false,
+                acceptEquivalentUnits: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+                  ? numericSettings.acceptEquivalentUnits
+                  : true,
+              },
+            })
+          : null;
 
       if (hasInvalidAnswerId) {
         throw new TRPCError({
@@ -177,6 +227,12 @@ export const voteRouter = router({
               message: `Kurzantwort darf maximal ${maxLength} Zeichen lang sein.`,
             });
           }
+          if (numericShortTextEvaluation?.feedbackCategory === 'invalid_input') {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Kurzantwort muss als Zahl im unterstützten Format eingegeben werden.',
+            });
+          }
           break;
         }
         case 'RATING':
@@ -228,15 +284,17 @@ export const voteRouter = router({
 
       const shortTextEvaluation =
         questionType === 'SHORT_TEXT'
-          ? evaluateShortAnswer({
-              modelAnswers: question.answers
-                .filter((answer) => answer.isCorrect)
-                .map((answer) => answer.text),
-              studentAnswer: freeText ?? '',
-              maxPoints: 1,
-              maxLength: question.shortTextMaxLength,
-              settings: shortTextSettings,
-            })
+          ? usesNumericShortTextEvaluation(shortTextEvaluationKind)
+            ? numericShortTextEvaluation
+            : evaluateShortAnswer({
+                modelAnswers: question.answers
+                  .filter((answer) => answer.isCorrect)
+                  .map((answer) => answer.text),
+                studentAnswer: freeText ?? '',
+                maxPoints: 1,
+                maxLength: question.shortTextMaxLength,
+                settings: shortTextSettings,
+              })
           : null;
       const shortTextMatchedAnswer =
         questionType === 'SHORT_TEXT' && shortTextEvaluation?.matchedModelAnswer
@@ -255,6 +313,7 @@ export const voteRouter = router({
         correctShortTextAnswers: question.answers
           .filter((answer) => answer.isCorrect)
           .map((answer) => answer.text),
+        shortTextEvaluationKind,
         shortTextMaxLength: question.shortTextMaxLength,
         shortTextCaseSensitive: shortTextSettings.caseSensitive,
         shortTextEvaluationMode: shortTextSettings.evaluationMode,
@@ -262,6 +321,19 @@ export const voteRouter = router({
         shortTextAllowPartialCredit: shortTextSettings.allowPartialCredit,
         shortTextTrimWhitespace: shortTextSettings.trimWhitespace,
         shortTextNormalizeWhitespace: shortTextSettings.normalizeWhitespace,
+        numericInputKind: numericSettings.inputKind,
+        numericToleranceMode: numericSettings.toleranceMode,
+        numericAbsoluteTolerance: numericSettings.absoluteTolerance,
+        numericRelativeTolerancePercent: numericSettings.relativeTolerancePercent,
+        numericUnitFamily: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+          ? numericSettings.unitFamily
+          : 'none',
+        numericRequireUnit: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+          ? numericSettings.requireUnit
+          : false,
+        numericAcceptEquivalentUnits: usesShortTextUnitEvaluation(shortTextEvaluationKind)
+          ? numericSettings.acceptEquivalentUnits
+          : true,
         responseTimeMs: input.responseTimeMs ?? null,
         timerDurationMs: timerSeconds ? timerSeconds * 1000 : null,
       });
