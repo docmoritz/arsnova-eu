@@ -62,6 +62,35 @@ import { questionTypeLabel as questionTypeLabelI18n } from '../../../shared/ques
 import { mergeTimerPresetOptions } from '../default-timer-presets';
 import { tryRequestDocumentFullscreen } from '../../../core/document-fullscreen.util';
 
+function resolveLiveStartErrorDetail(error: unknown): string | null {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    return message.length > 0 ? message : null;
+  }
+
+  if (typeof error !== 'object' || error === null) {
+    return null;
+  }
+
+  const candidate = error as {
+    message?: unknown;
+    data?: { message?: unknown };
+    shape?: { message?: unknown };
+  };
+
+  if (typeof candidate.message === 'string' && candidate.message.trim().length > 0) {
+    return candidate.message.trim();
+  }
+  if (typeof candidate.data?.message === 'string' && candidate.data.message.trim().length > 0) {
+    return candidate.data.message.trim();
+  }
+  if (typeof candidate.shape?.message === 'string' && candidate.shape.message.trim().length > 0) {
+    return candidate.shape.message.trim();
+  }
+
+  return null;
+}
+
 /**
  * Quiz-Preview & Schnellkorrektur (Epic 1).
  * Story 1.13, 1.7 (Markdown/KaTeX).
@@ -975,8 +1004,10 @@ export class QuizPreviewComponent implements OnDestroy {
       } finally {
         clearPendingHostSessionCode();
       }
-    } catch {
-      this.liveStartError.set($localize`Veranstaltung konnte nicht gestartet werden.`);
+    } catch (error) {
+      const fallbackMessage = $localize`Veranstaltung konnte nicht gestartet werden.`;
+      const detail = resolveLiveStartErrorDetail(error);
+      this.liveStartError.set(detail ? `${fallbackMessage} ${detail}` : fallbackMessage);
     } finally {
       this.liveStartPending.set(false);
     }

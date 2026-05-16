@@ -1,6 +1,6 @@
 {
-  "exportVersion": 23,
-  "exportedAt": "2026-05-16T13:40:00.000Z",
+  "exportVersion": 24,
+  "exportedAt": "2026-05-16T20:20:00.000Z",
   "quiz": {
     "name": "Showcase pédagogique : démo en équipe",
     "description": "![Showcase pédagogique](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase pédagogique\n\nCette démo est pensée pour un **usage réel en classe**. Elle n’essaie pas d’être un quiz disciplinaire parfait du début à la fin. Son rôle est ailleurs : montrer aux enseignant·es, formateur·rices et animateur·rices comment arsnova.eu peut rendre une séance en direct plus variée, plus visuelle et plus ludique.\n\nUtilise-la comme une courte **démo en équipe, façon Kahoot, pour les cours en direct** afin de montrer comment tu peux :\n- démarrer avec un rapide tour d’humeur ou un check-in social\n- utiliser des images plutôt que des consignes purement textuelles\n- intégrer des formules et de la notation scientifique en STEM\n- recueillir de courtes réponses en texte libre qui réapparaîtront ensuite sous forme de nuage de mots\n- utiliser à bon escient les choix multiples et les échelles d’évaluation\n- ajouter de l’énergie avec des chronos, des équipes, un classement et des codes bonus\n- afficher des extraits de code en informatique ou dans des cours techniques\n\nLes questions sont volontairement variées. L’idée est de te donner des pistes concrètes pour les échauffements, les vérifications de compréhension, les relances d’attention et les petits moments interactifs réutilisables en classe.\n\n**Conseil pour la démo :** Rejoins la session sur un deuxième appareil, idéalement en scannant le QR code avec ton téléphone. Tu pourras ainsi rejouer de façon réaliste l’aller-retour entre la vue hôte et l’expérience participante.\n\n**Autre conseil :** Ouvre ensuite le quiz en mode édition pour voir comment les questions sont construites avec Markdown et KaTeX.\n\n**Et encore une chose :** Si tu souhaites d’autres formats de questions ou fonctionnalités, n’hésite pas à les demander. Les coordonnées figurent dans les mentions légales.",
@@ -187,12 +187,36 @@
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",
-        "order": 7,
+        "order": 8,
         "answers": [],
         "ratingMin": 1,
         "ratingMax": 5,
         "ratingLabelMin": "Pas pour l’instant",
         "ratingLabelMax": "Je vais l’essayer"
+      },
+      {
+        "text": "### Calcul exigeant : combien de temps le son met-il pour parcourir 58 cm ?\n\n> **Usage pédagogique :** Cette réponse courte numérique est volontairement difficile : il faut convertir les unités correctement et donner un ordre de grandeur cohérent.\n\nSuppose la vitesse du son dans l’air sec à 20 °C : $$v = 343\\,\\mathrm{m/s}$$.\n\nDétermine le temps de parcours pour $$s = 0{,}58\\,\\mathrm{m}$$ et réponds avec unité (par exemple en ms ou en s).",
+        "type": "SHORT_TEXT",
+        "timer": null,
+        "difficulty": "HARD",
+        "order": 7,
+        "answers": [
+          {
+            "text": "1,69 ms",
+            "isCorrect": true
+          }
+        ],
+        "shortTextMaxLength": 24,
+        "shortTextCaseSensitive": false,
+        "shortTextEvaluationKind": "numeric_unit",
+        "numericInputKind": "decimal",
+        "numericToleranceMode": "relative",
+        "numericRelativeTolerancePercent": 2,
+        "numericUnitFamily": "time",
+        "numericRequireUnit": true,
+        "numericAcceptEquivalentUnits": true,
+        "shortTextTrimWhitespace": true,
+        "shortTextNormalizeWhitespace": true
       }
     ]
   }

@@ -1,6 +1,6 @@
 {
-  "exportVersion": 23,
-  "exportedAt": "2026-05-16T13:40:00.000Z",
+  "exportVersion": 24,
+  "exportedAt": "2026-05-16T20:20:00.000Z",
   "quiz": {
     "name": "Showcase docente: demo por equipos",
     "description": "![Showcase docente](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase docente\n\nEsta demo está pensada para el **uso real en el aula**. No pretende ser el quiz perfecto de principio a fin. Su objetivo es otro: mostrar a docentes, formadores y facilitadores cómo arsnova.eu puede hacer que una sesión en vivo sea más variada, más visual y más lúdica.\n\nÚsala como una **demo breve por equipos, al estilo Kahoot, para clases en vivo** para mostrar cómo puedes:\n- arrancar con un check-in emocional o social\n- usar imágenes en lugar de preguntas solo de texto\n- incorporar fórmulas y notación científica en STEM\n- recoger respuestas breves en texto libre que después reaparecen como nube de palabras\n- usar bien preguntas de respuesta múltiple y escalas de valoración\n- añadir energía con temporizadores, equipos, clasificación y códigos de bonificación\n- mostrar fragmentos de código en informática o en materias técnicas\n\nLas preguntas están mezcladas a propósito. La idea es darte ejemplos concretos para rompehielos, comprobaciones de comprensión, reinicios de atención y momentos interactivos breves que puedas reutilizar en clase.\n\n**Consejo para la demo:** Únete también a la sesión desde un segundo dispositivo, idealmente escaneando el código QR con el móvil. Así podrás ensayar de forma realista el cambio entre la vista del anfitrión y la experiencia del participante.\n\n**Otro consejo:** Después abre el cuestionario en modo de edición para ver cómo están hechas las preguntas con Markdown y KaTeX.\n\n**Y una cosa más:** Si echas en falta otros tipos de pregunta o funciones, puedes pedirlos sin problema. Encontrarás los datos de contacto en el aviso legal.",
@@ -187,12 +187,36 @@
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",
-        "order": 7,
+        "order": 8,
         "answers": [],
         "ratingMin": 1,
         "ratingMax": 5,
         "ratingLabelMin": "Todavía no",
         "ratingLabelMax": "Lo voy a probar"
+      },
+      {
+        "text": "### Cálculo exigente: ¿cuánto tarda el sonido en recorrer 58 cm?\n\n> **Uso didáctico:** Esta respuesta corta numérica es intencionalmente difícil: hay que convertir unidades con precisión y reportar una escala temporal físicamente plausible.\n\nSupón para aire seco a 20 °C una velocidad del sonido de $$v = 343\\,\\mathrm{m/s}$$.\n\nCalcula el tiempo para $$s = 0{,}58\\,\\mathrm{m}$$ y responde con unidad (por ejemplo en ms o en s).",
+        "type": "SHORT_TEXT",
+        "timer": null,
+        "difficulty": "HARD",
+        "order": 7,
+        "answers": [
+          {
+            "text": "1,69 ms",
+            "isCorrect": true
+          }
+        ],
+        "shortTextMaxLength": 24,
+        "shortTextCaseSensitive": false,
+        "shortTextEvaluationKind": "numeric_unit",
+        "numericInputKind": "decimal",
+        "numericToleranceMode": "relative",
+        "numericRelativeTolerancePercent": 2,
+        "numericUnitFamily": "time",
+        "numericRequireUnit": true,
+        "numericAcceptEquivalentUnits": true,
+        "shortTextTrimWhitespace": true,
+        "shortTextNormalizeWhitespace": true
       }
     ]
   }

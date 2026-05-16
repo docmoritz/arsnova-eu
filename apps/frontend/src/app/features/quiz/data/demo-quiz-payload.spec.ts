@@ -4,7 +4,7 @@ import { getDemoQuizPayload, getDemoQuizSeedFingerprint } from './demo-quiz-payl
 describe('getDemoQuizSeedFingerprint', () => {
   it('ändert sich mit exportVersion, Motiv-URL und Beschreibung (Demo-Reseed)', () => {
     const de = getDemoQuizSeedFingerprint('de');
-    expect(de).toMatch(/^de\|23\|/);
+    expect(de).toMatch(/^de\|24\|/);
     expect(de).toContain(
       'https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg',
     );
@@ -63,5 +63,43 @@ describe('getDemoQuizSeedFingerprint', () => {
         expect.objectContaining({ text: 'Mazur Methode', isCorrect: true }),
       ]),
     );
+  });
+
+  it('enthält eine sehr anspruchsvolle numerische SHORT_TEXT-Frage mit Einheit und Toleranz', () => {
+    const payload = getDemoQuizPayload('de') as {
+      quiz?: {
+        questions?: Array<{
+          text?: string;
+          type?: string;
+          difficulty?: string;
+          answers?: Array<{ text?: string; isCorrect?: boolean }>;
+          shortTextEvaluationKind?: string;
+          numericInputKind?: string;
+          numericToleranceMode?: string;
+          numericRelativeTolerancePercent?: number;
+          numericUnitFamily?: string;
+          numericRequireUnit?: boolean;
+          numericAcceptEquivalentUnits?: boolean;
+        }>;
+      };
+    };
+
+    const numericShortTextQuestion = payload.quiz?.questions?.find(
+      (question) =>
+        question.type === 'SHORT_TEXT' && question.shortTextEvaluationKind === 'numeric_unit',
+    );
+
+    expect(numericShortTextQuestion?.text).toContain('Schallgeschwindigkeit');
+    expect(numericShortTextQuestion?.text).toContain('58 cm');
+    expect(numericShortTextQuestion?.difficulty).toBe('HARD');
+    expect(numericShortTextQuestion?.numericInputKind).toBe('decimal');
+    expect(numericShortTextQuestion?.numericToleranceMode).toBe('relative');
+    expect(numericShortTextQuestion?.numericRelativeTolerancePercent).toBe(2);
+    expect(numericShortTextQuestion?.numericUnitFamily).toBe('time');
+    expect(numericShortTextQuestion?.numericRequireUnit).toBe(true);
+    expect(numericShortTextQuestion?.numericAcceptEquivalentUnits).toBe(true);
+    expect(numericShortTextQuestion?.answers).toEqual([
+      expect.objectContaining({ text: '1,69 ms', isCorrect: true }),
+    ]);
   });
 });
