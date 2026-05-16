@@ -6,6 +6,7 @@
 **Folgt auf:** `Story 1.14`, `Story 1.14a`, `Word Cloud 2.1/2.2/2.3/2.4`  
 **Status:** konzeptioneller Zielpfad; die aktuelle Produkt-UI nutzt seit `Word Cloud 2.5` bewusst `Einzelwoerter` / `Begriffe & Phrasen` statt `Themen`
 **Architekturbezug:** `ADR-0012`, `docs/implementation/WORD-CLOUD-2.1-LEMMA-STRATEGY.md`
+**Abgrenzung:** spaCy als optionale sprachliche Glaettung ist separat in `docs/implementation/WORD-CLOUD-SPACY-GLAETTUNG-ZIELBILD.md` beschrieben und ist nicht identisch mit diesem semantischen `3.0`-Themenpfad.
 
 ---
 

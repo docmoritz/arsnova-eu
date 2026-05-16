@@ -5,6 +5,8 @@
 **Status:** umgesetzt und bis `Word Cloud 2.5` stabilisiert (Mai 2026)
 **Bezug:** Freitext- und Q&A-Wortwolke in `apps/frontend/src/app/features/session/session-present/word-cloud-term.service.ts`, `apps/frontend/src/app/features/session/session-present/word-cloud.util.ts` und `apps/frontend/src/app/features/session/session-present/word-cloud.component.ts`
 **Ergaenzung zu:** `docs/architecture/decisions/0012-use-d3-cloud-for-freetext-word-clouds.md`
+**Einordnung einer aelteren frag.jetzt-Arbeit:** `docs/implementation/WORD-CLOUD-THESIS-REVIEW-2026-05.md`
+**Zielbild spaeterer spaCy-Glaettung:** `docs/implementation/WORD-CLOUD-SPACY-GLAETTUNG-ZIELBILD.md`
 **Weiterfuehrung:** `docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md`
 
 ---

@@ -1,0 +1,763 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WORD-CLOUD-SPACY-GLAETTUNG-ZIELBILD.md</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+
+    <style>
+      /* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+      /*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+      body {
+        font-family: var(
+          --vscode-markdown-font-family,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe WPC',
+          'Segoe UI',
+          'Ubuntu',
+          'Droid Sans',
+          sans-serif
+        );
+        font-size: var(--vscode-markdown-font-size, 14px);
+        padding: 0 26px;
+        line-height: var(--vscode-markdown-line-height, 22px);
+        word-wrap: break-word;
+      }
+
+      #code-csp-warning {
+        position: fixed;
+        top: 0;
+        right: 0;
+        color: white;
+        margin: 16px;
+        text-align: center;
+        font-size: 12px;
+        font-family: sans-serif;
+        background-color: #444444;
+        cursor: pointer;
+        padding: 6px;
+        box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.25);
+      }
+
+      #code-csp-warning:hover {
+        text-decoration: none;
+        background-color: #007acc;
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+      }
+
+      body.scrollBeyondLastLine {
+        margin-bottom: calc(100vh - 22px);
+      }
+
+      body.showEditorSelection .code-line {
+        position: relative;
+      }
+
+      body.showEditorSelection .code-active-line:before,
+      body.showEditorSelection .code-line:hover:before {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        left: -12px;
+        height: 100%;
+      }
+
+      body.showEditorSelection li.code-active-line:before,
+      body.showEditorSelection li.code-line:hover:before {
+        left: -30px;
+      }
+
+      .vscode-light.showEditorSelection .code-active-line:before {
+        border-left: 3px solid rgba(0, 0, 0, 0.15);
+      }
+
+      .vscode-light.showEditorSelection .code-line:hover:before {
+        border-left: 3px solid rgba(0, 0, 0, 0.4);
+      }
+
+      .vscode-light.showEditorSelection .code-line .code-line:hover:before {
+        border-left: none;
+      }
+
+      .vscode-dark.showEditorSelection .code-active-line:before {
+        border-left: 3px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .vscode-dark.showEditorSelection .code-line:hover:before {
+        border-left: 3px solid rgba(255, 255, 255, 0.6);
+      }
+
+      .vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+        border-left: none;
+      }
+
+      .vscode-high-contrast.showEditorSelection .code-active-line:before {
+        border-left: 3px solid rgba(255, 160, 0, 0.7);
+      }
+
+      .vscode-high-contrast.showEditorSelection .code-line:hover:before {
+        border-left: 3px solid rgba(255, 160, 0, 1);
+      }
+
+      .vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+        border-left: none;
+      }
+
+      img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      a:focus,
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 1px solid -webkit-focus-ring-color;
+        outline-offset: -1px;
+      }
+
+      hr {
+        border: 0;
+        height: 2px;
+        border-bottom: 2px solid;
+      }
+
+      h1 {
+        padding-bottom: 0.3em;
+        line-height: 1.2;
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-weight: normal;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      table > thead > tr > th {
+        text-align: left;
+        border-bottom: 1px solid;
+      }
+
+      table > thead > tr > th,
+      table > thead > tr > td,
+      table > tbody > tr > th,
+      table > tbody > tr > td {
+        padding: 5px 10px;
+      }
+
+      table > tbody > tr + tr > td {
+        border-top: 1px solid;
+      }
+
+      blockquote {
+        margin: 0 7px 0 5px;
+        padding: 0 16px 0 10px;
+        border-left-width: 5px;
+        border-left-style: solid;
+      }
+
+      code {
+        font-family:
+          Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
+          'Droid Sans Fallback';
+        font-size: 1em;
+        line-height: 1.357em;
+      }
+
+      body.wordWrap pre {
+        white-space: pre-wrap;
+      }
+
+      pre:not(.hljs),
+      pre.hljs code > div {
+        padding: 16px;
+        border-radius: 3px;
+        overflow: auto;
+      }
+
+      pre code {
+        color: var(--vscode-editor-foreground);
+        tab-size: 4;
+      }
+
+      /** Theming */
+
+      .vscode-light pre {
+        background-color: rgba(220, 220, 220, 0.4);
+      }
+
+      .vscode-dark pre {
+        background-color: rgba(10, 10, 10, 0.4);
+      }
+
+      .vscode-high-contrast pre {
+        background-color: rgb(0, 0, 0);
+      }
+
+      .vscode-high-contrast h1 {
+        border-color: rgb(0, 0, 0);
+      }
+
+      .vscode-light table > thead > tr > th {
+        border-color: rgba(0, 0, 0, 0.69);
+      }
+
+      .vscode-dark table > thead > tr > th {
+        border-color: rgba(255, 255, 255, 0.69);
+      }
+
+      .vscode-light h1,
+      .vscode-light hr,
+      .vscode-light table > tbody > tr + tr > td {
+        border-color: rgba(0, 0, 0, 0.18);
+      }
+
+      .vscode-dark h1,
+      .vscode-dark hr,
+      .vscode-dark table > tbody > tr + tr > td {
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+    </style>
+
+    <style>
+      /* Tomorrow Theme */
+      /* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+      /* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+      /* Tomorrow Comment */
+      .hljs-comment,
+      .hljs-quote {
+        color: #8e908c;
+      }
+
+      /* Tomorrow Red */
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-tag,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class,
+      .hljs-regexp,
+      .hljs-deletion {
+        color: #c82829;
+      }
+
+      /* Tomorrow Orange */
+      .hljs-number,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-literal,
+      .hljs-type,
+      .hljs-params,
+      .hljs-meta,
+      .hljs-link {
+        color: #f5871f;
+      }
+
+      /* Tomorrow Yellow */
+      .hljs-attribute {
+        color: #eab700;
+      }
+
+      /* Tomorrow Green */
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-bullet,
+      .hljs-addition {
+        color: #718c00;
+      }
+
+      /* Tomorrow Blue */
+      .hljs-title,
+      .hljs-section {
+        color: #4271ae;
+      }
+
+      /* Tomorrow Purple */
+      .hljs-keyword,
+      .hljs-selector-tag {
+        color: #8959a8;
+      }
+
+      .hljs {
+        display: block;
+        overflow-x: auto;
+        color: #4d4d4c;
+        padding: 0.5em;
+      }
+
+      .hljs-emphasis {
+        font-style: italic;
+      }
+
+      .hljs-strong {
+        font-weight: bold;
+      }
+    </style>
+
+    <style>
+      /*
+ * Markdown PDF CSS
+ */
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans',
+          sans-serif, 'Meiryo';
+        padding: 0 12px;
+      }
+
+      pre {
+        background-color: #f8f8f8;
+        border: 1px solid #cccccc;
+        border-radius: 3px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+      }
+
+      pre:not(.hljs) {
+        padding: 23px;
+        line-height: 19px;
+      }
+
+      blockquote {
+        background: rgba(127, 127, 127, 0.1);
+        border-color: rgba(0, 122, 204, 0.5);
+      }
+
+      .emoji {
+        height: 1.4em;
+      }
+
+      code {
+        font-size: 14px;
+        line-height: 19px;
+      }
+
+      /* for inline code */
+      :not(pre):not(.hljs) > code {
+        color: #c9ae75; /* Change the old color so it seems less like an error */
+        font-size: inherit;
+      }
+
+      /* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+      .page {
+        page-break-after: always;
+      }
+    </style>
+
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+  </head>
+  <body>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme:
+          document.body.classList.contains('vscode-dark') ||
+          document.body.classList.contains('vscode-high-contrast')
+            ? 'dark'
+            : 'default',
+      });
+    </script>
+    <!-- markdownlint-disable MD013 -->
+    <h1 id="word-cloud---zielbild-fuer-spacy-als-optionale-glaettung">
+      Word Cloud - Zielbild fuer spaCy als optionale Glaettung
+    </h1>
+    <p>
+      <strong>Status:</strong> Zielbild, nicht umgesetzt<br />
+      <strong>Stand:</strong> Mai 2026<br />
+      <strong>Bezug:</strong> <code>Word Cloud 2.5</code>,
+      <code>docs/implementation/WORD-CLOUD-2.1-LEMMA-STRATEGY.md</code>,
+      <code>docs/implementation/WORD-CLOUD-3.0-STORY-VORSCHLAG.md</code>
+    </p>
+    <hr />
+    <h2 id="kernaussage">Kernaussage</h2>
+    <p>
+      spaCy soll in <code>arsnova.eu</code> <strong>nicht</strong> als semantischer Themenmodus in
+      den Livepfad geschaltet werden.
+    </p>
+    <p>
+      spaCy soll spaeter nur als <strong>optionale sprachliche Glaettung</strong> innerhalb der
+      bestehenden lexikalischen Wortwolken-Pipeline dienen:
+    </p>
+    <ul>
+      <li><strong>kein</strong> Ersatz fuer die heutige Wortwolke</li>
+      <li><strong>keine</strong> Blackbox-Semantik</li>
+      <li><strong>kein</strong> Dauerlauf bei jeder neuen Eingabe</li>
+      <li><strong>keine</strong> Analyse im Renderer</li>
+    </ul>
+    <p>Das Ziel ist:</p>
+    <blockquote>
+      <p>
+        dieselbe erklaerbare lexikalische Wortwolke wie heute, aber auf Wunsch mit besser
+        zusammengefuehrten Sprachformen.
+      </p>
+    </blockquote>
+    <hr />
+    <h2 id="produktthese">Produktthese</h2>
+    <p>
+      Lemmatisierung mit spaCy erzeugt fuer <code>arsnova.eu</code>
+      <strong>keine semantische Begriffswolke</strong>.
+    </p>
+    <p>Sie erzeugt nur eine kontrollierte <strong>Glaettung</strong>:</p>
+    <ul>
+      <li><code>frage</code>, <code>fragen</code> laufen zusammen</li>
+      <li>
+        <code>validieren</code>, <code>validiert</code>, <code>validierung</code> laufen zusammen
+      </li>
+      <li><code>distribution</code>, <code>distributions</code> laufen zusammen</li>
+    </ul>
+    <p>Das sichtbare Ergebnis bleibt eine <strong>lexikalische</strong> Wolke:</p>
+    <ul>
+      <li>
+        Begriffe und Phrasen werden weiterhin ueber nachvollziehbare Oberflaechenmerkmale gebildet
+      </li>
+      <li>Gewichtung bleibt weiterhin Document-Frequency-basiert</li>
+      <li>Q&amp;A-Sortiermodi bleiben erhalten</li>
+      <li>Tooltips und Exporte bleiben erklaerbar</li>
+    </ul>
+    <p>Semantische Themenbildung bleibt davon getrennt ein eigener <code>3.x</code>-Pfad.</p>
+    <hr />
+    <h2 id="zielbild-im-produkt">Zielbild im Produkt</h2>
+    <h3 id="1-gilt-fuer-beide-wortwolken">1. Gilt fuer beide Wortwolken</h3>
+    <p>Von der optionalen Glaettung sollen beide Stellen profitieren:</p>
+    <ul>
+      <li><strong>Quiz-/Freitext-Wortwolke</strong></li>
+      <li><strong>Q&amp;A-Wortwolke</strong></li>
+    </ul>
+    <p>
+      Die Glaettung ist also kein Q&amp;A-Sonderfall und kein Freitext-Sonderfall, sondern eine
+      optionale Vorverarbeitung fuer die gemeinsame Term-Pipeline.
+    </p>
+    <h3 id="2-nur-host-ausgeloest">2. Nur host-ausgeloest</h3>
+    <p>Die Glaettung startet <strong>nur</strong>, wenn der Host sie explizit anfordert.</p>
+    <p>Es gibt:</p>
+    <ul>
+      <li><strong>keine</strong> automatische Analyse bei jeder neuen Antwort oder Frage</li>
+      <li><strong>keinen</strong> Participant-Toggle</li>
+      <li><strong>keine</strong> versteckte Dauerbelastung im Hintergrund</li>
+    </ul>
+    <h3 id="3-snapshot-statt-livelauf">3. Snapshot statt Livelauf</h3>
+    <p>
+      Die Glaettung arbeitet auf einem <strong>konkreten Snapshot</strong> der aktuell sichtbaren
+      Daten:
+    </p>
+    <ul>
+      <li>Host oeffnet die Wortwolke</li>
+      <li>Host fordert Glaettung an</li>
+      <li>der aktuelle Datenstand wird analysiert</li>
+      <li>das Ergebnis bleibt stehen</li>
+      <li>
+        kommen neue Fragen/Antworten hinzu, wird der Stand nur als
+        <strong>veraltet</strong> markiert
+      </li>
+      <li>erst ein erneuter Host-Trigger berechnet neu</li>
+    </ul>
+    <h3 id="4-die-lexikalische-wortwolke-bleibt-der-sichere-standard">
+      4. Die lexikalische Wortwolke bleibt der sichere Standard
+    </h3>
+    <p>Wenn spaCy nicht verfuegbar ist oder kein belastbares Ergebnis liefert:</p>
+    <ul>
+      <li>bleibt die heutige Wolke sichtbar</li>
+      <li>faellt der Dialog hart auf den bestehenden <code>2.x</code>-Pfad zurueck</li>
+      <li>entstehen keine leeren Zwischenzustaende</li>
+    </ul>
+    <hr />
+    <h2 id="ux-zielbild">UX-Zielbild</h2>
+    <p>
+      Die Glaettung soll <strong>nicht</strong> als technisches NLP-Feature in die Haupt-UI
+      hineinragen.
+    </p>
+    <p>Empfohlenes Wording:</p>
+    <ul>
+      <li>Aktion: <code>Sprachformen glaetten</code></li>
+      <li>Aktivzustand: <code>Glaettung aktiv</code></li>
+      <li>nach neuen Daten: <code>Neu analysieren</code></li>
+    </ul>
+    <p>Nicht empfohlen:</p>
+    <ul>
+      <li><code>Lemmatisieren</code></li>
+      <li><code>spaCy</code></li>
+      <li><code>NLP</code></li>
+      <li><code>Semantik</code></li>
+    </ul>
+    <h3 id="platzierung">Platzierung</h3>
+    <p>Die Aktion gehoert als <strong>sekundaere Host-Aktion</strong> in den Wortwolken-Dialog:</p>
+    <ul>
+      <li>Freitext-Dialog</li>
+      <li>Q&amp;A-Dialog</li>
+    </ul>
+    <p>
+      Sie sollte nicht als dritter grosser Modusblock neben Sortierung und Analyseart erscheinen.
+    </p>
+    <h3 id="sichtbare-zustandslogik">Sichtbare Zustandslogik</h3>
+    <ol>
+      <li><code>Sprachformen glaetten</code></li>
+      <li>Analyse laeuft</li>
+      <li><code>Glaettung aktiv</code></li>
+      <li>
+        Bei neuem Input: <code>Neue Antworten seit letzter Glaettung</code> oder
+        <code>Neue Fragen seit letzter Glaettung</code>
+      </li>
+      <li><code>Neu analysieren</code></li>
+    </ol>
+    <hr />
+    <h2 id="fachliche-regeln">Fachliche Regeln</h2>
+    <h3 id="1-glaettung-nicht-semantik">1. Glaettung, nicht Semantik</h3>
+    <p>spaCy darf nur Sprachformen normalisieren, nicht Themen frei erfinden.</p>
+    <h3 id="2-namen-nicht-blind-lemmatisieren">2. Namen nicht blind lemmatisieren</h3>
+    <p>Eigennamen bleiben moeglichst in ihrer Oberflaechenform erhalten.</p>
+    <h3 id="3-komposita-nicht-naiv-zerlegen">3. Komposita nicht naiv zerlegen</h3>
+    <p>
+      Deutsche Komposita sind ein spaeteres Spezialthema. Die erste Stufe der Glaettung darf sie
+      nicht aggressiv aufbrechen.
+    </p>
+    <h3 id="4-geschuetzte-fachbegriffe-bleiben-geschuetzt">
+      4. Geschuetzte Fachbegriffe bleiben geschuetzt
+    </h3>
+    <p>Vorhandene Produktregeln fuer technische Begriffe bleiben verbindlich, z. B.:</p>
+    <ul>
+      <li><code>C++</code></li>
+      <li><code>C#</code></li>
+      <li><code>npm install</code></li>
+      <li><code>docker compose</code></li>
+      <li><code>HTTP 404</code></li>
+    </ul>
+    <h3 id="5-anzeigetext-und-gruppierungsschluessel-werden-getrennt">
+      5. Anzeigetext und Gruppierungsschluessel werden getrennt
+    </h3>
+    <p>
+      Die Glaettung soll nicht dazu fuehren, dass die sichtbare Wolke unnatuerliche Lemmaformen
+      zeigt.
+    </p>
+    <p>Darum gilt:</p>
+    <ul>
+      <li><strong>key</strong> = normalisierte Form fuer Gruppierung</li>
+      <li>
+        <strong>label</strong> = lesbare, haeufige oder bevorzugte Oberflaechenform fuer die Anzeige
+      </li>
+    </ul>
+    <hr />
+    <h2 id="technisches-zielbild">Technisches Zielbild</h2>
+    <h3 id="pipeline">Pipeline</h3>
+    <p>Die bestehende Trennung bleibt erhalten:</p>
+    <p>
+      <code
+        >Daten holen -&gt; optional glaetten -&gt; lexikalisch aggregieren -&gt; rendern -&gt;
+        tooltip/export</code
+      >
+    </p>
+    <p>
+      spaCy sitzt dabei <strong>vor</strong> der heutigen Aggregation, nicht daneben und nicht im
+      Renderer.
+    </p>
+    <h3 id="logische-reihenfolge">Logische Reihenfolge</h3>
+    <ol>
+      <li>Quelldaten sammeln</li>
+      <li>bestehendes Cleaning anwenden</li>
+      <li>technische Begriffe schuetzen</li>
+      <li>optional spaCy-Normalisierung auf dem Snapshot ausfuehren</li>
+      <li>
+        aus normalisierten Einheiten wieder Kandidaten fuer Unigramme/Bigramme/Trigramme bilden
+      </li>
+      <li>bestehende DF-Gewichtung, Phrasenbevorzugung und Filterlogik anwenden</li>
+      <li>gewichtete Terme an die bestehende Visualisierung liefern</li>
+    </ol>
+    <h3 id="was-spacy-liefern-darf">Was spaCy liefern darf</h3>
+    <p>spaCy soll fuer diesen Pfad nur linguistische Hilfsdaten liefern:</p>
+    <ul>
+      <li>Token</li>
+      <li>Lemma</li>
+      <li>POS</li>
+      <li>optional Entity-Typ</li>
+    </ul>
+    <p>Mehr wird fuer die erste Glaettungsstufe nicht benoetigt.</p>
+    <h3 id="empfohlene-filterbasis">Empfohlene Filterbasis</h3>
+    <p>Die erste sinnvolle spaCy-Variante fuer <code>arsnova.eu</code> ist:</p>
+    <ul>
+      <li><code>NOUN</code></li>
+      <li><code>PROPN</code></li>
+      <li>geschuetzte technische Begriffe</li>
+    </ul>
+    <p>Optional spaeter:</p>
+    <ul>
+      <li>selektive Phrasenbildung ueber angrenzende nominale Einheiten</li>
+    </ul>
+    <p>Nicht Ziel der ersten Stufe:</p>
+    <ul>
+      <li>freie Verb-/Adjektivwolke</li>
+      <li>vollstaendige NER-gesteuerte Themenbildung</li>
+    </ul>
+    <hr />
+    <h2 id="architektur-im-repo">Architektur im Repo</h2>
+    <h3 id="bestehende-komponenten-die-bleiben">Bestehende Komponenten, die bleiben</h3>
+    <ul>
+      <li>
+        <code
+          >apps/frontend/src/app/features/session/session-present/word-cloud-term.service.ts</code
+        >
+      </li>
+      <li>
+        <code>apps/frontend/src/app/features/session/session-present/word-cloud.util.ts</code>
+      </li>
+      <li><code>apps/backend/src/lib/wordCloudAnalysis.ts</code></li>
+      <li><code>apps/backend/src/routers/wordCloud.ts</code></li>
+      <li><code>libs/shared-types/src/schemas.ts</code></li>
+    </ul>
+    <h3 id="empfohlene-erweiterungen">Empfohlene Erweiterungen</h3>
+    <h4 id="shared-types">Shared types</h4>
+    <p>Der Analysevertrag sollte spaeter um eine Normalisierungsachse erweitert werden, etwa:</p>
+    <pre
+      class="hljs"
+    ><code><div><span class="hljs-attr">normalization</span>: <span class="hljs-string">&#x27;NONE&#x27;</span> | <span class="hljs-string">&#x27;LEMMA&#x27;</span>
+<span class="hljs-attr">normalizationApplied</span>: <span class="hljs-string">&#x27;NONE&#x27;</span> | <span class="hljs-string">&#x27;LEMMA&#x27;</span>
+<span class="hljs-attr">fallbackLocale</span>: <span class="hljs-string">&#x27;de&#x27;</span> | <span class="hljs-string">&#x27;en&#x27;</span> | <span class="hljs-string">&#x27;fr&#x27;</span> | <span class="hljs-string">&#x27;it&#x27;</span> | <span class="hljs-string">&#x27;es&#x27;</span>
+</div></code></pre>
+    <p>Wichtig:</p>
+    <ul>
+      <li>
+        die heutige einzelne <code>locale</code> reicht fuer echte polylinguale Analyse nur begrenzt
+      </li>
+      <li>
+        fuer spaetere Mehrsprachigkeit braucht es pro Snapshot mindestens eine belastbare
+        Fallback-Sprache
+      </li>
+      <li>besser waere spaeter eine lokale Sprachschaetzung pro Item oder pro Cluster</li>
+    </ul>
+    <h4 id="backend">Backend</h4>
+    <p>Empfohlene neue Bausteine:</p>
+    <ul>
+      <li><code>wordCloudNormalizer.ts</code></li>
+      <li><code>spacyClient.ts</code></li>
+      <li>optional <code>wordCloudAnalysisCache.ts</code></li>
+    </ul>
+    <h4 id="betriebsmodell">Betriebsmodell</h4>
+    <p>
+      Wenn spaCy kommt, dann als <strong>optionaler Sidecar-Service</strong> hinter dem Backend:
+    </p>
+    <ul>
+      <li>nicht im Angular-Frontend</li>
+      <li>nicht im Node-App-Container selbst</li>
+      <li>nicht als Pflicht fuer jede lokale Entwicklungsumgebung</li>
+    </ul>
+    <hr />
+    <h2 id="cache-zielbild">Cache-Zielbild</h2>
+    <p>Damit Host-Neuberechnungen billig bleiben, braucht die Glaettung zwei Cache-Ebenen:</p>
+    <h3 id="1-text-cache">1. Text-Cache</h3>
+    <p>Normalisierte Einzeltexte nach:</p>
+    <ul>
+      <li>Sprache</li>
+      <li>Text-Hash</li>
+      <li>Analyseversion</li>
+    </ul>
+    <h3 id="2-snapshot-cache">2. Snapshot-Cache</h3>
+    <p>Komplette Wortwolkenanalyse nach:</p>
+    <ul>
+      <li>Session</li>
+      <li>Kanal</li>
+      <li>Sortiermetrik</li>
+      <li>Normalisierungsmodus</li>
+      <li>Snapshot-Hash</li>
+    </ul>
+    <p>Damit gilt:</p>
+    <ul>
+      <li>derselbe Host-Stand wird nicht doppelt analysiert</li>
+      <li>kleine UI-Interaktionen loesen keine neue NLP-Runde aus</li>
+      <li>Presenter kann spaeter denselben Snapshot verwenden</li>
+    </ul>
+    <hr />
+    <h2 id="kanalbezug">Kanalbezug</h2>
+    <h3 id="freitext">Freitext</h3>
+    <p>Freitext profitiert stark, weil kurze Antworten oft an Flexionsformen zerbrechen.</p>
+    <h3 id="qa">Q&amp;A</h3>
+    <p>
+      Q&amp;A profitiert, weil laengere Fragen oft dieselben Kerne in verschiedenen Sprachformen und
+      Phrasen tragen.
+    </p>
+    <h3 id="wichtig">Wichtig</h3>
+    <p>Die Glaettung aendert <strong>nicht</strong> die Q&amp;A-Sortierlogik:</p>
+    <ul>
+      <li><code>Meist unterstuetzt</code></li>
+      <li><code>Beste Fragen</code></li>
+      <li><code>Umstritten</code></li>
+    </ul>
+    <p>
+      Sie aendert nur, <strong>wie sprachlich aehnliche Begriffe zusammengefuehrt werden</strong>.
+    </p>
+    <hr />
+    <h2 id="nicht-ziele">Nicht-Ziele</h2>
+    <ul>
+      <li>kein spaCy im Participant-Livepfad</li>
+      <li>kein spaCy bei jeder neuen Eingabe</li>
+      <li>kein Participant-Umschalter</li>
+      <li>kein stilles Ersetzen der heutigen Wortwolke</li>
+      <li>keine semantische Synonym- oder Intent-Clusterung</li>
+      <li>kein neues Layout-System</li>
+      <li>kein WYSIWYG-PNG-Snapshot als primaeres Ziel</li>
+    </ul>
+    <hr />
+    <h2 id="akzeptanzkriterien-fuer-eine-spaetere-umsetzung">
+      Akzeptanzkriterien fuer eine spaetere Umsetzung
+    </h2>
+    <ol>
+      <li>
+        Host kann in Freitext- und Q&amp;A-Wortwolken explizit
+        <code>Sprachformen glaetten</code> ausloesen.
+      </li>
+      <li>Die bestehende lexikalische Wolke bleibt voll funktionsfaehig und ist der Standard.</li>
+      <li>Die Glaettung laeuft nur auf Host-Anforderung und nur auf dem aktuellen Snapshot.</li>
+      <li>
+        Neue Daten markieren das Ergebnis als veraltet, starten aber keine automatische
+        Neuberechnung.
+      </li>
+      <li>Bei Fehler oder Nichtverfuegbarkeit bleibt die bisherige Wolke sichtbar.</li>
+      <li>Sichtbare Labels bleiben lesbar; Lemmaformen muessen nicht 1:1 angezeigt werden.</li>
+      <li>Geschuetzte technische Begriffe bleiben unveraendert erhalten.</li>
+      <li>Q&amp;A- und Freitext-Wolke profitieren ueber dieselbe Normalisierungsachse.</li>
+      <li>Die Render-Komponente analysiert weiterhin keine Rohtexte selbst.</li>
+    </ol>
+    <hr />
+    <h2 id="einordnung-gegenueber-word-cloud-30">Einordnung gegenueber Word Cloud 3.0</h2>
+    <p>spaCy als Glaettungsoption ist <strong>nicht</strong> gleich <code>Word Cloud 3.0</code>.</p>
+    <p>Abgrenzung:</p>
+    <ul>
+      <li><strong>spaCy-Glaettung</strong> = bessere lexikalische Verdichtung</li>
+      <li><strong>Word Cloud 3.0</strong> = eigener Themen-/Clusterpfad</li>
+    </ul>
+    <p>
+      Darum ist spaCy hier ein <strong>optional vorgelagerter Qualitaetslayer</strong>, kein
+      semantischer Themenmodus.
+    </p>
+    <hr />
+    <h2 id="entscheidungslinie">Entscheidungslinie</h2>
+    <p>Wenn <code>arsnova.eu</code> spaeter spaCy nutzt, dann unter dieser Leitplanke:</p>
+    <blockquote>
+      <p>
+        spaCy verbessert auf Host-Anforderung die sprachliche Oberflaeche der bestehenden Wortwolke,
+        ersetzt aber weder ihre Erklaerbarkeit noch fuehrt es verdeckt eine semantische
+        Themenanalyse ein.
+      </p>
+    </blockquote>
+  </body>
+</html>
