@@ -100,28 +100,36 @@
                 Freitext-Antwort als Wortwolke
               </p>
             } @else if (slide.question.type === 'SHORT_TEXT') {
-              <p
-                class="quiz-preview-question__text quiz-preview-question__text--hint"
-                i18n="@@quizEdit.shortTextQuestionHint"
-              >
-                Kurzantwort mit automatischem Abgleich gegen Musterlösungen
-              </p>
-              <p class="quiz-preview-question__text quiz-preview-question__text--hint">
-                {{ shortTextConfigSummary(slide.question) }}
-              </p>
-              <p class="quiz-preview-question__text quiz-preview-question__text--hint">
-                {{ shortTextDidacticWarning() }}
-              </p>
-              <ol class="quiz-preview-question__answers">
-                @for (answer of slide.question.answers; track answer.id) {
-                  <li class="quiz-preview-question__answer-row">
-                    <span
-                      class="quiz-preview-question__answer-content markdown-body"
-                      [innerHTML]="renderAnswerMarkdown(answer.text)"
-                    ></span>
-                  </li>
-                }
-              </ol>
+              <div class="quiz-preview-question__host-only-block">
+                <p
+                  class="quiz-preview-question__host-only-label"
+                  i18n="@@quizPreview.shortTextHostOnlyLabel"
+                >
+                  Musterlösungen – nur für dich sichtbar
+                </p>
+                <p
+                  class="quiz-preview-question__text quiz-preview-question__text--hint"
+                  i18n="@@quizEdit.shortTextQuestionHint"
+                >
+                  Kurzantwort mit automatischem Abgleich gegen Musterlösungen
+                </p>
+                <p class="quiz-preview-question__text quiz-preview-question__text--hint">
+                  {{ shortTextConfigSummary(slide.question) }}
+                </p>
+                <p class="quiz-preview-question__text quiz-preview-question__text--hint">
+                  {{ shortTextDidacticWarning() }}
+                </p>
+                <ol class="quiz-preview-question__answers">
+                  @for (answer of slide.question.answers; track answer.id) {
+                    <li class="quiz-preview-question__answer-row">
+                      <span
+                        class="quiz-preview-question__answer-content markdown-body"
+                        [innerHTML]="renderAnswerMarkdown(answer.text)"
+                      ></span>
+                    </li>
+                  }
+                </ol>
+              </div>
             } @else if (slide.question.type === 'RATING') {
               @let ratingValues =
                 ratingScaleValues(slide.question.ratingMin ?? 1, slide.question.ratingMax ?? 5);
@@ -259,7 +267,7 @@
                 </div>
               }
 
-              <label class="quiz-preview-editor__label" i18n>Frage</label>
+              <p class="quiz-preview-editor__label" i18n>Frage</p>
               <app-markdown-katex-editor
                 [value]="questionDraftText()"
                 (valueChange)="onQuestionDraftChanged($event)"

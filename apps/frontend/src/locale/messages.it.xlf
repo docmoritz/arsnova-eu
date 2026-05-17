@@ -5661,6 +5661,14 @@
           <context context-type="linenumber">103</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="quizPreview.shortTextHostOnlyLabel" datatype="html">
+        <source>Musterlösungen – nur für dich sichtbar</source>
+        <target>Soluzioni modello – visibili solo per te</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/quiz-preview/quiz-preview.component.html</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="quizEdit.shortTextSolutionLabel" datatype="html">
         <source>Musterlösung <x id="solutionNumber" equiv-text="index + 1"/></source>
         <target>Soluzione modello <x id="solutionNumber" equiv-text="index + 1"/></target>
