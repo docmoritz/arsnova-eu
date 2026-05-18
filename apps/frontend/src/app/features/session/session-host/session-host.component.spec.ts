@@ -1100,6 +1100,75 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('blockiert beforeunload nur mit aktivem Schutz', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'ACTIVE' });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance as SessionHostComponent & {
+      unloadWarningEnabled: boolean;
+    };
+
+    component.unloadWarningEnabled = true;
+    const blockedEvent = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(blockedEvent);
+    expect(blockedEvent.defaultPrevented).toBe(true);
+
+    component.unloadWarningEnabled = false;
+    const allowedEvent = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(allowedEvent);
+    expect(allowedEvent.defaultPrevented).toBe(false);
+
+    fixture.destroy();
+  });
+
+  it('warnt in der leeren Lobby nicht vor beforeunload', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+    getParticipantsQueryMock.mockResolvedValue({ participantCount: 0, participants: [] });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance as SessionHostComponent & {
+      unloadWarningEnabled: boolean;
+      participantsPayload: {
+        set(value: { participantCount: number; participants: unknown[] }): void;
+      };
+    };
+
+    component.unloadWarningEnabled = true;
+    component.participantsPayload.set({ participantCount: 0, participants: [] });
+    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(event);
+    expect(event.defaultPrevented).toBe(false);
+
+    fixture.destroy();
+  });
+
+  it('warnt in der Lobby mit Teilnehmenden vor beforeunload', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+    getParticipantsQueryMock.mockResolvedValue({ participantCount: 3, participants: [] });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance as SessionHostComponent & {
+      unloadWarningEnabled: boolean;
+      participantsPayload: {
+        set(value: { participantCount: number; participants: unknown[] }): void;
+      };
+    };
+
+    component.unloadWarningEnabled = true;
+    component.participantsPayload.set({ participantCount: 3, participants: [] });
+    const event = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    component.onBeforeUnload(event);
+    expect(event.defaultPrevented).toBe(true);
+
+    fixture.destroy();
+  });
+
   it('schaltet Musik beim Preset-Wechsel sofort um', async () => {
     getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY', preset: 'PLAYFUL' });
 
@@ -6676,6 +6745,25 @@ describe('SessionHostComponent', () => {
 
       expect(nextQuestionMutateMock).toHaveBeenCalledTimes(2);
       expect(component.hostSteeringCallout()).toBeNull();
+      fixture.destroy();
+    });
+
+    it('bietet einen Reload-Link als Fallback an', async () => {
+      getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+      nextQuestionMutateMock.mockRejectedValueOnce(new Error('first'));
+
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const component = fixture.componentInstance;
+      await component.nextQuestion();
+      fixture.detectChanges();
+
+      const reloadLink = Array.from(fixture.nativeElement.querySelectorAll('a')).find((link) =>
+        (link.textContent ?? '').includes('Seite neu laden'),
+      ) as HTMLAnchorElement | undefined;
+      expect(reloadLink).toBeDefined();
+      expect(reloadLink?.getAttribute('href')).toBe(document.location.href);
       fixture.destroy();
     });
   });

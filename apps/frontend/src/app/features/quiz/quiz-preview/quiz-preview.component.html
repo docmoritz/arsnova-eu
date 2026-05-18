@@ -473,19 +473,41 @@
       }
     }
 
-    @if (validationWarnings().length > 0 || liveStartError()) {
+    @if (
+      validationWarnings().length > 0 ||
+      currentStartValidationWarnings().length > 0 ||
+      liveStartError()
+    ) {
       <mat-card appearance="outlined" class="quiz-preview__validation">
         <mat-card-content>
           @if (validationWarnings().length > 0) {
-            <p class="quiz-preview__invalid-title" i18n>Validierungshinweise</p>
+            @if (currentIndex() > 0) {
+              <p class="quiz-preview__invalid-title" i18n>Hinweise für das ganze Quiz</p>
+            } @else {
+              <p class="quiz-preview__invalid-title" i18n>Validierungshinweise</p>
+            }
             <div class="quiz-preview__invalid-list">
-              @for (warning of validationWarnings(); track warning.message) {
+              @for (warning of validationWarnings(); track warning.index + ':' + warning.message) {
                 <button mat-button type="button" (click)="goToQuestion(warning.index)">
                   {{ warning.message }}
                 </button>
               }
             </div>
-          } @else if (liveStartError()) {
+          }
+          @if (currentIndex() > 0 && currentStartValidationWarnings().length > 0) {
+            <p class="quiz-preview__invalid-title" i18n>Hinweise ab dieser Frage</p>
+            <div class="quiz-preview__invalid-list">
+              @for (
+                warning of currentStartValidationWarnings();
+                track warning.index + ':' + warning.message
+              ) {
+                <button mat-button type="button" (click)="goToQuestion(warning.index)">
+                  {{ warning.message }}
+                </button>
+              }
+            </div>
+          }
+          @if (liveStartError()) {
             <p class="quiz-preview__invalid-title" role="alert">{{ liveStartError() }}</p>
           }
         </mat-card-content>
@@ -543,21 +565,49 @@
               <mat-icon>edit</mat-icon>
               <span i18n>Bearbeiten</span>
             </button>
-            <button
-              matButton="tonal"
-              type="button"
-              class="quiz-preview__bottom-action quiz-preview__valid-action"
-              [class.quiz-preview__valid-action--pending]="liveStartPending()"
-              (click)="openLiveStartDialog()"
-              [disabled]="liveStartPending() || validationWarnings().length > 0"
-              i18n-aria-label="@@quizList.startSession"
-              aria-label="Starten"
-            >
-              <mat-icon>{{ liveStartPending() ? 'sync' : 'play_circle' }}</mat-icon>
-              <span class="quiz-preview__valid-action-label" i18n="@@quizList.startSession"
-                >Starten</span
+            @if (currentIndex() > 0) {
+              <button
+                mat-button
+                type="button"
+                class="quiz-preview__bottom-action"
+                (click)="openLiveStartDialogForMode('full')"
+                [disabled]="liveStartPending() || validationWarnings().length > 0"
+                i18n-aria-label
+                aria-label="Ganzes Quiz starten"
               >
-            </button>
+                <mat-icon>{{ liveStartPending() ? 'sync' : 'restart_alt' }}</mat-icon>
+                <span i18n>Ganzes Quiz</span>
+              </button>
+              <button
+                matButton="tonal"
+                type="button"
+                class="quiz-preview__bottom-action quiz-preview__valid-action"
+                [class.quiz-preview__valid-action--pending]="liveStartPending()"
+                (click)="openLiveStartDialogForMode('current')"
+                [disabled]="liveStartPending() || currentStartValidationWarnings().length > 0"
+                i18n-aria-label
+                aria-label="Ab dieser Frage live starten"
+              >
+                <mat-icon>{{ liveStartPending() ? 'sync' : 'play_circle' }}</mat-icon>
+                <span class="quiz-preview__valid-action-label" i18n>Ab hier</span>
+              </button>
+            } @else {
+              <button
+                matButton="tonal"
+                type="button"
+                class="quiz-preview__bottom-action quiz-preview__valid-action"
+                [class.quiz-preview__valid-action--pending]="liveStartPending()"
+                (click)="openLiveStartDialogForMode('full')"
+                [disabled]="liveStartPending() || validationWarnings().length > 0"
+                i18n-aria-label="@@quizList.startSession"
+                aria-label="Starten"
+              >
+                <mat-icon>{{ liveStartPending() ? 'sync' : 'play_circle' }}</mat-icon>
+                <span class="quiz-preview__valid-action-label" i18n="@@quizList.startSession"
+                  >Starten</span
+                >
+              </button>
+            }
           </div>
         } @else {
           <div class="quiz-preview__bottom-editing" i18n>Editor offen</div>

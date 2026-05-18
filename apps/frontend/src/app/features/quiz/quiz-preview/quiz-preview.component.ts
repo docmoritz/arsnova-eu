@@ -32,6 +32,7 @@ import {
   resolveEffectiveQuestionTimer,
   type CreateSessionOutput,
   type Difficulty,
+  type QuizUploadInput,
   type ShortAnswerEvaluationMode,
   type ToleranceLevel,
 } from '@arsnova/shared-types';
@@ -90,6 +91,9 @@ function resolveLiveStartErrorDetail(error: unknown): string | null {
 
   return null;
 }
+
+type LiveStartMode = 'full' | 'current';
+type PreviewValidationWarning = { index: number; message: string };
 
 /**
  * Quiz-Preview & Schnellkorrektur (Epic 1).
@@ -233,47 +237,9 @@ export class QuizPreviewComponent implements OnDestroy {
     if (total === 0) return 0;
     return Math.round(((this.currentIndex() + 1) / total) * 100);
   });
-  readonly validationWarnings = computed(() =>
-    this.questions()
-      .map((question, index) => {
-        if (
-          (question.type === 'SINGLE_CHOICE' ||
-            question.type === 'MULTIPLE_CHOICE' ||
-            question.type === 'SURVEY') &&
-          question.answers.length < 2
-        ) {
-          return {
-            index,
-            message: $localize`Frage ${index + 1}:questionNumber:: weniger als 2 Antworten`,
-          };
-        }
-        if (question.type === 'SINGLE_CHOICE') {
-          const count = question.answers.filter((answer) => answer.isCorrect).length;
-          if (count !== 1) {
-            return {
-              index,
-              message: $localize`Frage ${index + 1}:questionNumber:: keine richtige Antwort gewählt`,
-            };
-          }
-        }
-        if (question.type === 'MULTIPLE_CHOICE') {
-          const count = question.answers.filter((answer) => answer.isCorrect).length;
-          if (count < 1) {
-            return {
-              index,
-              message: $localize`Frage ${index + 1}:questionNumber:: keine richtige Antwort gewählt`,
-            };
-          }
-        }
-        if (question.type === 'SHORT_TEXT' && question.answers.length < 1) {
-          return {
-            index,
-            message: $localize`:@@quizPreview.warningShortTextSolutionsMissing:Frage ${index + 1}:questionNumber:: mindestens eine Musterlösung fehlt`,
-          };
-        }
-        return null;
-      })
-      .filter((entry): entry is { index: number; message: string } => entry !== null),
+  readonly validationWarnings = computed(() => this.buildValidationWarningsFromStartIndex(0));
+  readonly currentStartValidationWarnings = computed(() =>
+    this.currentIndex() > 0 ? this.buildValidationWarningsFromStartIndex(this.currentIndex()) : [],
   );
   readonly currentQuestionValidation = computed(() => {
     const question = this.displayedQuestion();
@@ -403,9 +369,19 @@ export class QuizPreviewComponent implements OnDestroy {
   }
 
   async openLiveStartDialog(): Promise<void> {
+    await this.openLiveStartDialogForMode(this.currentIndex() > 0 ? 'current' : 'full');
+  }
+
+  async openLiveStartDialogForMode(mode: LiveStartMode): Promise<void> {
     const quiz = this.quiz();
     if (!quiz || this.questions().length === 0 || this.liveStartPending()) return;
-    await this.startLiveSession();
+    if (mode === 'current' && this.currentStartValidationWarnings().length > 0) {
+      return;
+    }
+    if (mode === 'full' && this.validationWarnings().length > 0) {
+      return;
+    }
+    await this.startLiveSession(mode);
   }
 
   enterInlineEditMode(): void {
@@ -928,14 +904,91 @@ export class QuizPreviewComponent implements OnDestroy {
     }, 1160);
   }
 
-  private async startLiveSession(): Promise<void> {
+  private buildValidationWarnings(
+    questions: ReadonlyArray<QuizDocument['questions'][number]>,
+    indexOffset = 0,
+  ): PreviewValidationWarning[] {
+    return questions
+      .map((question, index) => {
+        const displayIndex = indexOffset + index + 1;
+        if (
+          (question.type === 'SINGLE_CHOICE' ||
+            question.type === 'MULTIPLE_CHOICE' ||
+            question.type === 'SURVEY') &&
+          question.answers.length < 2
+        ) {
+          return {
+            index: indexOffset + index,
+            message: $localize`Frage ${displayIndex}:questionNumber:: weniger als 2 Antworten`,
+          };
+        }
+        if (question.type === 'SINGLE_CHOICE') {
+          const count = question.answers.filter((answer) => answer.isCorrect).length;
+          if (count !== 1) {
+            return {
+              index: indexOffset + index,
+              message: $localize`Frage ${displayIndex}:questionNumber:: keine richtige Antwort gewählt`,
+            };
+          }
+        }
+        if (question.type === 'MULTIPLE_CHOICE') {
+          const count = question.answers.filter((answer) => answer.isCorrect).length;
+          if (count < 1) {
+            return {
+              index: indexOffset + index,
+              message: $localize`Frage ${displayIndex}:questionNumber:: keine richtige Antwort gewählt`,
+            };
+          }
+        }
+        if (question.type === 'SHORT_TEXT' && question.answers.length < 1) {
+          return {
+            index: indexOffset + index,
+            message: $localize`:@@quizPreview.warningShortTextSolutionsMissing:Frage ${displayIndex}:questionNumber:: mindestens eine Musterlösung fehlt`,
+          };
+        }
+        return null;
+      })
+      .filter((entry): entry is PreviewValidationWarning => entry !== null);
+  }
+
+  private buildValidationWarningsFromStartIndex(startIndex: number): PreviewValidationWarning[] {
+    const questions = this.questions();
+    const normalizedStartIndex = Math.max(0, Math.min(startIndex, questions.length));
+    return this.buildValidationWarnings(
+      questions.slice(normalizedStartIndex),
+      normalizedStartIndex,
+    );
+  }
+
+  private buildLiveStartPayload(mode: LiveStartMode): QuizUploadInput {
+    const payload = this.quizStore.getUploadPayload(this.id);
+    if (mode !== 'current') {
+      return payload;
+    }
+    const normalizedStartIndex = Math.max(
+      0,
+      Math.min(this.currentIndex(), Math.max(0, payload.questions.length - 1)),
+    );
+    if (normalizedStartIndex === 0) {
+      return payload;
+    }
+    return {
+      ...payload,
+      questions: payload.questions.slice(normalizedStartIndex).map((question, index) => ({
+        ...question,
+        order: index,
+      })),
+    };
+  }
+
+  private async startLiveSession(mode: LiveStartMode): Promise<void> {
     this.liveStartError.set(null);
     this.liveStartPending.set(true);
     if (isPlatformBrowser(this.platformId)) {
       tryRequestDocumentFullscreen(this.document);
     }
     try {
-      let payload = this.quizStore.getUploadPayload(this.id);
+      let payload = this.buildLiveStartPayload(mode);
       const presetKey = homePresetOptionsKeyForQuizPreset(payload.preset);
       try {
         const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(presetKey) : null;

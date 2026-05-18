@@ -418,6 +418,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     ? FOYER_CHIP_DEV_LIFETIME_MS
     : FOYER_CHIP_LIFETIME_MS;
   private readonly document = inject(DOCUMENT);
+  private unloadWarningEnabled = !this.isLocalDevSession();
   private readonly localeId = inject(LOCALE_ID);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -1788,9 +1789,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   /** Warnt den Host, wenn er den Tab schließt oder die Seite neu lädt. */
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isSessionActive()) {
-      event.preventDefault();
-    }
+    if (!this.shouldWarnOnBeforeUnload()) return;
+    event.preventDefault();
+    event.returnValue = '';
   }
 
   @HostListener('document:fullscreenchange')
@@ -1872,6 +1873,23 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return error instanceof Error && error.message.includes(SESSION_NOT_FOUND_MESSAGE);
   }
 
+  private shouldWarnOnBeforeUnload(): boolean {
+    if (!this.unloadWarningEnabled || !this.isSessionActive()) {
+      return false;
+    }
+
+    if (this.effectiveStatus() !== 'LOBBY') {
+      return true;
+    }
+
+    return (this.participantsPayload()?.participantCount ?? 0) > 0;
+  }
+
+  private isLocalDevSession(): boolean {
+    const hostname = this.document.location?.hostname ?? '';
+    return isDevMode() && (hostname === 'localhost' || hostname === '127.0.0.1');
+  }
+
   private clearSessionTokens(): void {
     if (!this.code) {
       return;
@@ -1903,6 +1921,10 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   dismissHostSteeringCallout(): void {
     this.hostSteeringCallout.set(null);
+  }
+
+  hostSteeringCalloutReloadHref(): string {
+    return this.document.location?.href ?? this.localizedPath('/');
   }
 
   private openHostSteeringCalloutForSteeringFailure(retry: () => void): void {

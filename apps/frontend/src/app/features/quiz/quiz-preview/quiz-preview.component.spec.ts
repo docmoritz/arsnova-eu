@@ -89,6 +89,30 @@ describe('QuizPreviewComponent', () => {
 
   const mockStore = {
     getQuizById: vi.fn((id: string) => (id === QUIZ_ID ? quiz : null)),
+    getUploadPayload: vi.fn(() => ({
+      historyScopeId: quiz.id,
+      name: quiz.name,
+      preset: quiz.settings.preset,
+      questions: [...quiz.questions]
+        .filter((question) => question.enabled !== false)
+        .sort((left, right) => left.order - right.order)
+        .map((question, index) => ({
+          text: question.text,
+          type: question.type,
+          difficulty: question.difficulty,
+          order: index,
+          timer: question.timer ?? null,
+          answers: question.answers.map((answer) => ({
+            text: answer.text,
+            isCorrect: answer.isCorrect,
+          })),
+          skipReadingPhase: question.skipReadingPhase ?? false,
+          ratingMin: question.ratingMin ?? undefined,
+          ratingMax: question.ratingMax ?? undefined,
+          ratingLabelMin: question.ratingLabelMin ?? undefined,
+          ratingLabelMax: question.ratingLabelMax ?? undefined,
+        })),
+    })),
     updateQuestion: vi.fn(),
     updateQuizSettings: vi.fn(),
   };
@@ -569,5 +593,90 @@ describe('QuizPreviewComponent', () => {
 
     expect(component.inlineEditHasChanges()).toBe(false);
     expect(saveButton?.disabled).toBe(true);
+  });
+
+  it('startet ab aktueller Frage nur mit dem verbleibenden Fragenblock', () => {
+    const appendedQuestion = {
+      id: 'trailing-question',
+      text: 'Dritte Frage',
+      type: 'SURVEY' as const,
+      difficulty: 'EASY' as const,
+      order: 2,
+      enabled: true,
+      timer: null,
+      answers: [
+        { id: 't1', text: 'Ja', isCorrect: false },
+        { id: 't2', text: 'Nein', isCorrect: false },
+      ],
+      ratingMin: null,
+      ratingMax: null,
+      ratingLabelMin: null,
+      ratingLabelMax: null,
+    };
+    quiz.questions.push(appendedQuestion);
+    try {
+      const fixture = TestBed.createComponent(QuizPreviewComponent);
+      const component = fixture.componentInstance;
+      component.currentIndex.set(1);
+      fixture.detectChanges();
+
+      const payload = component['buildLiveStartPayload']('current');
+
+      expect(payload.questions).toHaveLength(2);
+      expect(payload.questions.map((question) => question.text)).toEqual([
+        'Welche Aussage stimmt?',
+        'Dritte Frage',
+      ]);
+      expect(payload.questions.map((question) => question.order)).toEqual([0, 1]);
+    } finally {
+      quiz.questions.pop();
+    }
+  });
+
+  it('blockiert den Ab-hier-Start nicht wegen früherer ungültiger Fragen', () => {
+    const originalFirstQuestion = quiz.questions[0];
+    const originalSecondQuestion = quiz.questions[1];
+    quiz.questions[0] = {
+      id: 'invalid-question',
+      text: 'Ungültige Startfrage',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'EASY',
+      order: 0,
+      enabled: true,
+      timer: null,
+      answers: [{ id: 'invalid-answer', text: 'Nur eine Option', isCorrect: false }],
+      ratingMin: null,
+      ratingMax: null,
+      ratingLabelMin: null,
+      ratingLabelMax: null,
+    };
+    quiz.questions[1] = {
+      ...quiz.questions[1]!,
+      answers: [
+        { id: 'v1', text: 'Richtig', isCorrect: true },
+        { id: 'v2', text: 'Falsch', isCorrect: false },
+      ],
+    };
+    try {
+      const fixture = TestBed.createComponent(QuizPreviewComponent);
+      const component = fixture.componentInstance;
+      component.currentIndex.set(1);
+      fixture.detectChanges();
+
+      const fullStartButton = fixture.nativeElement.querySelector(
+        'button[aria-label="Ganzes Quiz starten"]',
+      ) as HTMLButtonElement | null;
+      const currentStartButton = fixture.nativeElement.querySelector(
+        'button[aria-label="Ab dieser Frage live starten"]',
+      ) as HTMLButtonElement | null;
+
+      expect(component.validationWarnings().length).toBeGreaterThan(0);
+      expect(component.currentStartValidationWarnings()).toHaveLength(0);
+      expect(fullStartButton?.disabled).toBe(true);
+      expect(currentStartButton?.disabled).toBe(false);
+    } finally {
+      quiz.questions[0] = originalFirstQuestion!;
+      quiz.questions[1] = originalSecondQuestion!;
+    }
   });
 });
