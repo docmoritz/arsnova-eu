@@ -730,6 +730,12 @@
   gap: 0.25rem;
 }
 
+.quiz-preview__bottom-nav > button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+}
+
 .quiz-preview__bottom-count {
   min-width: 4.5rem;
   text-align: center;
@@ -901,27 +907,44 @@
     --quiz-preview-flight-distance: 62vw;
   }
 
-  .quiz-preview__bottom-actions {
+  .quiz-preview__bottom-bar {
+    justify-content: center;
     gap: 0.25rem;
+    padding-inline: 0.35rem;
+    width: calc(100vw - 0.5rem);
   }
 
-  .quiz-preview__bottom-bar {
-    padding-inline: 0.35rem;
-    width: calc(100vw - 0.75rem);
+  .quiz-preview__bottom-nav,
+  .quiz-preview__bottom-actions {
+    gap: 0.25rem;
   }
 
   .quiz-preview__bottom-action span {
     display: none;
   }
 
+  .quiz-preview__bottom-action {
+    min-width: 44px;
+    padding-inline: 0.25rem;
+  }
+
+  .quiz-preview__bottom-action > .mat-icon {
+    margin: 0;
+  }
+
+  .quiz-preview__bottom-nav > button {
+    width: 44px;
+    height: 44px;
+  }
+
   .quiz-preview__valid-action {
-    width: 64px;
-    min-width: 64px;
+    width: 44px;
+    min-width: 44px;
     padding: 0;
   }
 
   .quiz-preview__bottom-count {
-    min-width: 3.75rem;
+    min-width: 2.75rem;
     font: var(--mat-sys-label-medium);
   }
 }
