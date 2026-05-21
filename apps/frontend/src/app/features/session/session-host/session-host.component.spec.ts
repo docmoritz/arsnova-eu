@@ -1379,6 +1379,51 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt nach initialem Q&A-Tabwechsel zum ungestarteten Quiz keinen leeren Quiz-Hinweis', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen aus dem Publikum', moderationMode: true },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+
+    const fixture = setup([
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          parent: {
+            snapshot: {
+              paramMap: convertToParamMap({ code: 'ABC123' }),
+            },
+          },
+          snapshot: {
+            queryParamMap: convertToParamMap({ tab: 'qa' }),
+          },
+        },
+      },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.activeChannel()).toBe('qa');
+
+    await component.selectChannel('quiz');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const steering = host.querySelector('.session-host__steering') as HTMLElement | null;
+    expect(component.activeChannel()).toBe('quiz');
+    expect(host.textContent ?? '').toContain('Erste Frage starten');
+    expect(host.querySelector('.session-host__no-question')).toBeNull();
+    expect(steering?.className).toContain('session-host__steering--prestart');
+    fixture.destroy();
+  });
+
   it('zeigt Kanal-Tabs für Quiz, Q&A und Blitzlicht', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,

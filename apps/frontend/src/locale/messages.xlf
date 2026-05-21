@@ -8065,13 +8065,6 @@
           <context context-type="linenumber">1473,1475</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="sessionHost.quizAwaitingFirstHint" datatype="html">
-        <source> Noch keine Quiz-Frage. Starte die erste Frage, wenn du mit dem Quiz beginnen möchtest. </source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1537,1540</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7435414614973406916" datatype="html">
         <source> Keine Frage aktiv. Mit „Nächste Frage“ starten. </source>
         <context-group purpose="location">

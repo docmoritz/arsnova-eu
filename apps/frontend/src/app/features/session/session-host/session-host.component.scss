@@ -3588,6 +3588,11 @@
   margin: 1.75rem 0 0;
 }
 
+.session-host__steering--prestart {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
 // Diskussionsphase-Button: MD3 tonal (Primary Container), Styleguide-Tokens
 button.session-host__btn-discussion {
   background: var(--mat-sys-primary-container) !important;

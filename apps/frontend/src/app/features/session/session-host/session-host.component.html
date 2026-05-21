@@ -1534,10 +1534,6 @@
                       />
                     </div>
                   }
-                  <p class="session-host__no-question" i18n="@@sessionHost.quizAwaitingFirstHint">
-                    Noch keine Quiz-Frage. Starte die erste Frage, wenn du mit dem Quiz beginnen
-                    möchtest.
-                  </p>
                 } @else {
                   <p class="session-host__no-question" i18n>
                     Keine Frage aktiv. Mit „Nächste Frage“ starten.
@@ -1717,7 +1713,10 @@
               }
 
               <!-- Steuerungs-Buttons (primär) -->
-              <div class="session-host__steering">
+              <div
+                class="session-host__steering"
+                [class.session-host__steering--prestart]="isQuizAwaitingFirstQuestion()"
+              >
                 @if (isQuizAwaitingFirstQuestion()) {
                   @if (canReplaceQuizBeforeStart()) {
                     <button
