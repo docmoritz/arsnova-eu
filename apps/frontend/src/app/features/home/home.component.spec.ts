@@ -284,6 +284,32 @@ describe('HomeComponent', () => {
       expect(comp.joinError()).toBe('Session nicht gefunden.');
       expect(comp.sessionCode()).toBe('NOTFND');
     });
+
+    it('markiert nach Lookup-Fehler den bestehenden Code fuer direkte Neueingabe', async () => {
+      const { trpc } = await import('../../core/trpc.client');
+      vi.mocked(trpc.session.getInfo.query).mockRejectedValueOnce(
+        new Error('Session nicht gefunden.'),
+      );
+
+      const fixture = createHomeFixture();
+      fixture.detectChanges();
+      const comp = fixture.componentInstance;
+      const input = fixture.nativeElement.querySelector(
+        '.home-code-segments__input',
+      ) as HTMLInputElement;
+
+      comp.sessionCode.set('NOTFND');
+      fixture.detectChanges();
+
+      await comp.joinSession();
+      vi.runOnlyPendingTimers();
+      fixture.detectChanges();
+
+      expect(comp.joinError()).toBe('Session nicht gefunden.');
+      expect(document.activeElement).toBe(input);
+      expect(input.selectionStart).toBe(0);
+      expect(input.selectionEnd).toBe(6);
+    });
   });
 
   describe('startQuickFeedback', () => {

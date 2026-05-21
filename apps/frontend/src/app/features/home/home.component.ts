@@ -424,7 +424,31 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   focusCodeInput(): void {
     this.markJoinIntentForMotd();
-    this.sessionCodeInput?.nativeElement.focus();
+    this.focusSessionCodeInput({ selectAll: this.shouldSelectAllSessionCodeOnFocus() });
+  }
+
+  private shouldSelectAllSessionCodeOnFocus(): boolean {
+    return this.sessionCode().trim().length === 6 && this.joinError() !== null;
+  }
+
+  private focusSessionCodeInput(options?: { defer?: boolean; selectAll?: boolean }): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const el = this.sessionCodeInput?.nativeElement;
+    if (!el) return;
+    const run = (): void => {
+      el.focus({ preventScroll: true });
+      if (!options?.selectAll) return;
+      try {
+        el.setSelectionRange(0, el.value.length);
+      } catch {
+        /* ignore */
+      }
+    };
+    if (options?.defer) {
+      this.scheduleTimeout(run, 0);
+      return;
+    }
+    run();
   }
 
   private triggerShake(): void {
@@ -631,7 +655,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.joinErrorSessionFinished.set(false);
       this.joinError.set($localize`Bitte den 6-stelligen Code eingeben.`);
       this.triggerShake();
-      this.sessionCodeInput?.nativeElement.focus();
+      this.focusSessionCodeInput();
       return;
     }
     this.joinErrorSessionFinished.set(false);
@@ -655,6 +679,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (err: unknown) {
       this.removeRecentSessionCode(code);
       this.applyJoinLookupError(code, err);
+      this.focusSessionCodeInput({ defer: true, selectAll: true });
     } finally {
       this.isJoining.set(false);
     }
