@@ -5308,6 +5308,63 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt Host-Zwischenleaderboards auch nach bewerteten Kurzantworten', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'RESULTS',
+      teamMode: true,
+    });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'RESULTS', currentQuestion: 0 });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Methode ist gemeint?',
+      type: 'SHORT_TEXT',
+      answers: [{ id: 'a1', text: 'Peer Instruction', isCorrect: true }],
+      voteDistribution: [],
+      totalVotes: 2,
+      correctVoterCount: 2,
+    });
+    getLeaderboardQueryMock.mockResolvedValue([
+      {
+        rank: 1,
+        nickname: 'Ada',
+        totalScore: 600,
+        correctCount: 1,
+        totalQuestions: 1,
+        totalResponseTimeMs: 900,
+      },
+    ]);
+    getTeamLeaderboardQueryMock.mockResolvedValue([
+      {
+        rank: 1,
+        teamName: ':apple: Team Apfel',
+        teamColor: '#1E88E5',
+        totalScore: 600,
+        memberCount: 2,
+        averageScore: 600,
+      },
+    ]);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent ?? '').toContain('Top 5');
+    expect(fixture.nativeElement.textContent ?? '').toContain('Ada');
+    expect(fixture.nativeElement.textContent ?? '').toContain('Team-Wertung');
+    expect(fixture.nativeElement.textContent ?? '').toContain('Team Apfel');
+    fixture.destroy();
+  });
+
   it('blendet im Host-Team-Leaderboard den Farbpunkt bei Emoji-Shortcodes aus', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,

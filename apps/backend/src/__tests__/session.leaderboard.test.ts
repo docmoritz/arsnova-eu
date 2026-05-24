@@ -159,4 +159,38 @@ describe('session.getLeaderboard', () => {
       }),
     ]);
   });
+
+  it('zaehlt positive SHORT_TEXT-Scores als richtige Antworten im Leaderboard', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: 'sess-1',
+      quiz: {
+        showLeaderboard: true,
+        questions: [{ type: 'SHORT_TEXT' }],
+      },
+      participants: [{ id: 'p1', nickname: 'Ada' }],
+    });
+    prismaMock.vote.findMany.mockResolvedValue([
+      {
+        participantId: 'p1',
+        score: 215,
+        responseTimeMs: 1800,
+        question: {
+          type: 'SHORT_TEXT',
+          answers: [{ id: 'a1', isCorrect: true }],
+        },
+        selectedAnswers: [],
+      },
+    ]);
+
+    const result = await caller.getLeaderboard({ code: 'ABC123' });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        nickname: 'Ada',
+        totalScore: 215,
+        correctCount: 1,
+        totalQuestions: 1,
+      }),
+    ]);
+  });
 });

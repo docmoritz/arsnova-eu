@@ -3086,6 +3086,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     this.debounced.set(true);
     this.voteSending.set(true);
     this.voteError.set(null);
+    this.timeoutMessage.set(null);
     this.voteSent.set(true);
     this.cdr.detectChanges();
 
@@ -3146,6 +3147,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         round: this.currentRound(),
       });
       this.scorecard.set(sc);
+      if (sc.wasCorrect !== null) {
+        this.voteSent.set(true);
+        this.timeoutMessage.set(null);
+      }
 
       const settings = this.sessionSettings();
       if (settings.enableMotivationMessages) {

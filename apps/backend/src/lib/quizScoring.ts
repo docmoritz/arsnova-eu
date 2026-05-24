@@ -17,7 +17,11 @@ import {
   type ToleranceLevel,
 } from '@arsnova/shared-types';
 
-const SCORED_QUESTION_TYPES: QuestionType[] = ['MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'SHORT_TEXT'];
+export const SCORED_QUESTION_TYPES = [
+  'MULTIPLE_CHOICE',
+  'SINGLE_CHOICE',
+  'SHORT_TEXT',
+] as const satisfies readonly QuestionType[];
 
 /**
  * Streak-Multiplikator basierend auf der aktuellen Serie (Story 5.5).
@@ -31,14 +35,14 @@ export function getStreakMultiplier(streakCount: number): number {
  * FREETEXT/SURVEY/RATING unterbrechen den Streak nicht (Story 5.5).
  */
 export function questionAffectsStreak(type: QuestionType): boolean {
-  return SCORED_QUESTION_TYPES.includes(type);
+  return (SCORED_QUESTION_TYPES as readonly QuestionType[]).includes(type);
 }
 
 /**
  * Bewertbare Fragetypen zählen in Leaderboard-Metriken wie totalQuestions (Story 1.2b / 4.1).
  */
 export function questionCountsTowardsTotalQuestions(type: QuestionType): boolean {
-  return SCORED_QUESTION_TYPES.includes(type);
+  return (SCORED_QUESTION_TYPES as readonly QuestionType[]).includes(type);
 }
 
 interface CalculateVoteScoreInput {

@@ -30,6 +30,7 @@ const {
   getParticipantSelfQueryMock,
   getTeamsQueryMock,
   getTeamLeaderboardQueryMock,
+  getPersonalScorecardQueryMock,
   getPersonalResultQueryMock,
   getHasSubmittedFeedbackQueryMock,
   getSessionFeedbackSummaryQueryMock,
@@ -52,6 +53,7 @@ const {
   getParticipantSelfQueryMock: vi.fn(),
   getTeamsQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
+  getPersonalScorecardQueryMock: vi.fn(),
   getPersonalResultQueryMock: vi.fn(),
   getHasSubmittedFeedbackQueryMock: vi.fn(),
   getSessionFeedbackSummaryQueryMock: vi.fn(),
@@ -78,6 +80,7 @@ vi.mock('../../../core/trpc.client', () => ({
       getParticipantSelf: { query: getParticipantSelfQueryMock },
       getTeams: { query: getTeamsQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
+      getPersonalScorecard: { query: getPersonalScorecardQueryMock },
       getPersonalResult: { query: getPersonalResultQueryMock },
       getHasSubmittedFeedback: { query: getHasSubmittedFeedbackQueryMock },
       getSessionFeedbackSummary: { query: getSessionFeedbackSummaryQueryMock },
@@ -179,6 +182,19 @@ describe('SessionVoteComponent', () => {
         averageScore: 63.3,
       },
     ]);
+    getPersonalScorecardQueryMock.mockResolvedValue({
+      questionOrder: 1,
+      totalQuestions: 1,
+      wasCorrect: null,
+      questionScore: 0,
+      baseScore: 0,
+      streakCount: 0,
+      streakMultiplier: 1,
+      currentRank: 0,
+      previousRank: null,
+      rankChange: 0,
+      totalScore: 0,
+    });
     getPersonalResultQueryMock.mockResolvedValue({
       totalScore: 120,
       rank: 2,
@@ -1011,6 +1027,48 @@ describe('SessionVoteComponent', () => {
     inst.timeoutMessage.set(null);
 
     expect(inst.unansweredResultsMessage()).toContain('Leider verpasst');
+    fixture.destroy();
+  });
+
+  it('behandelt eine serverseitig gespeicherte falsche Antwort nicht als Timeout', async () => {
+    getPersonalScorecardQueryMock.mockResolvedValueOnce({
+      questionOrder: 1,
+      totalQuestions: 1,
+      wasCorrect: false,
+      questionScore: 0,
+      baseScore: 0,
+      streakCount: 0,
+      streakMultiplier: 1,
+      currentRank: 2,
+      previousRank: null,
+      rankChange: 0,
+      totalScore: 2487,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const inst = fixture.componentInstance;
+    inst.participantId.set('11111111-1111-4111-8111-111111111111');
+    inst.status.set('RESULTS');
+    inst.currentQuestion.set({
+      id: 'q-short-text',
+      text: 'Kurzantwort',
+      type: 'SHORT_TEXT',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [{ id: 's1', text: '1.69 ms', isCorrect: true, voteCount: 1, votePercentage: 100 }],
+      totalVotes: 1,
+      shortTextEvaluationKind: 'numeric_unit',
+    } as never);
+    inst.voteSent.set(false);
+    inst.timeoutMessage.set('Zeit abgelaufen.');
+
+    await inst.loadScorecard(0);
+
+    expect(inst.scorecard()?.wasCorrect).toBe(false);
+    expect(inst.voteSent()).toBe(true);
+    expect(inst.timeoutMessage()).toBeNull();
+    expect(inst.unansweredResultsMessage()).toBeNull();
     fixture.destroy();
   });
 

@@ -27,7 +27,12 @@ import {
 import { publicProcedure, router } from '../trpc';
 import { prisma } from '../db';
 import { checkVoteRate } from '../lib/rateLimit';
-import { calculateVoteScore, getStreakMultiplier, questionAffectsStreak } from '../lib/quizScoring';
+import {
+  calculateVoteScore,
+  getStreakMultiplier,
+  questionAffectsStreak,
+  SCORED_QUESTION_TYPES,
+} from '../lib/quizScoring';
 import { touchParticipantPresence } from '../lib/presence';
 import { recordVoteActivity } from '../lib/loadSignal';
 import { invalidateCurrentQuestionCachesForCode, recordVoteCachesForCode } from './session';
@@ -73,17 +78,36 @@ export const voteRouter = router({
       if (!question) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Frage nicht gefunden.' });
       }
+      const round = input.round ?? 1;
+      if (
+        typeof participant.session.currentQuestion === 'number' &&
+        question.order !== participant.session.currentQuestion
+      ) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Diese Frage ist nicht aktiv.' });
+      }
+      if (
+        typeof participant.session.currentRound === 'number' &&
+        round !== participant.session.currentRound
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Diese Abstimmungsrunde ist nicht aktiv.',
+        });
+      }
 
       const quiz = await prisma.quiz.findUnique({
         where: { id: participant.session.quizId ?? '' },
         select: { defaultTimer: true, timerScaleByDifficulty: true },
       });
-      const timerSeconds = resolveEffectiveQuestionTimer(
-        question.timer,
-        quiz?.defaultTimer,
-        question.difficulty as Difficulty,
-        quiz?.timerScaleByDifficulty ?? true,
-      );
+      const timerSeconds =
+        round === 2
+          ? null
+          : resolveEffectiveQuestionTimer(
+              question.timer,
+              quiz?.defaultTimer,
+              question.difficulty as Difficulty,
+              quiz?.timerScaleByDifficulty ?? true,
+            );
 
       const statusChangedAtMs = participant.session.statusChangedAt
         ? new Date(participant.session.statusChangedAt).getTime()
@@ -285,8 +309,6 @@ export const voteRouter = router({
         });
       }
 
-      const round = input.round ?? 1;
-
       const correctAnswerIds = question.answers
         .filter((answer) => answer.isCorrect)
         .map((answer) => answer.id);
@@ -378,7 +400,7 @@ export const voteRouter = router({
               sessionId: input.sessionId,
               participantId: input.participantId,
               round,
-              question: { type: { in: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'] } },
+              question: { type: { in: [...SCORED_QUESTION_TYPES] } },
             },
             orderBy: { votedAt: 'desc' },
             select: { streakCount: true, score: true },

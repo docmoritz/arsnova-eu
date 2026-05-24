@@ -4443,6 +4443,12 @@ export const sessionRouter = router({
         }
 
         if (questionCountsTowardsTotalQuestions(v.question.type as QuestionType)) {
+          if (v.question.type === 'SHORT_TEXT') {
+            if (v.score > 0) {
+              s.correctCount++;
+            }
+            continue;
+          }
           const correctAnswerIds = v.question.answers
             .filter((answer) => answer.isCorrect)
             .map((answer) => answer.id);
@@ -4882,11 +4888,15 @@ export const sessionRouter = router({
 
       let wasCorrect: boolean | null = null;
       if (isScored && myVote) {
-        const selectedSet = new Set(myVote.selectedAnswers.map((a) => a.answerOptionId));
-        const correctSet = new Set(correctIds);
-        wasCorrect =
-          selectedSet.size === correctSet.size &&
-          [...selectedSet].every((id) => correctSet.has(id));
+        if (questionType === 'SHORT_TEXT') {
+          wasCorrect = myVote.score > 0;
+        } else {
+          const selectedSet = new Set(myVote.selectedAnswers.map((a) => a.answerOptionId));
+          const correctSet = new Set(correctIds);
+          wasCorrect =
+            selectedSet.size === correctSet.size &&
+            [...selectedSet].every((id) => correctSet.has(id));
+        }
       }
 
       // Alle Votes bis einschließlich dieser Frage (für Ranking)

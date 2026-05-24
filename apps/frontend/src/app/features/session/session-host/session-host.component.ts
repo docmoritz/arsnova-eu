@@ -233,7 +233,7 @@ function isValidTrack(v: unknown): v is HostMusicTrack {
 }
 
 function isScoredQuestionType(type: HostCurrentQuestionDTO['type'] | null | undefined): boolean {
-  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE';
+  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE' || type === 'SHORT_TEXT';
 }
 
 function sameStringArray(
