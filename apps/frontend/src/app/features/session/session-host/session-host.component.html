@@ -945,7 +945,7 @@
                     </p>
                   </mat-card-content>
                 </mat-card>
-              } @else if (currentQuestionForHost(); as q) {
+              } @else if (displayedCurrentQuestionForHost(); as q) {
                 <mat-card
                   appearance="outlined"
                   class="session-host__question-card"
@@ -1740,7 +1740,7 @@
                 }
               </div>
 
-              @if (currentQuestionForHost()?.type === 'FREETEXT') {
+              @if (displayedCurrentQuestionForHost()?.type === 'FREETEXT') {
                 <details
                   class="session-host__extra session-host__extra--freetext session-host__extra--no-divider"
                   [attr.open]="wordCloudExpanded() ? true : null"
@@ -1793,7 +1793,7 @@
                     <app-word-cloud
                       [responses]="displayedFreetextResponses()"
                       [terms]="displayedFreetextWordCloudTerms()"
-                      [selectionScopeKey]="currentQuestionForHost()?.questionId ?? null"
+                      [selectionScopeKey]="displayedCurrentQuestionForHost()?.questionId ?? null"
                       [eyebrow]="freetextWordCloudEyebrow"
                       [description]="freetextWordCloudDescription"
                       [maximizeActionHandler]="openFreetextWordCloudDialog"
@@ -2239,7 +2239,7 @@
           showQuickFeedbackAnchorAction() ||
           ((effectiveStatus() === 'PAUSED' || effectiveStatus() === 'RESULTS') &&
             !isLastQuestion()) ||
-          (effectiveStatus() === 'ACTIVE' && !isQaSession() && !!currentQuestionForHost())
+          (effectiveStatus() === 'ACTIVE' && !isQaSession() && hasCurrentQuizQuestionForHost())
         "
       >
         @if (showQuickFeedbackAnchorAction()) {
@@ -2267,11 +2267,8 @@
             <span i18n="@@sessionHost.revealAnswerOptions">Antwortoptionen freigeben</span>
           </button>
         }
-        @if (
-          effectiveStatus() === 'ACTIVE' && !isQaSession() && currentQuestionForHost();
-          as liveQ
-        ) {
-          @if (shouldShowPeerInstructionSuggestion(liveQ)) {
+        @if (effectiveStatus() === 'ACTIVE' && !isQaSession() && hasCurrentQuizQuestionForHost()) {
+          @if (shouldShowPeerInstructionSuggestion(displayedCurrentQuestionForHost())) {
             <button
               mat-flat-button
               color="primary"

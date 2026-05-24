@@ -4232,6 +4232,144 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('behält die sichtbare Frage bei, wenn während derselben Phase kurz kein Host-Fragenpayload kommt', () => {
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    const question = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+
+    component.statusUpdate.set({ status: 'ACTIVE', currentQuestion: 0, currentRound: 1 });
+    component.currentQuestionForHost.set(question);
+    (
+      component as unknown as {
+        syncCurrentQuestionForHost: (next: typeof question | null) => void;
+      }
+    ).syncCurrentQuestionForHost(null);
+
+    expect(component.displayedCurrentQuestionForHost()?.questionId).toBe(question.questionId);
+    fixture.destroy();
+  });
+
+  it('gibt Antwortoptionen-Aktion frei, waehrend die neue Host-Frage noch nachlaedt', async () => {
+    const loadedQuestion = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+    let resolveRefresh: ((value: typeof loadedQuestion) => void) | null = null;
+
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+    nextQuestionMutateMock.mockResolvedValue({
+      status: 'QUESTION_OPEN',
+      currentQuestion: 0,
+      currentRound: 1,
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    getCurrentQuestionForHostQueryMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+
+    const pendingNextQuestion = component.nextQuestion();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    const revealButton = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((button) => (button.textContent ?? '').includes('Antwortoptionen freigeben'));
+    expect(component.controlPending()).toBe(false);
+    expect(revealButton).toBeTruthy();
+    expect(revealButton?.disabled).toBe(false);
+
+    resolveRefresh?.(loadedQuestion);
+    await pendingNextQuestion;
+    await fixture.whenStable();
+    fixture.destroy();
+  });
+
+  it('gibt Ergebnis-Aktion frei, waehrend Host-Fragendetails noch nachladen', async () => {
+    const initialQuestion = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+    let resolveRefresh: ((value: typeof initialQuestion) => void) | null = null;
+
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'QUESTION_OPEN' });
+    getCurrentQuestionForHostQueryMock.mockResolvedValue(initialQuestion);
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    component.statusUpdate.set({ status: 'QUESTION_OPEN', currentQuestion: 0, currentRound: 1 });
+    component.currentQuestionForHost.set(initialQuestion);
+    getCurrentQuestionForHostQueryMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefresh = resolve;
+        }),
+    );
+
+    const pendingReveal = component.revealAnswers();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    const resultButton = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((button) => (button.textContent ?? '').includes('Ergebnis zeigen'));
+    expect(component.controlPending()).toBe(false);
+    expect(resultButton).toBeTruthy();
+    expect(resultButton?.disabled).toBe(false);
+
+    resolveRefresh?.(initialQuestion);
+    await pendingReveal;
+    await fixture.whenStable();
+    fixture.destroy();
+  });
+
   it('haelt die laufende Frage sichtbar, bis Runde 2 geladen ist', async () => {
     const roundOneQuestion = {
       questionId: 'bbbbbbbb-2222-4222-8222-222222222222',

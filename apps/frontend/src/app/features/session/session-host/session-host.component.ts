@@ -402,6 +402,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private qaSub: Unsubscribable | null = null;
   private qaSubscriptionKey: string | null = null;
   private hostRealtimeFallbackActive = false;
+  private currentQuestionRefreshRunId = 0;
   private participantBaselineReady = false;
   private knownParticipantIds = new Set<string>();
   private foyerArrivalSequence = 0;
@@ -481,6 +482,18 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly feedbackSummary = signal<SessionFeedbackSummary | null>(null);
   /** Aktuelle Frage für Host (Text + Antwortoptionen), null wenn keine Frage aktiv. */
   readonly currentQuestionForHost = signal<HostCurrentQuestionDTO | null>(null);
+  readonly displayedCurrentQuestionForHost = computed(() => {
+    const question = this.currentQuestionForHost();
+    if (!question) return null;
+    const statusUpdate = this.statusUpdate();
+    if (!statusUpdate) return question;
+    return statusUpdate.currentQuestion === question.order ? question : null;
+  });
+  readonly hasCurrentQuizQuestionForHost = computed(() => {
+    if (this.displayedCurrentQuestionForHost() !== null) return true;
+    const statusUpdate = this.statusUpdate();
+    return statusUpdate ? statusUpdate.currentQuestion !== null : false;
+  });
   /** Emoji-Reaktionen der Teilnehmenden in der Ergebnis-Phase (Story 5.8). */
   readonly emojiReactions = signal<{ reactions: Record<string, number>; total: number } | null>(
     null,
@@ -491,7 +504,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   /** Frage + Abstimmungsrunde (Peer Instruction), damit Emoji-Badge bei Rundenwechsel zurücksetzt. */
   private lastEmojiReactionScope = '';
   /** Aktuelle Quiz-Abstimmungsrunde (1/2) für Emoji-Host-Panel. */
-  readonly hostQuizVoteRound = computed(() => this.currentQuestionForHost()?.currentRound ?? 1);
+  readonly hostQuizVoteRound = computed(
+    () => this.displayedCurrentQuestionForHost()?.currentRound ?? 1,
+  );
   /** Countdown in Sekunden (null = kein Timer, Story 3.5). */
   readonly countdownSeconds = signal<number | null>(null);
   /** true, sobald der Countdown 0 erreicht hat (bis zum nächsten Start). */
@@ -529,7 +544,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return Math.max(...board.map((e) => e.totalScore));
   });
   readonly showsInterimLeaderboard = computed(() =>
-    isScoredQuestionType(this.currentQuestionForHost()?.type),
+    isScoredQuestionType(this.displayedCurrentQuestionForHost()?.type),
   );
   readonly wordCloudToggleLabel = computed(() =>
     this.wordCloudExpanded()
@@ -708,12 +723,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (this.isQaSession()) return false;
     if (!this.channels().quiz) return false;
     if (this.effectiveStatus() !== 'ACTIVE') return false;
-    return this.currentQuestionForHost() === null;
+    return !this.hasCurrentQuizQuestionForHost();
   });
   readonly canReplaceQuizBeforeStart = computed(() => {
     if (!this.channels().quiz) return false;
     if (this.effectiveStatus() !== 'LOBBY') return false;
-    return this.currentQuestionForHost() === null;
+    return this.displayedCurrentQuestionForHost() === null;
   });
   readonly isImmersiveMode = computed(() => this.hostDisplayMode.immersiveHostActive());
   readonly isFullscreenSupported = computed(() =>
@@ -1067,7 +1082,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (this.effectiveStatus() !== 'ACTIVE' || this.isQaSession()) {
       return null;
     }
-    const question = this.currentQuestionForHost();
+    const question = this.displayedCurrentQuestionForHost();
     const participants = this.participantsPayload()?.participantCount ?? 0;
     if (!question || participants <= 0) {
       return null;
@@ -1086,7 +1101,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (this.effectiveStatus() !== 'ACTIVE') return false;
     const participants = this.participantsPayload()?.participantCount ?? 0;
     if (participants <= 0) return false;
-    const votes = this.getVoteCountForCurrentQuestion(this.currentQuestionForHost());
+    const votes = this.getVoteCountForCurrentQuestion(this.displayedCurrentQuestionForHost());
     return votes >= participants;
   });
   readonly readingReadyStatus = computed(() => this.participantsPayload()?.readingReady ?? null);
@@ -1329,7 +1344,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
-      const questionId = this.currentQuestionForHost()?.questionId ?? null;
+      const questionId = this.displayedCurrentQuestionForHost()?.questionId ?? null;
       const allReady = this.allConnectedParticipantsReady();
 
       if (questionId !== this.previousReadingReadyQuestionId) {
@@ -1414,7 +1429,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       data: {
         responses: () => this.displayedFreetextResponses(),
         terms: () => this.displayedFreetextWordCloudTerms(),
-        selectionScopeKey: () => this.currentQuestionForHost()?.questionId ?? null,
+        selectionScopeKey: () => this.displayedCurrentQuestionForHost()?.questionId ?? null,
         eyebrow: this.freetextWordCloudEyebrow,
         description: this.freetextWordCloudDescription,
         analysisVariant: () => this.freetextWordCloudMode(),
@@ -1713,7 +1728,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (this.wordCloudFrozen()) {
       return false;
     }
-    return this.currentQuestionForHost()?.type === 'FREETEXT';
+    return this.displayedCurrentQuestionForHost()?.type === 'FREETEXT';
   }
 
   private shouldPollQaQuestions(): boolean {
@@ -2966,6 +2981,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   private syncCurrentQuestionForHost(next: HostCurrentQuestionDTO | null): void {
     const current = this.currentQuestionForHost();
+    if (next === null && this.shouldRetainCurrentHostQuestion(current)) {
+      return;
+    }
     if (this.isSameHostCurrentQuestion(current, next)) {
       return;
     }
@@ -2979,6 +2997,30 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
 
     this.currentQuestionForHost.set(next);
+  }
+
+  private shouldRetainCurrentHostQuestion(current: HostCurrentQuestionDTO | null): boolean {
+    if (!current) return false;
+    const status = this.effectiveStatus();
+    if (
+      status !== 'QUESTION_OPEN' &&
+      status !== 'ACTIVE' &&
+      status !== 'RESULTS' &&
+      status !== 'DISCUSSION'
+    ) {
+      return false;
+    }
+    const statusUpdate = this.statusUpdate();
+    return statusUpdate ? statusUpdate.currentQuestion === current.order : true;
+  }
+
+  private isCurrentStatusUpdate(update: SessionStatusUpdate): boolean {
+    const current = this.statusUpdate();
+    return (
+      current?.status === update.status &&
+      current.currentQuestion === update.currentQuestion &&
+      (current.currentRound ?? null) === (update.currentRound ?? null)
+    );
   }
 
   private isSameParticipantsPayload(
@@ -3297,7 +3339,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   /** True, wenn die aktuelle Frage die letzte ist – dann zeigt der Steuerungs-Button „Session beenden“. */
   isLastQuestion(): boolean {
-    const q = this.currentQuestionForHost();
+    const q = this.displayedCurrentQuestionForHost();
     if (!q || q.totalQuestions === null || q.totalQuestions === undefined) return false;
     return q.order + 1 >= q.totalQuestions;
   }
@@ -4144,11 +4186,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.countdownSeconds.set(null);
       const result = await trpc.session.nextQuestion.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      await this.refreshCurrentQuestionForHost();
-      if (result.status === 'ACTIVE') {
-        this.startCountdown(this.currentQuestionForHost()?.timer, result.activeAt);
-      }
       this.dismissHostSteeringCallout();
+      this.controlPending.set(false);
+      await this.refreshCurrentQuestionForHost();
+      if (!this.isCurrentStatusUpdate(result)) return;
+      if (result.status === 'ACTIVE') {
+        this.startCountdown(this.displayedCurrentQuestionForHost()?.timer, result.activeAt);
+      }
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.nextQuestion());
     } finally {
@@ -4408,10 +4452,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.clearEmojiNewBadge();
       const result = await trpc.session.revealAnswers.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      await this.refreshCurrentQuestionForHost();
-      this.scrollHostTargetIntoView(this.hostAnswersListRef);
-      this.startCountdown(this.currentQuestionForHost()?.timer, result.activeAt);
+      this.startCountdown(this.displayedCurrentQuestionForHost()?.timer, result.activeAt);
       this.dismissHostSteeringCallout();
+      this.controlPending.set(false);
+      await this.refreshCurrentQuestionForHost();
+      if (!this.isCurrentStatusUpdate(result)) return;
+      this.scrollHostTargetIntoView(this.hostAnswersListRef);
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.revealAnswers());
     } finally {
@@ -4428,9 +4474,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.countdownSeconds.set(null);
       const result = await trpc.session.revealResults.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      await this.refreshCurrentQuestionForHost();
-      this.scrollHostTargetIntoView(this.hostResultsSectionRef);
       this.dismissHostSteeringCallout();
+      this.controlPending.set(false);
+      await this.refreshCurrentQuestionForHost();
+      if (!this.isCurrentStatusUpdate(result)) return;
+      this.scrollHostTargetIntoView(this.hostResultsSectionRef);
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.revealResults());
     } finally {
@@ -4447,8 +4495,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.countdownSeconds.set(null);
       const result = await trpc.session.startDiscussion.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      await this.refreshCurrentQuestionForHost();
       this.dismissHostSteeringCallout();
+      this.controlPending.set(false);
+      await this.refreshCurrentQuestionForHost();
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.startDiscussion());
     } finally {
@@ -4465,8 +4514,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.countdownSeconds.set(null);
       const result = await trpc.session.startSecondRound.mutate({ code: this.code.toUpperCase() });
       this.statusUpdate.set(result);
-      await this.refreshCurrentQuestionForHost();
       this.dismissHostSteeringCallout();
+      this.controlPending.set(false);
+      await this.refreshCurrentQuestionForHost();
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(() => void this.startSecondRound());
     } finally {
@@ -4483,7 +4533,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return;
     }
     const sid = this.session()?.id;
-    const qHost = this.currentQuestionForHost();
+    const qHost = this.displayedCurrentQuestionForHost();
     const qid = qHost?.questionId;
     const round = qHost?.currentRound ?? 1;
     if (!sid || !qid) {
@@ -4739,12 +4789,29 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   private async refreshCurrentQuestionForHost(): Promise<void> {
     if (!this.code || this.code.length !== 6) return;
+    const runId = ++this.currentQuestionRefreshRunId;
+    const expectedStatus = this.effectiveStatus();
+    const expectedQuestion = this.statusUpdate()?.currentQuestion ?? null;
     try {
       const q = await trpc.session.getCurrentQuestionForHost.query({
         code: this.code.toUpperCase(),
       });
+      if (
+        runId !== this.currentQuestionRefreshRunId ||
+        this.effectiveStatus() !== expectedStatus ||
+        (this.statusUpdate()?.currentQuestion ?? null) !== expectedQuestion
+      ) {
+        return;
+      }
       this.syncCurrentQuestionForHost(q);
     } catch {
+      if (
+        runId !== this.currentQuestionRefreshRunId ||
+        this.effectiveStatus() !== expectedStatus ||
+        (this.statusUpdate()?.currentQuestion ?? null) !== expectedQuestion
+      ) {
+        return;
+      }
       this.syncCurrentQuestionForHost(null);
     }
   }
