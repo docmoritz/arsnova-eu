@@ -494,6 +494,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const statusUpdate = this.statusUpdate();
     return statusUpdate ? statusUpdate.currentQuestion !== null : false;
   });
+  readonly isHostQuestionDetailsPending = computed(
+    () => this.hasCurrentQuizQuestionForHost() && this.displayedCurrentQuestionForHost() === null,
+  );
   /** Emoji-Reaktionen der Teilnehmenden in der Ergebnis-Phase (Story 5.8). */
   readonly emojiReactions = signal<{ reactions: Record<string, number>; total: number } | null>(
     null,

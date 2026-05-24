@@ -9049,6 +9049,14 @@
           <context context-type="linenumber">1473,1475</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.questionDetailsPending" datatype="html">
+        <source> Frage wird aktualisiert …</source>
+        <target>Actualizando la pregunta …</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">1538,1540</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7435414614973406916" datatype="html">
         <source> Keine Frage aktiv. Mit „Nächste Frage“ starten.</source>
         <target>Ninguna pregunta activa. Comience con &quot;Siguiente pregunta&quot;.</target>

@@ -1534,6 +1534,10 @@
                       />
                     </div>
                   }
+                } @else if (isHostQuestionDetailsPending()) {
+                  <p class="session-host__no-question" i18n="@@sessionHost.questionDetailsPending">
+                    Frage wird aktualisiert …
+                  </p>
                 } @else {
                   <p class="session-host__no-question" i18n>
                     Keine Frage aktiv. Mit „Nächste Frage“ starten.

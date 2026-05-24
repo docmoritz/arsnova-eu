@@ -4318,6 +4318,23 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt beim bekannten Fragenindex ohne Host-Details einen neutralen Aktualisierungshinweis', async () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+
+    component.session.set({ ...defaultSession, status: 'ACTIVE' });
+    component.statusUpdate.set({ status: 'ACTIVE', currentQuestion: 0, currentRound: 1 });
+    component.currentQuestionForHost.set(null);
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Frage wird aktualisiert');
+    expect(text).not.toContain('Keine Frage aktiv');
+    fixture.destroy();
+  });
+
   it('gibt Ergebnis-Aktion frei, waehrend Host-Fragendetails noch nachladen', async () => {
     const initialQuestion = {
       questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
