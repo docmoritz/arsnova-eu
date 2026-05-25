@@ -793,6 +793,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly activeMusicTrack = computed<HostMusicTrack | null>(() => {
     if (this.musicMuted()) return null;
     if (this.activeChannel() === 'qa') return null;
+    if (this.activeChannel() === 'quickFeedback' && this.quickFeedbackResult()?.locked) {
+      return null;
+    }
     const phase = this.currentMusicPhase();
     if (!phase) return null;
     if (phase === 'countdown' && (this.countdownSfxPhase() || this.countdownEnded())) {
@@ -3531,6 +3534,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.quickFeedbackResult.update((current) =>
         current ? { ...current, locked: next.locked } : current,
       );
+      this.syncMusic();
     } catch {
       this.openHostSteeringCalloutForSteeringFailure(
         () => void this.toggleQuickFeedbackRoundLock(),

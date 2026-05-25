@@ -3228,6 +3228,61 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('stoppt und startet Hintergrundmusik mit Blitzlicht-Stopp und Fortsetzen', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      ...defaultSession,
+      status: 'ACTIVE',
+      preset: 'PLAYFUL',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: true, open: true },
+      },
+    });
+    quickFeedbackHostResultsQueryMock.mockResolvedValue({
+      type: 'MOOD',
+      theme: 'system',
+      preset: 'spielerisch',
+      locked: false,
+      totalVotes: 0,
+      distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+    });
+
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    const playMusicSpy = vi.spyOn(component.sound, 'playMusic').mockResolvedValue();
+    const stopMusicSpy = vi.spyOn(component.sound, 'stopMusic').mockImplementation(() => {});
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    component.musicMuted.set(false);
+    component.activeChannel.set('quickFeedback');
+    fixture.detectChanges();
+
+    expect(component.activeMusicTrack()).toBe('COUNTDOWN_0');
+
+    quickFeedbackToggleLockMutateMock.mockResolvedValueOnce({ locked: true });
+    await component.toggleQuickFeedbackRoundLock();
+    fixture.detectChanges();
+
+    expect(component.quickFeedbackResult()?.locked).toBe(true);
+    expect(component.activeMusicTrack()).toBeNull();
+    expect(stopMusicSpy).toHaveBeenCalled();
+
+    playMusicSpy.mockClear();
+    quickFeedbackToggleLockMutateMock.mockResolvedValueOnce({ locked: false });
+    await component.toggleQuickFeedbackRoundLock();
+    fixture.detectChanges();
+
+    expect(component.quickFeedbackResult()?.locked).toBe(false);
+    expect(component.activeMusicTrack()).toBe('COUNTDOWN_0');
+    expect(playMusicSpy).toHaveBeenCalledWith('COUNTDOWN_0');
+
+    fixture.destroy();
+  });
+
   it('laesst Hintergrundmusik nach Q&A aus, wenn sie vorher bereits stumm war', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,
