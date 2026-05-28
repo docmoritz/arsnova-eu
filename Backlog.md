@@ -1458,9 +1458,9 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Das Tempo-Blitzlicht darf beliebig lange offen bleiben, bis der Host es beendet oder durch ein anderes Blitzlicht ersetzt.
     - Die Host-Ansicht zeigt die normale Blitzlicht-Liveaggregation mit Prozentwerten und mindestens einer Tendenz aus: `Die Mehrheit kann folgen.`, `Das Tempo wirkt zu hoch.`, `Mehrere Teilnehmende sind abgehängt.`, `Die Gruppe signalisiert Unterforderung.`, `Die Gruppe ist heterogen.`
     - In der Host-Ansicht gibt es einen **Umschalter** zwischen **Detaildarstellung** und **Tendenzindikator**; im Session-Kontext sitzt er im Blitzlicht-Bereich, im Standalone-Blitzlicht in der dortigen Host-Steuerung.
-    - Auf der **Startseite** erhält das Tempo-Template fuer das **Standalone-Blitzlicht** eine **exponierte Darstellung** mit eigenem visuellen Gewicht; es wird **nicht** als bloesse vierte Hero-Pill in die bestehende Chip-Reihe eingeordnet.
-    - Die kanonische Hero-Chip-Reihe aus Story **6.7** bleibt dabei erhalten; `Tempo` erscheint als **prominenter Zusatz-Einstieg** oder hervorgehobenes Blitzlicht-Modul, nicht als Bruch des 3-Chip-Modells.
-    - Auch im **laufenden Blitzlicht-Host** wird `Tempo` in der Start-/Preset-Auswahl **exponiert** dargestellt und **nicht** als bloesse weitere gleichrangige Pill oder kleiner Preset-Chip unter vielen.
+    - Auf der **Startseite** erhält das Tempo-Template fuer das **Standalone-Blitzlicht** eine **Spotlight-Kachel** mit eigenem visuellen Gewicht; es wird **nicht** als bloesse vierte Hero-Pill in die bestehende Chip-Reihe eingeordnet.
+    - Die kanonische Hero-Chip-Reihe aus Story **6.7** bleibt dabei erhalten; `Tempo` erscheint als **prominente Spotlight-Kachel** oder hervorgehobenes Blitzlicht-Modul, nicht als Bruch des 3-Chip-Modells.
+    - Auch im **laufenden Blitzlicht-Host** wird `Tempo` in der Start-/Preset-Auswahl als **Spotlight-Kachel** dargestellt und **nicht** als bloesse weitere gleichrangige Pill oder kleiner Preset-Chip unter vielen.
     - Im **Standalone-Blitzlicht** wird der Tendenzindikator als **große, auffällige und raumeinnehmende Hauptinformation** dargestellt; das aktuelle Tempo-Feedback muss fuer den Host mit **einem Blick** erfassbar sein, insbesondere auf dem Smartphone waehrend des Vortrags.
     - Im Standalone-Tendenzmodus werden **Anzahl der aktuell teilnehmenden Personen** und **Anzahl der abgegebenen Tempo-Stimmen** sichtbar angezeigt.
     - Auch im prominenten Standalone-Tendenzmodus bleiben der **Umschalter** und die Aktion **`Session beenden`** jederzeit erreichbar.
@@ -1469,8 +1469,8 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Die vier Reaktionen sind auf Smartphones ohne horizontales Scrollen erreichbar; Touch-Ziele, Fokuszustände, Screenreader-Namen und semantische Markierung des aktiven Zustands erfüllen die projektweiten A11y-Regeln.
     - Die Umsetzung verursacht bei Sessions mit 500+ Teilnehmenden keinen spürbaren zusätzlichen Performance-Hotspot im Blitzlicht-Livepfad.
   - **Produktziel Host-UI:** Entscheidend ist die **leichte Lesbarkeit** des Tempo-Feedbacks. Besonders im Standalone-Blitzlicht hat die Host-UI nicht die volle Detailanalyse, sondern die **sofort erfassbare Lageeinschaetzung** fuer den Vortrag zu priorisieren.
-  - **Produktziel Startseite:** `Tempo` soll auf der Startseite **sichtbar auffindbar und bewusst hervorgehoben** sein, ohne die bestehende Hero-Chip-IA zu einer unruhigen Vierer-Pill-Leiste aufzublasen.
-  - **Produktziel Host-Startflaeche:** Auch in der Blitzlicht-Startflaeche selbst soll `Tempo` als **hervorgehobene Option** statt als kleine Zusatz-Pill erscheinen, damit Hosts das Feature in der Livesituation sofort finden.
+  - **Produktziel Startseite:** `Tempo` soll auf der Startseite als **Spotlight-Kachel** sichtbar auffindbar und bewusst hervorgehoben sein, ohne die bestehende Hero-Chip-IA zu einer unruhigen Vierer-Pill-Leiste aufzublasen.
+  - **Produktziel Host-Startflaeche:** Auch in der Blitzlicht-Startflaeche selbst soll `Tempo` als **Spotlight-Kachel** statt als kleine Zusatz-Pill erscheinen, damit Hosts das Feature in der Livesituation sofort finden.
   - **Empfohlene Berechnungslogik fuer die Tendenz:**
     - **Aktivierungsschwelle:** Der Indikator bleibt neutral, solange `tempoVotes < max(8, ceil(0.10 * activeParticipants))`; `activeParticipants` ist die aktuelle Zahl der Teilnehmenden im jeweiligen Blitzlicht-Kontext, nicht nur die Zahl der Tempo-Votes.
     - **Glaettung:** Grundlage ist ein rollendes Fenster von **60 Sekunden** mit **15-Sekunden-Buckets**; angezeigt wird nicht der rohe Momentanwert, sondern der geglättete Mittelwert ueber dieses Fenster.

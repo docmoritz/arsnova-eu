@@ -30,8 +30,8 @@ Fachliche Kerneigenschaften:
 - Hosts sehen nur **Aggregation + Tendenz**, keine Einzelrueckmeldungen.
 - Die Host-Ansicht bietet einen **Umschalter** zwischen Detaildarstellung und Tendenzindikator.
 - Im Standalone-Blitzlicht ist der Tendenzmodus die **dominante, grosse und sofort lesbare Hauptansicht**.
-- Auf der Startseite ist `Tempo` ein **prominenter Zusatz-Einstieg**, nicht nur eine weitere kleine Pill.
-- In der Blitzlicht-Host-Startflaeche ist `Tempo` ebenfalls **prominent** und nicht nur ein weiterer kleiner Preset-Chip.
+- Auf der Startseite ist `Tempo` eine **Spotlight-Kachel**, nicht nur eine weitere kleine Pill.
+- In der Blitzlicht-Host-Startflaeche ist `Tempo` ebenfalls eine **Spotlight-Kachel** und nicht nur ein weiterer kleiner Preset-Chip.
 - Die bestehende Blitzlicht-Architektur wird erweitert, nicht verdoppelt.
 
 ---
@@ -60,7 +60,7 @@ Empfohlener Branchname:
 | Bereich                    | Status                                                                                                                                                                                                                                                                                               |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Shared Types**           | `QuickFeedbackTypeEnum` kennt aktuell `MOOD`, `YESNO`, `YESNO_BINARY`, `TRUEFALSE_UNKNOWN`, `STARS`, `ABCD`. Ein Tempo-Typ fehlt.                                                                                                                                                                    |
-| **Frontend-Konfiguration** | `apps/frontend/src/app/features/feedback/feedback.config.ts` definiert die vorhandenen Optionen und Preset-Chips fuer Blitzlicht. Fuer `Tempo` fehlt ein hervorgehobenes Darstellungsmodell jenseits eines weiteren Standard-Presets.                                                                |
+| **Frontend-Konfiguration** | `apps/frontend/src/app/features/feedback/feedback.config.ts` definiert die vorhandenen Optionen und Preset-Chips fuer Blitzlicht. Fuer `Tempo` fehlt ein Spotlight-Darstellungsmodell jenseits eines weiteren Standard-Presets.                                                                      |
 | **Backend-Hotpath**        | `apps/backend/src/routers/quickFeedback.ts` behandelt Blitzlicht derzeit im Kern als Einmal-Vote: Redis-Set fuer `already voted`, Verteilung und Total werden hochgezaehlt.                                                                                                                          |
 | **Teilnehmer-UI**          | `feedback-vote.component.ts` ist auf klassischen Vote-Abschluss zugeschnitten und kennt keine template-spezifische Mutable-Semantik.                                                                                                                                                                 |
 | **Host-UI**                | Die Blitzlicht-Host-Ansichten koennen Typen starten und Live-Aggregate anzeigen, aber weder Tempo-Tendenz noch den vorgesehenen Umschalter zwischen Detaildarstellung und Tendenzindikator; fuer Standalone fehlt zudem das Zielbild einer grossen, one-glance-faehigen Tendenzansicht mit Zaehlern. |
@@ -214,19 +214,19 @@ Ziel: Host und Teilnehmende erhalten eine saubere, lokalisierbare Template-Defin
 
 ### Aufgaben
 
-| #   | Task                               | Beschreibung                                                                                                                                                               |
-| --- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1 | **Tempo-Optionen definieren**      | In `feedback.config.ts` die vier Reaktionen mit Icon, Label und accessible name hinterlegen.                                                                               |
-| 2.2 | **Host-Einstieg exponieren**       | Host-Startflaechen in Session und Standalone um einen festen, visuell hervorgehobenen `Tempo`-Einstieg erweitern statt nur einen weiteren Standard-Preset-Chip anzufuegen. |
-| 2.3 | **Anzeigehilfen kapseln**          | Helfer fuer Labels, Reihenfolge und ggf. Tendenz-Text zentral ablegen statt in Templates zu verteilen.                                                                     |
-| 2.4 | **Startseiten-Einstieg entwerfen** | `Tempo` als hervorgehobenen Standalone-Blitzlicht-Einstieg auf der Startseite vorsehen, ohne die kanonische 3-Chip-Reihe aus Story 6.7 zu einer vierten Pill zu erweitern. |
+| #   | Task                                | Beschreibung                                                                                                                                                |
+| --- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1 | **Tempo-Optionen definieren**       | In `feedback.config.ts` die vier Reaktionen mit Icon, Label und accessible name hinterlegen.                                                                |
+| 2.2 | **Host-Spotlight bauen**            | Host-Startflaechen in Session und Standalone um eine feste `Tempo`-Spotlight-Kachel erweitern statt nur einen weiteren Standard-Preset-Chip anzufuegen.     |
+| 2.3 | **Anzeigehilfen kapseln**           | Helfer fuer Labels, Reihenfolge und ggf. Tendenz-Text zentral ablegen statt in Templates zu verteilen.                                                      |
+| 2.4 | **Startseiten-Spotlight entwerfen** | `Tempo` als Standalone-Blitzlicht-Spotlight auf der Startseite vorsehen, ohne die kanonische 3-Chip-Reihe aus Story 6.7 zu einer vierten Pill zu erweitern. |
 
 ### Ergebnis
 
 - eine zentrale Definition fuer Tempo
 - keine duplizierten Emoji-/Label-Mappings
-- ein sichtbarer, aber IA-konsistenter Startseiten-Einstieg fuer `Tempo`
-- ein im Host sofort auffindbarer `Tempo`-Einstieg statt einer versteckten Zusatz-Pill
+- ein sichtbarer, aber IA-konsistenter Startseiten-Spotlight-Einstieg fuer `Tempo`
+- eine im Host sofort auffindbare `Tempo`-Spotlight-Kachel statt einer versteckten Zusatz-Pill
 
 ---
 
@@ -282,15 +282,15 @@ Ziel: Hosts koennen Tempo gezielt starten und den Zustand schnell erfassen.
 
 ### Aufgaben
 
-| #   | Task                                  | Beschreibung                                                                                                                                             |
-| --- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5.1 | **Tempo in Host-Auswahl exponieren**  | Session- und Standalone-Host bieten `Tempo` als startbare, visuell hervorgehobene Option an statt als kleine Zusatz-Pill.                                |
-| 5.2 | **Umschalter einfuehren**             | Host-Ansicht bietet einen Toggle-Button fuer `Detaildarstellung` und `Tendenzindikator`.                                                                 |
-| 5.3 | **Standalone-Tendenz als Hero bauen** | Im Standalone-Blitzlicht wird die Tendenz gross, auffaellig und auf einen Blick lesbar dargestellt.                                                      |
-| 5.4 | **Zaehler sichtbar halten**           | Im Standalone-Tendenzmodus werden `activeParticipants` und `tempoVotes` deutlich angezeigt.                                                              |
-| 5.5 | **Bedienleiste erhalten**             | Umschalter und `Session beenden` bleiben auch im Standalone-Tendenzmodus sichtbar und gut erreichbar.                                                    |
-| 5.6 | **Kontextgerechte Platzierung**       | `FeedbackHostComponent` rendert den Umschalter eingebettet im Session-Blitzlicht und standalone im dortigen Host-Layout jeweils an der richtigen Stelle. |
-| 5.7 | **Keine Einzelpersonen-Leaks**        | UI zeigt keine Rohdaten, keine Listen, keine technisch internen IDs.                                                                                     |
+| #   | Task                                          | Beschreibung                                                                                                                                             |
+| --- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5.1 | **Tempo in Host-Auswahl als Spotlight bauen** | Session- und Standalone-Host bieten `Tempo` als startbare, visuell hervorgehobene Spotlight-Kachel an statt als kleine Zusatz-Pill.                      |
+| 5.2 | **Umschalter einfuehren**                     | Host-Ansicht bietet einen Toggle-Button fuer `Detaildarstellung` und `Tendenzindikator`.                                                                 |
+| 5.3 | **Standalone-Tendenz als Hero bauen**         | Im Standalone-Blitzlicht wird die Tendenz gross, auffaellig und auf einen Blick lesbar dargestellt.                                                      |
+| 5.4 | **Zaehler sichtbar halten**                   | Im Standalone-Tendenzmodus werden `activeParticipants` und `tempoVotes` deutlich angezeigt.                                                              |
+| 5.5 | **Bedienleiste erhalten**                     | Umschalter und `Session beenden` bleiben auch im Standalone-Tendenzmodus sichtbar und gut erreichbar.                                                    |
+| 5.6 | **Kontextgerechte Platzierung**               | `FeedbackHostComponent` rendert den Umschalter eingebettet im Session-Blitzlicht und standalone im dortigen Host-Layout jeweils an der richtigen Stelle. |
+| 5.7 | **Keine Einzelpersonen-Leaks**                | UI zeigt keine Rohdaten, keine Listen, keine technisch internen IDs.                                                                                     |
 
 ### Ergebnis
 
@@ -336,8 +336,8 @@ Ziel: Das Feature wird sauber review- und releasefaehig.
 ### UX-Abnahme
 
 - Host versteht auf den ersten Blick, dass `Tempo` ein Blitzlicht-Preset ist
-- Auf der Startseite ist `Tempo` ohne Sucharbeit auffindbar und sichtbar hervorgehoben, aber nicht als vierter gleichrangiger Hero-Chip inszeniert
-- In der Blitzlicht-Host-Auswahl ist `Tempo` ohne Sucharbeit auffindbar und klar priorisiert
+- Auf der Startseite ist `Tempo` ohne Sucharbeit als Spotlight-Kachel auffindbar, aber nicht als vierter gleichrangiger Hero-Chip inszeniert
+- In der Blitzlicht-Host-Auswahl ist `Tempo` ohne Sucharbeit als Spotlight-Kachel auffindbar und klar priorisiert
 - Tendenz-Indikator ist sichtbar, aber nicht alarmistisch und nicht nervoes
 - Der Umschalter zwischen Detaildarstellung und Tendenz ist in Session und Standalone sofort verstaendlich
 - Die Standalone-Host-Ansicht macht die Lageeinschaetzung auf dem Handy ohne Nachdenken lesbar

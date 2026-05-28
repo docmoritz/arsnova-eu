@@ -47,13 +47,13 @@ Diese Host-Option muss in beiden Produktkontexten verfuegbar sein:
 
 Fuer die Startseite gilt zusaetzlich:
 
-- `Tempo` bekommt fuer das Standalone-Blitzlicht eine **exponierte Darstellung**
+- `Tempo` bekommt fuer das Standalone-Blitzlicht eine **Spotlight-Kachel**
 - diese Darstellung ist **kein** zusaetzlicher vierter Hero-Chip
 - die bestehende 3-Chip-IA bleibt erhalten; `Tempo` erscheint als hervorgehobener Zusatz-Einstieg zum Blitzlicht
 
 Fuer die Blitzlicht-Host-Startflaeche gilt dieselbe Regel:
 
-- `Tempo` wird in der Host-Auswahl **exponiert** dargestellt
+- `Tempo` wird in der Host-Auswahl als **Spotlight-Kachel** dargestellt
 - `Tempo` ist **kein** weiterer kleiner Preset-Chip ohne visuelle Prioritaet
 - Hosts muessen die Option in der Livesituation sofort finden koennen
 
@@ -124,8 +124,8 @@ Fuer das **Standalone-Blitzlicht** gilt zusaetzlich:
 
 Die Host-UI priorisiert hier bewusst **Lesbarkeit vor Informationsdichte**.
 
-Dasselbe Prinzip gilt fuer den Startseiten-Einstieg: **Prominenz vor Chip-Masse**.
-Dasselbe Prinzip gilt fuer die Blitzlicht-Host-Auswahl: **Auffindbarkeit vor Preset-Gleichfoermigkeit**.
+Dasselbe Prinzip gilt fuer den Startseiten-Einstieg: **Spotlight statt vierter Pill**.
+Dasselbe Prinzip gilt fuer die Blitzlicht-Host-Auswahl: **Spotlight statt Preset-Gleichfoermigkeit**.
 
 Der Tendenz-Indikator muss dabei bewusst **ruhig** bleiben:
 
