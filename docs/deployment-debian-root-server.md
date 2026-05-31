@@ -1,4 +1,4 @@
-# Deployment: arsnova.eu auf Debian Root-Server
+# Deployment: arsnova.eu auf Debian Root-Server
 
 > **Stand:** 2026-05-31 — abgeglichen mit `docker-compose.prod.yml`, `.env.production.example`, `scripts/deploy.sh`, Root-[README](../README.md), [ENVIRONMENT.md](ENVIRONMENT.md), [SECURITY-OVERVIEW.md](SECURITY-OVERVIEW.md) und [TESTING.md](TESTING.md).
 >
@@ -7,6 +7,10 @@
 > anderer Hostname verwendet wird, passe die Nginx-Konfiguration sowie
 > DNS‑Einträge entsprechend an. Optional kann eine ältere Subdomain per **301**
 > auf `https://arsnova.eu` zeigen, falls noch alte URLs in Umlauf sind.
+>
+> **Incident-Runbook:** Für akute Serverprobleme wie 500er/404, ungültige
+> Zertifikate, volle Platte oder Neustarts von Nginx/Docker Compose siehe
+> [server-erste-hilfe.md](server-erste-hilfe.md).
 
 Vorschlag für das Deployment auf einem externen Linux-Root-Server (Debian) nach aktuellem Stand der Technik: Let's Encrypt, Firewall, gehärteter Server. **Bei Hetzner** (Cloud oder Root) gelten die gleichen Schritte; Besonderheiten und Vereinfachungen sind in Abschnitt 2.7 und Abschnitt 11 beschrieben.
 
