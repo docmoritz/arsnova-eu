@@ -734,6 +734,14 @@ Aktueller Produktionsstandard: **Better Stack** überwacht beide Endpunkte:
 - `arsnova.eu Website`: `https://arsnova.eu/de/`
 - `arsnova.eu Healthcheck`: `https://arsnova.eu/trpc/health.check`
 
+Öffentliche Status Page:
+
+```text
+https://arsnova.betteruptime.com/
+```
+
+Die Status Page ist der externe Vertrauensanker bei Störungen, weil sie unabhängig von der arsnova.eu-Infrastruktur erreichbar bleibt. Für GitHub READMEs keine Better-Stack-`iframe`-Badges verwenden; stattdessen einen Markdown-kompatiblen Badge oder Link auf die Status Page setzen.
+
 Der externe Monitor sollte bei diesen Fällen alarmieren:
 
 - HTTP nicht 2xx/3xx

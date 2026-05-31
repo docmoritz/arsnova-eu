@@ -8,10 +8,11 @@
 [![Tech Stack: tRPC](https://img.shields.io/badge/API-tRPC%20v11-2596be.svg?style=flat-square&logo=trpc)](https://trpc.io/)
 [![Tech Stack: Prisma](https://img.shields.io/badge/ORM-Prisma%207.4-2D3748.svg?style=flat-square&logo=prisma)](https://www.prisma.io/)
 [![Docs: Architecture](https://img.shields.io/badge/Docs-Architecture%20%26%20ADRs-007A8A.svg?style=flat-square)](./docs/architecture/)
+[![Status](https://img.shields.io/badge/status-Better%20Stack-2ea44f.svg?style=flat-square)](https://arsnova.betteruptime.com/)
 
 **arsnova.eu** ist eine moderne Web-App für Live-Interaktion in Lehre, Weiterbildung, Workshops und Veranstaltungen. Lehrende erstellen Quiz-Inhalte lokal im Browser, starten Sessions per Code oder QR-Link und kombinieren dabei Quiz, Q&A und Blitzlicht-Feedback in einer einheitlichen Live-Session. Die Anwendung ist accountarm, mehrsprachig, PWA-fähig und auf einen DSGVO-orientierten Eigenbetrieb ausgelegt.
 
-Die öffentliche Referenzinstanz läuft unter **https://arsnova.eu**. Dieses Repository richtet sich an Organisationen, die arsnova.eu evaluieren, forken, anpassen oder auf eigener Infrastruktur produktiv betreiben möchten.
+Die öffentliche Referenzinstanz läuft unter **https://arsnova.eu**; der externe Betriebsstatus ist unter **https://arsnova.betteruptime.com/** einsehbar. Dieses Repository richtet sich an Organisationen, die arsnova.eu evaluieren, forken, anpassen oder auf eigener Infrastruktur produktiv betreiben möchten.
 
 ## Für wen ist dieses Repository relevant?
 
@@ -168,7 +169,7 @@ Vor größeren Änderungen sollten diese Dokumente gelesen werden:
 
 ## Qualität und Status
 
-Der aktuelle Codebestand ist auf produktionsnahen Betrieb ausgerichtet und wird über CI geprüft. Implementiert sind insbesondere die Kern-Epics für Live-Session, Quiz, Q&A, Blitzlicht, Team-Modus, Admin, MOTD, i18n und Server-Status. Offen bleiben laut Backlog unter anderem die abschließende Barrierefreiheitsprüfung, UX-Testreihen, vollständige Last-/Performance-Strecken und weitere fachliche Ausbaustufen.
+Der aktuelle Codebestand ist auf produktionsnahen Betrieb ausgerichtet und wird über CI geprüft. Die öffentliche Referenzinstanz wird extern über Better Stack überwacht; die Status Page steht unter **https://arsnova.betteruptime.com/**. Implementiert sind insbesondere die Kern-Epics für Live-Session, Quiz, Q&A, Blitzlicht, Team-Modus, Admin, MOTD, i18n und Server-Status. Offen bleiben laut Backlog unter anderem die abschließende Barrierefreiheitsprüfung, UX-Testreihen, vollständige Last-/Performance-Strecken und weitere fachliche Ausbaustufen.
 
 Der konkrete Produkt- und Story-Stand wird nicht in dieser README fortgeschrieben, sondern in:
 
