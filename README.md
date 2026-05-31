@@ -9,6 +9,7 @@
 [![Tech Stack: Prisma](https://img.shields.io/badge/ORM-Prisma%207.4-2D3748.svg?style=flat-square&logo=prisma)](https://www.prisma.io/)
 [![Docs: Architecture](https://img.shields.io/badge/Docs-Architecture%20%26%20ADRs-007A8A.svg?style=flat-square)](./docs/architecture/)
 [![Status](https://img.shields.io/badge/status-Better%20Stack-2ea44f.svg?style=flat-square)](https://arsnova.betteruptime.com/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kqc-real/arsnova.eu)
 
 **arsnova.eu** ist eine moderne Web-App für Live-Interaktion in Lehre, Weiterbildung, Workshops und Veranstaltungen. Lehrende erstellen Quiz-Inhalte lokal im Browser, starten Sessions per Code oder QR-Link und kombinieren dabei Quiz, Q&A und Blitzlicht-Feedback in einer einheitlichen Live-Session. Die Anwendung ist accountarm, mehrsprachig, PWA-fähig und auf einen DSGVO-orientierten Eigenbetrieb ausgelegt.
 
