@@ -11,6 +11,7 @@ Quick entry point for AI coding agents working in arsnova.eu. Keep this file sho
 - Read [Backlog.md](Backlog.md) before story work; it is the source of scope, acceptance criteria, and DoD.
 - Use [docs/README.md](docs/README.md) as the documentation map.
 - For longer Cursor sessions, use [docs/cursor-context.md](docs/cursor-context.md) as stable project context, but verify stale details against the focused docs and code.
+- If Serena MCP is available, use [docs/serena.md](docs/serena.md) to load project memories and semantic code-navigation context.
 
 ## Always-On Rules
 
@@ -57,6 +58,7 @@ Quick entry point for AI coding agents working in arsnova.eu. Keep this file sho
 - Admin flow: [docs/implementation/ADMIN-FLOW.md](docs/implementation/ADMIN-FLOW.md)
 - Angular i18n workflow: [docs/I18N-ANGULAR.md](docs/I18N-ANGULAR.md)
 - UI rules: [docs/ui/README.md](docs/ui/README.md)
+- Serena agent memory workflow: [docs/serena.md](docs/serena.md)
 - Architecture decisions: [docs/architecture/decisions](docs/architecture/decisions)
 
 ## Scoped Instructions
