@@ -491,10 +491,130 @@ Wenn die DB noch erreichbar ist:
 
 ```bash
 mkdir -p backups
-$COMPOSE exec -T postgres pg_dump -U arsnova_user arsnova_v3 > "backups/arsnova-$(date +%F-%H%M%S).sql"
+$COMPOSE exec -T postgres pg_dump -U arsnova_user -d arsnova_v3 | gzip -9 > "backups/arsnova-$(date +%F-%H%M%S).sql.gz"
 ```
 
 Danach erst invasive Maßnahmen planen.
+
+### Automatische PostgreSQL-Sicherung einrichten
+
+Für Produktion reicht ein Docker-Volume nicht aus. Es schützt gegen Container-Neustarts, aber nicht gegen Volume-Löschung, Dateisystemschäden, Bedienfehler oder Serververlust. Mindestens täglich sollte ein `pg_dump` erzeugt und regelmäßig per Restore-Test geprüft werden.
+
+Backup-Verzeichnis anlegen:
+
+```bash
+sudo install -o deploy -g deploy -m 0700 -d /home/deploy/backups/postgres
+```
+
+Backup-Script anlegen:
+
+```bash
+sudo tee /usr/local/sbin/arsnova-pg-backup.sh >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_DIR="/home/deploy/arsnova.eu"
+BACKUP_DIR="/home/deploy/backups/postgres"
+RETENTION_DAYS="30"
+MAX_BACKUP_DIR_BYTES="$((5 * 1024 * 1024 * 1024))"
+
+cd "$APP_DIR"
+
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.production"
+STAMP="$(date +%F-%H%M%S)"
+OUT="$BACKUP_DIR/arsnova-postgres-$STAMP.sql.gz"
+
+install -o deploy -g deploy -m 0700 -d "$BACKUP_DIR"
+
+$COMPOSE exec -T postgres pg_dump -U arsnova_user -d arsnova_v3 | gzip -9 > "$OUT"
+
+chown deploy:deploy "$OUT"
+chmod 0600 "$OUT"
+
+find "$BACKUP_DIR" -type f -name "arsnova-postgres-*.sql.gz" -mtime +"$RETENTION_DAYS" -delete
+
+while [ "$(du -sb "$BACKUP_DIR" | awk '{print $1}')" -gt "$MAX_BACKUP_DIR_BYTES" ]; do
+  oldest="$(find "$BACKUP_DIR" -type f -name "arsnova-postgres-*.sql.gz" -printf '%T@ %p\n' | sort -n | head -n 1 | cut -d' ' -f2-)"
+  [ -n "$oldest" ] || break
+  rm -f "$oldest"
+done
+
+echo "Created backup: $OUT"
+EOF
+
+sudo chmod 0750 /usr/local/sbin/arsnova-pg-backup.sh
+```
+
+systemd Service anlegen:
+
+```bash
+sudo tee /etc/systemd/system/arsnova-pg-backup.service >/dev/null <<'EOF'
+[Unit]
+Description=arsnova.eu PostgreSQL backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/arsnova-pg-backup.sh
+EOF
+```
+
+systemd Timer anlegen:
+
+```bash
+sudo tee /etc/systemd/system/arsnova-pg-backup.timer >/dev/null <<'EOF'
+[Unit]
+Description=Daily arsnova.eu PostgreSQL backup
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+Aktivieren und prüfen:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now arsnova-pg-backup.timer
+sudo systemctl start arsnova-pg-backup.service
+sudo journalctl -u arsnova-pg-backup.service -n 50 --no-pager
+systemctl list-timers arsnova-pg-backup.timer
+ls -lh /home/deploy/backups/postgres
+du -sh /home/deploy/backups/postgres
+```
+
+Zusätzlich prüfen, ob bereits andere Backup-Jobs existieren:
+
+```bash
+sudo crontab -l
+crontab -l
+sudo ls -la /etc/cron.d /etc/cron.daily /etc/cron.weekly
+systemctl list-timers --all | grep -Ei 'postgres|backup|dump|pg|arsnova'
+```
+
+### Restore-Test
+
+Ein Backup gilt erst dann als belastbar, wenn es testweise wiederhergestellt wurde. Der folgende Test legt eine separate Datenbank im bestehenden PostgreSQL-Container an und entfernt sie danach wieder.
+
+```bash
+cd /home/deploy/arsnova.eu
+COMPOSE='docker compose -f docker-compose.prod.yml --env-file .env.production'
+LATEST="$(ls -1t /home/deploy/backups/postgres/arsnova-postgres-*.sql.gz | head -n 1)"
+
+$COMPOSE exec -T postgres dropdb -U arsnova_user --if-exists arsnova_restore_check
+$COMPOSE exec -T postgres createdb -U arsnova_user arsnova_restore_check
+gunzip -c "$LATEST" | $COMPOSE exec -T postgres psql -U arsnova_user -d arsnova_restore_check >/dev/null
+$COMPOSE exec -T postgres psql -U arsnova_user -d arsnova_restore_check -c '\dt'
+$COMPOSE exec -T postgres dropdb -U arsnova_user arsnova_restore_check
+```
+
+Lokale Dumps schützen nicht gegen kompletten Serververlust. Für echte Produktion sollten die Dateien zusätzlich extern kopiert werden, z. B. per Storage Box, S3-kompatiblem Speicher, `rsync`, `restic` oder `borg`.
 
 <a id="redis" name="redis"></a>
 
@@ -593,7 +713,216 @@ Das Skript führt aus:
 5. App starten.
 6. Container-Healthcheck und HTTP-Verifikation.
 
-## 15. Nach dem Incident
+## 15. Monitoring und Alerts einrichten
+
+Monitoring besteht aus zwei Ebenen:
+
+- **extern:** Prüft von außerhalb, ob DNS, TLS, Nginx und App erreichbar sind.
+- **intern:** Prüft Serverzustand, lokale Backups, Timer, Container und Zertifikatslaufzeit.
+
+### Externes Monitoring
+
+Mindestens diese URLs von einem externen Dienst prüfen lassen, z. B. Uptime Kuma, Better Stack oder Healthchecks.io:
+
+```text
+https://arsnova.eu/de/
+https://arsnova.eu/trpc/health.check
+```
+
+Aktueller Produktionsstandard: **Better Stack** überwacht beide Endpunkte:
+
+- `arsnova.eu Website`: `https://arsnova.eu/de/`
+- `arsnova.eu Healthcheck`: `https://arsnova.eu/trpc/health.check`
+
+Der externe Monitor sollte bei diesen Fällen alarmieren:
+
+- HTTP nicht 2xx/3xx
+- TLS-Zertifikat ungültig oder bald ablaufend
+- DNS- oder Verbindungsfehler
+- Antwortzeit dauerhaft auffällig hoch
+
+### Lokalen Wartungscheck einrichten
+
+Der lokale Check prüft:
+
+- `/`-Belegung und Inodes
+- Alter des letzten PostgreSQL-Dumps
+- fehlgeschlagene systemd Units
+- aktive Wartungstimer
+- Containerstatus und Docker-Healthchecks
+- lokale und öffentliche App-Healthchecks
+- TLS-Zertifikat mit Warnschwelle
+
+Konfiguration anlegen. `ALERT_OK_URL` und `ALERT_FAIL_URL` können leer bleiben oder auf Push-/Webhook-URLs zeigen, z. B. Healthchecks.io:
+
+```bash
+sudo tee /etc/arsnova-maintenance.env >/dev/null <<'EOF'
+ALERT_OK_URL=""
+ALERT_FAIL_URL=""
+DISK_WARN_PERCENT="80"
+INODE_WARN_PERCENT="80"
+BACKUP_MAX_AGE_SECONDS="108000"
+CERT_WARN_SECONDS="1814400"
+EOF
+
+sudo chmod 0600 /etc/arsnova-maintenance.env
+```
+
+Check-Script anlegen:
+
+```bash
+sudo tee /usr/local/sbin/arsnova-maintenance-check.sh >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -f /etc/arsnova-maintenance.env ]; then
+  # shellcheck disable=SC1091
+  source /etc/arsnova-maintenance.env
+fi
+
+DISK_WARN_PERCENT="${DISK_WARN_PERCENT:-80}"
+INODE_WARN_PERCENT="${INODE_WARN_PERCENT:-80}"
+BACKUP_MAX_AGE_SECONDS="${BACKUP_MAX_AGE_SECONDS:-108000}"
+CERT_WARN_SECONDS="${CERT_WARN_SECONDS:-1814400}"
+BACKUP_DIR="/home/deploy/backups/postgres"
+APP_DIR="/home/deploy/arsnova.eu"
+COMPOSE="docker compose -f $APP_DIR/docker-compose.prod.yml --env-file $APP_DIR/.env.production"
+
+problems=()
+
+disk_used="$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')"
+if [ "$disk_used" -ge "$DISK_WARN_PERCENT" ]; then
+  problems+=("Disk / is ${disk_used}% used")
+fi
+
+inode_used="$(df -Pi / | awk 'NR==2 {gsub("%","",$5); print $5}')"
+if [ "$inode_used" -ge "$INODE_WARN_PERCENT" ]; then
+  problems+=("Inodes / are ${inode_used}% used")
+fi
+
+latest_backup="$(find "$BACKUP_DIR" -type f -name 'arsnova-postgres-*.sql.gz' -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -n 1 | cut -d' ' -f2- || true)"
+if [ -z "$latest_backup" ]; then
+  problems+=("No PostgreSQL dump found in $BACKUP_DIR")
+else
+  backup_age="$(( $(date +%s) - $(stat -c %Y "$latest_backup") ))"
+  if [ "$backup_age" -gt "$BACKUP_MAX_AGE_SECONDS" ]; then
+    problems+=("Latest PostgreSQL dump is ${backup_age}s old: $latest_backup")
+  fi
+fi
+
+failed_units="$(systemctl --failed --no-legend --plain | awk '{print $1}' | grep -v '^arsnova-maintenance-check.service$' || true)"
+if [ -n "$failed_units" ]; then
+  problems+=("Failed systemd units: $(echo "$failed_units" | paste -sd ',' -)")
+fi
+
+for timer in certbot.timer arsnova-pg-backup.timer docker-build-cache-prune.timer; do
+  if ! systemctl is-active --quiet "$timer"; then
+    problems+=("Timer inactive: $timer")
+  fi
+done
+
+for container in arsnova-v3-app arsnova-v3-postgres arsnova-v3-redis; do
+  state="$(docker inspect -f '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "$container" 2>/dev/null || true)"
+  if [ -z "$state" ]; then
+    problems+=("Container missing: $container")
+  elif [[ "$state" != running* ]]; then
+    problems+=("Container not running: $container ($state)")
+  elif [[ "$state" == *unhealthy* ]]; then
+    problems+=("Container unhealthy: $container ($state)")
+  fi
+done
+
+if ! curl -fsS --max-time 10 http://127.0.0.1:3000/trpc/health.check >/dev/null; then
+  problems+=("Local health.check failed")
+fi
+
+if ! curl -fsS --max-time 15 https://arsnova.eu/trpc/health.check >/dev/null; then
+  problems+=("Public health.check failed")
+fi
+
+if ! curl -fsSI --max-time 15 https://arsnova.eu/de/ >/dev/null; then
+  problems+=("Public /de/ failed")
+fi
+
+if ! openssl s_client -servername arsnova.eu -connect arsnova.eu:443 </dev/null 2>/dev/null | openssl x509 -noout -checkend "$CERT_WARN_SECONDS" >/dev/null; then
+  problems+=("TLS certificate invalid or expires within ${CERT_WARN_SECONDS}s")
+fi
+
+if [ "${#problems[@]}" -gt 0 ]; then
+  message="$(printf 'arsnova maintenance check FAILED on %s at %s\n' "$(hostname -f 2>/dev/null || hostname)" "$(date -Is)")"
+  message+=$'\n'
+  message+="$(printf -- '- %s\n' "${problems[@]}")"
+  printf '%s\n' "$message"
+  if [ -n "${ALERT_FAIL_URL:-}" ]; then
+    printf '%s\n' "$message" | curl -fsS --max-time 15 --retry 2 -X POST --data-binary @- "$ALERT_FAIL_URL" >/dev/null || true
+  fi
+  exit 1
+fi
+
+message="arsnova maintenance check OK on $(hostname -f 2>/dev/null || hostname) at $(date -Is)"
+printf '%s\n' "$message"
+if [ -n "${ALERT_OK_URL:-}" ]; then
+  printf '%s\n' "$message" | curl -fsS --max-time 15 --retry 2 -X POST --data-binary @- "$ALERT_OK_URL" >/dev/null || true
+fi
+EOF
+
+sudo chmod 0750 /usr/local/sbin/arsnova-maintenance-check.sh
+```
+
+systemd Service und Timer anlegen:
+
+```bash
+sudo tee /etc/systemd/system/arsnova-maintenance-check.service >/dev/null <<'EOF'
+[Unit]
+Description=arsnova.eu maintenance check
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/arsnova-maintenance-check.sh
+EOF
+
+sudo tee /etc/systemd/system/arsnova-maintenance-check.timer >/dev/null <<'EOF'
+[Unit]
+Description=Hourly arsnova.eu maintenance check
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=10m
+
+[Install]
+WantedBy=timers.target
+EOF
+```
+
+Aktivieren und einmal manuell testen:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now arsnova-maintenance-check.timer
+sudo systemctl start arsnova-maintenance-check.service
+sudo journalctl -u arsnova-maintenance-check.service -n 80 --no-pager
+systemctl list-timers arsnova-maintenance-check.timer
+```
+
+### Manuelle Kontrollbefehle
+
+```bash
+df -h
+df -ih
+systemctl --failed
+systemctl list-timers --all | grep -Ei 'arsnova|backup|docker|certbot|maintenance'
+find /home/deploy/backups/postgres -type f -name 'arsnova-postgres-*.sql.gz' -mtime -2 -ls
+sudo certbot certificates
+docker compose -f /home/deploy/arsnova.eu/docker-compose.prod.yml --env-file /home/deploy/arsnova.eu/.env.production ps
+curl -fsS http://127.0.0.1:3000/trpc/health.check
+curl -fsS https://arsnova.eu/trpc/health.check
+```
+
+## 16. Nach dem Incident
 
 Nach Stabilisierung dokumentieren:
 
@@ -612,7 +941,7 @@ curl -I https://arsnova.eu/de/
 curl -fsS http://127.0.0.1:3000/trpc/health.check
 ```
 
-## 16. Verwandte Dokumente
+## 17. Verwandte Dokumente
 
 - [deployment-debian-root-server.md](deployment-debian-root-server.md) - vollständiges Produktions-Setup
 - [ENVIRONMENT.md](ENVIRONMENT.md) - Env-Variablen und Schnelldiagnose
