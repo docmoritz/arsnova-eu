@@ -68,7 +68,10 @@ ls_specific_settings: {}
 #   additional_workspace_folders:
 #     - ../sibling-package
 #     - ../shared-lib
-additional_workspace_folders: []
+additional_workspace_folders:
+  - apps/frontend
+  - apps/backend
+  - libs/shared-types
 
 # list of additional paths to ignore in this project.
 # Same syntax as gitignore, so you can use * and **.

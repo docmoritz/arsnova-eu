@@ -1,74 +1,23 @@
 # Cursor Rules: arsnova.eu
 
-Du arbeitest als Lead-Architekt in einem npm-Workspaces-Monorepo. Halte diese Datei kurz im Kopf, lade bei Bedarf aber die kanonischen Dokumente: `AGENT.md`, `CONTRIBUTING.md`, `docs/README.md`, `docs/cursor-context.md`, `docs/architecture/handbook.md`, `docs/SECURITY-OVERVIEW.md`, `docs/TESTING.md`.
+Du arbeitest in einem npm-Workspaces-Monorepo für arsnova.eu.
 
 ## Projektstruktur
 
 - **Backend:** `apps/backend/` — Node.js, Express, tRPC v11, Prisma 7, Redis.
-- **Frontend:** `apps/frontend/` — Angular 21.2, Standalone Components, Signals, Angular Material 3. App-Struktur: `core/`, `shared/`, `features/`.
-- **Shared Types:** `libs/shared-types/` — Zod v4 Schemas und TypeScript-Typen. Import immer über `@arsnova/shared-types`.
-- **Prisma:** `prisma/schema.prisma` — Datenmodell.
-- **Docs:** `docs/README.md` ist die Landkarte; produktionsrelevant sind Deployment, ENVIRONMENT, SECURITY-OVERVIEW, TESTING und Admin-Flow.
-- **Cursor modern:** `.cursor/rules/core.mdc` ergänzt diese Legacy-Datei und verweist auf den stabilen Cursor-Kontext.
+- **Frontend:** `apps/frontend/` — Angular 21.2, Standalone Components, Signals, Angular Material 3; Struktur: `core/`, `shared/`, `features/`.
+- **Shared Types:** `libs/shared-types/` — Zod v4 Schemas und TypeScript-Typen; Import über `@arsnova/shared-types`.
+- **Landing:** `apps/landing/` — Astro 5, Tailwind 3.
+- **Prisma:** `prisma/schema.prisma` — PostgreSQL-Datenmodell.
+- **Docs:** `docs/README.md` ist die Dokumentationslandkarte.
 
-## Monorepo-Regeln
+## Stack-Fakten
 
-1. **Schema-first:** Jede tRPC-Eingabe/Ausgabe muss ein Zod-Schema aus `@arsnova/shared-types` nutzen. Schema zuerst ändern, dann Backend und Frontend.
-2. **Nur tRPC:** Keine neuen REST-Endpunkte, keine parallelen DTO-Definitionen in App-Code.
-3. **Backend/Frontend zusammen denken:** Neue Procedures brauchen Router, Shared Schema, Client-Nutzung und Tests im gleichen Arbeitszusammenhang.
-4. **Keine Secrets:** `.env`, `.env.production`, Tokens und Zugangsdaten nie committen oder in Prompts übernehmen.
-5. **Bestehende Änderungen schützen:** Vor Edits `git status` prüfen; fremde Änderungen nicht überschreiben.
+- **Runtime:** Node 20 aus `.nvmrc` oder passende Node 22 LTS; CI prüft Node 20 und 22.
+- **Package Manager:** npm mit Workspaces und `package-lock.json`.
+- **API:** tRPC über Shared Zod Contracts.
+- **Persistenz:** PostgreSQL für persistente Daten; Redis für Rate-Limits, Token-TTLs und Live-Hilfsdaten.
+- **Realtime/Sync:** tRPC WebSocket und Yjs/y-websocket; IndexedDB für Local-First Quiz-Sync.
+- **i18n:** Quellsprache `de`; gepflegte Locales `de`, `en`, `fr`, `es`, `it`.
 
-## Sicherheit und Datenschutz
-
-- Rechte nie aus URL, Session-Code oder UI-State ableiten. `/session/:code/host`, `/session/:code/present`, `/feedback/:code` und `/admin` sind keine Berechtigungsnachweise.
-- Host-only Backend-Logik muss über `hostProcedure` oder gleichwertige serverseitige Token-Prüfung laufen.
-- Standalone-Blitzlicht nutzt ein eigenes Feedback-Host-Token-Modell; nicht implizit mit Session-Host-Rechten vermischen.
-- Admin-Zugriff: `ADMIN_SECRET` nur für `admin.login`; danach Admin-Session-Token mit TTL in Redis, geschützt über `adminProcedure`.
-- Owner-gebundene Quiz-Historie oder ähnliche Daten dürfen nicht allein über `quizId` enumerierbar sein; `accessProof` oder ein gleichwertiges Besitzmodell verwenden.
-- Öffentliche Teilnehmer-Endpunkte minimal halten. Keine öffentliche Voll-Liste, wenn Nickname-Kollisionen oder Self-Lookups reichen.
-- DTO/Data-Stripping ist Pflicht: `isCorrect` und andere lösungsrelevante Daten nicht im Status `ACTIVE` an Teilnehmende ausliefern.
-- Effective-Vote-Regel für Peer Instruction bei Scoring, Leaderboards, Bonuscodes und Exporten nicht umgehen.
-
-## Stack- und UI-Regeln
-
-- **Node:** Lokal Node 20 aus `.nvmrc` oder passende Node 22 LTS nutzen; CI prüft Node 20 und 22.
-- **Angular:** Standalone Components, Signals, `@if`/`@for`; RxJS nur für echte Streams, nicht als Standard-UI-State.
-- **Styling:** Angular Material 3, Tokens und vorhandene SCSS-Patterns. Kein Tailwind in `apps/frontend`.
-- **Tests:** Frontend-Specs neben der Datei als `<dateiname>.spec.ts`; Backend-Tests unter `apps/backend/src/**/*.test.ts`.
-- **Data:** PostgreSQL für persistente Session-, Audit-, MOTD- und Statistikdaten. Redis für Rate-Limits, Token-TTLs, Presence-/Live-Hilfsdaten und flüchtiges Blitzlicht. Yjs/IndexedDB/y-websocket für Local-First Quiz-Sync.
-
-## UX und i18n
-
-- Quellsprache ist Deutsch; UI spricht informell per Du.
-- Neue oder geänderte UI-Texte, ARIA-Labels, Fehlermeldungen, Platzhalter und Hilfetexte in `de`, `en`, `fr`, `es`, `it` synchron halten.
-- Legal-Texte pro Locale nur bewusst ändern und die passenden Markdown-Dateien mitziehen.
-- Stabile Übersetzungs-IDs (`i18n="@@..."`, `$localize`:@@...:) bevorzugen; verwaiste XLF-Einträge nach Copy-Umbauten entfernen.
-- Mobile-First prüfen, besonders 320 px und längere lokalisierte Texte.
-- Micro-Interactions in `@media (prefers-reduced-motion: no-preference)` kapseln.
-- Startseiten- und UI-Patterns stehen in `docs/ui/STYLEGUIDE.md`, `docs/ui/TOKENS.md`, `docs/ui/PR-CHECKLIST-UI.md`.
-
-## Produktionsrelevante Änderungen
-
-Wenn Env, Deploy, Nginx, Docker, Admin, Rate-Limits, Health, Backups, CI/CD oder Betreiberabläufe betroffen sind:
-
-- `docs/deployment-debian-root-server.md`
-- `docs/ENVIRONMENT.md`
-- `docs/SECURITY-OVERVIEW.md`
-- `docs/TESTING.md`
-- `docs/implementation/ADMIN-FLOW.md`
-- `.env.production.example`
-- `docker-compose.prod.yml`
-- `scripts/deploy.sh`
-- `.github/workflows/ci.yml`
-
-gegen Code und Konfiguration abgleichen. Hinter genau einem Nginx/Reverse Proxy ist `TRUST_PROXY_HOPS=1` produktionsrelevant, damit Rate-Limits echte Client-IPs sehen.
-
-## Arbeitsweise in Cursor
-
-- `AGENT.md` ist der kurze KI-Einstieg; bei Unklarheit zuerst laden.
-- `Backlog.md` vor Story-Arbeit lesen; Akzeptanzkriterien und DoD sind verbindlich.
-- `docs/cursor-context.md` ist nützlich für lange Sessions, kann aber veralten. Aktuelle Aussagen immer gegen fokussierte Doku und Code prüfen.
-- Für Feature-/Bugfix-Arbeit kleinste sinnvolle Scheibe umsetzen, dann gezielt testen, dann erst breitere Checks.
-- Für Markdown-only Arbeit mindestens Prettier-Check und `git diff --check` über die berührten Dateien ausführen.
-- Vor „fertig“, Commit oder Push die relevanten Checks aus `AGENT.md` und `docs/TESTING.md` durchlaufen oder Abweichungen dokumentieren.
+Für Projektkontext: lies mem:core
