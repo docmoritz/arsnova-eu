@@ -129,6 +129,25 @@ describe('HomeComponent', () => {
       comp.themePreset.setPreset('serious');
       expect(comp.isPlayfulPreset()).toBe(false);
     });
+
+    it('zeigt die Brand-Wiederholung im Mitmachen-Panel nur im spielerischen Preset', () => {
+      const fixture = createHomeFixture();
+      fixture.detectChanges();
+
+      const brand = fixture.nativeElement.querySelector(
+        '#participant-entry .home-card__brand-repeat',
+      ) as HTMLElement | null;
+      expect(brand?.getAttribute('aria-hidden')).toBe('true');
+      expect(brand?.textContent).toContain('arsnova.eu');
+      expect(brand?.querySelector('img')?.getAttribute('src')).toBe('assets/icons/favicon.svg');
+
+      fixture.componentInstance.themePreset.setPreset('serious');
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('#participant-entry .home-card__brand-repeat'),
+      ).toBeNull();
+    });
   });
 
   describe('isValidSessionCode', () => {

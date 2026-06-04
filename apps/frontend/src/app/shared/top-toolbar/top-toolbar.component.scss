@@ -168,6 +168,8 @@
   flex-shrink: 0;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
+  user-select: none;
 }
 
 .top-toolbar__brand-star {
@@ -352,13 +354,6 @@
   .top-toolbar__brand-icon {
     border-radius: 0.5rem;
     overflow: visible;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .top-toolbar__brand-icon {
-      transform-origin: center center;
-      animation: home-playful-brand-pulse 2s ease-in-out infinite;
-    }
   }
 
   .top-toolbar__preset-icon-playful {

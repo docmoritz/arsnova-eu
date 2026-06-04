@@ -124,6 +124,18 @@
           <span i18n>Mitmachen</span>
         </mat-card-subtitle>
         <mat-card-title class="home-card__title" i18n>Dabei sein</mat-card-title>
+        @if (isPlayfulPreset()) {
+          <span class="home-card__brand-repeat" aria-hidden="true">
+            <img
+              class="home-card__brand-repeat-icon"
+              src="assets/icons/favicon.svg"
+              alt=""
+              width="32"
+              height="32"
+            />
+            <span class="home-card__brand-repeat-wordmark">arsnova.eu</span>
+          </span>
+        }
       </mat-card-header>
 
       <mat-card-content class="l-stack l-stack--sm">
