@@ -2016,6 +2016,30 @@ mat-card-actions.l-stack {
       justify-content: center;
     }
   }
+
+  @media (min-width: 840px) {
+    .home-motd-layer {
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding-block-start: max(6rem, env(safe-area-inset-top, 0px));
+      padding-inline-end: max(1.5rem, calc((100vw - 56rem) / 2));
+    }
+
+    .home-motd-sheet {
+      width: min(31rem, 100%);
+      max-height: min(
+        31rem,
+        calc(100dvh - 7.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+      );
+      max-height: min(
+        31rem,
+        calc(
+          min(100dvh, 100svh) -
+            7.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+        )
+      );
+    }
+  }
 }
 
 /* MOTD-Overlay (Epic 10): über Toolbar/Inhalt */
