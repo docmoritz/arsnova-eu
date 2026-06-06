@@ -41,14 +41,14 @@
         <p class="vote-bonus-card__code">{{ gateToken }}</p>
         <p class="vote-bonus-card__hint">{{ vpc.voteBonusHint(isPlayfulPreset()) }}</p>
       </section>
-    } @else if (!feedbackSubmitted()) {
+    } @else if (sessionFeedbackAvailable() && !feedbackSubmitted()) {
       <p class="vote-session-end-gate__lead" i18n="@@sessionVote.sessionEndFeedbackLead">
         Die Session ist beendet. Wenn du magst, bewerte sie kurz – danach kannst du zur Startseite
         wechseln.
       </p>
     }
 
-    @if (!feedbackSubmitted()) {
+    @if (sessionFeedbackAvailable() && !feedbackSubmitted()) {
       <section
         class="vote-feedback-card vote-feedback-card--session-end-gate"
         aria-labelledby="session-end-feedback-heading"
@@ -144,7 +144,7 @@
           </div>
         </fieldset>
       </section>
-    } @else {
+    } @else if (sessionFeedbackAvailable()) {
       @if (feedbackSummary(); as summary) {
         <section class="vote-feedback-done" aria-labelledby="session-end-feedback-done-heading">
           <mat-icon class="vote-feedback-done__icon" aria-hidden="true">check_circle</mat-icon>
@@ -653,7 +653,7 @@
           }
 
           <!-- Feedback-Formular -->
-          @if (!feedbackSubmitted()) {
+          @if (sessionFeedbackAvailable() && !feedbackSubmitted()) {
             <section
               class="vote-feedback-card"
               aria-labelledby="feedback-heading"

@@ -116,6 +116,7 @@ model Session {
   onboardingNicknameTheme NicknameTheme?
   currentQuestion Int?                             // Index der aktuell aktiven Frage (0-basiert)
   currentRound    Int              @default(1)     // Story 2.7: Peer Instruction – aktuelle Abstimmungsrunde (1 oder 2)
+  quizStarted     Boolean          @default(false) // Wurde mindestens eine Quizfrage gestartet?
   quizId          String?                          // null bei Q&A-Sessions
   quiz            Quiz?         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   participants    Participant[]

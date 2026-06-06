@@ -41,6 +41,7 @@ describe('session.getInfo (ADR-0009)', () => {
       status: 'LOBBY',
       title: null,
       quizId: QUIZ_ID,
+      quizStarted: true,
       qaEnabled: true,
       qaOpen: true,
       qaTitle: 'Fragen zur Vorlesung',
@@ -84,6 +85,7 @@ describe('session.getInfo (ADR-0009)', () => {
       },
       quickFeedback: { enabled: true, open: true },
     });
+    expect(result.quizStarted).toBe(true);
     expect(result.quizName).toBe('Demo Quiz');
     expect(result.nicknameTheme).toBe('NOBEL_LAUREATES');
   });

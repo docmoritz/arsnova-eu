@@ -2162,6 +2162,7 @@ export const SessionInfoDTOSchema = z.object({
   enableEmojiReactions: z.boolean().optional(),
   showQuestionTypeIndicators: z.boolean().optional(),
   readingPhaseEnabled: z.boolean().optional(),
+  quizStarted: z.boolean().optional(),
   defaultTimer: z.number().nullable().optional(),
   timerScaleByDifficulty: z.boolean().optional(),
   backgroundMusic: z.string().nullable().optional(),

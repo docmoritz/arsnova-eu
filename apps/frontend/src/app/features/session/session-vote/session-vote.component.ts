@@ -728,7 +728,13 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
-      if (this.isFinished() && this.code && this.participantId() && !this.feedbackStateLoaded) {
+      if (
+        this.isFinished() &&
+        this.sessionFeedbackAvailable() &&
+        this.code &&
+        this.participantId() &&
+        !this.feedbackStateLoaded
+      ) {
         void this.loadFeedbackState();
       }
     });
@@ -1415,14 +1421,16 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly showSessionEndGateBonusAction = computed(
     () => this.showSessionEndGate() && Boolean(this.bonusToken()),
   );
+  readonly sessionFeedbackAvailable = computed(() => this.sessionSettings().quizStarted === true);
   readonly showSessionEndGateFeedbackAction = computed(
-    () => this.showSessionEndGate() && !this.feedbackSubmitted(),
+    () => this.showSessionEndGate() && this.sessionFeedbackAvailable() && !this.feedbackSubmitted(),
   );
   readonly showFinishedBonusAction = computed(
     () => this.showFinishedActions() && Boolean(this.bonusToken()),
   );
   readonly showFinishedFeedbackAction = computed(
-    () => this.showFinishedActions() && !this.feedbackSubmitted(),
+    () =>
+      this.showFinishedActions() && this.sessionFeedbackAvailable() && !this.feedbackSubmitted(),
   );
   readonly sessionEndGateActionCount = computed(
     () =>
@@ -1858,11 +1866,14 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       const pid = this.participantId();
       if (pid) {
         await this.loadPersonalResult();
-        await this.refreshFeedbackSubmittedForGate();
+        if (this.sessionFeedbackAvailable()) {
+          await this.refreshFeedbackSubmittedForGate();
+        }
       }
       const bonus = this.bonusToken();
       const hasBonus = typeof bonus === 'string' && bonus.length > 0;
-      const needsFeedback = Boolean(pid) && !this.feedbackSubmitted();
+      const needsFeedback =
+        this.sessionFeedbackAvailable() && Boolean(pid) && !this.feedbackSubmitted();
       if (hasBonus || needsFeedback) {
         this.showSessionEndGate.set(true);
         return;
@@ -1878,7 +1889,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   /** Frische Abfrage vor dem Abschluss-Screen (unabhängig vom Effect). */
   private async refreshFeedbackSubmittedForGate(): Promise<void> {
     const pid = this.participantId();
-    if (!this.code || !pid) return;
+    if (!this.code || !pid || !this.sessionFeedbackAvailable()) return;
     try {
       const { submitted } = await trpc.session.getHasSubmittedFeedback.query({
         code: this.code,
@@ -3301,8 +3312,14 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   async submitFeedback(): Promise<void> {
-    if (this.feedbackSubmitting() || this.feedbackSubmitted() || this.feedbackOverall() === 0)
+    if (
+      this.feedbackSubmitting() ||
+      this.feedbackSubmitted() ||
+      !this.sessionFeedbackAvailable() ||
+      this.feedbackOverall() === 0
+    ) {
       return;
+    }
     this.feedbackSubmitting.set(true);
     try {
       await trpc.session.submitSessionFeedback.mutate({
@@ -3351,7 +3368,14 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   /** Beim Neuladen prüfen, ob dieser Teilnehmer bereits bewertet hat (Formular ausblenden). */
   private async loadFeedbackState(): Promise<void> {
-    if (!this.code || !this.participantId() || this.feedbackStateLoaded) return;
+    if (
+      !this.code ||
+      !this.participantId() ||
+      !this.sessionFeedbackAvailable() ||
+      this.feedbackStateLoaded
+    ) {
+      return;
+    }
     try {
       const { submitted } = await trpc.session.getHasSubmittedFeedback.query({
         code: this.code,

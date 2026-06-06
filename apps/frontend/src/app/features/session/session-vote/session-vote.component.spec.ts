@@ -1842,6 +1842,7 @@ describe('SessionVoteComponent', () => {
       title: null,
       participantCount: 6,
       teamMode: true,
+      quizStarted: true,
       enableRewardEffects: true,
       preset: 'PLAYFUL',
     });
@@ -1878,6 +1879,7 @@ describe('SessionVoteComponent', () => {
       title: null,
       participantCount: 6,
       teamMode: false,
+      quizStarted: true,
       preset: 'PLAYFUL',
     });
     currentQuestionQueryMock.mockResolvedValue(null);
@@ -1922,6 +1924,7 @@ describe('SessionVoteComponent', () => {
       title: null,
       participantCount: 6,
       teamMode: false,
+      quizStarted: true,
       preset: 'PLAYFUL',
     });
     currentQuestionQueryMock.mockResolvedValue(null);
@@ -1949,6 +1952,48 @@ describe('SessionVoteComponent', () => {
     expect(bottomActions?.textContent).toMatch(/Absenden!|Bewertung absenden/);
     expect(bottomActions?.textContent).toContain('Zur Startseite');
     expect(bottomActions?.className).toContain('vote-page__bottom-actions--session-end');
+    expect(navSpy).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('zeigt im Session-End-Gate keine Bewertung, wenn kein Quiz gestartet wurde', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'FINISHED',
+      quizName: 'Team-Quiz',
+      title: null,
+      participantCount: 6,
+      teamMode: false,
+      quizStarted: false,
+      preset: 'PLAYFUL',
+    });
+    currentQuestionQueryMock.mockResolvedValue(null);
+    getPersonalResultQueryMock.mockResolvedValue({
+      totalScore: 10,
+      rank: 3,
+      bonusToken: 'BONUS-123',
+    });
+
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const bottomActions = host.querySelector('.vote-page__bottom-actions') as HTMLElement | null;
+    expect(host.querySelector('.vote-feedback-card')).toBeNull();
+    expect(bottomActions).not.toBeNull();
+    expect(bottomActions?.textContent).toContain('Code kopieren');
+    expect(bottomActions?.textContent).toContain('Zur Startseite');
+    expect(bottomActions?.textContent).not.toMatch(/Absenden!|Bewertung absenden/);
+    expect(getHasSubmittedFeedbackQueryMock).not.toHaveBeenCalled();
     expect(navSpy).not.toHaveBeenCalled();
     fixture.destroy();
   });

@@ -2525,6 +2525,7 @@ export const sessionRouter = router({
           quickFeedbackOpen,
           ...buildSessionOnboardingUpdate(onboardingProfile),
           status: 'LOBBY',
+          quizStarted: false,
         },
       });
       if (onboardingProfile.teamMode) {
@@ -3154,6 +3155,7 @@ export const sessionRouter = router({
               enableEmojiReactions: q.enableEmojiReactions,
               showQuestionTypeIndicators: q.showQuestionTypeIndicators,
               readingPhaseEnabled: q.readingPhaseEnabled,
+              quizStarted: session.quizStarted,
               defaultTimer: q.defaultTimer,
               timerScaleByDifficulty: q.timerScaleByDifficulty,
               backgroundMusic: q.backgroundMusic,
@@ -3612,6 +3614,7 @@ export const sessionRouter = router({
           status: newStatus,
           currentQuestion: nextIdx,
           currentRound: 1,
+          quizStarted: true,
           statusChangedAt: now,
           ...(answerDisplayOrderPayload && { answerDisplayOrder: answerDisplayOrderPayload }),
         },
@@ -5392,7 +5395,7 @@ export const sessionRouter = router({
     .mutation(async ({ input }) => {
       const session = await prisma.session.findUnique({
         where: { code: input.code.toUpperCase() },
-        select: { id: true, status: true },
+        select: { id: true, status: true, quizStarted: true },
       });
       if (!session) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
@@ -5401,6 +5404,12 @@ export const sessionRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Bewertung nur nach Session-Ende möglich.',
+        });
+      }
+      if (!session.quizStarted) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Bewertung nur nach gestartetem Quiz möglich.',
         });
       }
 
