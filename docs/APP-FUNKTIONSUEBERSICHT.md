@@ -117,7 +117,7 @@ Die Startseite ist der primäre Ort für die **Message of the Day**:
 
 - Sprachwechsel
 - Theme-Wechsel
-- Preset-Wechsel zwischen **Seriös** und **Spielerisch**
+- lokaler Preset-Wechsel zwischen **Seriös** und **Spielerisch**
 - News-/Archiv-Icon mit Ungelesen-Badge
 - Server-Status im Footer
 - PWA-Installations- und Update-Hinweise
@@ -345,7 +345,7 @@ Für diese Kanäle kann der Host:
 
 Während der Session kann der Host zusätzlich:
 
-- das visuelle Preset der Session aktualisieren
+- das eigene Host-Preset und Theme lokal wechseln; Join-, Vote- und Present-Clients behalten ihr eigenes Preset und Theme
 - den Q&A-Titel live ändern
 - Quiz austauschen, solange die Session noch in der Startphase ist
 
@@ -411,6 +411,7 @@ Die Vote-Oberfläche verwaltet dabei auch Clientzustand wie:
 - Rejoin-Token
 - lokale Abstimmungsmarker
 - eigenes Team
+- lokales Theme und Preset
 - Session-End-Gates für Bonuscode oder Feedback
 
 ### 4.5 Join-Rolle
@@ -517,7 +518,7 @@ Der Host kann im Blitzlicht:
 
 - eine Runde starten
 - Typ wechseln
-- Theme und Preset synchronisieren
+- den Blitzlicht-Style-Snapshot aktualisieren (`theme` / `preset`); normale Session-Vote-Clients übernehmen daraus kein globales Theme oder Preset
 - Abstimmung sperren und entsperren
 - Runde zurücksetzen
 - Diskussionsphase starten
@@ -533,7 +534,7 @@ Teilnehmende können:
 - je Runde genau einmal abstimmen
 - je nach Typ passende Eingaben wählen
 - auf zweite Runden reagieren
-- den vom Host vorgegebenen Stil übernehmen
+- in der Standalone-Blitzlicht-Route den Blitzlicht-Style-Snapshot übernehmen; in normalen Session-Vote-Clients bleiben Theme und Preset lokal
 - beim Tempo-Feedback ihre aktuelle Auswahl wechseln oder per Re-Tap entfernen
 
 ### 6.5 Ergebnismodus
@@ -600,7 +601,7 @@ Der Ablauf ist jeweils:
 
 ### 7.4 Belohnungs- und Motivationssystem
 
-Je nach Preset und Quizkonfiguration sind verfügbar:
+Je nach Quiz-Preset, lokalem UI-Preset und Quizkonfiguration sind verfügbar:
 
 - Soundeffekte
 - Belohnungseffekte

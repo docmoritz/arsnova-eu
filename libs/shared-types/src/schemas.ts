@@ -1752,13 +1752,6 @@ export const AttachQuizToSessionInputSchema = GetSessionInfoInputSchema.extend({
 });
 export type AttachQuizToSessionInput = z.infer<typeof AttachQuizToSessionInputSchema>;
 
-/** Input: Preset zur Laufzeit ändern (Host → alle Clients). */
-export const UpdateSessionPresetInputSchema = z.object({
-  code: z.string().length(6),
-  preset: QuizPresetEnum,
-});
-export type UpdateSessionPresetInput = z.infer<typeof UpdateSessionPresetInputSchema>;
-
 /** Input: Q&A-Kanaltitel zur Laufzeit setzen (Host, ADR-0009). */
 export const UpdateSessionQaTitleInputSchema = z.object({
   code: z.string().length(6),
@@ -1786,7 +1779,6 @@ export const SessionStatusUpdateSchema = z.object({
   timer: z.number().nullable().optional(),
   /** Server-Zeitstempel des Status-Snapshots (ISO-8601) zur Uhrensynchronisation. */
   serverTime: z.string().optional(),
-  preset: QuizPresetEnum.optional(),
   /** Aktuelle Runde bei Peer Instruction (Story 2.7), 1 oder 2. */
   currentRound: z.number().int().min(1).max(2).optional(),
   /** Kanalzustand für Live-Umschaltung auf Vote-Clients. */
@@ -2178,7 +2170,6 @@ export const SessionInfoDTOSchema = z.object({
   teamAssignment: z.string().nullable().optional(),
   teamNames: z.array(z.string()).optional(),
   bonusTokenCount: z.number().nullable().optional(),
-  preset: QuizPresetEnum.optional(),
 });
 export type SessionInfoDTO = z.infer<typeof SessionInfoDTOSchema>;
 

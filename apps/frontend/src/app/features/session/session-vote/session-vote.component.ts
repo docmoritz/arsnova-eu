@@ -1932,11 +1932,6 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.ensureQaSubscription();
       this.ensureQuickFeedbackSubscription();
       await this.refreshQaQuestions();
-      if (session.preset === 'PLAYFUL' || session.preset === 'SERIOUS') {
-        this.themePreset.setPreset(session.preset === 'PLAYFUL' ? 'spielerisch' : 'serious', {
-          silent: true,
-        });
-      }
       if (session.teamMode) {
         await Promise.all([this.loadParticipantTeam(), this.loadSessionTeams()]);
         if (session.status === 'RESULTS') {
@@ -2031,7 +2026,6 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           currentQuestion: number | null;
           activeAt?: string;
           timer?: number | null;
-          preset?: string;
           currentRound?: number;
           channels?: SessionChannelsDTO;
           preferredChannel?: SessionLiveChannel;
@@ -2069,11 +2063,6 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           if (newRound !== prevRound) {
             this.emojiSent.set(false);
             this.emojiSentEmoji.set('');
-          }
-          if (data.preset === 'PLAYFUL' || data.preset === 'SERIOUS') {
-            this.themePreset.setPreset(data.preset === 'PLAYFUL' ? 'spielerisch' : 'serious', {
-              silent: true,
-            });
           }
           if (data.status === 'ACTIVE' && newRound === 2 && prevRound === 1) {
             this.resetForSecondRoundStart();
@@ -2152,11 +2141,6 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.ensureActiveChannel();
       if (session.teamMode && !previousTeamMode) {
         await Promise.all([this.loadParticipantTeam(), this.loadSessionTeams()]);
-      }
-      if (session.preset === 'PLAYFUL' || session.preset === 'SERIOUS') {
-        this.themePreset.setPreset(session.preset === 'PLAYFUL' ? 'spielerisch' : 'serious', {
-          silent: true,
-        });
       }
       if (prevStatus !== nextStatus && session.teamMode) {
         if (nextStatus === 'RESULTS') {

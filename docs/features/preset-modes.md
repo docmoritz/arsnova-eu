@@ -1,8 +1,10 @@
-# Preset-Modi (Session-Voreinstellungen)
+# Preset-Modi (Quiz-Defaults und lokale UI-Voreinstellungen)
 
-> **Stand:** 2026-05-30 · Abgleich mit `QUIZ_PRESETS` / `CreateQuizInput` (`libs/shared-types/src/schemas.ts`), `ThemePresetService`, `preset-toast.component.ts` (`PRESET_OPTION_IDS`, `getPresetDefaults`), `PresetStorageEntrySchema`, Foyer-Einflug im Preset `PLAYFUL`
+> **Stand:** 2026-06-06 · Abgleich mit `QUIZ_PRESETS` / `CreateQuizInput` (`libs/shared-types/src/schemas.ts`), `ThemePresetService`, `preset-toast.component.ts` (`PRESET_OPTION_IDS`, `getPresetDefaults`), `PresetStorageEntrySchema`, Foyer-Einflug im lokalen Preset `spielerisch`
 
-Die Preset-Modi sind ein zentrales Unterscheidungsmerkmal von arsnova.eu. Sie erlauben es Dozenten, mit **einem Klick** eine komplette Session-Konfiguration zu laden – optimiert für den jeweiligen Einsatzzweck. Kein langwieriges Zusammenklicken einzelner Optionen, kein versehentliches Vergessen eines Toggles.
+Die Preset-Modi sind ein zentrales Unterscheidungsmerkmal von arsnova.eu. Sie erlauben es Dozenten, mit **einem Klick** eine Quiz-Konfiguration für den Live-Start zu laden – optimiert für den jeweiligen Einsatzzweck. Kein langwieriges Zusammenklicken einzelner Optionen, kein versehentliches Vergessen eines Toggles.
+
+Wichtig: Preset und Theme sind im laufenden Client eine **lokale UI-Entscheidung**. Hosts können ihr eigenes Preset und Theme wechseln, aber sie überschreiben damit nicht das Preset oder Theme von Join-, Vote- oder Present-Clients.
 
 ## Konzept & Motivation
 
@@ -15,6 +17,18 @@ In klassischen Audience-Response-Systemen (Kahoot!, Mentimeter) gibt es meist ei
 | Teamarbeit im Seminar         | Gruppenbildung, kooperative Auswertung                                       |
 
 Die Preset-Modi lösen dieses Problem mit **zwei Grundkonfigurationen**, die der Dozent jederzeit individuell anpassen kann.
+
+## Nutzerhoheit in Live-Sessions
+
+Seit 2026-06-06 gibt es keine serverseitige Runtime-Synchronisation mehr, bei der das Host-Preset auf Vote-Clients übertragen wird.
+
+- `SessionInfoDTO` und `SessionStatusUpdate` enthalten kein Session-Preset.
+- Es gibt keinen `session.updatePreset`-Endpoint.
+- `ThemePresetService` liest und schreibt Preset und Theme lokal im jeweiligen Browser (`home-preset`, `home-theme`).
+- Host, Join, Present und Vote verwenden ihr jeweils lokales Preset für Copy, Motion, Musik- bzw. Effekt-Gates und visuelle Akzente.
+- Das Quiz-Preset bleibt relevant für die beim Live-Start gespeicherte Quiz-/Session-Konfiguration, z. B. `readingPhaseEnabled`, `enableRewardEffects`, `enableSoundEffects`, Team- und Nickname-Optionen.
+
+Damit behalten Teilnehmende die Kontrolle darüber, ob für sie **Seriös**/**Spielerisch** und **Light**/**Dark**/**System** am besten passt.
 
 ## Die zwei Presets
 
@@ -50,7 +64,7 @@ Die Preset-Modi lösen dieses Problem mit **zwei Grundkonfigurationen**, die der
 - Zeitlimit: **an** (Standard-Sekundenwert aus `DEFAULT_TIMER_SECONDS` in shared-types)
 - **`anonymousMode`: false**, **`allowCustomNicknames`: false**, **`nicknameTheme`: Oberstufe** — vorgegebene Pseudonyme, kein reiner Anonym-Modus
 - Lesephase: **aus**
-- Foyer-Einflug im Live-Betrieb: In der Host-Lobby erscheinen neue Teilnehmende im Preset `PLAYFUL` als dezente Einflug-Chips, sofern `enableRewardEffects !== false`; auf Teilnehmendengeräten gibt es einen kurzen Ankunftsmoment.
+- Foyer-Einflug im Live-Betrieb: In der Host-Lobby erscheinen neue Teilnehmende im lokalen UI-Preset `spielerisch` als dezente Einflug-Chips, sofern `enableRewardEffects !== false`; auf Teilnehmendengeräten gibt es nur dann einen kurzen Ankunftsmoment, wenn deren lokales UI-Preset ebenfalls `spielerisch` ist.
 
 **Hinweis Startseite:** Im **Preset-Toast** (localStorage) kann die **Altersgruppe** für Nicks separat gewählt werden; beim **neuen Quiz** legt das Preset aber **`QUIZ_PRESETS`** fest (derzeit **Oberstufe** für beide Modi).
 
@@ -63,7 +77,7 @@ Wenn der **Team-Modus** mit dem Preset **Spielerisch** kombiniert wird, soll die
 - Bereits beim **Beitritt** sehen Teilnehmende farbige Teamkarten; bei manueller Auswahl gibt es einen kleinen positiven Bestätigungsmoment, bei automatischer Zuweisung eine sichtbare Teamvorschau mit leichtem Fokus.
 - In der **Host-Lobby** erscheinen Teams gruppiert mit Farben und Mitgliedern; auf dem Beamer bleibt der Zugang sichtbar, aber die Teamkarten stehen visuell im Vordergrund und wirken wie ein bevorstehendes Teamduell.
 - In den **Ergebnisphasen auf dem Teilnehmergerät** bleibt der Teamgedanke sichtbar: eigene Teamkarte, Teamrang, Team-Punkte und eine kleine Topliste schaffen einen kollektiven Reward statt nur Individual-Feedback.
-- Im **Present-/Beamer-Finale** gibt es eine Siegerkarte und ein Team-Balkenboard; im Preset `PLAYFUL` mit dezentem Finish-Effekt und ohne konkurrierende Freitext-/Placeholder-Flächen im Abschlusszustand.
+- Im **Present-/Beamer-Finale** gibt es eine Siegerkarte und ein Team-Balkenboard; im lokalen UI-Preset `spielerisch` mit dezentem Finish-Effekt und ohne konkurrierende Freitext-/Placeholder-Flächen im Abschlusszustand.
 - Alle dekorativen Bewegungen bleiben an `@media (prefers-reduced-motion: no-preference)` gebunden.
 - Gamification-Effekte sind unterstützend: klare Zugehörigkeit, leichte Spannung, kein visuelles Chaos.
 
@@ -152,7 +166,7 @@ Die Themes sind als Zod-Enum `NicknameThemeEnum` in `libs/shared-types/src/schem
 
 ## Persistenz (localStorage)
 
-Alle Preset-Toast-Einstellungen werden **pro Preset** im Browser des Dozenten gespeichert. Es gibt dafür keinen Server-Roundtrip – das passt zum Zero-Knowledge-Prinzip.
+Alle Preset-Toast-Einstellungen werden **pro Preset** im jeweiligen Browser gespeichert. Es gibt dafür keinen Server-Roundtrip und keine Live-Übersteuerung anderer Clients – das passt zum Zero-Knowledge-Prinzip.
 
 | Key                               | Inhalt                                                                                                                          |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -210,8 +224,8 @@ graph TD
     LS["localStorage<br/>home-preset, home-preset-options-*"]
     ST["@arsnova/shared-types<br/>PresetStorageEntrySchema, NicknameThemeEnum"]
     QP["QuizPreview/List<br/>Live-Schaltung"]
-    SH["SessionHostComponent<br/>Lobby + FoyerEntranceLayer"]
-    SV["SessionVoteComponent<br/>Join Arrival Moment"]
+    SH["SessionHostComponent<br/>lokales Preset: Musik + Foyer"]
+    JP["Join/Present/Vote<br/>lokales Preset"]
 
     HC -->|"presetToastVisible signal"| PTC
     PTC -->|"closed output"| HC
@@ -221,9 +235,10 @@ graph TD
     TPS -->|"setPreset / setTheme"| LS
     PTC -->|"safeParse / Import-Export"| ST
     LS -->|"Preset-Overrides beim Live-Start"| QP
-    ST -->|"preset + enableRewardEffects"| QP
+    ST -->|"Quiz-Defaults + enableRewardEffects"| QP
     QP -->|"session.create / quiz.upload"| SH
-    QP -->|"session.create / quiz.upload"| SV
+    TPS -->|"lokal, kein Server-Push"| SH
+    TPS -->|"lokal, kein Server-Push"| JP
 
     style HC fill:#1a1a2e,stroke:#e94560,color:#fff
     style PTC fill:#1a1a2e,stroke:#0f3460,color:#fff
@@ -231,7 +246,7 @@ graph TD
     style LS fill:#0f3460,stroke:#533483,color:#fff
     style ST fill:#0f3460,stroke:#533483,color:#fff
     style SH fill:#0f3460,stroke:#e94560,color:#fff
-    style SV fill:#0f3460,stroke:#e94560,color:#fff
+    style JP fill:#0f3460,stroke:#e94560,color:#fff
 ```
 
 ## User-Flow: Preset konfigurieren
@@ -255,7 +270,7 @@ flowchart TD
     J --> F
     K --> E
     L --> M["Session starten<br/>mit gespeicherter Konfiguration"]
-    M --> N{"PLAYFUL +<br/>Reward-Effekte an?"}
+    M --> N{"Lokales Spielerisch +<br/>Reward-Effekte an?"}
     N -->|Ja| O["Host-Lobby:<br/>Foyer-Einflug aktiv"]
     N -->|Nein| P["Seriöser / reduzierter<br/>Lobby-Start"]
 
@@ -274,5 +289,5 @@ flowchart TD
 | Neue Preset-Option              | `PRESET_OPTION_IDS` + ggf. `OPTION_REQUIRES_PARENT_ON`, Kategorie in `PRESET_CATEGORIES`, `getPresetDefaults()` | Gering  |
 | Neue Kategorie                  | `PRESET_CATEGORIES` erweitern                                                                                   | Gering  |
 | Drittes Preset (z.B. „Prüfung") | `PresetValue` in `theme-preset.service.ts`, Defaults in `getPresetDefaults()`, Header-Toggle + Storage-Keys     | Mittel  |
-| Server-seitige Preset-Sync      | Neuer tRPC-Endpoint, Prisma-Schema erweitern                                                                    | Hoch    |
+| Server-seitige Preset-Sync      | Bewusst nicht vorhanden; nur mit expliziter Produktentscheidung und Opt-in der betroffenen Clients              | Hoch    |
 | Multi-Device-Spiegelung         | `QuizStoreService` / Yjs `home-presets` (bestehend erweitern)                                                   | Mittel  |

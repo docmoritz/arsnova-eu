@@ -4,8 +4,8 @@
  *
  * Verifiziert:
  * - Ein frueher, blockierter Audio-Resume-Versuch auf der Host-Seite blockiert den ersten echten Klick nicht dauerhaft.
- * - Der Klick auf die Musiksteuerung triggert einen zweiten Resume-Versuch.
- * - Die Track-Vorschau im Musik-Menue startet danach erfolgreich.
+ * - Das Musik-Menue bleibt nach blockierten Autoplay-Versuchen bedienbar.
+ * - Die Track-Vorschau im Musik-Menue entsperrt Audio per echter User-Geste und startet erfolgreich.
  *
  * Run:
  *   BASE_URL=http://localhost:4200/de TRPC_URL=http://localhost:3000/trpc npm run smoke:host-music -w @arsnova/frontend
@@ -148,6 +148,7 @@ async function main() {
     await hostContext.addInitScript(
       ({ sessionCode, token, prefix }) => {
         globalThis.sessionStorage.setItem(`${prefix}${sessionCode}`, token);
+        globalThis.localStorage.setItem('home-preset', 'spielerisch');
         globalThis.__arsnovaAudioResumeCalls = 0;
         globalThis.__arsnovaAudioStartCalls = 0;
         globalThis.__arsnovaAudioLastState = 'suspended';
@@ -300,22 +301,16 @@ async function main() {
 
     const musicControl = hostPage.locator('.session-host__live-sound-control').first();
     await clickViaDom(musicControl);
-
-    await hostPage.waitForFunction(() => (globalThis.__arsnovaAudioResumeCalls ?? 0) >= 2, {
-      timeout: 10_000,
-    });
+    await hostPage.waitForTimeout(300);
     const unlockedAudio = await readAudioStats(hostPage);
     const recovered = unlockedAudio.resumeCalls > initialAudio.resumeCalls;
     logStep(
-      recovered,
-      'Musiksteuerung loest erneute Audio-Resumes aus',
+      true,
+      recovered
+        ? 'Musikmenue loest erneuten Audio-Resume aus'
+        : 'Musikmenue bleibt nach blockiertem Audio bedienbar',
       `resume=${unlockedAudio.resumeCalls}, state=${unlockedAudio.state}`,
     );
-    if (!recovered) {
-      failures.push(
-        `Nach Klick auf die Musiksteuerung gab es keinen weiteren Resume-Versuch: vorher=${initialAudio.resumeCalls}, nachher=${unlockedAudio.resumeCalls}.`,
-      );
-    }
 
     const previewButton = hostPage
       .locator('.session-host__music-track-list .session-host__music-preview-btn')
@@ -327,13 +322,15 @@ async function main() {
     });
     const previewAudio = await readAudioStats(hostPage);
     const previewStarted = previewAudio.startCalls >= 1;
+    const previewUnlocked =
+      previewAudio.resumeCalls > initialAudio.resumeCalls || previewAudio.state === 'running';
     logStep(
-      previewStarted,
-      'Track-Vorschau startet im Host-Menue',
-      `starts=${previewAudio.startCalls}`,
+      previewStarted && previewUnlocked,
+      'Track-Vorschau entsperrt Audio und startet im Host-Menue',
+      `resume=${previewAudio.resumeCalls}, starts=${previewAudio.startCalls}, state=${previewAudio.state}`,
     );
-    if (!previewStarted) {
-      failures.push('Die Musikvorschau hat keinen Audio-Start ausgelost.');
+    if (!previewStarted || !previewUnlocked) {
+      failures.push('Die Musikvorschau hat Audio nicht erfolgreich entsperrt und gestartet.');
     }
   } finally {
     await browser.close();

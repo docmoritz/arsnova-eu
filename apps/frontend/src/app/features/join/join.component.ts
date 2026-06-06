@@ -29,6 +29,7 @@ import {
 import { recordServerTimeIso } from '../session/session-server-clock';
 import { setParticipantJoinArrival } from '../../core/participant-join-arrival';
 import { setConfirmedParticipantTeam } from '../../core/participant-team-confirmation';
+import { ThemePresetService } from '../../core/theme-preset.service';
 import {
   edgeEmojiMarkerPosition,
   extractEdgeEmoji,
@@ -70,6 +71,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly localeId = inject(LOCALE_ID);
+  private readonly themePreset = inject(ThemePresetService);
   readonly code = (this.route.snapshot.paramMap.get('code') ?? '').trim().toUpperCase();
   private readonly locale = getEffectiveLocale(localeIdToSupported(this.localeId));
 
@@ -183,7 +185,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   });
 
   readonly showTeamInfo = computed(() => this.session()?.teamMode === true);
-  readonly isPlayfulPreset = computed(() => this.session()?.preset === 'PLAYFUL');
+  readonly isPlayfulPreset = computed(() => this.themePreset.preset() === 'spielerisch');
 
   readonly selectedTeam = computed(
     () => this.teams().find((team) => team.id === this.selectedTeamId()) ?? null,

@@ -13,7 +13,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distBrowser = path.resolve(__dirname, '../dist/browser');
-const PORT = 4200;
+const PORT = Number.parseInt(process.env.PORT || '4200', 10);
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const WS_PORT = process.env.WS_PORT || '3001';
 const YJS_WS_PORT = process.env.YJS_WS_PORT || '3002';

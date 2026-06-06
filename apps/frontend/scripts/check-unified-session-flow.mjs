@@ -256,6 +256,24 @@ async function waitForHostFeedbackVote(hostPage, timeout = 8_000) {
   return false;
 }
 
+async function waitForParticipantFeedbackOptions(participantPage, timeout = 10_000) {
+  const options = participantPage.locator(
+    '.feedback-vote__mood-btn, .feedback-vote__abcd-btn, .feedback-vote__star-btn',
+  );
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeout) {
+    const count = await options.count().catch(() => 0);
+    for (let index = 0; index < count; index += 1) {
+      const option = options.nth(index);
+      if (await option.isVisible().catch(() => false)) {
+        return option;
+      }
+    }
+    await participantPage.waitForTimeout(250);
+  }
+  return null;
+}
+
 async function createUnifiedSession(trpc) {
   const { quizId } = await trpc.quiz.upload.mutate(QUIZ_PAYLOAD);
   return trpc.session.create.mutate({
@@ -441,10 +459,10 @@ async function runQuickFeedbackFlow(host, participant, warnings, hardFailures) {
   }
 
   await clickChannelTab(participant, 2);
-  const feedbackOptions = participant.locator('.feedback-vote__mood-btn, .feedback-vote__abcd-btn');
-  if ((await feedbackOptions.count()) > 0) {
+  const feedbackOption = await waitForParticipantFeedbackOptions(participant);
+  if (feedbackOption) {
     logStep(true, 'Participant sees active quick feedback round');
-    await feedbackOptions.first().click();
+    await feedbackOption.click();
     await participant.waitForTimeout(1_000);
   } else {
     hardFailures.push('Participant does not see the started quick feedback round.');

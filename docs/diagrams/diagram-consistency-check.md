@@ -242,7 +242,7 @@ Der repo-weite Mermaid-Render-Audit vom 2026-05-30 bleibt die letzte Render-Prü
 | `docs/features/team-mode.md`                       | Aktualisiert auf Session-Onboarding-Felder, effektive Peer-Instruction-Votes und normalisiertes Team-Leaderboard                   |
 | `docs/features/bonus-codes.md`                     | Aktualisiert auf effektive Rundenwertung, letzte-Frage-Guard und Token-/Feedback-Retention vor Session-Purge                       |
 | `docs/features/blitzlicht-quickfeedback-api.md`    | Fehlende `quickFeedback`-Procedures `isActive`, `hostResults`, `onHostResults` ergänzt                                             |
-| `docs/features/preset-modes.md`                    | Foyer-Einflug im Preset `PLAYFUL` in Architektur- und User-Flow-Diagrammen ergänzt                                                 |
+| `docs/features/preset-modes.md`                    | Foyer-Einflug an lokales UI-Preset `spielerisch` und Reward-Effekte gebunden; keine Host-Übersteuerung von Client-Presets          |
 | `docs/onboarding.md`                               | Backend-Diagramm um `wordCloudRouter`, `wordCloudAnalysis` und aktuellen Server-Status-Pfad ergänzt                                |
 | `docs/didaktik/dritter-kurs-data-analytics-nlp.md` | Zielbild an bestehenden `wordCloudRouter` und deterministische `wordCloudAnalysis`-Baseline angepasst                              |
 | `docs/praktikum/HANDOUT-TAGESREKORD-KI-AGENT.md`   | Tagesrekord-Sequenzen auf `footerBundle`/`stats`-Trennung und dynamisches Chart-Lazy-Loading aktualisiert                          |

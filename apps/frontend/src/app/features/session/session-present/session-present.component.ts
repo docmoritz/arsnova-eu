@@ -32,6 +32,7 @@ import {
   type SupportedLocale,
 } from '../../../core/locale-from-path';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
+import { ThemePresetService } from '../../../core/theme-preset.service';
 import { getWordCloudWeightFromUpvotes } from './word-cloud.util';
 import {
   WordCloudTermExtractorService,
@@ -67,6 +68,7 @@ export class SessionPresentComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly localeId = inject(LOCALE_ID);
   private readonly wordCloudTermExtractor = inject(WordCloudTermExtractorService);
+  private readonly themePreset = inject(ThemePresetService);
   private metaPollTimer: ReturnType<typeof setInterval> | null = null;
   private livePollTimer: ReturnType<typeof setInterval> | null = null;
   private readonly code = this.route.parent?.snapshot.paramMap.get('code') ?? '';
@@ -102,7 +104,7 @@ export class SessionPresentComponent implements OnInit, OnDestroy {
   readonly qaWordCloudDescription = $localize`:@@sessionWordCloud.qaDescription:Zeigt, welche Wörter und Phrasen in den sichtbaren Q&A-Fragen dominieren.`;
   readonly qaWordCloudTitle = $localize`:@@sessionQa.wordCloudTitle:Q&A-Wortwolke`;
   readonly qaWordCloudWeightingHint = $localize`:@@sessionWordCloud.qaHint:Große Wörter und Phrasen kommen aus häufiger genannten oder stärker unterstützten Fragen.`;
-  readonly isPlayfulPreset = computed(() => this.session()?.preset === 'PLAYFUL');
+  readonly isPlayfulPreset = computed(() => this.themePreset.preset() === 'spielerisch');
   readonly showPinnedQaQuestion = computed(
     () => this.pinnedQaQuestion() !== null && !this.showTeamFinish(),
   );

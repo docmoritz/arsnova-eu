@@ -18,6 +18,7 @@ import {
   peekConfirmedParticipantTeam,
   setConfirmedParticipantTeam,
 } from '../../../core/participant-team-confirmation';
+import { ThemePresetService } from '../../../core/theme-preset.service';
 
 const {
   getInfoQueryMock,
@@ -248,6 +249,7 @@ describe('SessionVoteComponent', () => {
         },
       ],
     });
+    TestBed.inject(ThemePresetService).setPreset('spielerisch', { silent: true });
   });
 
   it('zeigt in der Lesephase die Bereitschafts-CTA und bestätigt sie für den aktuellen Teilnehmenden', async () => {
@@ -1911,6 +1913,7 @@ describe('SessionVoteComponent', () => {
     });
     currentQuestionQueryMock.mockResolvedValue(null);
 
+    TestBed.inject(ThemePresetService).setPreset('serious', { silent: true });
     const fixture = TestBed.createComponent(SessionVoteComponent);
     fixture.detectChanges();
     await fixture.whenStable();

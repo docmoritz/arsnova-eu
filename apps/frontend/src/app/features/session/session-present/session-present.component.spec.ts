@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { SessionPresentComponent } from './session-present.component';
+import { ThemePresetService } from '../../../core/theme-preset.service';
 
 const {
   liveQueryMock,
@@ -57,7 +58,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: false,
-      preset: 'PLAYFUL',
     });
     getTeamLeaderboardQueryMock.mockResolvedValue([]);
     qaListQueryMock.mockResolvedValue([]);
@@ -88,6 +88,7 @@ describe('SessionPresentComponent', () => {
         },
       ],
     });
+    TestBed.inject(ThemePresetService).setPreset('spielerisch', { silent: true });
   });
 
   it('rendert die Word-Cloud in der Presenter-Ansicht mit Live-Hinweis', async () => {
@@ -119,7 +120,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: true,
-      preset: 'PLAYFUL',
     });
 
     const router = TestBed.inject(Router);
@@ -162,7 +162,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: false,
-      preset: 'PLAYFUL',
       channels: {
         quiz: { enabled: true },
         qa: { enabled: true, title: 'Fragen', moderationMode: true },
@@ -206,7 +205,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: false,
-      preset: 'PLAYFUL',
       channels: {
         quiz: { enabled: true },
         qa: { enabled: true, title: 'Fragen', moderationMode: false },
@@ -260,7 +258,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: false,
-      preset: 'PLAYFUL',
       channels: {
         quiz: { enabled: true },
         qa: { enabled: true, title: 'Fragen', moderationMode: false },
@@ -319,7 +316,6 @@ describe('SessionPresentComponent', () => {
       title: null,
       participantCount: 3,
       teamMode: false,
-      preset: 'PLAYFUL',
       channels: {
         quiz: { enabled: true },
         qa: { enabled: false, title: null, moderationMode: false },

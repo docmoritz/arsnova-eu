@@ -75,7 +75,6 @@ import {
   type ShortTextEvaluationKind,
   type ShortAnswerEvaluationMode,
   type VoterMigrationEntry,
-  UpdateSessionPresetInputSchema,
   UpdateSessionQaTitleInputSchema,
   UpdateSessionQaTitleOutputSchema,
   UpdateSessionChannelsOutputSchema,
@@ -213,7 +212,6 @@ type StatusSnapshotPayload = {
   currentQuestion: number | null;
   activeAt?: string;
   timer?: number | null;
-  preset?: string;
   currentRound?: number;
   channels?: z.infer<typeof SessionChannelsDTOSchema>;
   preferredChannel?: z.infer<typeof SessionLiveChannelSchema>;
@@ -584,7 +582,6 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
           statusChangedAt: true,
           quiz: {
             select: {
-              preset: true,
               defaultTimer: true,
               timerScaleByDifficulty: true,
               questions: {
@@ -613,7 +610,6 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
         status: session.status,
         currentQuestion: session.currentQuestion,
         currentRound: session.currentRound,
-        preset: (session.quiz?.preset as 'PLAYFUL' | 'SERIOUS') || undefined,
         channels,
         preferredChannel: resolvePreferredLiveChannel(code, channels),
         ...(isActive && {
@@ -3125,7 +3121,6 @@ export const sessionRouter = router({
                     teamCount: true,
                     teamAssignment: true,
                     bonusTokenCount: true,
-                    preset: true,
                     motifImageUrl: true,
                     teamNames: true,
                   },
@@ -3163,7 +3158,6 @@ export const sessionRouter = router({
               timerScaleByDifficulty: q.timerScaleByDifficulty,
               backgroundMusic: q.backgroundMusic,
               bonusTokenCount: q.bonusTokenCount,
-              preset: q.preset as 'PLAYFUL' | 'SERIOUS',
             }),
           };
         },
@@ -3403,24 +3397,6 @@ export const sessionRouter = router({
         await waitForSessionParticipantSignal(code, currentVersion, waitMs);
       }
     }),
-
-  /** Subscription: Status-Wechsel (Story 2.3). Pollt alle 2s und pusht bei Änderung. */
-  updatePreset: hostProcedure.input(UpdateSessionPresetInputSchema).mutation(async ({ input }) => {
-    const code = input.code.toUpperCase();
-    const session = await prisma.session.findUnique({
-      where: { code },
-      select: { id: true, quizId: true },
-    });
-    if (!session || !session.quizId) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
-    }
-    await prisma.quiz.update({
-      where: { id: session.quizId },
-      data: { preset: input.preset },
-    });
-    invalidateSessionMetadataCachesForCode(code);
-    return { preset: input.preset };
-  }),
 
   /** Q&A-Kanaltitel ändern (Host; Teilnehmende sehen den Titel beim nächsten getInfo-Poll). */
   updateQaTitle: hostProcedure

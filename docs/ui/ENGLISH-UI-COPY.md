@@ -12,23 +12,25 @@ This document generalises the copy-editing rules applied to the English XLF targ
 
 ## 1. Product terminology (stay consistent)
 
-| Prefer                                             | Avoid / use only if source locks you                                                                                                              |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **host** (person running the live session)         | _instructor_, _lecturer_, _teacher_ in generic session UI — those imply a classroom and confuse corporate or informal use                         |
-| **session**, **live session**                      | _event_ when we mean the same flow as “Veranstaltung” in product copy (SEO/join/help/errors)                                                      |
-| **Start session** (button/help that quotes the UI) | _Start event_ if the German UI still says “Veranstaltung starten” — English UI and help should **quote the same English label**                   |
-| **participants** / **audience**                    | stiff _learners_ unless the sentence is clearly didactic                                                                                          |
-| **leaderboard** (feature/options)                  | _rankings_ as a noun for that feature                                                                                                             |
-| **Reveal answers** / **Show results**              | _Release answers_ / _Show result_ — must match **actual button labels** in `messages.en.xlf`                                                      |
-| **Privacy policy** (page title, SEO, navigation)   | _Data protection_ as a standalone consumer-facing title (UK/legal tone); body text can still mention GDPR/data handling                           |
-| **quiz, Q&A, and live polls** (home hero tagline)  | _quiz, Q&A and Blitzlicht_ in source — marketing line favors **live polls** (US SaaS idiom); elsewhere keep **Pulse Check** for the named feature |
-| **6-character** (session code)                     | _6-digit_ when the code is alphanumeric                                                                                                           |
-| **Business** (session preset; DE: Seriös)          | _Professional_ / _Serious_ as the toggle label — **Business** reads better for corporate US than “professional” alone                             |
-| **Gamification** (session preset; DE: Spielerisch) | _Gamified_ as an adjective label — prefer the **category noun** **Gamification** on toggles and in help                                           |
-| **Pulse Check** (feature; tabs, errors, help)      | _Blitzlicht_ — standard US term for a quick mood/status poll; avoid leaving _Blitzlicht_ in English targets                                       |
-| **poll** (verb/noun in UX)                         | _pulse_ as a verb (_to pulse_ the room) — use **poll** / **live polls** instead                                                                   |
+| Prefer                                                     | Avoid / use only if source locks you                                                                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **host** (person running the live session)                 | _instructor_, _lecturer_, _teacher_ in generic session UI — those imply a classroom and confuse corporate or informal use                         |
+| **session**, **live session**                              | _event_ when we mean the same flow as “Veranstaltung” in product copy (SEO/join/help/errors)                                                      |
+| **Start session** (button/help that quotes the UI)         | _Start event_ if the German UI still says “Veranstaltung starten” — English UI and help should **quote the same English label**                   |
+| **participants** / **audience**                            | stiff _learners_ unless the sentence is clearly didactic                                                                                          |
+| **leaderboard** (feature/options)                          | _rankings_ as a noun for that feature                                                                                                             |
+| **Reveal answers** / **Show results**                      | _Release answers_ / _Show result_ — must match **actual button labels** in `messages.en.xlf`                                                      |
+| **Privacy policy** (page title, SEO, navigation)           | _Data protection_ as a standalone consumer-facing title (UK/legal tone); body text can still mention GDPR/data handling                           |
+| **quiz, Q&A, and live polls** (home hero tagline)          | _quiz, Q&A and Blitzlicht_ in source — marketing line favors **live polls** (US SaaS idiom); elsewhere keep **Pulse Check** for the named feature |
+| **6-character** (session code)                             | _6-digit_ when the code is alphanumeric                                                                                                           |
+| **Business** (local UI / quiz preset; DE: Seriös)          | _Professional_ / _Serious_ as the toggle label — **Business** reads better for corporate US than “professional” alone                             |
+| **Gamification** (local UI / quiz preset; DE: Spielerisch) | _Gamified_ as an adjective label — prefer the **category noun** **Gamification** on toggles and in help                                           |
+| **Pulse Check** (feature; tabs, errors, help)              | _Blitzlicht_ — standard US term for a quick mood/status poll; avoid leaving _Blitzlicht_ in English targets                                       |
+| **poll** (verb/noun in UX)                                 | _pulse_ as a verb (_to pulse_ the room) — use **poll** / **live polls** instead                                                                   |
 
 **Note:** German source strings still say **Blitzlicht** / **Seriös** / **Spielerisch**; English **`messages.en.xlf` targets** use **Pulse Check**, **Business**, and **Gamification** as above.
+
+Preset and theme wording should not imply that a host forces a participant’s UI style during a live session. In session routes, Business/Gamification and light/dark/system remain local browser choices; quiz presets only describe quiz-default configuration at setup/live start.
 
 ---
 

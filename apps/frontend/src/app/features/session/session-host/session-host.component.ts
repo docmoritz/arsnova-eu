@@ -689,7 +689,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly isQaSession = computed(
     () => this.channels().quiz === false && this.channels().qa === true,
   );
-  readonly isPlayfulPreset = computed(() => this.session()?.preset === 'PLAYFUL');
+  readonly isPlayfulPreset = computed(() => this.themePreset.preset() === 'spielerisch');
   readonly canShowFoyerEntrance = computed(() => {
     const session = this.session();
     return (
@@ -1315,24 +1315,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       );
     });
     effect(() => {
-      const mappedPreset = this.themePreset.preset() === 'serious' ? 'SERIOUS' : 'PLAYFUL';
-      this.musicMuted.set(mappedPreset === 'SERIOUS');
+      this.musicMuted.set(this.themePreset.preset() === 'serious');
       untracked(() => this.syncMusic());
-
-      if (this.code.length !== 6) {
-        return;
-      }
-      const session = this.session();
-      if (!session || session.preset === mappedPreset) {
-        return;
-      }
-
-      this.session.update((current) => (current ? { ...current, preset: mappedPreset } : current));
-      void trpc.session.updatePreset
-        .mutate({ code: this.code.toUpperCase(), preset: mappedPreset })
-        .catch(() => {
-          /* best-effort */
-        });
     });
     // Story 5.1: Sound-Effekte bei Status-Wechsel
     effect(() => {
@@ -1618,11 +1602,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.sessionUnavailable.set(false);
     this.session.set(session);
     this.syncQaTitleDraftFromSession();
-    if (session.preset === 'PLAYFUL' || session.preset === 'SERIOUS') {
-      this.themePreset.setPreset(session.preset === 'PLAYFUL' ? 'spielerisch' : 'serious', {
-        silent: true,
-      });
-    }
     return session;
   }
 
@@ -1664,8 +1643,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
             activeAt: data.activeAt ?? undefined,
             timer: data.timer,
             currentRound: data.currentRound,
-            preset:
-              data.preset === 'PLAYFUL' || data.preset === 'SERIOUS' ? data.preset : undefined,
             channels: data.channels,
             preferredChannel: data.preferredChannel,
           } satisfies SessionStatusUpdate;

@@ -4,15 +4,17 @@ Welche Designfarben (M3-Paletten) in welcher Kombination genutzt werden und wie 
 
 ## Kombinationen (4)
 
-| Preset      | Theme | Primary (Palette) | Tertiary (Palette) | Charakter |
-|------------|-------|-------------------|--------------------|-----------|
-| **Seriös**   | Hell  | Azure              | Cyan               | Kühles Blau + Türkis |
-| **Seriös**   | Dunkel| Azure              | Cyan               | Gleiche Paletten, hellere Töne auf dunklem Grund |
-| **Spielerisch** | Hell  | Magenta            | Violet             | Pink + Violett |
-| **Spielerisch** | Dunkel| Magenta            | Violet             | Gleiche Paletten, hellere Töne auf dunklem Grund |
+| Preset          | Theme  | Primary (Palette) | Tertiary (Palette) | Charakter                                        |
+| --------------- | ------ | ----------------- | ------------------ | ------------------------------------------------ |
+| **Seriös**      | Hell   | Azure             | Cyan               | Kühles Blau + Türkis                             |
+| **Seriös**      | Dunkel | Azure             | Cyan               | Gleiche Paletten, hellere Töne auf dunklem Grund |
+| **Spielerisch** | Hell   | Magenta           | Violet             | Pink + Violett                                   |
+| **Spielerisch** | Dunkel | Magenta           | Violet             | Gleiche Paletten, hellere Töne auf dunklem Grund |
 
 Die **Paletten** wechseln nur mit dem **Preset** (Seriös vs. Spielerisch).  
 **Hell/Dunkel** wählt nur andere **Töne** aus derselben Palette (M3 berechnet Kontrast automatisch).
+
+Preset und Theme sind lokale Browser-Entscheidungen. Ein Host-Preset setzt in Live-Sessions nicht die Palette oder Hell/Dunkel-Wahl von Join-, Vote- oder Present-Clients.
 
 ---
 
@@ -23,10 +25,10 @@ Die **Paletten** wechseln nur mit dem **Preset** (Seriös vs. Spielerisch).
 
 Typische sichtbare Farben (aus der Palette, Töne 40/50 für Hell, 80 für Dunkel):
 
-| Rolle     | Hell (Beispiel) | Dunkel (Beispiel) |
-|----------|------------------|-------------------|
-| Primary  | `#005cbb` / `#0074e9` | `#abc7ff` |
-| Tertiary | `#006a6a` / `#008585` | `#00dddd` |
+| Rolle    | Hell (Beispiel)       | Dunkel (Beispiel) |
+| -------- | --------------------- | ----------------- |
+| Primary  | `#005cbb` / `#0074e9` | `#abc7ff`         |
+| Tertiary | `#006a6a` / `#008585` | `#00dddd`         |
 
 ---
 
@@ -37,10 +39,10 @@ Typische sichtbare Farben (aus der Palette, Töne 40/50 für Hell, 80 für Dunke
 
 Typische sichtbare Farben:
 
-| Rolle     | Hell (Beispiel) | Dunkel (Beispiel) |
-|----------|------------------|-------------------|
-| Primary  | `#a900a9` / `#d200d2` | `#ffabf3` |
-| Tertiary | `#7d00fa` / `#944aff` | `#d5baff` |
+| Rolle    | Hell (Beispiel)       | Dunkel (Beispiel) |
+| -------- | --------------------- | ----------------- |
+| Primary  | `#a900a9` / `#d200d2` | `#ffabf3`         |
+| Tertiary | `#7d00fa` / `#944aff` | `#d5baff`         |
 
 ---
 
