@@ -107,7 +107,7 @@ Insbesondere gilt:
 
 - Der Quiz-Status steuert **nicht automatisch** Q&A oder Blitzlicht.
 - Q&A und Blitzlicht dürfen während einer laufenden Quiz-Session parallel verfügbar sein.
-- Erst das fachliche Ende der Session schließt alle Live-Kanäle oder setzt sie in einen read-only Zustand.
+- Erst das fachliche Ende der Session (`FINISHED`) beendet die gemeinsame Live-Session kanaluebergreifend: Vote-Clients verlassen dann auch einen gerade aktiven Q&A- oder Blitzlicht-Kanal und raeumen kanalbezogene Live-Subscriptions ab.
 
 ### 7. Bestehendes Blitzlicht wird integriert, nicht parallel weiter isoliert
 
@@ -178,3 +178,8 @@ Stand 2026-05-31:
 - Die kanonischen Session-Kanaele sind weiterhin `quiz`, `qa` und `quickFeedback`.
 - `SessionLiveChannelSchema` enthaelt keinen vierten `tempo`-Kanal; Tempo ist nach ADR-0029 als kuenftiges Blitzlicht-Template, nicht als Erweiterung dieser Kanalarchitektur, einzuordnen.
 - Q&A-Sortierung und Q&A-Wortwolke sind in Host- und Presenter-Kontexten an den bestehenden `qa`-Kanal angebunden.
+
+Stand 2026-06-06:
+
+- `FINISHED` ist im Vote-Client ein globaler Session-Endzustand und hat Vorrang vor `preferredChannel`, lokaler Kanalwahl und Q&A-/Blitzlicht-Views.
+- Beim Session-Ende stoppt der Vote-Client Countdown, Fallback-Polling sowie Q&A- und Blitzlicht-Subscriptions; danach erscheint Abschluss-Gate oder Home-Redirect gemaess ADR-0020.

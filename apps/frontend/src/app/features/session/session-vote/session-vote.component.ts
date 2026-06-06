@@ -869,6 +869,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     () => this.channels().quiz === false && this.channels().qa === true,
   );
   readonly showPrimaryLiveView = computed(() => {
+    if (this.isFinished()) {
+      return true;
+    }
+
     const active = this.activeChannel();
     if (active === 'quiz') {
       return this.channels().quiz;
@@ -1825,6 +1829,19 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     void this.runSessionEndRedirect();
   }
 
+  private handleSessionFinished(): void {
+    this.stopCountdown();
+    this.stopFallbackPolling();
+    this.statusSub?.unsubscribe();
+    this.statusSub = null;
+    this.qaSub?.unsubscribe();
+    this.qaSub = null;
+    this.quickFeedbackSub?.unsubscribe();
+    this.quickFeedbackSub = null;
+    this.applyQuickFeedbackResult(null);
+    this.redirectToHomeIfSessionFinished();
+  }
+
   private async runSessionEndRedirect(): Promise<void> {
     if (this.status() !== 'FINISHED') return;
     if (this.sessionEndRedirectInFlight) return;
@@ -1909,6 +1926,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.activateSessionFallback();
     }
 
+    if (this.isFinished()) {
+      return;
+    }
+
     this.ensureStatusSubscription();
 
     this.ensureQaSubscription();
@@ -1924,7 +1945,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.sessionSettings.set(session);
       this.applyPreferredChannelIfChanged(session.preferredChannel);
       if (session.status === 'FINISHED') {
-        this.redirectToHomeIfSessionFinished();
+        this.handleSessionFinished();
         this.applyPendingLobbyArrivalIfNeeded();
         return true;
       }
@@ -1950,7 +1971,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   private ensureQaSubscription(): void {
-    if (!this.channels().qa || !this.isQaChannelOpen() || !this.sessionId()) {
+    if (this.isFinished() || !this.channels().qa || !this.isQaChannelOpen() || !this.sessionId()) {
       this.qaSub?.unsubscribe();
       this.qaSub = null;
       return;
@@ -1978,7 +1999,12 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   private ensureQuickFeedbackSubscription(): void {
-    if (!this.channels().quickFeedback || !this.isQuickFeedbackChannelOpen() || !this.code) {
+    if (
+      this.isFinished() ||
+      !this.channels().quickFeedback ||
+      !this.isQuickFeedbackChannelOpen() ||
+      !this.code
+    ) {
       this.quickFeedbackSub?.unsubscribe();
       this.quickFeedbackSub = null;
       this.applyQuickFeedbackResult(null);
@@ -2056,7 +2082,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
             this.ensureActiveChannel();
           }
           if (data.status === 'FINISHED') {
-            this.redirectToHomeIfSessionFinished();
+            this.handleSessionFinished();
             return;
           }
           this.currentRound.set(newRound);
@@ -2132,7 +2158,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.applyPreferredChannelIfChanged(session.preferredChannel);
       this.status.set(nextStatus);
       if (nextStatus === 'FINISHED') {
-        this.redirectToHomeIfSessionFinished();
+        this.handleSessionFinished();
         return;
       }
       this.ensureStatusSubscription();

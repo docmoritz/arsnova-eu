@@ -4,11 +4,11 @@
 
 **Erstellt:** 2026-02-20
 
-**Zuletzt aktualisiert:** 2026-05-31
+**Zuletzt aktualisiert:** 2026-06-06
 
 **Zweck:** Visualisierung der gesamten Codebasis-Struktur und Architektur
 
-**Status:** Epics 0–5 inkl. 5.4a, 7.1, 8.1–8.4, 8.6/8.7, 9, **10 (MOTD)** umgesetzt · Epic 6 größtenteils umgesetzt (6.5, 6.6 offen) · Plattformstatistik Rekordteilnehmer und Tagesrekorde (`PlatformStatistic`, `DailyStatistic`) in `health.footerBundle` / `health.stats` · Kurzantwort (`SHORT_TEXT`) inkl. numerischer Bewertung und Effective-Vote-Regel umgesetzt · Host-Härtung, Feedback-Host-Token und besitzgebundene Quiz-Historie umgesetzt · Markdown-Stories **1.7a** und **1.7b** umgesetzt ([ADR-0015](../architecture/decisions/0015-markdown-images-url-only-and-lightbox.md), [ADR-0016](../architecture/decisions/0016-markdown-katex-editor-split-view-and-md3-toolbar.md), [ADR-0017](../architecture/decisions/0017-markdown-editor-ui-scope-and-ki-import-paste-field.md) — Geltungsbereich Editor vs. KI-Paste). Blitzlicht ist als Startseiten-Shortcut und Session-Kanal konsolidiert. Rollen/Routen/Autorisierung inkl. Admin, Host-Härtung und MOTD siehe [ADR-0006](../architecture/decisions/0006-roles-routes-authorization-host-admin.md), [ADR-0019](../architecture/decisions/0019-host-hardening-and-owner-bound-session-access.md), [ADR-0009](../architecture/decisions/0009-unified-live-session-channels.md), [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md), [ADR-0018](../architecture/decisions/0018-message-of-the-day-platform-communication.md), [ROUTES_AND_STORIES.md](../ROUTES_AND_STORIES.md).
+**Status:** Epics 0–5 inkl. 5.4a, 7.1, 8.1–8.4, 8.6/8.7, 9, **10 (MOTD)** umgesetzt · Epic 6 größtenteils umgesetzt (6.5, 6.6 offen) · Plattformstatistik Rekordteilnehmer und Tagesrekorde (`PlatformStatistic`, `DailyStatistic`) in `health.footerBundle` / `health.stats` · Kurzantwort (`SHORT_TEXT`) inkl. numerischer Bewertung und Effective-Vote-Regel umgesetzt · Host-Härtung, Feedback-Host-Token und besitzgebundene Quiz-Historie umgesetzt · Markdown-Stories **1.7a** und **1.7b** umgesetzt ([ADR-0015](../architecture/decisions/0015-markdown-images-url-only-and-lightbox.md), [ADR-0016](../architecture/decisions/0016-markdown-katex-editor-split-view-and-md3-toolbar.md), [ADR-0017](../architecture/decisions/0017-markdown-editor-ui-scope-and-ki-import-paste-field.md) — Geltungsbereich Editor vs. KI-Paste). Blitzlicht ist als Startseiten-Shortcut und Session-Kanal konsolidiert; `FINISHED` beendet den Session-Vote kanaluebergreifend und stoppt Q&A-/Blitzlicht-Live-Subscriptions. Rollen/Routen/Autorisierung inkl. Admin, Host-Härtung und MOTD siehe [ADR-0006](../architecture/decisions/0006-roles-routes-authorization-host-admin.md), [ADR-0019](../architecture/decisions/0019-host-hardening-and-owner-bound-session-access.md), [ADR-0009](../architecture/decisions/0009-unified-live-session-channels.md), [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md), [ADR-0018](../architecture/decisions/0018-message-of-the-day-platform-communication.md), [ROUTES_AND_STORIES.md](../ROUTES_AND_STORIES.md).
 
 ## System-Architektur-Diagramm
 
@@ -102,71 +102,77 @@ graph LR
 ```mermaid
 sequenceDiagram
     participant D as Dozent
-    participant FE as Frontend (Angular)
-    participant YJS as Yjs (IndexedDB)
-    participant BE as Backend (tRPC)
+    participant FE as Frontend Angular
+    participant YJS as Yjs IndexedDB
+    participant BE as Backend tRPC
     participant PG as PostgreSQL
     participant R as Redis
     participant S as Student
 
-    Note over D,YJS: Local-First: Quiz wird lokal gespeichert
+    Note over D,YJS: Local-First - Quiz wird lokal gespeichert
     D->>FE: Quiz erstellen/bearbeiten
     FE->>YJS: CRDT-Dokument speichern
     YJS-->>FE: Sync bestätigt
-    opt Story 1.6a: Auf anderem Gerät öffnen
+    opt Story 1.6a - Auf anderem Gerät öffnen
         D->>FE: Sync-Link/Room-ID anzeigen
         FE-->>D: Link/QR/Code (Yjs-Dokument-ID)
-        Note over D: Anderes Gerät: Link öffnen → gleiches Quiz
+        Note over D: Anderes Gerät - Link öffnen und gleiches Quiz sehen
     end
 
-    Note over D,BE: Session starten (Backlog 2.1a)
+    Note over D,BE: Session starten - Backlog 2.1a
     D->>FE: Live schalten
     FE->>BE: quiz.upload (Quiz-Kopie)
     BE->>PG: Quiz + Questions speichern
-    FE->>BE: session.create()
+    FE->>BE: session.create
     BE->>PG: Session speichern
     BE->>R: Code registrieren
     BE-->>FE: Session-Code zurück
 
     Note over S,BE: Student tritt bei
     S->>FE: Code eingeben
-    FE->>BE: session.join()
+    FE->>BE: session.join
     BE->>PG: Participant erstellen
     BE->>R: Presence-/Live-Hilfsdaten aktualisieren
-    BE-->>FE: tRPC Subscription: onParticipantJoined
+    BE-->>FE: tRPC Subscription onParticipantJoined
     FE-->>D: Echtzeit-Update
 
-    Note over D,S: Frage wird gestartet (Story 2.6: Zwei-Phasen optional)
+    Note over D,S: Frage wird gestartet - Story 2.6 mit optional zwei Phasen
     D->>FE: Nächste Frage
-    FE->>BE: session.nextQuestion()
+    FE->>BE: session.nextQuestion
     BE->>PG: Status = QUESTION_OPEN (oder ACTIVE wenn readingPhaseEnabled=false)
-    BE-->>S: tRPC Subscription: onQuestionRevealed (QuestionPreviewDTO – nur Fragenstamm)
-    S-->>S: Lesephase: Frage anzeigen, keine Antworten
+    BE-->>S: tRPC Subscription onQuestionRevealed - QuestionPreviewDTO nur Fragenstamm
+    S-->>S: Lesephase - Frage anzeigen, keine Antworten
 
     opt Lesephase aktiv
         D->>FE: Antworten freigeben
-        FE->>BE: session.revealAnswers()
+        FE->>BE: session.revealAnswers
         BE->>PG: Status = ACTIVE
-        BE-->>S: tRPC Subscription: onAnswersRevealed (QuestionStudentDTO OHNE isCorrect)
+        BE-->>S: tRPC Subscription onAnswersRevealed - QuestionStudentDTO ohne isCorrect
         S-->>S: Antwort-Buttons + Countdown
     end
 
     Note over S,BE: Student votet
     S->>FE: Antwort auswählen
-    FE->>BE: vote.submit()
+    FE->>BE: vote.submit
     BE->>PG: Vote speichern
-    BE-->>FE: tRPC Subscription: onVoteCountUpdate
+    BE-->>FE: tRPC Subscription onVoteCountUpdate
     FE-->>D: Live-Update
 
     Note over D,S: Ergebnisse werden aufgelöst
     D->>FE: Ergebnisse zeigen
-    FE->>BE: session.revealResults()
+    FE->>BE: session.revealResults
     BE->>PG: Status = RESULTS
     BE->>BE: Scoring berechnen
-    BE-->>S: tRPC Subscription: onResultsRevealed (MIT isCorrect!)
+    BE-->>S: tRPC Subscription onResultsRevealed - mit isCorrect
     S-->>S: Ergebnisse + Punkte
 
-    Note over D,S: Zwischen Fragen: PAUSED, dann erneut nextQuestion, Session-Ende mit session.end → FINISHED
+    Note over D,S: Zwischen Fragen - PAUSED, dann erneut nextQuestion
+    D->>FE: Session beenden
+    FE->>BE: session.end
+    BE->>PG: Status FINISHED
+    BE-->>S: onStatusChanged FINISHED
+    S->>S: Abschluss-Gate oder Home anzeigen
+    Note right of S: Q&A- und Blitzlicht-Subscriptions stoppen
 ```
 
 ### Admin-Datenfluss (Epic 9)

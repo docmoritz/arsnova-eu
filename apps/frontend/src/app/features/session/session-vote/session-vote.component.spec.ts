@@ -1131,6 +1131,60 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it.each(['qa', 'quickFeedback'] as const)(
+    'rendert nach Session-Ende die Abschlussansicht statt dem aktiven Kanal %s',
+    async (channel) => {
+      getInfoQueryMock.mockResolvedValue({
+        id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        serverTime: MOCK_SERVER_TIME,
+        code: 'ABC123',
+        type: 'QUIZ',
+        status: 'ACTIVE',
+        quizName: 'Team-Quiz',
+        title: null,
+        participantCount: 6,
+        teamMode: false,
+        preset: 'PLAYFUL',
+        channels: {
+          quiz: { enabled: true },
+          qa: { enabled: true, open: true, title: 'Fragen', moderationMode: false },
+          quickFeedback: { enabled: true, open: true },
+        },
+      });
+      currentQuestionQueryMock.mockResolvedValue(null);
+      quickFeedbackResultsQueryMock.mockResolvedValue({
+        type: 'MOOD',
+        locked: false,
+        totalVotes: 0,
+        distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+        currentRound: 1,
+      });
+
+      const fixture = TestBed.createComponent(SessionVoteComponent);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise((r) => setTimeout(r, 50));
+
+      const inst = fixture.componentInstance;
+      inst.activeChannel.set(channel);
+      inst.personalResultLoaded.set(true);
+      inst.personalScore.set(42);
+      inst.personalRank.set(2);
+      inst.feedbackSubmitted.set(true);
+      inst.status.set('FINISHED');
+      fixture.detectChanges();
+
+      expect(inst.showPrimaryLiveView()).toBe(true);
+      expect(fixture.nativeElement.querySelector('.vote-finished-page')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.session-channel-card--qa')).toBeNull();
+      expect(
+        fixture.nativeElement.querySelector('.session-channel-card--quick-feedback'),
+      ).toBeNull();
+      expect(fixture.nativeElement.querySelector('app-feedback-vote')).toBeNull();
+      fixture.destroy();
+    },
+  );
+
   it('zeigt im Ergebnis der letzten Frage bereits den finalen Score-Titel', () => {
     const fixture = TestBed.createComponent(SessionVoteComponent);
     const inst = fixture.componentInstance;
@@ -3054,6 +3108,68 @@ describe('SessionVoteComponent', () => {
     );
 
     expect(fixture.nativeElement.querySelector('.vote-countdown')).toBeNull();
+    fixture.destroy();
+  });
+
+  it('räumt Live-Kanal-Subscriptions beim FINISHED-Statussignal ab', async () => {
+    const statusUnsubscribe = vi.fn();
+    const qaUnsubscribe = vi.fn();
+    const quickFeedbackUnsubscribe = vi.fn();
+    let statusListener: ((data: unknown) => void) | null = null;
+
+    statusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        statusListener = opts.onData;
+        return { unsubscribe: statusUnsubscribe };
+      },
+    );
+    qaQuestionsUpdatedSubscribeMock.mockReturnValue({ unsubscribe: qaUnsubscribe });
+    quickFeedbackOnResultsSubscribeMock.mockReturnValue({ unsubscribe: quickFeedbackUnsubscribe });
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Team-Quiz',
+      title: null,
+      participantCount: 6,
+      preset: 'SERIOUS',
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: true, open: true, title: 'Fragen', moderationMode: false },
+        quickFeedback: { enabled: true, open: true },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue(null);
+    quickFeedbackResultsQueryMock.mockResolvedValue({
+      type: 'MOOD',
+      locked: false,
+      totalVotes: 0,
+      distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+      currentRound: 1,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(statusListener).not.toBeNull();
+    expect(qaQuestionsUpdatedSubscribeMock).toHaveBeenCalled();
+    expect(quickFeedbackOnResultsSubscribeMock).toHaveBeenCalled();
+
+    statusListener?.({
+      status: 'FINISHED',
+      currentQuestion: null,
+      currentRound: 1,
+      serverTime: MOCK_SERVER_TIME,
+    });
+
+    expect(fixture.componentInstance.status()).toBe('FINISHED');
+    expect(statusUnsubscribe).toHaveBeenCalled();
+    expect(qaUnsubscribe).toHaveBeenCalled();
+    expect(quickFeedbackUnsubscribe).toHaveBeenCalled();
     fixture.destroy();
   });
 

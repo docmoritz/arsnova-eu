@@ -453,4 +453,34 @@ describe('FeedbackVoteComponent', () => {
     expect(text).toContain('Zur Startseite');
     fixture.destroy();
   });
+
+  it('meldet eine beendete Standalone-Runde nach einem zuvor aktiven Poll', async () => {
+    quickFeedbackResultsQueryMock
+      .mockResolvedValueOnce({
+        type: 'YESNO',
+        locked: false,
+        discussion: false,
+        totalVotes: 0,
+        distribution: { YES: 0, NO: 0, MAYBE: 0 },
+        currentRound: 1,
+      })
+      .mockRejectedValueOnce(new Error('not found'));
+
+    const fixture = TestBed.createComponent(FeedbackVoteComponent);
+    fixture.componentRef.setInput('sessionCode', 'ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent ?? '').toContain('Vielleicht');
+
+    await (fixture.componentInstance as unknown as { pollStyle(): Promise<void> }).pollStyle();
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('Feedback-Runde nicht gefunden oder abgelaufen.');
+    expect(text).toContain('Zur Startseite');
+    fixture.destroy();
+  });
 });

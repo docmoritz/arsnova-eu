@@ -12,6 +12,7 @@ In der **UI** heißt der Modus **Blitzlicht** ([ADR-0010](../architecture/decisi
 - Feld **`Session.quickFeedbackEnabled`**: Blitzlicht-Kanal für dieselbe Session ([ADR-0009](../architecture/decisions/0009-unified-live-session-channels.md)).
 - **`quickFeedback.create`** mit `sessionCode`: Backend prüft, ob die Session existiert und Blitzlicht aktiviert ist (`assertSessionQuickFeedbackEnabled`).
 - **Standalone** (Startseite): `create` ohne Session-Code erzeugt einen neuen 6-stelligen Code und schreibt nur Redis-Keys.
+- **Session-Ende:** `session.end` ist nicht `quickFeedback.end`. Die Session setzt `FINISHED` und der Session-Vote verlaesst jeden aktiven Kanal; `quickFeedback.end` beendet nur die Redis-Runde zum Code.
 
 ## Autorisierung
 
@@ -29,7 +30,7 @@ In der **UI** heißt der Modus **Blitzlicht** ([ADR-0010](../architecture/decisi
 | `create`           | Mutation     | Neue Runde; optional `sessionCode` für eingebettetes Blitzlicht                                                                                              |
 | `changeType`       | Mutation     | Formatwechsel im laufenden Code-Kontext; setzt Verteilung/Zähler zurück                                                                                      |
 | `reset`            | Mutation     | Stimmen und Runden-Metadaten zurücksetzen, Format bleibt                                                                                                     |
-| `end`              | Mutation     | Redis-Keys zur Session-Code entfernen (Runde beenden)                                                                                                        |
+| `end`              | Mutation     | Redis-Keys zum Code entfernen (Standalone-/Blitzlicht-Runde beenden; nicht identisch mit `session.end`)                                                      |
 | `toggleLock`       | Mutation     | Abstimmung sperren / entsperren (`locked`)                                                                                                                   |
 | `startDiscussion`  | Mutation     | Runde 1 einfrieren (API-Name „Discussion“); UI: **Vergleichsrunde** vorbereiten ([ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md)) |
 | `startSecondRound` | Mutation     | Zweite Abstimmung öffnen (`currentRound = 2`)                                                                                                                |
@@ -37,7 +38,7 @@ In der **UI** heißt der Modus **Blitzlicht** ([ADR-0010](../architecture/decisi
 | `vote`             | Mutation     | Teilnehmer-Stimme (`voterId`, `value`); klassische Formate einmal pro Runde, `TEMPO` mutable mit Wechsel und Re-Tap-Entfernen                                |
 | `results`          | Query        | Aktueller `QuickFeedbackResult` inkl. berechneter Verschiebung (Runde 2) und optionaler `tempoTrend`                                                         |
 | `hostResults`      | Query        | Host-Snapshot mit Host-Autorisierung                                                                                                                         |
-| `onResults`        | Subscription | Pollt Redis und liefert bei Änderung neuen Snapshot (aktives vs. idle Intervall)                                                                             |
+| `onResults`        | Subscription | Pollt Redis und liefert bei Änderung neuen Snapshot; endet, wenn Redis-Snapshot fehlt oder ein Session-Kanal geschlossen ist                                 |
 | `onHostResults`    | Subscription | Host-Subscription mit Host-Autorisierung                                                                                                                     |
 
 Eingaben/Ausgaben: Zod-Schemas in `@arsnova/shared-types` (z. B. `QuickFeedbackVoteInputSchema`, `QuickFeedbackResultSchema`).
@@ -73,17 +74,26 @@ flowchart LR
     H2[toggleLock]
     H3[startDiscussion]
     H4[startSecondRound]
-    H5[reset / end]
+    H5[reset]
+    H7[quickFeedback.end]
+    H8[session.end]
     H6[hostResults / onHostResults]
   end
 
   subgraph Redis["Redis qf:*"]
     R1[(Snapshot + voter sets + choice hashes)]
+    R2[(Snapshot geloescht)]
+  end
+
+  subgraph Session["Session-Status"]
+    S1[FINISHED]
   end
 
   subgraph Client
     C1[vote]
     C2[onResults / results]
+    C3[Standalone: abgelaufen/geschlossen + Home-CTA]
+    C4[Session-Vote: Abschluss-Gate oder Home]
   end
 
   H1 --> R1
@@ -91,10 +101,16 @@ flowchart LR
   H3 --> R1
   H4 --> R1
   H5 --> R1
+  H7 --> R2
+  H8 --> S1
   R1 --> H6
   C1 --> R1
   R1 --> C2
+  R2 -.->|onResults endet / results wirft NOT_FOUND| C3
+  S1 -.->|session.onStatusChanged FINISHED| C4
 ```
+
+Standalone-Vote erkennt eine beendete Runde ueber `onResults`/`results` und zeigt den Fehlerzustand mit `Zur Startseite`. Eingebettete Session-Votes folgen dagegen dem Session-Status: Bei `FINISHED` wird Blitzlicht wie Q&A und Quiz verlassen; Q&A-/Blitzlicht-Subscriptions werden clientseitig gestoppt.
 
 ---
 

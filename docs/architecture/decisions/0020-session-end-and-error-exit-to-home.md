@@ -6,7 +6,7 @@
 **Datum:** 2026-04-06  
 **Entscheider:** Projektteam
 
-**Letzter Repo-Abgleich:** 2026-05-31
+**Letzter Repo-Abgleich:** 2026-06-06
 
 ## Kontext
 
@@ -29,7 +29,7 @@ Views, die bereits **in einer laufenden Session** sind und deren Session-Kontext
 Das gilt insbesondere fuer:
 
 - Presenter (`/session/:code/present`) bei `FINISHED`
-- Vote (`/session/:code/vote`) bei `FINISHED`, sofern kein explizites Abschluss-Gate offen bleiben muss
+- Vote (`/session/:code/vote`) bei `FINISHED`, sofern kein explizites Abschluss-Gate offen bleiben muss; `FINISHED` hat dabei Vorrang vor dem gerade aktiven Live-Kanal (`Quiz`, `Q&A`, `Blitzlicht`)
 - Host (`/session/:code/host`) bei verwaister oder serverseitig bereits beendeter Session, wenn eine Host-Aktion wie `session.end` keine gueltige Session mehr findet
 
 `replaceUrl` ist verbindlich, damit der veraltete Session-Pfad nicht im Verlauf als naechster Ruecksprungpunkt erhalten bleibt.
@@ -102,6 +102,7 @@ Fuer Session-bezogene Frontend-Routen gilt kuenftig die folgende Regel:
 - Auto-Redirects aus aktiven Session-Views nutzen `navigateByUrl(localizePath('/'), { replaceUrl: true })`.
 - Fehlerkarten in Entry- oder Standalone-Views enthalten eine lokale CTA `Zur Startseite`.
 - Polling oder Fallback-Refreshes duerfen einen terminalen Fehlerzustand nicht mehr ueberschreiben, solange `session()` oder aequivalente Metadaten fehlen.
+- Vote-Clients stoppen bei `FINISHED` kanalbezogene Live-Pfade wie Q&A-Subscriptions, Blitzlicht-Subscriptions, Fallback-Polling und Countdown, bevor Abschluss-Gate oder Home-Redirect greifen.
 
 ## Implementierungsstand (Projekt arsnova.eu)
 
@@ -118,6 +119,12 @@ Stand 2026-05-31:
 - Die Exit-Regel bleibt gueltig fuer Host, Presenter, Join, Vote und Standalone-Blitzlicht.
 - Host-Route-Guards leiten bei fehlendem oder ungueltigem Host-Token in den Join- bzw. Vote-Pfad, statt Host-Rechte aus der URL abzuleiten.
 - Session-Ende bleibt mit Bonus-Code-/Feedback-Gates vereinbar; solche Gates sind die dokumentierte Ausnahme vom Sofort-Redirect.
+
+Stand 2026-06-06:
+
+- Session-Vote behandelt `FINISHED` als kanaluebergreifenden Endzustand: Die Abschlussansicht bzw. das Abschluss-Gate ersetzt auch dann Q&A oder Blitzlicht, wenn dieser Kanal gerade aktiv war.
+- Beim `FINISHED`-Signal werden Countdown, Fallback-Polling, Status-, Q&A- und Blitzlicht-Subscriptions im Vote-Client abgeraeumt.
+- Standalone-Blitzlicht bleibt ein separater Redis-Rundenpfad: `quickFeedback.end` loescht die Runde, der Vote-Client zeigt danach den abgelaufen/geschlossen-Zustand mit lokaler Home-CTA.
 
 ---
 

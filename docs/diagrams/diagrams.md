@@ -3,7 +3,7 @@
 # Diagramme: arsnova.eu
 
 Alle Diagramme sind in Mermaid geschrieben und werden von GitHub nativ gerendert.
-**Stand:** 2026-05-31 · **Epics 0–5 inkl. 5.4a, 7.1, 8.1–8.4, 8.6/8.7, 9, 10 (MOTD) umgesetzt;** Epic 6 größtenteils umgesetzt (**6.5 Barrierefreiheit** und **6.6 Thinking Aloud** noch offen). Plattformstatistik Rekordteilnehmer und Tagesrekorde laufen über `health.footerBundle` / `health.stats` (`PlatformStatistic`, `DailyStatistic`). Kurzantwort (`SHORT_TEXT`) inkl. numerischer Bewertung und die Effective-Vote-Regel für Peer Instruction sind umgesetzt. Markdown-Erweiterungen **1.7a** und **1.7b** umgesetzt ([ADR-0015](../architecture/decisions/0015-markdown-images-url-only-and-lightbox.md), [ADR-0016](../architecture/decisions/0016-markdown-katex-editor-split-view-and-md3-toolbar.md)). `Blitzlicht` ist als Startseiten-Shortcut und Session-Kanal konsolidiert. Rollen/Routen/Autorisierung siehe [ADR-0006](../architecture/decisions/0006-roles-routes-authorization-host-admin.md), [ADR-0009](../architecture/decisions/0009-unified-live-session-channels.md), [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md), [ADR-0018](../architecture/decisions/0018-message-of-the-day-platform-communication.md), [ROUTES_AND_STORIES.md](../ROUTES_AND_STORIES.md).
+**Stand:** 2026-06-06 · **Epics 0–5 inkl. 5.4a, 7.1, 8.1–8.4, 8.6/8.7, 9, 10 (MOTD) umgesetzt;** Epic 6 größtenteils umgesetzt (**6.5 Barrierefreiheit** und **6.6 Thinking Aloud** noch offen). Plattformstatistik Rekordteilnehmer und Tagesrekorde laufen über `health.footerBundle` / `health.stats` (`PlatformStatistic`, `DailyStatistic`). Kurzantwort (`SHORT_TEXT`) inkl. numerischer Bewertung und die Effective-Vote-Regel für Peer Instruction sind umgesetzt. Markdown-Erweiterungen **1.7a** und **1.7b** umgesetzt ([ADR-0015](../architecture/decisions/0015-markdown-images-url-only-and-lightbox.md), [ADR-0016](../architecture/decisions/0016-markdown-katex-editor-split-view-and-md3-toolbar.md)). `Blitzlicht` ist als Startseiten-Shortcut und Session-Kanal konsolidiert. `FINISHED` beendet die Session fuer Vote-Clients kanaluebergreifend und raeumt Live-Kanal-Subscriptions ab. Rollen/Routen/Autorisierung siehe [ADR-0006](../architecture/decisions/0006-roles-routes-authorization-host-admin.md), [ADR-0009](../architecture/decisions/0009-unified-live-session-channels.md), [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md), [ADR-0018](../architecture/decisions/0018-message-of-the-day-platform-communication.md), [ROUTES_AND_STORIES.md](../ROUTES_AND_STORIES.md).
 
 > **VS Code:** Mermaid wird in der Standard-Markdown-Vorschau nicht gerendert. Bitte die Erweiterung **„Markdown Preview Mermaid Support“** (`bierner.markdown-mermaid`) installieren. Siehe [README.md](./README.md) in diesem Ordner.
 
@@ -613,15 +613,24 @@ sequenceDiagram
     participant BE as Backend tRPC
     participant PG as PostgreSQL
     participant R as Redis
+    participant V as Vote-Clients
 
     Note over D,R: Phase 6 - Session-Ende
     D->>FE: Quiz beenden
     FE->>BE: session.end
     BE->>PG: Status = FINISHED
-    BE->>R: Redis-Keys löschen (Story 4.2)
+    BE->>BE: Status-/Question-/Participant-Caches invalidieren
+    BE-->>V: session.onStatusChanged FINISHED
+    V->>V: FINISHED ueberstimmt Quiz, Q&A und Blitzlicht
+    V->>V: Countdown, Fallback-Polling und Live-Kanal-Subscriptions stoppen
+    alt Bonus-Code oder Session-Feedback offen
+        V->>V: Abschluss-Gate mit CTA Zur Startseite anzeigen
+    else kein Abschluss-Gate noetig
+        V->>V: per replaceUrl zur Startseite wechseln
+    end
     opt bonusTokenCount > 0
         BE->>PG: BonusToken INSERT (Top-X)
-        BE->>FE: onPersonalResult mit bonusToken
+        BE->>V: onPersonalResult / getPersonalResult mit bonusToken
     end
     FE->>BE: session.getBonusTokens
     BE-->>FE: BonusTokenListDTO
@@ -696,13 +705,17 @@ sequenceDiagram
 
     Note over S,BE: Phase 6 - Session-Ende
     BE->>FE: onStatusChanged FINISHED
+    FE->>FE: Aktiven Kanal verlassen (Quiz, Q&A oder Blitzlicht)
+    FE->>FE: Countdown, Fallback-Polling, Q&A-Sub und Blitzlicht-Sub stoppen
     opt Top-X
         BE->>FE: onPersonalResult mit bonusToken
         FE->>S: Bonus-Token anzeigen, Kopieren
     end
-    FE->>BE: session.getLeaderboard
-    BE-->>FE: LeaderboardEntryDTO
-    FE->>S: Finales Ranking
+    opt Bonus-Code oder Session-Feedback offen
+        FE->>S: Abschluss-Gate mit CTA Zur Startseite
+    else kein Abschluss-Gate noetig
+        FE->>S: Startseite per replaceUrl
+    end
 ```
 
 ---
@@ -899,7 +912,8 @@ flowchart LR
         F3[Antworten sammeln]
         F4[Vergleichsrunde starten]
         F5[Zweite Abstimmung]
-        F6[Reset oder Beenden]
+        F6[Reset oder Blitzlicht-Runde beenden]
+        F7[Gesamte Session beenden]
     end
 
     subgraph Backend["Backend Redis · quickFeedback.*"]
@@ -908,6 +922,7 @@ flowchart LR
         B3[startDiscussion]
         B4[startSecondRound]
         B5[reset · end · optional toggleLock]
+        B6[session.end setzt FINISHED]
     end
 
     subgraph Vote["Teilnehmer-Flow"]
@@ -915,6 +930,8 @@ flowchart LR
         V2[Stimme abgeben]
         V3[Vergleichsrunde sehen]
         V4[Zweite Stimme abgeben]
+        V5[Standalone: Runde abgelaufen + Home-CTA]
+        V6[Session: Abschluss-Gate oder Home]
     end
 
     H1 --> F1
@@ -929,6 +946,9 @@ flowchart LR
     F5 --> B4 --> V4
     V4 --> B2 --> F3
     F3 --> F6 --> B5
+    B5 -.->|Standalone end: Redis-Snapshot fehlt| V5
+    F3 --> F7 --> B6
+    B6 -.->|session.onStatusChanged FINISHED| V6
 ```
 
-**Hinweis:** Standalone-Blitzlicht (`/feedback/:code`, `/feedback/:code/vote`) und Blitzlicht im Session-Kanal teilen sich denselben Fachkern. Unterschiedlich ist nur der Einstiegskontext, nicht die Grundlogik. **Technische Procedure-Namen und Tabelle:** [blitzlicht-quickfeedback-api.md](../features/blitzlicht-quickfeedback-api.md). Produktbegriffe (z. B. „Vergleichsrunde“) siehe [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md) und [BLITZLICHT-GUIDELINES.md](../ui/BLITZLICHT-GUIDELINES.md).
+**Hinweis:** Standalone-Blitzlicht (`/feedback/:code`, `/feedback/:code/vote`) und Blitzlicht im Session-Kanal teilen sich denselben Fachkern. Unterschiedlich ist der Endpfad: `quickFeedback.end` loescht die Redis-Runde und der Standalone-Vote zeigt den abgelaufen/geschlossen-Zustand mit Home-CTA; `session.end` setzt dagegen die gesamte Session auf `FINISHED`, der Session-Vote verlaesst jeden aktiven Kanal und stoppt Q&A-/Blitzlicht-Subscriptions. **Technische Procedure-Namen und Tabelle:** [blitzlicht-quickfeedback-api.md](../features/blitzlicht-quickfeedback-api.md). Produktbegriffe (z. B. „Vergleichsrunde“) siehe [ADR-0010](../architecture/decisions/0010-blitzlicht-as-core-live-mode.md) und [BLITZLICHT-GUIDELINES.md](../ui/BLITZLICHT-GUIDELINES.md).
