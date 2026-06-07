@@ -36,11 +36,14 @@ import {
   calculateTempoTrend,
   parseTempoBucketPayloads,
   tempoBucketStartMs,
+  type TempoBucketSnapshot,
 } from '../lib/quickFeedbackTempo';
 
 const FEEDBACK_TTL_SECONDS = 30 * 60;
 const QUICK_FEEDBACK_POLL_ACTIVE_MS = 500;
 const QUICK_FEEDBACK_POLL_IDLE_MS = 1200;
+const TEMPO_DEFAULT_VALUE = 'FOLLOWING';
+const TEMPO_DEVIATION_VALUES = ['SPEED_UP', 'SLOW_DOWN', 'LOST'] as const;
 const TEMPO_VOTE_SCRIPT = `
 local raw = redis.call('GET', KEYS[1])
 if not raw then
@@ -75,14 +78,15 @@ if previous ~= false and valid[previous] then
   end
 end
 
-local removesCurrentChoice = previous == ARGV[2]
-if removesCurrentChoice then
+local resetsToDefault = ARGV[2] == 'FOLLOWING' or previous == ARGV[2]
+if resetsToDefault then
   redis.call('HDEL', KEYS[2], ARGV[1])
 else
   distribution[ARGV[2]] = (tonumber(distribution[ARGV[2]]) or 0) + 1
   redis.call('HSET', KEYS[2], ARGV[1], ARGV[2])
 end
 
+distribution['FOLLOWING'] = 0
 local totalVotes = 0
 for i = 5, #ARGV do
   totalVotes = totalVotes + (tonumber(distribution[ARGV[i]]) or 0)
@@ -108,7 +112,7 @@ redis.call(
 )
 redis.call('EXPIRE', KEYS[3], ttl)
 
-return cjson.encode({ totalVotes = totalVotes, removesCurrentChoice = removesCurrentChoice })
+return cjson.encode({ totalVotes = totalVotes, resetsToDefault = resetsToDefault })
 `;
 type StoredQuickFeedbackResult = QuickFeedbackResult & { sessionBound?: boolean };
 
@@ -164,6 +168,63 @@ function validValues(type: QuickFeedbackType): readonly string[] {
 
 function emptyDistribution(type: QuickFeedbackType): Record<string, number> {
   return Object.fromEntries(validValues(type).map((v) => [v, 0]));
+}
+
+function positiveInteger(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+}
+
+function tempoCount(distribution: Record<string, number>, value: string): number {
+  return positiveInteger(distribution[value]);
+}
+
+function tempoDeviationTotal(distribution: Record<string, number>): number {
+  return TEMPO_DEVIATION_VALUES.reduce((sum, value) => sum + tempoCount(distribution, value), 0);
+}
+
+function tempoDistributionWithDefaultFollowing(
+  distribution: Record<string, number>,
+  participantBasis: number,
+): Record<string, number> {
+  const deviations = tempoDeviationTotal(distribution);
+  return {
+    SPEED_UP: tempoCount(distribution, 'SPEED_UP'),
+    [TEMPO_DEFAULT_VALUE]: Math.max(0, participantBasis - deviations),
+    SLOW_DOWN: tempoCount(distribution, 'SLOW_DOWN'),
+    LOST: tempoCount(distribution, 'LOST'),
+  };
+}
+
+function applyTempoDefaultFollowing(
+  result: StoredQuickFeedbackResult,
+  activeParticipants: number,
+): number {
+  const storedTotalVotes = positiveInteger(result.totalVotes);
+  const deviations = tempoDeviationTotal(result.distribution);
+  const participantBasis = Math.max(
+    positiveInteger(activeParticipants),
+    storedTotalVotes,
+    deviations,
+  );
+
+  result.distribution = tempoDistributionWithDefaultFollowing(
+    result.distribution,
+    participantBasis,
+  );
+  result.totalVotes = participantBasis;
+
+  return participantBasis;
+}
+
+function tempoSnapshotsWithDefaultFollowing(
+  snapshots: readonly TempoBucketSnapshot[],
+  participantBasis: number,
+): readonly TempoBucketSnapshot[] {
+  return snapshots.map((snapshot) => ({
+    ...snapshot,
+    distribution: tempoDistributionWithDefaultFollowing(snapshot.distribution, participantBasis),
+    totalVotes: participantBasis,
+  }));
 }
 
 async function assertSessionQuickFeedbackEnabled(code: string): Promise<void> {
@@ -717,12 +778,17 @@ async function enrichTempoTrend(
     resolveTempoActiveParticipants(result, code, knownSessionId),
     redis.hgetall(tempoBucketsKey(code)).catch(() => ({}) as Record<string, string>),
   ]);
+  const participantBasis = applyTempoDefaultFollowing(result, activeParticipants);
+  const snapshots = tempoSnapshotsWithDefaultFollowing(
+    parseTempoBucketPayloads(rawBuckets),
+    participantBasis,
+  );
 
   result.tempoTrend = calculateTempoTrend({
     distribution: result.distribution,
     totalVotes: result.totalVotes,
-    activeParticipants,
-    snapshots: parseTempoBucketPayloads(rawBuckets),
+    activeParticipants: participantBasis,
+    snapshots,
   });
 }
 

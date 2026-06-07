@@ -8,6 +8,7 @@ const {
   createFeedbackHostTokenMock,
   assertFeedbackHostAccessMock,
   invalidateFeedbackHostTokenMock,
+  getActiveParticipantCountForSessionMock,
 } = vi.hoisted(() => ({
   redisMock: {
     get: vi.fn(),
@@ -28,6 +29,7 @@ const {
   createFeedbackHostTokenMock: vi.fn(),
   assertFeedbackHostAccessMock: vi.fn(),
   invalidateFeedbackHostTokenMock: vi.fn(),
+  getActiveParticipantCountForSessionMock: vi.fn(),
 }));
 
 vi.mock('../redis', () => ({
@@ -68,6 +70,10 @@ vi.mock('../lib/feedbackHostAuth', () => ({
   invalidateFeedbackHostToken: invalidateFeedbackHostTokenMock,
 }));
 
+vi.mock('../lib/presence', () => ({
+  getActiveParticipantCountForSession: getActiveParticipantCountForSessionMock,
+}));
+
 import { quickFeedbackRouter } from '../routers/quickFeedback';
 
 const caller = quickFeedbackRouter.createCaller({ req: undefined });
@@ -89,6 +95,7 @@ describe('quickFeedback.vote und Session-Status', () => {
     createFeedbackHostTokenMock.mockResolvedValue('feedback-owner-token');
     assertFeedbackHostAccessMock.mockResolvedValue('feedback-owner-token');
     invalidateFeedbackHostTokenMock.mockResolvedValue(undefined);
+    getActiveParticipantCountForSessionMock.mockResolvedValue(0);
     redisMock.set.mockResolvedValue('OK');
     redisMock.hget.mockResolvedValue(null);
     redisMock.hgetall.mockResolvedValue({});
@@ -138,14 +145,15 @@ describe('quickFeedback.vote und Session-Status', () => {
           distribution[previousValue] = Math.max(0, distribution[previousValue] - 1);
         }
 
-        const removesCurrentChoice = previousValue === value;
-        if (removesCurrentChoice) {
+        const resetsToDefault = value === 'FOLLOWING' || previousValue === value;
+        if (resetsToDefault) {
           lastTempoChoiceAction = { method: 'hdel', key: cKey, voterId, value };
         } else {
           distribution[value] = (distribution[value] ?? 0) + 1;
           lastTempoChoiceAction = { method: 'hset', key: cKey, voterId, value };
         }
 
+        distribution.FOLLOWING = 0;
         result.distribution = distribution;
         result.totalVotes = Object.values(distribution).reduce((sum, count) => sum + count, 0);
         lastTempoEvalResult = {
@@ -153,7 +161,7 @@ describe('quickFeedback.vote und Session-Status', () => {
           distribution,
         };
 
-        return JSON.stringify({ totalVotes: result.totalVotes, removesCurrentChoice });
+        return JSON.stringify({ totalVotes: result.totalVotes, resetsToDefault });
       },
     );
     redisMock.multi.mockReturnValue({
@@ -247,7 +255,7 @@ describe('quickFeedback.vote und Session-Status', () => {
     expect(redisMock.sismember).toHaveBeenCalledWith('qf:voters:ABCDEF', VOTER_ID);
   });
 
-  it('setzt bei Tempo eine aktuelle Auswahl ohne One-Shot-Sperre', async () => {
+  it('speichert bei Tempo nur Abweichungen ohne One-Shot-Sperre', async () => {
     redisMock.get.mockResolvedValue(
       JSON.stringify({
         type: 'TEMPO',
@@ -262,7 +270,7 @@ describe('quickFeedback.vote und Session-Status', () => {
       caller.vote({
         sessionCode: 'ABCDEF',
         voterId: VOTER_ID,
-        value: 'FOLLOWING',
+        value: 'SLOW_DOWN',
       }),
     ).resolves.toEqual({ ok: true });
 
@@ -275,7 +283,7 @@ describe('quickFeedback.vote und Session-Status', () => {
       'qf:choices:ABCDEF',
       'qf:tempo:buckets:ABCDEF',
       VOTER_ID,
-      'FOLLOWING',
+      'SLOW_DOWN',
       expect.any(String),
       expect.any(String),
       'SPEED_UP',
@@ -286,12 +294,45 @@ describe('quickFeedback.vote und Session-Status', () => {
     expect(lastTempoEvalResult?.totalVotes).toBe(1);
     expect(lastTempoEvalResult?.distribution).toMatchObject({
       SPEED_UP: 0,
-      FOLLOWING: 1,
-      SLOW_DOWN: 0,
+      FOLLOWING: 0,
+      SLOW_DOWN: 1,
       LOST: 0,
     });
     expect(lastTempoChoiceAction).toEqual({
       method: 'hset',
+      key: 'qf:choices:ABCDEF',
+      voterId: VOTER_ID,
+      value: 'SLOW_DOWN',
+    });
+  });
+
+  it('setzt Tempo per FOLLOWING auf den Default zurueck', async () => {
+    redisMock.hget.mockResolvedValue('SLOW_DOWN');
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 1,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 1, LOST: 0 },
+        sessionBound: false,
+      }),
+    );
+
+    await caller.vote({
+      sessionCode: 'ABCDEF',
+      voterId: VOTER_ID,
+      value: 'FOLLOWING',
+    });
+
+    expect(lastTempoEvalResult?.totalVotes).toBe(0);
+    expect(lastTempoEvalResult?.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 0,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(lastTempoChoiceAction).toEqual({
+      method: 'hdel',
       key: 'qf:choices:ABCDEF',
       voterId: VOTER_ID,
       value: 'FOLLOWING',
@@ -388,31 +429,44 @@ describe('quickFeedback.vote und Session-Status', () => {
     });
   });
 
-  it('liefert fuer Tempo nur Aggregation und Tendenz aus', async () => {
+  it('liefert fuer Tempo ab drei aktiven Teilnehmenden Default-Following und Tendenz aus', async () => {
     redisMock.get.mockResolvedValue(
       JSON.stringify({
         type: 'TEMPO',
         locked: false,
-        totalVotes: 8,
-        distribution: { SPEED_UP: 0, FOLLOWING: 8, SLOW_DOWN: 0, LOST: 0 },
-        sessionBound: false,
+        totalVotes: 0,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+        sessionBound: true,
       }),
     );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+    });
+    getActiveParticipantCountForSessionMock.mockResolvedValue(3);
     redisMock.hgetall.mockResolvedValue({
       [String(Date.now())]: JSON.stringify({
-        totalVotes: 8,
-        distribution: { SPEED_UP: 0, FOLLOWING: 8, SLOW_DOWN: 0, LOST: 0 },
+        totalVotes: 0,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
       }),
     });
 
     const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
 
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 3,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
     expect(result.tempoTrend).toMatchObject({
       status: 'FOLLOWING',
       active: true,
-      activeParticipants: 8,
-      tempoVotes: 8,
-      requiredVotes: 8,
+      activeParticipants: 3,
+      tempoVotes: 3,
+      requiredVotes: 3,
     });
     expect(JSON.stringify(result)).not.toContain(VOTER_ID);
   });
@@ -435,7 +489,7 @@ describe('quickFeedback.vote und Session-Status', () => {
       active: false,
       activeParticipants: 1,
       tempoVotes: 1,
-      requiredVotes: 8,
+      requiredVotes: 3,
     });
   });
 

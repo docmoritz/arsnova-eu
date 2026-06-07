@@ -1865,7 +1865,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoMetricResponses" datatype="html">
-        <source>Rückmeldungen</source>
+        <source>Im Barometer</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.html</context>
           <context context-type="linenumber">399</context>
@@ -1990,6 +1990,69 @@
           <context context-type="linenumber">113</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="feedback.tempoHelpTriggerAria" datatype="html">
+        <source>Tempo-Barometer erklären</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpTitle" datatype="html">
+        <source>Tempo-Barometer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpDefault" datatype="html">
+        <source>Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpDeviations" datatype="html">
+        <source>Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpThreshold" datatype="html">
+        <source>Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpBasis" datatype="html">
+        <source>Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpSmoothing" datatype="html">
+        <source>Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpCloseAria" datatype="html">
+        <source>Hilfe schließen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpClose" datatype="html">
+        <source>Verstanden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionHost.copyJoinLinkSuccess" datatype="html">
         <source>Session-Link kopiert.</source>
         <context-group purpose="location">
@@ -2085,6 +2148,20 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">508</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoParticipantCountOne" datatype="html">
+        <source>1 Person im Barometer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">513</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoParticipantCountMany" datatype="html">
+        <source><x id="count" equiv-text="totalVotes"/> Teilnehmende im Barometer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">515</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.endSessionWarning" datatype="html">
@@ -2274,11 +2351,18 @@
           <context context-type="linenumber">169</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="feedback.tempoOptionSelectedAria" datatype="html">
-        <source><x id="label" equiv-text="label"/> ausgewählt, erneut tippen zum Entfernen</source>
+      <trans-unit id="feedback.tempoOptionDefaultSelectedAria" datatype="html">
+        <source><x id="label" equiv-text="label"/> ausgewählt</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-vote.component.ts</context>
-          <context context-type="linenumber">174</context>
+          <context context-type="linenumber">176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoOptionSelectedAria" datatype="html">
+        <source><x id="label" equiv-text="label"/> ausgewählt, erneut tippen zum Zurücksetzen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-vote.component.ts</context>
+          <context context-type="linenumber">178</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.quickFeedbackClosedNotice" datatype="html">

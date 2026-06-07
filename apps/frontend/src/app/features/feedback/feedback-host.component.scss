@@ -1368,6 +1368,31 @@
   text-wrap: balance;
 }
 
+.feedback-host__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0 0 0.35rem;
+}
+
+.feedback-host__title-row .feedback-host__title {
+  margin: 0;
+}
+
+.feedback-host__tempo-help-button {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--mat-sys-primary);
+}
+
+.feedback-host__tempo-help-button mat-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .feedback-host__tempo-strip {
   display: inline-flex;
   align-items: center;
@@ -1375,7 +1400,7 @@
   justify-self: center;
   gap: 0.45rem;
   width: min(100%, 32rem);
-  margin: -0.55rem auto 1rem;
+  margin: 0.35rem auto 1rem;
   padding: 0.55rem 0.75rem;
   border-radius: var(--mat-sys-corner-medium);
   background: color-mix(in srgb, var(--mat-sys-primary-container) 52%, transparent);
@@ -1457,6 +1482,13 @@
   font-size: clamp(2.05rem, 6.4vw, 3.15rem);
 }
 
+.feedback-host__tempo-trend-heading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
 .feedback-host__tempo-trend-eyebrow {
   margin: 0;
   font: var(--mat-sys-label-large);
@@ -1464,6 +1496,75 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.feedback-host__tempo-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, black 46%, transparent);
+}
+
+.feedback-host__tempo-help {
+  width: min(100%, 34rem);
+  max-height: min(44rem, calc(100vh - 2rem));
+  max-height: min(44rem, calc(100dvh - 2rem));
+  overflow: auto;
+  border-radius: var(--mat-sys-corner-extra-large);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  box-shadow:
+    0 1.2rem 3rem color-mix(in srgb, black 24%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--mat-sys-on-surface) 7%, transparent);
+}
+
+.feedback-host__tempo-help-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.35rem;
+}
+
+.feedback-host__tempo-help-lead {
+  color: var(--mat-sys-primary);
+}
+
+.feedback-host__tempo-help-title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.feedback-host__tempo-help-close {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.feedback-host__tempo-help-content {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem 0.25rem;
+}
+
+.feedback-host__tempo-help-content p {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  line-height: 1.45;
+}
+
+.feedback-host__tempo-help-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.feedback-host__tempo-help-actions button {
+  font-weight: 700;
 }
 
 .feedback-host__tempo-trend-label {
@@ -1724,6 +1825,12 @@
   .feedback-host__title {
     font: var(--mat-sys-title-medium);
     margin: 0 0 0.25rem;
+  }
+  .feedback-host__title-row {
+    margin: 0 0 0.25rem;
+  }
+  .feedback-host__title-row .feedback-host__title {
+    margin: 0;
   }
   .feedback-host__tempo-trend--standalone {
     min-height: min(42vh, 24rem);

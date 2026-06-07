@@ -28,7 +28,7 @@ Fachliche Kerneigenschaften:
 
 - Tempo ist ein **Blitzlicht-Template**, kein eigener Session-Kanal.
 - Es gibt weiterhin genau **ein aktives Blitzlicht** zur selben Zeit.
-- Teilnehmende koennen ihre Tempo-Auswahl **aendern** oder durch Re-Tap **entfernen**.
+- `🙂 Ich folge` ist initial der aktive Default; Teilnehmende koennen auf eine Abweichung wechseln und per `🙂 Ich folge` oder Re-Tap wieder zum Default zurueck.
 - Hosts sehen nur **Aggregation + Tendenz**, keine Einzelrueckmeldungen.
 - Die Host-Ansicht bietet einen **Umschalter** zwischen Detaildarstellung und Tendenzindikator.
 - Im Standalone-Blitzlicht ist der Tendenzmodus die **dominante, grosse und sofort lesbare Hauptansicht**.
@@ -102,8 +102,10 @@ Die fachliche Erweiterung muss dabei in **beiden** Host-Kontexten verfuegbar sei
 
 `Tempo` benoetigt eine Sondersemantik:
 
-- Auswahl wechseln
-- aktive Auswahl entfernen
+- `🙂 Ich folge` als initial aktiver Default
+- Auswahl auf Abweichung wechseln
+- Abweichung per `🙂 Ich folge` oder Re-Tap zuruecksetzen
+- nur Abweichungen vom Default speichern
 - immer nur letzter Zustand zaehlt
 
 Andere Blitzlicht-Typen bleiben beim heutigen Verhalten, solange keine explizite Folgeentscheidung etwas anderes verlangt.
@@ -120,12 +122,12 @@ Die Umsetzung nutzt dafuer eine atomare Redis-Mutation per Lua-Skript; Counts, a
 
 ### 4. Ruhiger Indikator mit Teilnehmerbezug
 
-Die Tendenz darf nicht aus dem bloessen Roh-Snapshot der aktuellen Tempo-Rueckmeldungen abgeleitet werden.
+Die Tendenz darf nicht aus dem bloessen Roh-Snapshot der aktuellen Tempo-Zustaende abgeleitet werden.
 
 Verbindliche Richtung:
 
-- Aktivierung nur bei ausreichender Rueckmeldequote relativ zu `activeParticipants`
-- Bezugsbasis ist die gesamte aktive Teilnehmendenbasis des jeweiligen Blitzlicht-Kontexts, nicht nur `tempoVotes`
+- Aktivierung nur bei ausreichender erfasster Teilnehmendenbasis relativ zu `activeParticipants`
+- Bezugsbasis ist die gesamte aktive Teilnehmendenbasis des jeweiligen Blitzlicht-Kontexts; aktive Teilnehmende ohne Abweichung zaehlen im Session-Kontext als `🙂 Ich folge`
 - geglaettete Berechnung ueber Rolling Window
 - Hysterese vor jedem sichtbaren Indikatorwechsel
 
@@ -310,7 +312,7 @@ Ziel: Das Feature wird sauber review- und releasefaehig.
 - Backend:
   - Vote neu setzen bei `Tempo`
   - Vote wechseln bei `Tempo`
-  - Vote per Re-Tap entfernen
+  - Abweichung per Re-Tap zuruecksetzen
   - andere Blitzlicht-Typen bleiben Einmal-Vote
   - Host bekommt nur Aggregation und Tendenz
   - Tendenz bleibt unterhalb der Mindestquote neutral
@@ -360,8 +362,8 @@ Ziel: Das Feature wird sauber review- und releasefaehig.
 ### Aktivierung
 
 - `activeParticipants` = aktuelle Zahl der aktiven Teilnehmenden im jeweiligen Blitzlicht-Kontext
-- `tempoVotes` = Zahl der Teilnehmenden mit aktuellem Tempo-Zustand
-- Der Indikator bleibt neutral, solange `tempoVotes < max(8, ceil(0.10 * activeParticipants))`
+- `tempoVotes` = Zahl der Teilnehmenden mit aktuellem Tempo-Zustand, inklusive Default `🙂 Ich folge` in Session-Kontexten
+- Der Indikator bleibt neutral, solange `tempoVotes < max(3, ceil(0.10 * activeParticipants))`
 
 ### Glaettung
 
@@ -398,10 +400,10 @@ Der Score dient dann als Sekundaersignal; harte Sicherheitsregeln fuer `lost` un
 ## Definition of Done (story-spezifisch)
 
 - `Tempo` ist als Blitzlicht-Template startbar.
-- Teilnehmende koennen `Tempo` setzen, wechseln und per Re-Tap entfernen.
+- Teilnehmende starten bei `🙂 Ich folge`, koennen Abweichungen setzen, wechseln und per Re-Tap zuruecksetzen.
 - Hosts sehen nur Aggregation und Tendenz.
 - In Session- und Standalone-Host gibt es einen sichtbaren Umschalter zwischen Detaildarstellung und Tendenzmodus.
 - Bestehende Blitzlicht-Typen verhalten sich unveraendert.
 - Mobile- und A11y-Anforderungen sind fuer die vier Reaktionen erfuellt.
 - Lastverhalten zeigt keinen auffaelligen Regressionshotspot fuer grosse Sessions.
-- Parallel abgegebene Tempo-Rueckmeldungen von 500 Teilnehmenden werden korrekt aggregiert.
+- Parallel abgegebene Tempo-Zustaende von 500 Teilnehmenden werden korrekt aggregiert.

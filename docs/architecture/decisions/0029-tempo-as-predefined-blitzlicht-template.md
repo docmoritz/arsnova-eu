@@ -81,8 +81,10 @@ Die vier vordefinierten Tempo-Reaktionen sind:
 
 Fuer dieses Template gilt abweichend vom klassischen Einmal-Vote:
 
+- `🙂 Ich folge` ist initial der aktive Default fuer teilnehmende Personen
 - eine teilnehmende Person kann ihre Auswahl jederzeit aendern
-- ein Tap auf die aktuell aktive Option entfernt die Auswahl wieder
+- ein Tap auf `🙂 Ich folge` oder die aktuell aktive Abweichung setzt wieder auf den Default zurueck
+- gespeichert werden nur Abweichungen vom Default (`🐇 Schneller`, `🐢 Langsamer`, `🙈 Verloren`)
 - pro teilnehmender Person zaehlt immer nur der **aktuelle** Zustand
 
 Diese Semantik ist auf das Template `Tempo` begrenzt. Andere Blitzlicht-Typen bleiben unveraendert, solange keine explizite Folgeentscheidung etwas anderes festlegt.
@@ -132,14 +134,14 @@ Dasselbe Prinzip gilt fuer die Blitzlicht-Host-Auswahl: **Spotlight statt Preset
 Der Tendenz-Indikator muss dabei bewusst **ruhig** bleiben:
 
 - keine Umschaltung wegen einzelner neuer Rueckmeldungen
-- keine Aktivierung bei duennen Rueckmeldungen
-- keine Bewertung nur relativ zu den abgegebenen Tempo-Rueckmeldungen
+- keine Aktivierung bei zu kleiner Teilnehmendenbasis
+- keine Bewertung nur relativ zu expliziten Abweichungen
 
-Bezugsbasis fuer Aktivierung und Schwellwerte ist die **gesamte aktive Teilnehmendenbasis des jeweiligen Blitzlicht-Kontexts**, nicht nur die aktuelle Zahl der Tempo-Rueckmeldungen.
+Bezugsbasis fuer Aktivierung und Schwellwerte ist die **gesamte aktive Teilnehmendenbasis des jeweiligen Blitzlicht-Kontexts**. Aktive Teilnehmende ohne gespeicherte Abweichung zaehlen im Session-Kontext als `🙂 Ich folge`.
 
 Empfohlene Leitplanken:
 
-- neutraler Zustand, solange weniger als `max(8, 10 % der aktiven Teilnehmenden)` eine Tempo-Rueckmeldung abgegeben haben
+- neutraler Zustand, solange weniger als `max(3, 10 % der aktiven Teilnehmenden)` Personen im Tempo-Barometer erfasst sind
 - geglaettete Berechnung ueber ein kurzes Rolling Window, z. B. `60s`
 - Hysterese, sodass ein Indikatorwechsel erst nach stabiler Tendenz oder klarer Marge erfolgt
 
@@ -209,8 +211,8 @@ Aktueller Stand:
 - `quickFeedback.vote` verzweigt fuer `TEMPO` auf einen atomaren Redis-Lua-Hotpath: Wechsel, Re-Tap-Entfernen, Verteilung, `qf:choices:*` und `qf:tempo:buckets:*` werden ohne PostgreSQL-Schreibpfad pro Tap fortgeschrieben.
 - Die Tendenzlogik liegt in `apps/backend/src/lib/quickFeedbackTempo.ts` mit 15-Sekunden-Buckets, 60-Sekunden-Fenster, Mindestquote und Hysterese.
 - Die Startseite und die Blitzlicht-Host-Auswahl enthalten eine Tempo-Spotlight-Kachel; der Startseiten-CTA lautet `Tempo-Feedback`.
-- Die Host-UI bietet Detail- und Tendenzmodus mit den Kennzahlen `Online` und `Rueckmeldungen`; Teilnehmende koennen ihre Tempo-Auswahl wechseln, per Re-Tap entfernen und im Vote-Client per Backdrop zuruecksetzen.
-- Die 500-Teilnehmenden-Abnahme wurde mit parallel abgegebenen Tempo-Rueckmeldungen validiert.
+- Die Host-UI bietet Detail- und Tendenzmodus mit den Kennzahlen `Online` und `Rueckmeldungen`; Teilnehmende starten bei `🙂 Ich folge`, koennen Abweichungen wechseln, per Re-Tap zuruecksetzen und im Vote-Client per Backdrop auf den Default zurueck.
+- Die 500-Teilnehmenden-Abnahme wurde mit parallel abgegebenen Tempo-Zustaenden validiert.
 
 ## Referenzen
 

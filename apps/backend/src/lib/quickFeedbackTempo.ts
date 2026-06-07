@@ -16,7 +16,7 @@ export const TEMPO_BUCKET_SECONDS = 15;
 export const TEMPO_WINDOW_SECONDS = 60;
 const TEMPO_BUCKET_MS = TEMPO_BUCKET_SECONDS * 1000;
 const TEMPO_WINDOW_MS = TEMPO_WINDOW_SECONDS * 1000;
-const TEMPO_MIN_REQUIRED_VOTES = 8;
+const TEMPO_MIN_REQUIRED_VOTES = 3;
 
 export interface TempoBucketSnapshot {
   bucketMs: number;

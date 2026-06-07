@@ -175,11 +175,11 @@ describe('FeedbackHostComponent', () => {
       totalVotes: 3,
       distribution: { SPEED_UP: 0, FOLLOWING: 2, SLOW_DOWN: 1, LOST: 0 },
       tempoTrend: {
-        status: 'NEUTRAL',
-        active: false,
+        status: 'TOO_FAST',
+        active: true,
         activeParticipants: 3,
         tempoVotes: 3,
-        requiredVotes: 8,
+        requiredVotes: 3,
         windowSeconds: 60,
         bucketSeconds: 15,
       },
@@ -456,7 +456,7 @@ describe('FeedbackHostComponent', () => {
         active: true,
         activeParticipants: 12,
         tempoVotes: 9,
-        requiredVotes: 8,
+        requiredVotes: 3,
         windowSeconds: 60,
         bucketSeconds: 15,
       },
@@ -467,7 +467,7 @@ describe('FeedbackHostComponent', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Die Mehrheit kann folgen.');
     expect(text).toContain('Online');
-    expect(text).toContain('Rückmeldungen');
+    expect(text).toContain('Im Barometer');
     expect(text).not.toContain('12 aktive Personen');
     expect(text).not.toContain('9 Rückmeldungen');
     expect(text).toContain('Details');
@@ -489,10 +489,65 @@ describe('FeedbackHostComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.feedback-host__tempo-strip')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('9 Teilnehmende im Barometer');
     expect(
       fixture.nativeElement.querySelector('.feedback-host__tempo-strip-icon')?.textContent?.trim(),
     ).toBe('🙂');
     expect(fixture.nativeElement.querySelector('.feedback-host__bars')).toBeTruthy();
+    fixture.destroy();
+  });
+
+  it('öffnet die Tempo-Hilfe in Details und Tendenz', () => {
+    const fixture = TestBed.createComponent(FeedbackHostComponent);
+    const comp = fixture.componentInstance;
+    comp.result.set({
+      type: 'TEMPO',
+      locked: false,
+      totalVotes: 3,
+      distribution: { SPEED_UP: 0, FOLLOWING: 3, SLOW_DOWN: 0, LOST: 0 },
+      tempoTrend: {
+        status: 'FOLLOWING',
+        active: true,
+        activeParticipants: 3,
+        tempoVotes: 3,
+        requiredVotes: 3,
+        windowSeconds: 60,
+        bucketSeconds: 15,
+      },
+    });
+    fixture.detectChanges();
+
+    const detailHelp = fixture.nativeElement.querySelector<HTMLButtonElement>(
+      '.feedback-host__title-row .feedback-host__tempo-help-button',
+    );
+    expect(detailHelp?.getAttribute('aria-label')).toBe('Tempo-Barometer erklären');
+    detailHelp?.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.feedback-host__tempo-help')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Alle aktiven Teilnehmenden starten');
+    expect(fixture.nativeElement.textContent).toContain('ab drei aktiven Teilnehmenden');
+
+    fixture.nativeElement
+      .querySelector<HTMLButtonElement>('.feedback-host__tempo-help-actions button')
+      ?.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.feedback-host__tempo-help')).toBeNull();
+
+    comp.tempoViewMode.set('trend');
+    fixture.detectChanges();
+
+    const trendHelp = fixture.nativeElement.querySelector<HTMLButtonElement>(
+      '.feedback-host__tempo-trend-heading .feedback-host__tempo-help-button',
+    );
+    expect(trendHelp?.getAttribute('aria-label')).toBe('Tempo-Barometer erklären');
+    trendHelp?.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.feedback-host__tempo-help')).toBeTruthy();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.feedback-host__tempo-help')).toBeNull();
     fixture.destroy();
   });
 

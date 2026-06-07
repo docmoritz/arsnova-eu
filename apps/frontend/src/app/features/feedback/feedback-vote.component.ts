@@ -20,6 +20,8 @@ import { feedbackOptions, feedbackTitle, isTempoFeedbackType } from './feedback.
 import type { QuickFeedbackResult, QuickFeedbackType } from '@arsnova/shared-types';
 
 const VOTER_ID_KEY = 'qf-voter-id';
+const TEMPO_DEFAULT_VALUE = 'FOLLOWING';
+const TEMPO_DEVIATION_VALUES = new Set(['SPEED_UP', 'SLOW_DOWN', 'LOST']);
 
 function getOrCreateVoterId(): string {
   try {
@@ -52,7 +54,8 @@ function tempoSelectionStorageKey(code: string): string {
 
 function readStoredTempoSelection(code: string): string | null {
   try {
-    return localStorage.getItem(tempoSelectionStorageKey(code));
+    const value = localStorage.getItem(tempoSelectionStorageKey(code));
+    return value && TEMPO_DEVIATION_VALUES.has(value) ? value : null;
   } catch {
     return null;
   }
@@ -60,7 +63,7 @@ function readStoredTempoSelection(code: string): string | null {
 
 function writeStoredTempoSelection(code: string, value: string | null): void {
   try {
-    if (value) {
+    if (value && TEMPO_DEVIATION_VALUES.has(value)) {
       localStorage.setItem(tempoSelectionStorageKey(code), value);
     } else {
       localStorage.removeItem(tempoSelectionStorageKey(code));
@@ -169,7 +172,10 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
 
   tempoOptionAriaLabel(label: string, value: string): string {
     if (this.selectedTempoValue() === value) {
-      return $localize`:@@feedback.tempoOptionSelectedAria:${label}:label: ausgewählt, erneut tippen zum Entfernen`;
+      if (value === TEMPO_DEFAULT_VALUE) {
+        return $localize`:@@feedback.tempoOptionDefaultSelectedAria:${label}:label: ausgewählt`;
+      }
+      return $localize`:@@feedback.tempoOptionSelectedAria:${label}:label: ausgewählt, erneut tippen zum Zurücksetzen`;
     }
     return label;
   }
@@ -177,7 +183,12 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   clearTempoSelectionFromBackdrop(event: MouseEvent): void {
     const selectedValue = this.selectedTempoValue();
-    if (!this.isTempoFeedback() || !selectedValue || this.submitting()) {
+    if (
+      !this.isTempoFeedback() ||
+      !selectedValue ||
+      selectedValue === TEMPO_DEFAULT_VALUE ||
+      this.submitting()
+    ) {
       return;
     }
 
@@ -318,10 +329,15 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
 
     if (result.type === 'TEMPO') {
       this.voted.set(false);
-      this.selectedTempoValue.set(result.totalVotes > 0 ? readStoredTempoSelection(code) : null);
-      if (result.totalVotes === 0) {
+      const storedTempoValue = readStoredTempoSelection(code);
+      const storedTempoValueStillPresent =
+        !!storedTempoValue && (result.distribution[storedTempoValue] ?? 0) > 0;
+      if (!storedTempoValueStillPresent) {
         writeStoredTempoSelection(code, null);
       }
+      this.selectedTempoValue.set(
+        storedTempoValueStillPresent ? storedTempoValue : TEMPO_DEFAULT_VALUE,
+      );
     } else if (previousType === 'TEMPO') {
       this.selectedTempoValue.set(null);
       writeStoredTempoSelection(code, null);
@@ -354,15 +370,29 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const isTempo = this.isTempoFeedback();
+    const selectedTempoValue = this.selectedTempoValue();
+    const submittedValue =
+      isTempo && (value === TEMPO_DEFAULT_VALUE || selectedTempoValue === value)
+        ? TEMPO_DEFAULT_VALUE
+        : value;
+    if (
+      isTempo &&
+      selectedTempoValue === TEMPO_DEFAULT_VALUE &&
+      submittedValue === TEMPO_DEFAULT_VALUE
+    ) {
+      return;
+    }
+
     this.submitting.set(true);
     try {
       await trpc.quickFeedback.vote.mutate({
         sessionCode: code,
         voterId: this.effectiveVoterId(),
-        value,
+        value: submittedValue,
       });
-      if (this.isTempoFeedback()) {
-        const nextValue = this.selectedTempoValue() === value ? null : value;
+      if (isTempo) {
+        const nextValue = submittedValue === TEMPO_DEFAULT_VALUE ? TEMPO_DEFAULT_VALUE : value;
         this.selectedTempoValue.set(nextValue);
         writeStoredTempoSelection(code, nextValue);
         return;

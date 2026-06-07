@@ -2112,8 +2112,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoMetricResponses" datatype="html">
-        <source>Rückmeldungen</source>
-        <target>Feedback</target>
+        <source>Im Barometer</source>
+        <target>Nel barometro</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.html</context>
           <context context-type="linenumber">399</context>
@@ -2247,10 +2247,82 @@
       </trans-unit>
       <trans-unit id="feedback.tempoHostActiveLabel" datatype="html">
         <source>Läuft</source>
-        <target>Corsa</target>
+        <target>In corso</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpTriggerAria" datatype="html">
+        <source>Tempo-Barometer erklären</source>
+        <target>Spiegare il barometro del ritmo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpTitle" datatype="html">
+        <source>Tempo-Barometer</source>
+        <target>Barometro del ritmo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpDefault" datatype="html">
+        <source>Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.</source>
+        <target>Tutte le persone attive partono da 🙂 Riesco a seguire.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpDeviations" datatype="html">
+        <source>Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.</source>
+        <target>Vengono inviati attivamente solo gli scostamenti: 🐇 Più veloce, 🐢 Più piano o 🙈 Perduto.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpThreshold" datatype="html">
+        <source>Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.</source>
+        <target>La tendenza viene mostrata a partire da tre persone attive.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpBasis" datatype="html">
+        <source>Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.</source>
+        <target>Valuta l’intero gruppo attivo, non solo chi segnala uno scostamento.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpSmoothing" datatype="html">
+        <source>Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.</source>
+        <target>Le variazioni brevi vengono smussate, così l’indicatore non cambia a ogni singola azione.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpCloseAria" datatype="html">
+        <source>Hilfe schließen</source>
+        <target>Chiudi la guida</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">122</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpClose" datatype="html">
+        <source>Verstanden</source>
+        <target>Ho capito</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">123</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.copyJoinLinkSuccess" datatype="html">
@@ -2359,6 +2431,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">508</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoParticipantCountOne" datatype="html">
+        <source>1 Person im Barometer</source>
+        <target>1 persona nel barometro</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">513</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoParticipantCountMany" datatype="html">
+        <source><x id="count" equiv-text="totalVotes"/> Teilnehmende im Barometer</source>
+        <target><x id="count" equiv-text="totalVotes"/> persone nel barometro</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">515</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.endSessionWarning" datatype="html">
@@ -2573,12 +2661,20 @@
           <context context-type="linenumber">169</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="feedback.tempoOptionSelectedAria" datatype="html">
-        <source><x id="label" equiv-text="label"/> ausgewählt, erneut tippen zum Entfernen</source>
-        <target><x id="label" equiv-text="label"/> selezionato, tocca di nuovo per rimuovere</target>
+      <trans-unit id="feedback.tempoOptionDefaultSelectedAria" datatype="html">
+        <source><x id="label" equiv-text="label"/> ausgewählt</source>
+        <target><x id="label" equiv-text="label"/> selezionato</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-vote.component.ts</context>
-          <context context-type="linenumber">174</context>
+          <context context-type="linenumber">176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoOptionSelectedAria" datatype="html">
+        <source><x id="label" equiv-text="label"/> ausgewählt, erneut tippen zum Zurücksetzen</source>
+        <target><x id="label" equiv-text="label"/> selezionato, tocca di nuovo per reimpostare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-vote.component.ts</context>
+          <context context-type="linenumber">178</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.quickFeedbackClosedNotice" datatype="html">

@@ -109,6 +109,16 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
   readonly tempoHostSpotlightEyebrow = $localize`:@@feedback.tempoHostSpotlightEyebrow:Live-Rückmeldung`;
   readonly tempoHostSpotlightActionLabel = $localize`:@@feedback.tempoHostSpotlightAction:Starten`;
   readonly tempoHostActiveLabel = $localize`:@@feedback.tempoHostActiveLabel:Läuft`;
+  readonly tempoHelpTriggerAria = $localize`:@@feedback.tempoHelpTriggerAria:Tempo-Barometer erklären`;
+  readonly tempoHelpTitle = $localize`:@@feedback.tempoHelpTitle:Tempo-Barometer`;
+  readonly tempoHelpDefaultText = $localize`:@@feedback.tempoHelpDefault:Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.`;
+  readonly tempoHelpDeviationsText = $localize`:@@feedback.tempoHelpDeviations:Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.`;
+  readonly tempoHelpThresholdText = $localize`:@@feedback.tempoHelpThreshold:Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.`;
+  readonly tempoHelpBasisText = $localize`:@@feedback.tempoHelpBasis:Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.`;
+  readonly tempoHelpSmoothingText = $localize`:@@feedback.tempoHelpSmoothing:Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.`;
+  readonly tempoHelpCloseAria = $localize`:@@feedback.tempoHelpCloseAria:Hilfe schließen`;
+  readonly tempoHelpCloseLabel = $localize`:@@feedback.tempoHelpClose:Verstanden`;
+  readonly tempoHelpOpen = signal(false);
 
   sessionCodeDisplayAria(code: string): string {
     return i18nSessionCodeAria(code);
@@ -195,10 +205,18 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydownCloseFeedbackJoinPopover(ev: KeyboardEvent): void {
-    if (ev.key !== 'Escape' || !this.feedbackJoinPopoverOpen()) {
+    if (ev.key !== 'Escape') {
       return;
     }
-    this.closeFeedbackJoinPopover();
+    if (this.tempoHelpOpen()) {
+      this.closeTempoHelp();
+      ev.preventDefault();
+      return;
+    }
+    if (this.feedbackJoinPopoverOpen()) {
+      this.closeFeedbackJoinPopover();
+      ev.preventDefault();
+    }
   }
 
   joinOriginForMenu(): string {
@@ -489,6 +507,22 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
       return $localize`:@@feedback.voteCountOne:1 Stimme`;
     }
     return $localize`:@@feedback.voteCountMany:${totalVotes}:count: Stimmen`;
+  }
+
+  tempoParticipantCountLabel(totalVotes: number): string {
+    if (totalVotes === 1) {
+      return $localize`:@@feedback.tempoParticipantCountOne:1 Person im Barometer`;
+    }
+    return $localize`:@@feedback.tempoParticipantCountMany:${totalVotes}:count: Teilnehmende im Barometer`;
+  }
+
+  openTempoHelp(event?: Event): void {
+    event?.stopPropagation();
+    this.tempoHelpOpen.set(true);
+  }
+
+  closeTempoHelp(): void {
+    this.tempoHelpOpen.set(false);
   }
 
   async startDiscussion(): Promise<void> {

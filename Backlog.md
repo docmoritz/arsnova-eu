@@ -1488,8 +1488,8 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Das Feature wird als **vordefiniertes Blitzlicht-Template** im bestehenden `quickFeedback`-Kanal umgesetzt und **nicht** als eigener Session-Kanal, Quizfrage oder Gamification-Element modelliert.
     - Hosts können das Tempo-Blitzlicht sowohl aus der bestehenden Session-Blitzlicht-Host-UI als auch im **Standalone-Blitzlicht** starten; dabei wird pro Host-Kontext genau **ein** aktives Blitzlicht angezeigt und ausgewertet.
     - Startet der Host ein anderes Blitzlicht, ersetzt es das laufende Tempo-Blitzlicht; Tempo kann später erneut gestartet werden.
-    - Teilnehmende sehen genau vier Reaktionen mit stabiler Semantik und zugänglichen Namen: `🙂 Ich folge`, `🐇 Schneller`, `🐢 Langsamer`, `🙈 Verloren`.
-    - Teilnehmende können ihre Auswahl mit **einem Tap** setzen, auf einen anderen Zustand wechseln und den aktuell gewählten Zustand durch erneuten Tap wieder entfernen.
+    - Teilnehmende sehen genau vier Reaktionen mit stabiler Semantik und zugänglichen Namen: `🙂 Ich folge`, `🐇 Schneller`, `🐢 Langsamer`, `🙈 Verloren`; `🙂 Ich folge` ist initial der aktive Default.
+    - Teilnehmende können mit **einem Tap** auf einen anderen Zustand wechseln; `🙂 Ich folge` oder ein Re-Tap auf die aktive Abweichung setzt die Person wieder auf den Default zurück.
     - Pro teilnehmender Person zählt immer nur der **aktuelle** Zustand; Hosts sehen niemals individuelle Rückmeldungen, sondern nur aggregierte Werte.
     - Das Tempo-Blitzlicht darf beliebig lange offen bleiben, bis der Host es beendet oder durch ein anderes Blitzlicht ersetzt.
     - Die Host-Ansicht zeigt die normale Blitzlicht-Liveaggregation mit Prozentwerten und mindestens einer Tendenz aus: `Die Mehrheit kann folgen.`, `Es wirkt zu schnell.`, `Mehrere Teilnehmende sind abgehängt.`, `Die Gruppe kann schneller mitgehen.`, `Die Rückmeldungen sind gemischt.`
@@ -1501,7 +1501,7 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
     - Im Standalone-Tendenzmodus werden die Kennzahlen **Online** und **Rückmeldungen** sichtbar angezeigt.
     - Auch im prominenten Standalone-Tendenzmodus bleiben der **Umschalter** und die Aktion **`Session beenden`** jederzeit erreichbar.
     - Der Tendenzindikator bleibt **ruhig**: Er reagiert nicht auf Einzelstimmen oder kurzfristige Ausschläge, sondern nur auf geglättete Werte über ein kurzes Zeitfenster mit Hysterese.
-    - Der Tendenzindikator wird erst **aktiv**, wenn genügend Tempo-Rückmeldungen relativ zur **Gesamtzahl der aktuell teilnehmenden Personen im jeweiligen Blitzlicht-Kontext** vorliegen; die Bewertung bezieht sich dabei nicht nur auf die abgegebenen Tempo-Rückmeldungen, sondern auf die gesamte aktive Teilnehmendenbasis.
+    - Der Tendenzindikator wird erst **aktiv**, wenn genügend Personen im Tempo-Barometer relativ zur **Gesamtzahl der aktuell teilnehmenden Personen im jeweiligen Blitzlicht-Kontext** erfasst sind; in Session-Kontexten zählen aktive Teilnehmende ohne Abweichung als `🙂 Ich folge`.
     - Die vier Reaktionen sind auf Smartphones ohne horizontales Scrollen erreichbar; Touch-Ziele, Fokuszustände, Screenreader-Namen und semantische Markierung des aktiven Zustands erfüllen die projektweiten A11y-Regeln.
     - Die Umsetzung verursacht bei Sessions mit 500+ Teilnehmenden keinen spürbaren zusätzlichen Performance-Hotspot im Blitzlicht-Livepfad.
   - **Produktziel Host-UI:** Entscheidend ist die **leichte Lesbarkeit** des Tempo-Feedbacks. Besonders im Standalone-Blitzlicht hat die Host-UI nicht die volle Detailanalyse, sondern die **sofort erfassbare Lageeinschaetzung** fuer den Vortrag zu priorisieren.
@@ -1509,7 +1509,7 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
   - **Umsetzungsstand Stand 2026-06-04:** Umgesetzt im bestehenden `quickFeedback`-Kanal mit `TEMPO`-Template, atomarem mutablem Redis-Hotpath per Lua-Skript, aggregierter Tendenz, Spotlight-Einstiegen auf Startseite und Host-Auswahl, Startseiten-CTA `Tempo-Feedback`, Host-Kennzahlen `Online`/`Rückmeldungen` sowie i18n in `de`, `en`, `fr`, `es` und `it`.
   - **Produktziel Host-Startflaeche:** Auch in der Blitzlicht-Startflaeche selbst soll `Tempo` als **Spotlight-Kachel** statt als kleine Zusatz-Pill erscheinen, damit Hosts das Feature in der Livesituation sofort finden.
   - **Empfohlene Berechnungslogik fuer die Tendenz:**
-    - **Aktivierungsschwelle:** Der Indikator bleibt neutral, solange `tempoVotes < max(8, ceil(0.10 * activeParticipants))`; `activeParticipants` ist die aktuelle Online-Zahl im jeweiligen Blitzlicht-Kontext, nicht nur die Zahl der Tempo-Rückmeldungen.
+    - **Aktivierungsschwelle:** Der Indikator bleibt neutral, solange `tempoVotes < max(3, ceil(0.10 * activeParticipants))`; `tempoVotes` umfasst im Session-Kontext auch den Default `🙂 Ich folge` fuer aktive Teilnehmende ohne gespeicherte Abweichung.
     - **Glaettung:** Grundlage ist ein rollendes Fenster von **60 Sekunden** mit **15-Sekunden-Buckets**; angezeigt wird nicht der rohe Momentanwert, sondern der geglättete Mittelwert ueber dieses Fenster.
     - **Hysterese:** Ein Wechsel des Indikators erfolgt erst, wenn dieselbe neue Tendenz in **mindestens 2 aufeinanderfolgenden Buckets** dominiert oder die bestehende Tendenz um eine klare Marge uebertroffen wird.
     - **Score-Idee:** `speed_up = -1`, `following = 0`, `slow_down = 1`, `lost = 2`; daraus wird ein geglätteter Durchschnitt gebildet, dessen Schwellen durch harte Sicherheitsregeln fuer `lost` und `slow_down + lost` uebersteuert werden duerfen.

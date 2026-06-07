@@ -350,7 +350,7 @@ describe('FeedbackVoteComponent', () => {
     fixture.destroy();
   });
 
-  it('laesst Tempo-Auswahlen wechseln und per Re-Tap entfernen', async () => {
+  it('laesst Tempo-Auswahlen vom Default aus wechseln und per Re-Tap zuruecksetzen', async () => {
     quickFeedbackResultsQueryMock.mockResolvedValueOnce({
       type: 'TEMPO',
       locked: false,
@@ -371,23 +371,35 @@ describe('FeedbackVoteComponent', () => {
       fixture.nativeElement.querySelectorAll<HTMLButtonElement>('.feedback-vote__mood-btn'),
     );
     const following = buttons.find((button) => button.textContent?.includes('Ich folge'));
+    const faster = buttons.find((button) => button.textContent?.includes('Schneller'));
     expect(buttons).toHaveLength(4);
     expect(following).toBeTruthy();
+    expect(faster).toBeTruthy();
+    expect(following!.getAttribute('aria-pressed')).toBe('true');
+    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
 
     following!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(quickFeedbackVoteMutateMock).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent ?? '').not.toContain('Danke für dein Feedback!');
+    expect(following!.getAttribute('aria-pressed')).toBe('true');
+
+    faster!.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(quickFeedbackVoteMutateMock).toHaveBeenCalledWith({
       sessionCode: 'ABC123',
       voterId: expect.any(String),
-      value: 'FOLLOWING',
+      value: 'SPEED_UP',
     });
-    expect(fixture.nativeElement.textContent ?? '').not.toContain('Danke für dein Feedback!');
-    expect(following!.getAttribute('aria-pressed')).toBe('true');
-    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
+    expect(faster!.getAttribute('aria-pressed')).toBe('true');
+    expect(faster!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
+    expect(following!.getAttribute('aria-pressed')).toBe('false');
 
-    following!.click();
+    faster!.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -397,8 +409,10 @@ describe('FeedbackVoteComponent', () => {
       voterId: expect.any(String),
       value: 'FOLLOWING',
     });
-    expect(following!.getAttribute('aria-pressed')).toBe('false');
-    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(false);
+    expect(following!.getAttribute('aria-pressed')).toBe('true');
+    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
+    expect(faster!.getAttribute('aria-pressed')).toBe('false');
+    expect(faster!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(false);
     fixture.destroy();
   });
 
@@ -419,18 +433,28 @@ describe('FeedbackVoteComponent', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     fixture.detectChanges();
 
-    const following = Array.from(
+    const buttons = Array.from(
       fixture.nativeElement.querySelectorAll<HTMLButtonElement>('.feedback-vote__mood-btn'),
-    ).find((button) => button.textContent?.includes('Ich folge'));
+    );
+    const following = buttons.find((button) => button.textContent?.includes('Ich folge'));
+    const slower = buttons.find((button) => button.textContent?.includes('Langsamer'));
 
     expect(following).toBeTruthy();
+    expect(slower).toBeTruthy();
+    expect(following!.getAttribute('aria-pressed')).toBe('true');
 
-    following!.click();
+    slower!.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(1);
-    expect(following!.getAttribute('aria-pressed')).toBe('true');
+    expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+      value: 'SLOW_DOWN',
+    });
+    expect(slower!.getAttribute('aria-pressed')).toBe('true');
+    expect(following!.getAttribute('aria-pressed')).toBe('false');
 
     document.body.click();
     await fixture.whenStable();
@@ -442,8 +466,40 @@ describe('FeedbackVoteComponent', () => {
       voterId: expect.any(String),
       value: 'FOLLOWING',
     });
-    expect(following!.getAttribute('aria-pressed')).toBe('false');
-    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(false);
+    expect(following!.getAttribute('aria-pressed')).toBe('true');
+    expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
+    expect(slower!.getAttribute('aria-pressed')).toBe('false');
+    expect(slower!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(false);
+    fixture.destroy();
+  });
+
+  it('verwirft stale Tempo-Abweichungen nach einem Reset', async () => {
+    localStorage.setItem('qf-tempo-selection:ABC123', 'SLOW_DOWN');
+    quickFeedbackResultsQueryMock.mockResolvedValueOnce({
+      type: 'TEMPO',
+      locked: false,
+      discussion: false,
+      totalVotes: 3,
+      distribution: { SPEED_UP: 0, FOLLOWING: 3, SLOW_DOWN: 0, LOST: 0 },
+      currentRound: 1,
+    });
+
+    const fixture = TestBed.createComponent(FeedbackVoteComponent);
+    fixture.componentRef.setInput('sessionCode', 'ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll<HTMLButtonElement>('.feedback-vote__mood-btn'),
+    );
+    const following = buttons.find((button) => button.textContent?.includes('Ich folge'));
+    const slower = buttons.find((button) => button.textContent?.includes('Langsamer'));
+
+    expect(following?.getAttribute('aria-pressed')).toBe('true');
+    expect(slower?.getAttribute('aria-pressed')).toBe('false');
+    expect(localStorage.getItem('qf-tempo-selection:ABC123')).toBeNull();
     fixture.destroy();
   });
 
