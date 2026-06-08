@@ -2005,35 +2005,70 @@
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpDefault" datatype="html">
-        <source>Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.</source>
+        <source>Schweigen gilt als Zustimmung – alle Aktiven starten bei 🙂. Nur wer abweicht, tippt etwas anderes.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">114</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="feedback.tempoHelpDeviations" datatype="html">
-        <source>Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.</source>
+            <trans-unit id="feedback.tempoHelpRowFollowing" datatype="html">
+        <source>Gruppe folgt</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">115</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowTooFast" datatype="html">
+        <source>Tempo drosseln</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowTooSlow" datatype="html">
+        <source>Tempo erhöhen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowLost" datatype="html">
+        <source>Innehalten, direkt ansprechen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowHeterogeneous" datatype="html">
+        <source>Gruppe gespalten – beide Seiten abholen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowUnclear" datatype="html">
+        <source>Noch kein klares Bild</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="feedback.tempoHelpThreshold" datatype="html">
-        <source>Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.</source>
+        <source>Das Signal erscheint ab drei Aktiven und reagiert mit etwa 15 Sekunden Verzögerung. Kurz abwarten, bevor Sie anpassen.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">116</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpBasis" datatype="html">
-        <source>Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.</source>
+        <source>Bei 🙈 kurz pausieren – das zeigt Stärke, nicht Schwäche. Bei 🐇🐢 explizit beide Lager ansprechen.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpSmoothing" datatype="html">
-        <source>Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.</source>
+        <source>🤷 bedeutet: Das Signal ist noch unscharf. Einfach weitermachen – das klärt sich nach kurzer Zeit.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">118</context>

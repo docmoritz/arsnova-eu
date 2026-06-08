@@ -3207,6 +3207,9 @@ export const TempoTrendSchema = z.object({
   requiredVotes: z.number().int().nonnegative(),
   windowSeconds: z.number().int().positive(),
   bucketSeconds: z.number().int().positive(),
+  /** True when the trend signal is backed by a clear margin or two consistent buckets.
+   * False for HETEROGENEOUS that results from a margin fallback (signal still unclear). */
+  marginMet: z.boolean().optional(),
 });
 export type TempoTrend = z.infer<typeof TempoTrendSchema>;
 

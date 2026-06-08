@@ -112,9 +112,13 @@ function averageTempoDistribution(
     TEMPO_VALUES.map((value) => [value, 0]),
   );
 
-  for (const snapshot of source) {
+  // Linear time-weighting: snapshots are sorted oldest-first (ascending bucketMs).
+  // Index 0 (oldest) gets weight 1, index n-1 (newest) gets weight n.
+  const totalWeight = (source.length * (source.length + 1)) / 2;
+  for (let i = 0; i < source.length; i++) {
+    const weight = (i + 1) / totalWeight;
     for (const value of TEMPO_VALUES) {
-      averaged[value] += count(snapshot.distribution, value) / source.length;
+      averaged[value] += count(source[i].distribution, value) * weight;
     }
   }
 
@@ -199,6 +203,7 @@ export function calculateTempoTrend(input: CalculateTempoTrendInput): TempoTrend
       requiredVotes,
       windowSeconds: TEMPO_WINDOW_SECONDS,
       bucketSeconds: TEMPO_BUCKET_SECONDS,
+      marginMet: false,
     };
   }
 
@@ -206,11 +211,9 @@ export function calculateTempoTrend(input: CalculateTempoTrendInput): TempoTrend
   const smoothedDistribution = averageTempoDistribution(input.distribution, snapshots);
   const smoothedStatus = deriveTempoStatus(smoothedDistribution, activeParticipants);
   const stableStatus = stableBucketStatus(snapshots, activeParticipants, requiredVotes);
-  const status =
-    stableStatus ??
-    (hasClearTempoMargin(smoothedDistribution, activeParticipants, smoothedStatus)
-      ? smoothedStatus
-      : 'HETEROGENEOUS');
+  const marginClear = hasClearTempoMargin(smoothedDistribution, activeParticipants, smoothedStatus);
+  const status = stableStatus ?? (marginClear ? smoothedStatus : 'HETEROGENEOUS');
+  const marginMet = stableStatus !== null || marginClear;
 
   return {
     status,
@@ -220,5 +223,6 @@ export function calculateTempoTrend(input: CalculateTempoTrendInput): TempoTrend
     requiredVotes,
     windowSeconds: TEMPO_WINDOW_SECONDS,
     bucketSeconds: TEMPO_BUCKET_SECONDS,
+    marginMet,
   };
 }

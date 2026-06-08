@@ -2270,40 +2270,80 @@
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpDefault" datatype="html">
-        <source>Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.</source>
-        <target>Todas las personas activas empiezan en 🙂 Puedo seguir.</target>
+        <source>Schweigen gilt als Zustimmung – alle Aktiven starten bei 🙂. Nur wer abweicht, tippt etwas anderes.</source>
+        <target>El silencio es aprobación – todos empiezan en 🙂. Solo quien siente algo diferente pulsa otra opción.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">114</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="feedback.tempoHelpDeviations" datatype="html">
-        <source>Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.</source>
-        <target>Solo se envían activamente las desviaciones: 🐇 Más rápido, 🐢 Más despacio o 🙈 Perdido.</target>
+            <trans-unit id="feedback.tempoHelpRowFollowing" datatype="html">
+        <source>Gruppe folgt</source>
+        <target>El grupo sigue</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">115</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowTooFast" datatype="html">
+        <source>Tempo drosseln</source>
+        <target>Bajar el ritmo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowTooSlow" datatype="html">
+        <source>Tempo erhöhen</source>
+        <target>Subir el ritmo</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowLost" datatype="html">
+        <source>Innehalten, direkt ansprechen</source>
+        <target>Pausa, interpela directamente</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowHeterogeneous" datatype="html">
+        <source>Gruppe gespalten – beide Seiten abholen</source>
+        <target>Grupo dividido – recoge ambas partes</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="feedback.tempoHelpRowUnclear" datatype="html">
+        <source>Noch kein klares Bild</source>
+        <target>Señal aún poco clara</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
+          <context context-type="linenumber">120</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="feedback.tempoHelpThreshold" datatype="html">
-        <source>Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.</source>
-        <target>La tendencia se muestra a partir de tres personas activas.</target>
+        <source>Das Signal erscheint ab drei Aktiven und reagiert mit etwa 15 Sekunden Verzögerung. Kurz abwarten, bevor Sie anpassen.</source>
+        <target>La señal aparece a partir de tres activos y reacciona con unos 15 segundos de retardo. Espera un momento antes de ajustar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">116</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpBasis" datatype="html">
-        <source>Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.</source>
-        <target>Evalúa a todo el grupo activo, no solo a quienes indican una desviación.</target>
+        <source>Bei 🙈 kurz pausieren – das zeigt Stärke, nicht Schwäche. Bei 🐇🐢 explizit beide Lager ansprechen.</source>
+        <target>Ante 🙈 una breve pausa es señal de fortaleza, no de debilidad. Ante 🐇🐢 interpela explícitamente a los dos grupos.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.tempoHelpSmoothing" datatype="html">
-        <source>Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.</source>
-        <target>Los cambios breves se suavizan para que la pantalla no salte con cada acción.</target>
+        <source>🤷 bedeutet: Das Signal ist noch unscharf. Einfach weitermachen – das klärt sich nach kurzer Zeit.</source>
+        <target>🤷 significa: la señal aún no es nítida. Sigue adelante – se aclarará en un momento.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/feedback/feedback-host.component.ts</context>
           <context context-type="linenumber">118</context>

@@ -111,11 +111,21 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
   readonly tempoHostActiveLabel = $localize`:@@feedback.tempoHostActiveLabel:Läuft`;
   readonly tempoHelpTriggerAria = $localize`:@@feedback.tempoHelpTriggerAria:Tempo-Barometer erklären`;
   readonly tempoHelpTitle = $localize`:@@feedback.tempoHelpTitle:Tempo-Barometer`;
-  readonly tempoHelpDefaultText = $localize`:@@feedback.tempoHelpDefault:Alle aktiven Teilnehmenden starten bei 🙂 Ich folge.`;
-  readonly tempoHelpDeviationsText = $localize`:@@feedback.tempoHelpDeviations:Nur Abweichungen werden aktiv gemeldet: 🐇 Schneller, 🐢 Langsamer oder 🙈 Verloren.`;
-  readonly tempoHelpThresholdText = $localize`:@@feedback.tempoHelpThreshold:Die Tendenz wird erst ab drei aktiven Teilnehmenden angezeigt.`;
-  readonly tempoHelpBasisText = $localize`:@@feedback.tempoHelpBasis:Sie bewertet die gesamte aktive Gruppe, nicht nur Personen mit Abweichung.`;
-  readonly tempoHelpSmoothingText = $localize`:@@feedback.tempoHelpSmoothing:Kurze Ausschläge werden geglättet, damit die Anzeige nicht bei jeder einzelnen Änderung springt.`;
+  readonly tempoHelpDefaultText = $localize`:@@feedback.tempoHelpDefault:Schweigen gilt als Zustimmung – alle Aktiven starten bei 🙂. Nur wer abweicht, tippt etwas anderes.`;
+  readonly tempoHelpSignalRows: { emoji: string; action: string }[] = [
+    { emoji: '🙂', action: $localize`:@@feedback.tempoHelpRowFollowing:Gruppe folgt` },
+    { emoji: '🐢', action: $localize`:@@feedback.tempoHelpRowTooFast:Tempo drosseln` },
+    { emoji: '🐇', action: $localize`:@@feedback.tempoHelpRowTooSlow:Tempo erhöhen` },
+    { emoji: '🙈', action: $localize`:@@feedback.tempoHelpRowLost:Innehalten, direkt ansprechen` },
+    {
+      emoji: '🐇🐢',
+      action: $localize`:@@feedback.tempoHelpRowHeterogeneous:Gruppe gespalten – beide Seiten abholen`,
+    },
+    { emoji: '🤷', action: $localize`:@@feedback.tempoHelpRowUnclear:Noch kein klares Bild` },
+  ];
+  readonly tempoHelpThresholdText = $localize`:@@feedback.tempoHelpThreshold:Das Signal erscheint ab drei Aktiven und reagiert mit etwa 15 Sekunden Verzögerung. Kurz abwarten, bevor Sie anpassen.`;
+  readonly tempoHelpBasisText = $localize`:@@feedback.tempoHelpBasis:Bei 🙈 kurz pausieren – das zeigt Stärke, nicht Schwäche. Bei 🐇🐢 explizit beide Lager ansprechen.`;
+  readonly tempoHelpSmoothingText = $localize`:@@feedback.tempoHelpSmoothing:🤷 bedeutet: Das Signal ist noch unscharf. Einfach weitermachen – das klärt sich nach kurzer Zeit.`;
   readonly tempoHelpCloseAria = $localize`:@@feedback.tempoHelpCloseAria:Hilfe schließen`;
   readonly tempoHelpCloseLabel = $localize`:@@feedback.tempoHelpClose:Verstanden`;
   readonly tempoHelpOpen = signal(false);
@@ -747,12 +757,12 @@ export class FeedbackHostComponent implements OnInit, OnDestroy {
     return tempoTrendLabel(status);
   }
 
-  tempoTrendEmoji(status: string | null | undefined): string {
-    return tempoTrendEmoji(status);
+  tempoTrendEmoji(status: string | null | undefined, marginMet?: boolean): string {
+    return tempoTrendEmoji(status, marginMet);
   }
 
-  tempoTrendEmojiCompound(status: string | null | undefined): boolean {
-    return status === 'HETEROGENEOUS';
+  tempoTrendEmojiCompound(status: string | null | undefined, marginMet?: boolean): boolean {
+    return status === 'HETEROGENEOUS' && marginMet !== false;
   }
 
   tempoTrendTone(status: string | null | undefined): string {

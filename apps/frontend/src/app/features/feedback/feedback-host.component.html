@@ -397,11 +397,11 @@
             <span
               class="feedback-host__tempo-trend-icon"
               [class.feedback-host__tempo-trend-icon--compound]="
-                tempoTrendEmojiCompound(data.tempoTrend?.status)
+                tempoTrendEmojiCompound(data.tempoTrend?.status, data.tempoTrend?.marginMet)
               "
               aria-hidden="true"
             >
-              {{ tempoTrendEmoji(data.tempoTrend?.status) }}
+              {{ tempoTrendEmoji(data.tempoTrend?.status, data.tempoTrend?.marginMet) }}
             </span>
             <div class="feedback-host__tempo-trend-heading">
               <p class="feedback-host__tempo-trend-eyebrow" i18n="@@feedback.tempoTrendEyebrow">
@@ -730,11 +730,11 @@
               <span
                 class="feedback-host__tempo-strip-icon"
                 [class.feedback-host__tempo-strip-icon--compound]="
-                  tempoTrendEmojiCompound(data.tempoTrend?.status)
+                  tempoTrendEmojiCompound(data.tempoTrend?.status, data.tempoTrend?.marginMet)
                 "
                 aria-hidden="true"
               >
-                {{ tempoTrendEmoji(data.tempoTrend?.status) }}
+                {{ tempoTrendEmoji(data.tempoTrend?.status, data.tempoTrend?.marginMet) }}
               </span>
               <span>{{ tempoTrendLabel(data.tempoTrend?.status) }}</span>
             </div>
@@ -876,7 +876,18 @@
       </div>
       <div class="feedback-host__tempo-help-content">
         <p>{{ tempoHelpDefaultText }}</p>
-        <p>{{ tempoHelpDeviationsText }}</p>
+        <table class="feedback-host__tempo-help-table">
+          <tbody>
+            @for (row of tempoHelpSignalRows; track row.emoji) {
+              <tr>
+                <td class="feedback-host__tempo-help-table-emoji" aria-hidden="true">
+                  {{ row.emoji }}
+                </td>
+                <td>{{ row.action }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
         <p>{{ tempoHelpThresholdText }}</p>
         <p>{{ tempoHelpBasisText }}</p>
         <p>{{ tempoHelpSmoothingText }}</p>

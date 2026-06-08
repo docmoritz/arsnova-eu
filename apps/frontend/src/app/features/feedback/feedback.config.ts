@@ -270,7 +270,10 @@ export function tempoTrendLabel(status: TempoTrendStatus | string | null | undef
   }
 }
 
-export function tempoTrendEmoji(status: TempoTrendStatus | string | null | undefined): string {
+export function tempoTrendEmoji(
+  status: TempoTrendStatus | string | null | undefined,
+  marginMet?: boolean,
+): string {
   switch (status) {
     case 'FOLLOWING':
       return '🙂';
@@ -281,7 +284,7 @@ export function tempoTrendEmoji(status: TempoTrendStatus | string | null | undef
     case 'LOST':
       return '🙈';
     case 'HETEROGENEOUS':
-      return '🐇🐢';
+      return marginMet === false ? '🤷' : '🐇🐢';
     default:
       return '○';
   }

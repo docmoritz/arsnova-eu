@@ -525,8 +525,8 @@ describe('FeedbackHostComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.feedback-host__tempo-help')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Alle aktiven Teilnehmenden starten');
-    expect(fixture.nativeElement.textContent).toContain('ab drei aktiven Teilnehmenden');
+    expect(fixture.nativeElement.textContent).toContain('Schweigen gilt als Zustimmung');
+    expect(fixture.nativeElement.textContent).toContain('ab drei Aktiven');
 
     fixture.nativeElement
       .querySelector<HTMLButtonElement>('.feedback-host__tempo-help-actions button')

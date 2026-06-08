@@ -116,11 +116,11 @@ Standalone-Vote erkennt eine beendete Runde ueber `onResults`/`results` und zeig
 
 ## Referenzen im Code
 
-| Bereich              | Pfad                                                                       |
-| -------------------- | -------------------------------------------------------------------------- |
-| Router               | `apps/backend/src/routers/quickFeedback.ts`                                |
-| Registrierung        | `apps/backend/src/routers/index.ts` → `quickFeedback: quickFeedbackRouter` |
-| Tempo-Tendenz        | `apps/backend/src/lib/quickFeedbackTempo.ts`                               |
-| Host-UI              | `apps/frontend/src/app/features/feedback/feedback-host.component.*`        |
-| Vote-UI              | `apps/frontend/src/app/features/feedback/feedback-vote.component.*`        |
-| Startseiten-Shortcut | `apps/frontend/src/app/features/home/` (Blitzlicht-Chips)                  |
+| Bereich              | Pfad                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| Router               | `apps/backend/src/routers/quickFeedback.ts`                                                             |
+| Registrierung        | `apps/backend/src/routers/index.ts` → `quickFeedback: quickFeedbackRouter`                              |
+| Tempo-Tendenz        | `apps/backend/src/lib/quickFeedbackTempo.ts` · [tempo-tendenzberechnung.md](tempo-tendenzberechnung.md) |
+| Host-UI              | `apps/frontend/src/app/features/feedback/feedback-host.component.*`                                     |
+| Vote-UI              | `apps/frontend/src/app/features/feedback/feedback-vote.component.*`                                     |
+| Startseiten-Shortcut | `apps/frontend/src/app/features/home/` (Blitzlicht-Chips)                                               |
