@@ -635,6 +635,56 @@ describe('QuizListComponent', () => {
     expect(component.showKiPromptPreview()).toBe(false);
   });
 
+  it('scrollt beim Öffnen der KI-Import-Karte zum Panel', () => {
+    const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance as QuizListComponent & {
+      scrollAiImportPanelIntoViewAfterRender: () => void;
+    };
+    const scrollSpy = vi
+      .spyOn(component, 'scrollAiImportPanelIntoViewAfterRender')
+      .mockImplementation(() => {});
+
+    component.toggleAiImport();
+
+    expect(component.showAiImport()).toBe(true);
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+
+    component.toggleAiImport();
+
+    expect(component.showAiImport()).toBe(false);
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('richtet die KI-Import-Karte im App-Scrollcontainer aus', () => {
+    const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance as QuizListComponent & {
+      scrollAiImportPanelIntoView: () => boolean;
+    };
+    const scrollRoot = document.createElement('main');
+    scrollRoot.className = 'app-main';
+    scrollRoot.style.paddingTop = '64px';
+    scrollRoot.scrollTop = 240;
+    scrollRoot.getBoundingClientRect = () =>
+      ({ top: 0, bottom: 600, left: 0, right: 360, width: 360, height: 600 }) as DOMRect;
+    const scrollTo = vi.fn((options: ScrollToOptions) => {
+      scrollRoot.scrollTop = Number(options.top ?? 0);
+    });
+    scrollRoot.scrollTo = scrollTo;
+    document.body.appendChild(scrollRoot);
+    scrollRoot.appendChild(fixture.nativeElement);
+
+    component.showAiImport.set(true);
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('.quiz-list__ai-card') as HTMLElement;
+    card.getBoundingClientRect = () =>
+      ({ top: 500, bottom: 900, left: 0, right: 360, width: 360, height: 400 }) as DOMRect;
+
+    expect(component.scrollAiImportPanelIntoView()).toBe(true);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 668, behavior: 'smooth' });
+
+    scrollRoot.remove();
+  });
+
   it('setzt die KI-Eingabe ohne Schliessen der Karte zurueck', () => {
     const fixture = TestBed.createComponent(QuizListComponent);
     const component = fixture.componentInstance;

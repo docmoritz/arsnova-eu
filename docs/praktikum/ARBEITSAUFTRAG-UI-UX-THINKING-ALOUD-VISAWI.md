@@ -114,7 +114,7 @@ Das verantwortliche Teammitglied übernimmt die Rolle der **Testleitung** und be
 - rollenbezogene Aufgaben für Quizmaster und Quizteilnehmer/in
 - Preset **„Spielerisch“** für beide Sitzungen
 - Quiz-Einstellungen für die Quizmaster-Session: gamifiziertes Quiz, **2 Teams**, Pseudonyme aus dem Set **„Kindergarten (Tier-Emojis)“**
-- Demo-Quiz **„Praxis-Showcase: Live-Teamdemo“** mit 9 Fragen für die Quizteilnehmer/in-Session
+- Demo-Quiz **„Praxis-Showcase: Team-Quiz“** mit 9 Fragen für die Quizteilnehmer/in-Session
 
 Das Demo-Quiz wird bei einem initialen Start von arsnova.eu ohne vorherige Nutzung in der Quizsammlung angeboten.
 
@@ -271,13 +271,13 @@ Auch für die teilnehmende Rolle wird ein realistisches Nutzungsszenario verwend
 
 Sie nehmen an einer Lehrveranstaltung teil und nutzen dafür einen **Smartphone-Browser**.
 
-Die Testleitung übernimmt im **Desktop-Browser** die Rolle **Quizmaster**, verwendet das Preset **„Spielerisch“** und führt auf dem Produktionsserver <https://arsnova.eu> das Demo-Quiz **„Praxis-Showcase: Live-Teamdemo“** mit 9 Fragen vollständig durch.
+Die Testleitung übernimmt im **Desktop-Browser** die Rolle **Quizmaster**, verwendet das Preset **„Spielerisch“** und führt auf dem Produktionsserver <https://arsnova.eu> das Demo-Quiz **„Praxis-Showcase: Team-Quiz“** mit 9 Fragen vollständig durch.
 
 Das Demo-Quiz ist bereits gamifiziert: Es nutzt zwei Teams und Pseudonyme aus **„Kindergarten (Tier-Emojis)“**. Sie erhalten die notwendigen Zugangsinformationen und nehmen als Quizteilnehmer/in am Demo-Quiz teil.
 
 ### Aufgaben
 
-1. Öffnen Sie <https://arsnova.eu> im Smartphone-Browser und finden Sie heraus, wie Sie dem von der Testleitung gestarteten Demo-Quiz **„Praxis-Showcase: Live-Teamdemo“** beitreten können.
+1. Öffnen Sie <https://arsnova.eu> im Smartphone-Browser und finden Sie heraus, wie Sie dem von der Testleitung gestarteten Demo-Quiz **„Praxis-Showcase: Team-Quiz“** beitreten können.
 2. Prüfen Sie die angezeigte Session-Info und treten Sie der Sitzung mit den bereitgestellten Zugangsinformationen bei.
 3. Wählen Sie, falls die App dies verlangt, einen Namen aus der Liste und beachten Sie die Team-Informationen.
 4. Orientieren Sie sich in der Lobby und sagen Sie laut, was Sie als nächsten Schritt erwarten.
@@ -460,7 +460,7 @@ Alle Ergebnisse müssen spätestens am **24. Juni 2026** beim Kursleiter eingega
 - [ ] Testperson erstellt ein Quiz mit 2 Fragen: 1 Single-Choice-Frage mit genau einer richtigen Antwort und 1 Multiple-Choice-Frage mit mindestens zwei richtigen Antworten, jeweils mit 4 Antwortoptionen
 - [ ] Testperson nutzt bei den Fragetexten mindestens zwei Markdown-Funktionen, z. B. Bild, Liste, Programmcode, Link, Formel oder Vorschau
 - [ ] In der Quizmaster-Session als Testleitung im Smartphone-Browser dem von der Testperson erstellten Quiz als Quizteilnehmer/in beitreten
-- [ ] Demo-Quiz **„Praxis-Showcase: Live-Teamdemo“** mit 9 Fragen für die Quizteilnehmer/in-Session verwenden und als Testleitung vollständig durchführen
+- [ ] Demo-Quiz **„Praxis-Showcase: Team-Quiz“** mit 9 Fragen für die Quizteilnehmer/in-Session verwenden und als Testleitung vollständig durchführen
 - [ ] Thinking-Aloud-Session für Quizteilnehmer/in im Smartphone-Browser durchführen
 - [ ] Separate Audioaufnahme je Sitzung sichern
 - [ ] VisAWI-Fragebogen nach jeder Sitzung ausfüllen lassen

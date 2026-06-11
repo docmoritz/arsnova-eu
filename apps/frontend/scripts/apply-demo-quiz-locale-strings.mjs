@@ -178,7 +178,7 @@ function buildPayload(locale) {
 
 const LOCALES = {
   de: {
-    name: 'Praxis-Showcase: Live-Teamdemo',
+    name: 'Praxis-Showcase: Team-Quiz',
     teamNames: ['Team 🍎', 'Team 🍐'],
     description: md`![Praxis-Showcase](${PI_IMAGE_URL})
 

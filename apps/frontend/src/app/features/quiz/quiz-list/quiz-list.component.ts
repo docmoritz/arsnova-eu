@@ -1,6 +1,16 @@
 import { DatePipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatCard, MatCardContent } from '@angular/material/card';
@@ -161,6 +171,8 @@ export class QuizListComponent implements OnInit {
   readonly lastFeedbackEmptyTooltip = $localize`:@@quizList.lastFeedbackEmpty:Noch kein Feedback vorhanden.`;
   private lastQuizHistoryAvailabilityKey = '';
   private quizHistoryAvailabilityRequestId = 0;
+  @ViewChild('aiImportCard', { read: ElementRef })
+  private readonly aiImportCard?: ElementRef<HTMLElement>;
 
   /** Wird true, während quiz.upload + session.create laufen (Story 2.1a). */
   readonly liveStartPending = signal(false);
@@ -360,11 +372,77 @@ export class QuizListComponent implements OnInit {
   }
 
   toggleAiImport(): void {
-    this.showAiImport.update((visible) => !visible);
+    const shouldOpen = !this.showAiImport();
+    this.showAiImport.set(shouldOpen);
     this.showKiPromptPreview.set(false);
     this.actionError.set(null);
     this.actionInfo.set(null);
     this.actionInfoWarnings.set([]);
+    if (shouldOpen) {
+      this.scrollAiImportPanelIntoViewAfterRender();
+    }
+  }
+
+  private scrollAiImportPanelIntoViewAfterRender(): void {
+    const win = this.document.defaultView;
+    const schedule = win?.setTimeout.bind(win) ?? setTimeout;
+    const requestFrame = win?.requestAnimationFrame.bind(win);
+    const run = (attemptsLeft: number): void => {
+      if (this.scrollAiImportPanelIntoView() || attemptsLeft <= 0) {
+        return;
+      }
+      if (typeof win?.requestAnimationFrame === 'function') {
+        requestFrame?.(() => run(attemptsLeft - 1));
+      } else {
+        schedule(() => run(attemptsLeft - 1), 16);
+      }
+    };
+    schedule(() => run(6), 0);
+  }
+
+  private scrollAiImportPanelIntoView(): boolean {
+    const target = this.aiImportCard?.nativeElement;
+    if (!target) {
+      return false;
+    }
+
+    const scrollRoot =
+      (target.closest('.app-main') as HTMLElement | null) ??
+      this.findScrollableOverflowParent(target);
+
+    if (!scrollRoot) {
+      target.scrollIntoView?.({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+      return true;
+    }
+
+    const rootRect = scrollRoot.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const toolbarClearancePx =
+      parseFloat(this.document.defaultView?.getComputedStyle(scrollRoot).paddingTop ?? '0') || 0;
+    const gapPx = 8;
+    const nextTop =
+      targetRect.top - rootRect.top + scrollRoot.scrollTop - toolbarClearancePx - gapPx;
+
+    try {
+      scrollRoot.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
+    } catch {
+      scrollRoot.scrollTop = Math.max(0, nextTop);
+    }
+    return true;
+  }
+
+  private findScrollableOverflowParent(from: HTMLElement): HTMLElement | null {
+    let current = from.parentElement;
+    while (current) {
+      const style = this.document.defaultView?.getComputedStyle(current);
+      const overflowY = style?.overflowY ?? '';
+      const canScroll = /(auto|scroll|overlay)/.test(overflowY);
+      if (canScroll && current.scrollHeight > current.clientHeight) {
+        return current;
+      }
+      current = current.parentElement;
+    }
+    return null;
   }
 
   toggleKiPromptPreview(): void {

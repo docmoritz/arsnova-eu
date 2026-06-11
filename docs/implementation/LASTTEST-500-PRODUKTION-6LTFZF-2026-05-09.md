@@ -10,7 +10,7 @@ Dieses Dokument haelt den am 2026-05-09 gegen die Produktionsinstanz `https://ar
 - Session-Code: `6LTFZF`
 - Session-ID: `f64bdc32-107e-41db-9396-4510093e633b`
 - Modus zum Testzeitpunkt: `LOBBY`
-- Quizname: `Praxis-Showcase: Live-Teamdemo`
+- Quizname: `Praxis-Showcase: Team-Quiz`
 
 Vor dem Lastlauf wurde geprueft:
 

@@ -3768,8 +3768,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="home.heroChip.quizStart" datatype="html">
-        <source>Quiz starten</source>
-        <target>Start quiz</target>
+        <source>Quiz erstellen oder starten</source>
+        <target>Create or start a quiz</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/home/home.component.html</context>
           <context context-type="linenumber">54</context>
@@ -3972,7 +3972,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="homeHostCard.title" datatype="html">
-        <source>Mit Quiz starten</source>
+        <source>Mit einem Quiz starten</source>
         <target>Start with a quiz</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/home/home.component.html</context>
