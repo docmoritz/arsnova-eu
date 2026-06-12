@@ -105,7 +105,7 @@ function parseMarkdownEscapingInlineHtml(
 ): string {
   const renderer = new marked.Renderer();
   renderer.code = (token) => renderMarkdownCodeBlockHtml(token);
-  renderer.html = ({ text }) => escapeHtml(text);
+  renderer.html = ({ text }) => renderTrustedInlineHtml(text);
   renderer.text = function (token): string {
     const inlineTokens = 'tokens' in token ? token.tokens : undefined;
     if (inlineTokens?.length) {
@@ -148,6 +148,17 @@ function parseMarkdownEscapingInlineHtml(
     return `<img src="${hrefEsc}" alt="${altEsc}" title="${titleEsc}" loading="eager" decoding="async" crossorigin="anonymous" referrerpolicy="no-referrer" data-markdown-image-lightbox="true" data-markdown-image-state="loading" />`;
   };
   return marked.parse(source, { renderer }) as string;
+}
+
+function renderTrustedInlineHtml(text: string): string {
+  const value = text.trim();
+  if (/^<br\s*\/?>$/i.test(value)) {
+    return value;
+  }
+  if (/^<\/?(?:strong|b|em|i|code|sub|sup)>$/i.test(value)) {
+    return value;
+  }
+  return escapeHtml(text);
 }
 
 /** Markdown → HTML ohne KaTeX (kein `$…$`-Parsing). Für lange System-Prompts mit JSON-Beispielen. */
@@ -359,9 +370,13 @@ function sanitizeMarkdownHtml(html: string): string {
       'br',
       'hr',
       'strong',
+      'b',
       'em',
+      'i',
       's',
       'code',
+      'sub',
+      'sup',
       'pre',
       'blockquote',
       'ul',
@@ -376,6 +391,12 @@ function sanitizeMarkdownHtml(html: string): string {
       'button',
       'img',
       'span',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
       'svg',
       'path',
       // KaTeX (MathML + Annotation) – für A11y und Tests.
@@ -416,6 +437,7 @@ function sanitizeMarkdownHtml(html: string): string {
       'crossorigin',
       'referrerpolicy',
       'data-markdown-link-kind',
+      'align',
       'aria-hidden',
       'aria-label',
       'disabled',

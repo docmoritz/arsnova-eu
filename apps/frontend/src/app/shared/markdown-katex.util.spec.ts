@@ -15,6 +15,37 @@ describe('renderMarkdownWithKatex', () => {
     expect(result.katexError).toBeNull();
   });
 
+  it('rendert Markdown-Tabellen als sanitisiertes Tabellen-HTML', () => {
+    const result = renderMarkdownWithKatex(
+      [
+        '| Element | Bedeutung |',
+        '|---|---|',
+        '| `X` | Feature-Matrix |',
+        '| `y` | Zielvariable |',
+      ].join('\n'),
+    );
+
+    expect(result.katexError).toBeNull();
+    expect(result.html).toContain('<table>');
+    expect(result.html).toContain('<thead>');
+    expect(result.html).toContain('<tbody>');
+    expect(result.html).toContain('<th>Element</th>');
+    expect(result.html).toContain('<td><code>X</code></td>');
+    expect(result.html).toContain('<td>Feature-Matrix</td>');
+    expect(result.html).not.toContain('|---|---|');
+  });
+
+  it('rendert sichere Inline-HTML-Tags und escaped unsichere HTML-Tags', () => {
+    const result = renderMarkdownWithKatex(
+      '<strong>Wichtig:</strong><br>H<sub>2</sub>O und x<sup>2</sup> <code>code</code> <img src=x onerror=alert(1)>',
+    );
+
+    expect(result.html).toContain('<strong>Wichtig:</strong><br>H<sub>2</sub>O und x<sup>2</sup>');
+    expect(result.html).toContain('<code>code</code>');
+    expect(result.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(result.html).not.toContain('<img src=');
+  });
+
   it('behält KaTeX-SVG-Attribute für Wurzelzeichen nach DOMPurify', () => {
     const result = renderMarkdownWithKatex(String.raw`$U = \hat{u}\cdot \sqrt{2}$`);
 

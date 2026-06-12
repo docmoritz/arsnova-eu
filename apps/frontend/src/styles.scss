@@ -1499,38 +1499,40 @@ $markdown-katex-flow-hosts:
   }
 }
 
-/* Quiz-Beschreibung: Tabellen (innerHTML); KaTeX-Display siehe Schleife oben */
-.quiz-list-item__description table {
-  line-height: 1.5;
-  width: 100%;
-  min-width: 0;
-  table-layout: fixed;
-  margin: 0.75rem 0;
-  border-collapse: collapse;
-  font: var(--mat-sys-label-small);
-  font-size: 0.9em;
-}
+/* Markdown-Tabellen in Fragen, Antworten, Vorschau, Host, Vote und Quiz-Beschreibung. */
+@each $host in $markdown-katex-flow-hosts {
+  #{$host} table {
+    line-height: 1.5;
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    margin: 0.75rem 0;
+    border-collapse: collapse;
+    font: var(--mat-sys-label-small);
+    font-size: 0.9em;
+  }
 
-.quiz-list-item__description th,
-.quiz-list-item__description td {
-  padding: 0.4rem 0.6rem;
-  text-align: left;
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 35%, transparent);
-  vertical-align: top;
-  overflow-wrap: break-word;
-  word-break: normal;
-  hyphens: auto;
-  -webkit-hyphens: auto;
-  line-height: 1.5;
-}
+  #{$host} th,
+  #{$host} td {
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 35%, transparent);
+    vertical-align: top;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    line-height: 1.5;
+  }
 
-.quiz-list-item__description thead th {
-  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
-  font-weight: 600;
-}
+  #{$host} thead th {
+    background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+    font-weight: 600;
+  }
 
-.quiz-list-item__description tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  #{$host} tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  }
 }
 
 /* Erste Spalte (# / laufende Nr.): nur Platz für zwei Ziffern, Rest für die anderen Spalten */
