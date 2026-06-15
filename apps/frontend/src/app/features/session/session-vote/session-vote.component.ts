@@ -717,6 +717,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
    */
   readonly showSessionEndGate = signal(false);
   private sessionEndRedirectInFlight = false;
+  private participantOfflineMarked = false;
 
   constructor() {
     effect(() => {
@@ -1878,6 +1879,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         this.showSessionEndGate.set(true);
         return;
       }
+      this.markParticipantOffline();
       await this.router.navigateByUrl(this.localizedPath('/'), { replaceUrl: true });
     } finally {
       if (!this.showSessionEndGate()) {
@@ -1907,6 +1909,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   continueToHomeAfterSessionEnd(): void {
+    this.markParticipantOffline();
     void this.router.navigateByUrl(this.localizedPath('/'), { replaceUrl: true });
   }
 
@@ -2221,6 +2224,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.markParticipantOffline();
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
     }
@@ -2236,6 +2240,23 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.lobbyArrivalTimeout = null;
     }
     this.stopCountdown();
+  }
+
+  private markParticipantOffline(): void {
+    const participantId = this.participantId();
+    if (!this.code || !participantId || this.participantOfflineMarked) {
+      return;
+    }
+
+    this.participantOfflineMarked = true;
+    void trpc.session.markParticipantOffline
+      .mutate({
+        code: this.code,
+        participantId,
+      })
+      .catch(() => {
+        // Best effort: stale Presence expires via Redis TTL if the leave signal is lost.
+      });
   }
 
   private startFallbackPolling(immediate = false): void {

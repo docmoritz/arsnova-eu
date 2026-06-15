@@ -110,6 +110,7 @@ import {
 import {
   getActiveParticipantCountForSession,
   getActiveParticipantIdsForSession,
+  removeParticipantPresence,
   touchParticipantPresence,
 } from '../lib/presence';
 import { markCountdownSessionActive, recordSessionTransitionActivity } from '../lib/loadSignal';
@@ -3251,6 +3252,29 @@ export const sessionRouter = router({
         teamId: participant.teamId ?? null,
         teamName: participant.team?.name ?? null,
       };
+    }),
+
+  /** Teilnehmende verlassen die Live-Ansicht: nur Online-Presence entfernen, nicht die Teilnahme. */
+  markParticipantOffline: publicProcedure
+    .input(GetSessionParticipantInputSchema)
+    .output(z.object({ ok: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const code = input.code.toUpperCase();
+      const participant = await prisma.participant.findFirst({
+        where: {
+          id: input.participantId,
+          session: { code },
+        },
+        select: { sessionId: true },
+      });
+
+      if (participant) {
+        await removeParticipantPresence(participant.sessionId, input.participantId);
+        clearParticipantsSnapshotCache(code);
+        emitSessionParticipantSignal(code);
+      }
+
+      return { ok: true };
     }),
 
   confirmReadingReady: publicProcedure

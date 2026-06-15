@@ -8,12 +8,14 @@ const {
   createFeedbackHostTokenMock,
   assertFeedbackHostAccessMock,
   invalidateFeedbackHostTokenMock,
-  getActiveParticipantCountForSessionMock,
+  getActiveParticipantIdsForSessionMock,
+  touchParticipantPresenceMock,
 } = vi.hoisted(() => ({
   redisMock: {
     get: vi.fn(),
     hget: vi.fn(),
     hgetall: vi.fn(),
+    hdel: vi.fn(),
     set: vi.fn(),
     sismember: vi.fn(),
     eval: vi.fn(),
@@ -29,7 +31,8 @@ const {
   createFeedbackHostTokenMock: vi.fn(),
   assertFeedbackHostAccessMock: vi.fn(),
   invalidateFeedbackHostTokenMock: vi.fn(),
-  getActiveParticipantCountForSessionMock: vi.fn(),
+  getActiveParticipantIdsForSessionMock: vi.fn(),
+  touchParticipantPresenceMock: vi.fn(),
 }));
 
 vi.mock('../redis', () => ({
@@ -71,7 +74,8 @@ vi.mock('../lib/feedbackHostAuth', () => ({
 }));
 
 vi.mock('../lib/presence', () => ({
-  getActiveParticipantCountForSession: getActiveParticipantCountForSessionMock,
+  getActiveParticipantIdsForSession: getActiveParticipantIdsForSessionMock,
+  touchParticipantPresence: touchParticipantPresenceMock,
 }));
 
 import { quickFeedbackRouter } from '../routers/quickFeedback';
@@ -95,10 +99,12 @@ describe('quickFeedback.vote und Session-Status', () => {
     createFeedbackHostTokenMock.mockResolvedValue('feedback-owner-token');
     assertFeedbackHostAccessMock.mockResolvedValue('feedback-owner-token');
     invalidateFeedbackHostTokenMock.mockResolvedValue(undefined);
-    getActiveParticipantCountForSessionMock.mockResolvedValue(0);
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set());
+    touchParticipantPresenceMock.mockResolvedValue(undefined);
     redisMock.set.mockResolvedValue('OK');
     redisMock.hget.mockResolvedValue(null);
     redisMock.hgetall.mockResolvedValue({});
+    redisMock.hdel.mockResolvedValue(1);
     redisMock.sismember.mockResolvedValue(0);
     lastTempoEvalResult = null;
     lastTempoChoiceAction = null;
@@ -145,15 +151,10 @@ describe('quickFeedback.vote und Session-Status', () => {
           distribution[previousValue] = Math.max(0, distribution[previousValue] - 1);
         }
 
-        const resetsToDefault = value === 'FOLLOWING' || previousValue === value;
-        if (resetsToDefault) {
-          lastTempoChoiceAction = { method: 'hdel', key: cKey, voterId, value };
-        } else {
-          distribution[value] = (distribution[value] ?? 0) + 1;
-          lastTempoChoiceAction = { method: 'hset', key: cKey, voterId, value };
-        }
-
-        distribution.FOLLOWING = 0;
+        const resetsToDefault = previousValue === value && value !== 'FOLLOWING';
+        const nextValue = resetsToDefault ? 'FOLLOWING' : value;
+        distribution[nextValue] = (distribution[nextValue] ?? 0) + 1;
+        lastTempoChoiceAction = { method: 'hset', key: cKey, voterId, value: nextValue };
         result.distribution = distribution;
         result.totalVotes = Object.values(distribution).reduce((sum, count) => sum + count, 0);
         lastTempoEvalResult = {
@@ -190,6 +191,7 @@ describe('quickFeedback.vote und Session-Status', () => {
       quickFeedbackEnabled: true,
       quickFeedbackOpen: true,
       status: 'FINISHED',
+      _count: { participants: 0 },
     });
 
     await expect(
@@ -218,6 +220,7 @@ describe('quickFeedback.vote und Session-Status', () => {
       quickFeedbackEnabled: true,
       quickFeedbackOpen: false,
       status: 'ACTIVE',
+      _count: { participants: 0 },
     });
 
     await expect(
@@ -255,7 +258,39 @@ describe('quickFeedback.vote und Session-Status', () => {
     expect(redisMock.sismember).toHaveBeenCalledWith('qf:voters:ABCDEF', VOTER_ID);
   });
 
-  it('speichert bei Tempo nur Abweichungen ohne One-Shot-Sperre', async () => {
+  it('aktualisiert Presence bei sessiongebundenen Blitzlicht-Stimmen', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'MOOD',
+        locked: false,
+        totalVotes: 0,
+        distribution: { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 1 },
+    });
+
+    await expect(
+      caller.vote({
+        sessionCode: 'ABCDEF',
+        voterId: VOTER_ID,
+        value: 'POSITIVE',
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    expect(touchParticipantPresenceMock).toHaveBeenCalledWith(
+      '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      VOTER_ID,
+    );
+  });
+
+  it('speichert bei Tempo Auswahlen ohne One-Shot-Sperre', async () => {
     redisMock.get.mockResolvedValue(
       JSON.stringify({
         type: 'TEMPO',
@@ -306,7 +341,7 @@ describe('quickFeedback.vote und Session-Status', () => {
     });
   });
 
-  it('setzt Tempo per FOLLOWING auf den Default zurueck', async () => {
+  it('registriert bei Tempo FOLLOWING als Default-Auswahl', async () => {
     redisMock.hget.mockResolvedValue('SLOW_DOWN');
     redisMock.get.mockResolvedValue(
       JSON.stringify({
@@ -324,19 +359,71 @@ describe('quickFeedback.vote und Session-Status', () => {
       value: 'FOLLOWING',
     });
 
-    expect(lastTempoEvalResult?.totalVotes).toBe(0);
+    expect(lastTempoEvalResult?.totalVotes).toBe(1);
     expect(lastTempoEvalResult?.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 1,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(lastTempoChoiceAction).toEqual({
+      method: 'hset',
+      key: 'qf:choices:ABCDEF',
+      voterId: VOTER_ID,
+      value: 'FOLLOWING',
+    });
+  });
+
+  it('entfernt Standalone-Tempo-Auswahl beim Verlassen aus dem Barometer', async () => {
+    redisMock.hget.mockResolvedValue('FOLLOWING');
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 1,
+        distribution: { SPEED_UP: 0, FOLLOWING: 1, SLOW_DOWN: 0, LOST: 0 },
+        sessionBound: false,
+      }),
+    );
+
+    await expect(
+      caller.leaveTempo({
+        sessionCode: 'ABCDEF',
+        voterId: VOTER_ID,
+      }),
+    ).resolves.toEqual({ ok: true });
+
+    const multi = redisMock.multi.mock.results[redisMock.multi.mock.results.length - 1]?.value as {
+      set: ReturnType<typeof vi.fn>;
+      hdel: ReturnType<typeof vi.fn>;
+      hset: ReturnType<typeof vi.fn>;
+      expire: ReturnType<typeof vi.fn>;
+      exec: ReturnType<typeof vi.fn>;
+    };
+    expect(multi.hdel).toHaveBeenCalledWith('qf:choices:ABCDEF', VOTER_ID);
+    expect(multi.set).toHaveBeenCalledWith(
+      'qf:ABCDEF',
+      expect.any(String),
+      'EX',
+      expect.any(Number),
+    );
+    const stored = JSON.parse(String(multi.set.mock.calls[0]?.[1])) as {
+      totalVotes: number;
+      distribution: Record<string, number>;
+    };
+    expect(stored.totalVotes).toBe(0);
+    expect(stored.distribution).toMatchObject({
       SPEED_UP: 0,
       FOLLOWING: 0,
       SLOW_DOWN: 0,
       LOST: 0,
     });
-    expect(lastTempoChoiceAction).toEqual({
-      method: 'hdel',
-      key: 'qf:choices:ABCDEF',
-      voterId: VOTER_ID,
-      value: 'FOLLOWING',
-    });
+    expect(multi.hset).toHaveBeenCalledWith(
+      'qf:tempo:buckets:ABCDEF',
+      expect.any(String),
+      expect.stringContaining('"totalVotes":0'),
+    );
+    expect(multi.expire).toHaveBeenCalledWith('qf:choices:ABCDEF', expect.any(Number));
   });
 
   it('wechselt bei Tempo per Delta auf die neue Auswahl', async () => {
@@ -372,7 +459,7 @@ describe('quickFeedback.vote und Session-Status', () => {
     });
   });
 
-  it('entfernt bei Tempo die aktive Auswahl per Re-Tap', async () => {
+  it('setzt bei Tempo die aktive Abweichung per Re-Tap auf FOLLOWING zurueck', async () => {
     redisMock.hget.mockResolvedValue('SLOW_DOWN');
     redisMock.get.mockResolvedValue(
       JSON.stringify({
@@ -390,18 +477,18 @@ describe('quickFeedback.vote und Session-Status', () => {
       value: 'SLOW_DOWN',
     });
 
-    expect(lastTempoEvalResult?.totalVotes).toBe(0);
+    expect(lastTempoEvalResult?.totalVotes).toBe(1);
     expect(lastTempoEvalResult?.distribution).toMatchObject({
       SPEED_UP: 0,
-      FOLLOWING: 0,
+      FOLLOWING: 1,
       SLOW_DOWN: 0,
       LOST: 0,
     });
     expect(lastTempoChoiceAction).toEqual({
-      method: 'hdel',
+      method: 'hset',
       key: 'qf:choices:ABCDEF',
       voterId: VOTER_ID,
-      value: 'SLOW_DOWN',
+      value: 'FOLLOWING',
     });
   });
 
@@ -444,14 +531,19 @@ describe('quickFeedback.vote und Session-Status', () => {
       quickFeedbackEnabled: true,
       quickFeedbackOpen: true,
       status: 'ACTIVE',
+      _count: { participants: 3 },
     });
-    getActiveParticipantCountForSessionMock.mockResolvedValue(3);
-    redisMock.hgetall.mockResolvedValue({
-      [String(Date.now())]: JSON.stringify({
-        totalVotes: 0,
-        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
-      }),
-    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set(['p1', 'p2', 'p3']));
+    redisMock.hgetall.mockImplementation(async (key: string) =>
+      key === 'qf:tempo:buckets:ABCDEF'
+        ? {
+            [String(Date.now())]: JSON.stringify({
+              totalVotes: 0,
+              distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+            }),
+          }
+        : {},
+    );
 
     const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
 
@@ -469,6 +561,195 @@ describe('quickFeedback.vote und Session-Status', () => {
       requiredVotes: 3,
     });
     expect(JSON.stringify(result)).not.toContain(VOTER_ID);
+  });
+
+  it('zaehlt bei Tempo bekannte Session-Teilnehmende ohne Presence nicht als online', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 0,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 4 },
+    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set());
+    redisMock.hgetall.mockResolvedValue({});
+
+    const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
+
+    expect(result.totalVotes).toBe(0);
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 0,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(result.tempoTrend).toMatchObject({
+      activeParticipants: 0,
+      tempoVotes: 0,
+    });
+  });
+
+  it('zaehlt bei sessiongebundenem Tempo gespeicherte FOLLOWING-Stimmen ohne Presence nicht als online', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 1,
+        distribution: { SPEED_UP: 0, FOLLOWING: 1, SLOW_DOWN: 0, LOST: 0 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 1 },
+    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set());
+    redisMock.hgetall.mockResolvedValue({});
+
+    const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
+
+    expect(result.totalVotes).toBe(0);
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 0,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(result.tempoTrend).toMatchObject({
+      activeParticipants: 0,
+      tempoVotes: 0,
+    });
+  });
+
+  it('zaehlt bei sessiongebundenem Tempo gespeicherte Abweichungen ohne Presence nicht als online', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 1,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 1, LOST: 0 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 1 },
+    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set());
+    redisMock.hgetall.mockResolvedValue({
+      [VOTER_ID]: 'SLOW_DOWN',
+    });
+
+    const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
+
+    expect(result.totalVotes).toBe(0);
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 0,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(result.tempoTrend).toMatchObject({
+      activeParticipants: 0,
+      tempoVotes: 0,
+    });
+  });
+
+  it('ignoriert bei sessiongebundenem Tempo Choices mit nicht aktiver Standalone-ID', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 2,
+        distribution: { SPEED_UP: 0, FOLLOWING: 1, SLOW_DOWN: 1, LOST: 0 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 1 },
+    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set(['participant-live']));
+    redisMock.hgetall.mockImplementation(async (key: string) =>
+      key === 'qf:choices:ABCDEF'
+        ? {
+            'standalone-voter': 'SLOW_DOWN',
+          }
+        : {},
+    );
+
+    const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
+
+    expect(result.totalVotes).toBe(1);
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 1,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+  });
+
+  it('ignoriert bei sessiongebundenem Tempo alte Trend-Buckets mit nicht aktiven Choices', async () => {
+    redisMock.get.mockResolvedValue(
+      JSON.stringify({
+        type: 'TEMPO',
+        locked: false,
+        totalVotes: 3,
+        distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 3 },
+        sessionBound: true,
+      }),
+    );
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      quickFeedbackEnabled: true,
+      quickFeedbackOpen: true,
+      status: 'ACTIVE',
+      _count: { participants: 3 },
+    });
+    getActiveParticipantIdsForSessionMock.mockResolvedValue(new Set(['p1', 'p2', 'p3']));
+    redisMock.hgetall.mockImplementation(async (key: string) =>
+      key === 'qf:tempo:buckets:ABCDEF'
+        ? {
+            [String(Date.now())]: JSON.stringify({
+              totalVotes: 3,
+              distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 3 },
+            }),
+          }
+        : {},
+    );
+
+    const result = await caller.hostResults({ sessionCode: 'ABCDEF' });
+
+    expect(result.distribution).toMatchObject({
+      SPEED_UP: 0,
+      FOLLOWING: 3,
+      SLOW_DOWN: 0,
+      LOST: 0,
+    });
+    expect(result.tempoTrend).toMatchObject({
+      status: 'FOLLOWING',
+      active: true,
+      activeParticipants: 3,
+      tempoVotes: 3,
+    });
   });
 
   it('haelt die Tempo-Tendenz unterhalb der Mindestquote neutral', async () => {

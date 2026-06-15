@@ -40,6 +40,26 @@ export async function touchParticipantPresence(
   }
 }
 
+export async function removeParticipantPresence(
+  sessionId: string,
+  participantId: string,
+): Promise<void> {
+  if (process.env['NODE_ENV'] === 'test') return;
+  if (!sessionId || !participantId) return;
+
+  try {
+    await getRedis().zrem(presenceKey(sessionId), participantId);
+  } catch (err) {
+    if (!touchWarned) {
+      touchWarned = true;
+      logger.warn(
+        'presence.remove: Redis nicht erreichbar, Presence-Entfernung wird übersprungen.',
+        err,
+      );
+    }
+  }
+}
+
 export async function countActiveParticipantsForSessions(
   sessionIds: readonly string[],
   nowMs: number = Date.now(),

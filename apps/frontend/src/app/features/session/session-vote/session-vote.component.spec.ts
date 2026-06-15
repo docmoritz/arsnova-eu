@@ -37,6 +37,7 @@ const {
   getSessionFeedbackSummaryQueryMock,
   submitSessionFeedbackMutateMock,
   getParticipantNicknamesQueryMock,
+  markParticipantOfflineMutateMock,
   joinMutateMock,
   qaListQueryMock,
   qaSubmitMutateMock,
@@ -60,6 +61,7 @@ const {
   getSessionFeedbackSummaryQueryMock: vi.fn(),
   submitSessionFeedbackMutateMock: vi.fn(),
   getParticipantNicknamesQueryMock: vi.fn(),
+  markParticipantOfflineMutateMock: vi.fn(),
   joinMutateMock: vi.fn(),
   qaListQueryMock: vi.fn(),
   qaSubmitMutateMock: vi.fn(),
@@ -87,6 +89,7 @@ vi.mock('../../../core/trpc.client', () => ({
       getSessionFeedbackSummary: { query: getSessionFeedbackSummaryQueryMock },
       submitSessionFeedback: { mutate: submitSessionFeedbackMutateMock },
       getParticipantNicknames: { query: getParticipantNicknamesQueryMock },
+      markParticipantOffline: { mutate: markParticipantOfflineMutateMock },
       join: { mutate: joinMutateMock },
     },
     quickFeedback: {
@@ -215,6 +218,7 @@ describe('SessionVoteComponent', () => {
     });
     submitSessionFeedbackMutateMock.mockResolvedValue({ success: true });
     getParticipantNicknamesQueryMock.mockResolvedValue({ nicknames: [], participantCount: 0 });
+    markParticipantOfflineMutateMock.mockResolvedValue({ ok: true });
     joinMutateMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
       participantId: '11111111-1111-4111-8111-111111111111',
@@ -253,6 +257,22 @@ describe('SessionVoteComponent', () => {
       ],
     });
     TestBed.inject(ThemePresetService).setPreset('spielerisch', { silent: true });
+  });
+
+  it('markiert den Teilnehmer beim Verlassen der Session-Ansicht offline', () => {
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.participantId.set('11111111-1111-4111-8111-111111111111');
+
+    component.ngOnDestroy();
+    component.ngOnDestroy();
+
+    expect(markParticipantOfflineMutateMock).toHaveBeenCalledTimes(1);
+    expect(markParticipantOfflineMutateMock).toHaveBeenCalledWith({
+      code: 'ABC123',
+      participantId: '11111111-1111-4111-8111-111111111111',
+    });
+    fixture.destroy();
   });
 
   it('zeigt in der Lesephase die Bereitschafts-CTA und bestätigt sie für den aktuellen Teilnehmenden', async () => {

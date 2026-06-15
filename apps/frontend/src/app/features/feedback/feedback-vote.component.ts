@@ -91,7 +91,9 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private subscription: Unsubscribable | null = null;
-  private readonly standaloneVoterId = getOrCreateVoterId();
+  private standaloneVoterId: string | null = null;
+  private readonly tempoDefaultRegisteredKeys = new Set<string>();
+  private readonly tempoDefaultRegistrations = new Map<string, Promise<void>>();
   readonly sessionCode = input('');
   readonly participantId = input('');
   readonly participantName = input<string | null>(null);
@@ -104,7 +106,13 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
   readonly code = computed(() =>
     (this.sessionCode() || (this.route.snapshot.paramMap.get('code') ?? '')).toUpperCase(),
   );
-  readonly effectiveVoterId = computed(() => this.participantId() || this.standaloneVoterId);
+  readonly effectiveVoterId = computed(() => {
+    if (this.embeddedInSession()) {
+      return this.participantId();
+    }
+    this.standaloneVoterId ??= getOrCreateVoterId();
+    return this.standaloneVoterId;
+  });
   readonly voted = signal(false);
   readonly error = signal<string | null>(null);
   readonly feedbackType = signal<QuickFeedbackType | null>(null);
@@ -210,6 +218,7 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearStandaloneTempoRegistration();
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
@@ -335,9 +344,11 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
       if (!storedTempoValueStillPresent) {
         writeStoredTempoSelection(code, null);
       }
-      this.selectedTempoValue.set(
-        storedTempoValueStillPresent ? storedTempoValue : TEMPO_DEFAULT_VALUE,
-      );
+      const nextTempoValue = storedTempoValueStillPresent ? storedTempoValue : TEMPO_DEFAULT_VALUE;
+      this.selectedTempoValue.set(nextTempoValue);
+      if (nextTempoValue === TEMPO_DEFAULT_VALUE && !result.locked && !result.discussion) {
+        void this.ensureTempoDefaultRegistered(code);
+      }
     } else if (previousType === 'TEMPO') {
       this.selectedTempoValue.set(null);
       writeStoredTempoSelection(code, null);
@@ -366,7 +377,8 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
 
   async vote(value: string): Promise<void> {
     const code = this.code();
-    if (!code || this.submitting()) {
+    const voterId = this.effectiveVoterId();
+    if (!code || !voterId || this.submitting()) {
       return;
     }
 
@@ -376,23 +388,31 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
       isTempo && (value === TEMPO_DEFAULT_VALUE || selectedTempoValue === value)
         ? TEMPO_DEFAULT_VALUE
         : value;
+    const tempoRegistrationKey = isTempo ? this.tempoDefaultRegistrationKey(code) : null;
     if (
-      isTempo &&
+      tempoRegistrationKey &&
       selectedTempoValue === TEMPO_DEFAULT_VALUE &&
-      submittedValue === TEMPO_DEFAULT_VALUE
+      submittedValue === TEMPO_DEFAULT_VALUE &&
+      this.tempoDefaultRegisteredKeys.has(tempoRegistrationKey)
     ) {
       return;
     }
 
     this.submitting.set(true);
     try {
+      if (tempoRegistrationKey && submittedValue !== TEMPO_DEFAULT_VALUE) {
+        await this.tempoDefaultRegistrations.get(tempoRegistrationKey);
+      }
       await trpc.quickFeedback.vote.mutate({
         sessionCode: code,
-        voterId: this.effectiveVoterId(),
+        voterId,
         value: submittedValue,
       });
       if (isTempo) {
         const nextValue = submittedValue === TEMPO_DEFAULT_VALUE ? TEMPO_DEFAULT_VALUE : value;
+        if (tempoRegistrationKey && submittedValue === TEMPO_DEFAULT_VALUE) {
+          this.tempoDefaultRegisteredKeys.add(tempoRegistrationKey);
+        }
         this.selectedTempoValue.set(nextValue);
         writeStoredTempoSelection(code, nextValue);
         return;
@@ -418,5 +438,69 @@ export class FeedbackVoteComponent implements OnInit, OnDestroy {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  private clearStandaloneTempoRegistration(): void {
+    if (this.embeddedInSession() || this.feedbackType() !== 'TEMPO') {
+      return;
+    }
+
+    const code = this.code();
+    if (!code) {
+      return;
+    }
+
+    const voterId = this.effectiveVoterId();
+    const key = this.tempoDefaultRegistrationKey(code);
+    const cleanup = async () => {
+      await this.tempoDefaultRegistrations.get(key);
+      await trpc.quickFeedback.leaveTempo.mutate({ sessionCode: code, voterId });
+      this.tempoDefaultRegisteredKeys.delete(key);
+      writeStoredTempoSelection(code, null);
+    };
+
+    void cleanup().catch(() => {
+      // Leaving the standalone view should stay best-effort.
+    });
+  }
+
+  private tempoDefaultRegistrationKey(code: string): string {
+    return `${code}:${this.effectiveVoterId()}`;
+  }
+
+  private ensureTempoDefaultRegistered(code: string): Promise<void> {
+    const voterId = this.effectiveVoterId();
+    if (!voterId) {
+      return Promise.resolve();
+    }
+
+    const key = this.tempoDefaultRegistrationKey(code);
+    if (this.tempoDefaultRegisteredKeys.has(key)) {
+      return Promise.resolve();
+    }
+
+    const pending = this.tempoDefaultRegistrations.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const registration = trpc.quickFeedback.vote
+      .mutate({
+        sessionCode: code,
+        voterId,
+        value: TEMPO_DEFAULT_VALUE,
+      })
+      .then(() => {
+        this.tempoDefaultRegisteredKeys.add(key);
+      })
+      .catch(() => {
+        // The regular result subscription will surface closed/expired rounds.
+      })
+      .finally(() => {
+        this.tempoDefaultRegistrations.delete(key);
+      });
+
+    this.tempoDefaultRegistrations.set(key, registration);
+    return registration;
   }
 }

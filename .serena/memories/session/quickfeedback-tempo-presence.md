@@ -1,0 +1,10 @@
+# QuickFeedback Tempo Presence und IDs
+
+- Standalone-Tempo-Blitzlicht und sessiongebundenes Live-Tempo müssen unterschiedlich gezählt werden.
+- Standalone-Tempo nutzt eine lokale `voterId` und registriert `FOLLOWING` als Default; beim Verlassen der Standalone-Vote-Ansicht muss `quickFeedback.leaveTempo` die gespeicherte Auswahl aus Redis (`qf:choices:<code>`) entfernen und `totalVotes`/Distribution neu schreiben.
+- Eingebettetes Live-Blitzlicht darf keine Standalone-`voterId` als Fallback verwenden. `FeedbackVoteComponent.effectiveVoterId` muss bei `embeddedInSession()` leer bleiben, solange keine echte Session-`participantId` vorhanden ist; ohne ID darf kein Vote/Default-FOLLOWING gesendet werden.
+- Sessiongebundenes Tempo darf Host-/Presenter-Ergebnisse nicht aus alten aggregierten Redis-Distributionen ableiten. Die Distribution wird aus `qf:choices:<code>` nur fuer aktuell aktive Session-Participant-IDs aus `getActiveParticipantIdsForSession(session.id)` aufgebaut. Nicht aktive IDs und alte Standalone-IDs werden ignoriert.
+- Fuer sessiongebundenes Tempo sollten alte Tempo-Trend-Buckets nicht als Quelle fuer den Live-Trend verwendet werden, weil sie aggregiert sind und keine Voter-ID-Filterung zulassen. Standalone kann die Bucket-Glaettung weiter verwenden.
+- Q&A und Blitzlicht sollen dasselbe Online-Verhalten zeigen: wenn ein Teilnehmer die Session verlaesst und `markParticipantOffline` die Presence entfernt, muss Q&A `connectedCount` und Tempo-Barometer beide auf 0 fallen.
+- Relevante Dateien: `apps/backend/src/routers/quickFeedback.ts`, `apps/backend/src/lib/presence.ts`, `apps/backend/src/routers/session.ts`, `apps/frontend/src/app/features/feedback/feedback-vote.component.ts`, `apps/frontend/src/app/features/session/session-vote/session-vote.component.ts`.
+- Regressionstests: `quickFeedback.vote-session.test.ts` fuer stale FOLLOWING/Abweichungen/Standalone-ID im Livekanal, `feedback-vote.component.spec.ts` fuer eingebettetes Tempo ohne Standalone-Fallback, `session.participants.test.ts` und `session-vote.component.spec.ts` fuer Offline-Presence beim Verlassen der Session.

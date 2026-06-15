@@ -16,6 +16,7 @@ const { prismaMock, hostAuthMocks, presenceMocks } = vi.hoisted(() => ({
   },
   presenceMocks: {
     getActiveParticipantCountForSession: vi.fn(),
+    removeParticipantPresence: vi.fn(),
   },
 }));
 
@@ -26,6 +27,7 @@ vi.mock('../db', () => ({
 vi.mock('../lib/presence', () => ({
   getActiveParticipantCountForSession: presenceMocks.getActiveParticipantCountForSession,
   getActiveParticipantIdsForSession: vi.fn(),
+  removeParticipantPresence: presenceMocks.removeParticipantPresence,
   touchParticipantPresence: vi.fn(),
 }));
 
@@ -55,6 +57,7 @@ describe('session participant access (Story 2.2)', () => {
     resetParticipantNicknameCacheForTests();
     resetSessionReadCachesForTests();
     presenceMocks.getActiveParticipantCountForSession.mockResolvedValue(0);
+    presenceMocks.removeParticipantPresence.mockResolvedValue(undefined);
     hostAuthMocks.extractHostTokenMock.mockReturnValue('host-token-123');
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
@@ -199,6 +202,26 @@ describe('session participant access (Story 2.2)', () => {
       teamId: '22222222-2222-4222-8222-222222222222',
       teamName: 'Rot',
     });
+  });
+
+  it('entfernt beim Verlassen nur die Online-Presence des Teilnehmers', async () => {
+    const participantId = '11111111-1111-4111-8111-111111111111';
+    prismaMock.participant.findFirst.mockResolvedValue({
+      sessionId: SESSION_ID,
+    });
+
+    await expect(caller.markParticipantOffline({ code: 'ABC123', participantId })).resolves.toEqual(
+      { ok: true },
+    );
+
+    expect(prismaMock.participant.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: participantId,
+        session: { code: 'ABC123' },
+      },
+      select: { sessionId: true },
+    });
+    expect(presenceMocks.removeParticipantPresence).toHaveBeenCalledWith(SESSION_ID, participantId);
   });
 
   it('lehnt die Host-Teilnehmerliste ohne Host-Token ab', async () => {

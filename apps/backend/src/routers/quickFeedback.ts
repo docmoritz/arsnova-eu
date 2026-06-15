@@ -25,7 +25,7 @@ import { publicProcedure, router } from '../trpc';
 import { getRedis } from '../redis';
 import { prisma } from '../db';
 import { recordVoteActivity } from '../lib/loadSignal';
-import { getActiveParticipantCountForSession } from '../lib/presence';
+import { getActiveParticipantIdsForSession, touchParticipantPresence } from '../lib/presence';
 import { assertHostSessionAccessFromContext, type HostTokenContext } from '../lib/hostAuth';
 import {
   assertFeedbackHostAccess,
@@ -78,15 +78,16 @@ if previous ~= false and valid[previous] then
   end
 end
 
-local resetsToDefault = ARGV[2] == 'FOLLOWING' or previous == ARGV[2]
-if resetsToDefault then
-  redis.call('HDEL', KEYS[2], ARGV[1])
-else
-  distribution[ARGV[2]] = (tonumber(distribution[ARGV[2]]) or 0) + 1
-  redis.call('HSET', KEYS[2], ARGV[1], ARGV[2])
+local nextValue = ARGV[2]
+local resetsToDefault = false
+if previous == ARGV[2] and ARGV[2] ~= 'FOLLOWING' then
+  nextValue = 'FOLLOWING'
+  resetsToDefault = true
 end
 
-distribution['FOLLOWING'] = 0
+distribution[nextValue] = (tonumber(distribution[nextValue]) or 0) + 1
+redis.call('HSET', KEYS[2], ARGV[1], nextValue)
+
 local totalVotes = 0
 for i = 5, #ARGV do
   totalVotes = totalVotes + (tonumber(distribution[ARGV[i]]) or 0)
@@ -115,6 +116,13 @@ redis.call('EXPIRE', KEYS[3], ttl)
 return cjson.encode({ totalVotes = totalVotes, resetsToDefault = resetsToDefault })
 `;
 type StoredQuickFeedbackResult = QuickFeedbackResult & { sessionBound?: boolean };
+type SessionQuickFeedbackGate = {
+  id: string;
+  quickFeedbackEnabled: boolean;
+  quickFeedbackOpen: boolean;
+  status: string;
+  participantCount: number;
+};
 
 function feedbackKey(code: string): string {
   return `qf:${code}`;
@@ -195,17 +203,33 @@ function tempoDistributionWithDefaultFollowing(
   };
 }
 
+function tempoDistributionForActiveChoices(
+  choices: Record<string, string>,
+  activeParticipantIds: ReadonlySet<string>,
+): Record<string, number> {
+  const distribution = emptyDistribution('TEMPO');
+  const tempoValues = TempoValueEnum.options as readonly string[];
+
+  for (const [voterId, value] of Object.entries(choices)) {
+    if (!activeParticipantIds.has(voterId) || !tempoValues.includes(value)) {
+      continue;
+    }
+    distribution[value] = tempoCount(distribution, value) + 1;
+  }
+
+  return distribution;
+}
+
 function applyTempoDefaultFollowing(
   result: StoredQuickFeedbackResult,
   activeParticipants: number,
 ): number {
   const storedTotalVotes = positiveInteger(result.totalVotes);
   const deviations = tempoDeviationTotal(result.distribution);
-  const participantBasis = Math.max(
-    positiveInteger(activeParticipants),
-    storedTotalVotes,
-    deviations,
-  );
+  const participantBasis =
+    result.sessionBound === true
+      ? Math.max(positiveInteger(activeParticipants), deviations)
+      : Math.max(positiveInteger(activeParticipants), storedTotalVotes, deviations);
 
   result.distribution = tempoDistributionWithDefaultFollowing(
     result.distribution,
@@ -245,12 +269,7 @@ async function assertSessionQuickFeedbackEnabled(code: string): Promise<void> {
   }
 }
 
-async function loadSessionQuickFeedbackGate(code: string): Promise<{
-  id: string;
-  quickFeedbackEnabled: boolean;
-  quickFeedbackOpen: boolean;
-  status: string;
-}> {
+async function loadSessionQuickFeedbackGate(code: string): Promise<SessionQuickFeedbackGate> {
   const session = await prisma.session.findUnique({
     where: { code },
     select: {
@@ -258,6 +277,7 @@ async function loadSessionQuickFeedbackGate(code: string): Promise<{
       quickFeedbackEnabled: true,
       quickFeedbackOpen: true,
       status: true,
+      _count: { select: { participants: true } },
     },
   });
 
@@ -270,11 +290,14 @@ async function loadSessionQuickFeedbackGate(code: string): Promise<{
     quickFeedbackEnabled: session.quickFeedbackEnabled === true,
     quickFeedbackOpen: session.quickFeedbackOpen !== false,
     status: session.status,
+    participantCount: session._count.participants,
   };
 }
 
 /** Teilnehmer-Abstimmung nur solange die Live-Session nicht beendet ist. */
-async function assertSessionAllowsQuickFeedbackVote(code: string): Promise<void> {
+async function assertSessionAllowsQuickFeedbackVote(
+  code: string,
+): Promise<SessionQuickFeedbackGate> {
   const session = await loadSessionQuickFeedbackGate(code);
 
   if (!session.quickFeedbackEnabled) {
@@ -297,6 +320,8 @@ async function assertSessionAllowsQuickFeedbackVote(code: string): Promise<void>
       message: 'Die Session ist beendet. Blitzlicht ist nicht mehr möglich.',
     });
   }
+
+  return session;
 }
 
 function parseStoredQuickFeedbackResult(raw: string): StoredQuickFeedbackResult {
@@ -545,9 +570,8 @@ export const quickFeedbackRouter = router({
     const key = feedbackKey(code);
     const result = await loadQuickFeedbackForVote(code);
 
-    if (result.sessionBound === true) {
-      await assertSessionAllowsQuickFeedbackVote(code);
-    }
+    const gate =
+      result.sessionBound === true ? await assertSessionAllowsQuickFeedbackVote(code) : null;
 
     if (result.locked) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Abstimmung ist geschlossen.' });
@@ -557,6 +581,10 @@ export const quickFeedbackRouter = router({
 
     if (!allowed.includes(input.value)) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ungültige Auswahl.' });
+    }
+
+    if (gate) {
+      void touchParticipantPresence(gate.id, input.voterId);
     }
 
     if (result.type === 'TEMPO') {
@@ -585,6 +613,13 @@ export const quickFeedbackRouter = router({
 
     return { ok: true };
   }),
+
+  leaveTempo: publicProcedure
+    .input(QuickFeedbackVoteInputSchema.pick({ sessionCode: true, voterId: true }))
+    .mutation(async ({ input }) => {
+      await clearTempoVote(input);
+      return { ok: true };
+    }),
 
   results: publicProcedure
     .input(QuickFeedbackVoteInputSchema.pick({ sessionCode: true }))
@@ -622,7 +657,7 @@ export const quickFeedbackRouter = router({
 
       const result = JSON.parse(raw) as StoredQuickFeedbackResult;
       await enrichOpinionShift(result, code);
-      await enrichTempoTrend(result, code, gate?.id);
+      await enrichTempoTrend(result, code, gate ?? undefined);
       return QuickFeedbackResultSchema.parse(result);
     }),
 
@@ -657,7 +692,7 @@ export const quickFeedbackRouter = router({
 
         const result = JSON.parse(raw) as StoredQuickFeedbackResult;
         await enrichOpinionShift(result, code);
-        await enrichTempoTrend(result, code, gate?.id);
+        await enrichTempoTrend(result, code, gate ?? undefined);
         const payload = QuickFeedbackResultSchema.parse(result);
         const json = JSON.stringify(payload);
         if (json !== lastJson) {
@@ -741,32 +776,96 @@ async function submitTempoVote(input: QuickFeedbackVoteInput, key: string): Prom
   void recordVoteActivity();
 }
 
+async function clearTempoVote(
+  input: Pick<QuickFeedbackVoteInput, 'sessionCode' | 'voterId'>,
+): Promise<void> {
+  const redis = getRedis();
+  const code = input.sessionCode.toUpperCase();
+  const key = feedbackKey(code);
+  const raw = await redis.get(key);
+
+  if (!raw) {
+    return;
+  }
+
+  const result = parseStoredQuickFeedbackResult(raw);
+  if (result.type !== 'TEMPO' || result.sessionBound === true) {
+    return;
+  }
+
+  const cKey = choicesKey(code);
+  const previous = await redis.hget(cKey, input.voterId);
+  const tempoValues = TempoValueEnum.options as readonly string[];
+
+  if (typeof previous !== 'string' || !tempoValues.includes(previous)) {
+    await redis.hdel(cKey, input.voterId);
+    return;
+  }
+
+  result.distribution = Object.fromEntries(
+    TempoValueEnum.options.map((value) => [value, tempoCount(result.distribution, value)]),
+  ) as Record<string, number>;
+  result.distribution[previous] = Math.max(0, tempoCount(result.distribution, previous) - 1);
+  result.totalVotes = TempoValueEnum.options.reduce(
+    (sum, value) => sum + tempoCount(result.distribution, value),
+    0,
+  );
+  result.currentRound = undefined;
+  result.discussion = undefined;
+  result.round1Distribution = undefined;
+  result.round1Total = undefined;
+  result.opinionShift = undefined;
+  result.tempoTrend = undefined;
+
+  const bucketPayload = JSON.stringify({
+    distribution: result.distribution,
+    totalVotes: result.totalVotes,
+  });
+  const bucketKey = tempoBucketsKey(code);
+  const multi = redis.multi();
+  multi.set(key, JSON.stringify(result), 'EX', FEEDBACK_TTL_SECONDS);
+  multi.hdel(cKey, input.voterId);
+  multi.expire(cKey, FEEDBACK_TTL_SECONDS);
+  multi.hset(bucketKey, String(tempoBucketStartMs()), bucketPayload);
+  multi.expire(bucketKey, FEEDBACK_TTL_SECONDS);
+  await multi.exec();
+  void recordVoteActivity();
+}
+
 async function resolveTempoActiveParticipants(
   result: StoredQuickFeedbackResult,
   code: string,
-  knownSessionId?: string,
+  knownSession?: Pick<SessionQuickFeedbackGate, 'id' | 'participantCount'>,
 ): Promise<number> {
+  const storedTotalVotes = positiveInteger(result.totalVotes);
   if (result.sessionBound !== true) {
-    return Math.max(0, result.totalVotes);
+    return storedTotalVotes;
   }
 
-  const sessionId =
-    knownSessionId ??
-    (await loadSessionQuickFeedbackGate(code)
-      .then((session) => session.id)
-      .catch(() => null));
-  if (!sessionId) {
-    return Math.max(0, result.totalVotes);
+  const session = knownSession ?? (await loadSessionQuickFeedbackGate(code).catch(() => null));
+  if (!session) {
+    return storedTotalVotes;
   }
 
-  const activeParticipants = await getActiveParticipantCountForSession(sessionId).catch(() => 0);
-  return Math.max(activeParticipants, result.totalVotes);
+  const activeParticipantIds = await getActiveParticipantIdsForSession(session.id).catch(
+    () => new Set<string>(),
+  );
+  if (activeParticipantIds.size === 0) {
+    result.distribution = emptyDistribution('TEMPO');
+    return 0;
+  }
+
+  const choices = await getRedis()
+    .hgetall(choicesKey(code))
+    .catch(() => ({}) as Record<string, string>);
+  result.distribution = tempoDistributionForActiveChoices(choices, activeParticipantIds);
+  return activeParticipantIds.size;
 }
 
 async function enrichTempoTrend(
   result: StoredQuickFeedbackResult,
   code: string,
-  knownSessionId?: string,
+  knownSession?: Pick<SessionQuickFeedbackGate, 'id' | 'participantCount'>,
 ): Promise<void> {
   if (result.type !== 'TEMPO') {
     result.tempoTrend = undefined;
@@ -775,14 +874,12 @@ async function enrichTempoTrend(
 
   const redis = getRedis();
   const [activeParticipants, rawBuckets] = await Promise.all([
-    resolveTempoActiveParticipants(result, code, knownSessionId),
+    resolveTempoActiveParticipants(result, code, knownSession),
     redis.hgetall(tempoBucketsKey(code)).catch(() => ({}) as Record<string, string>),
   ]);
   const participantBasis = applyTempoDefaultFollowing(result, activeParticipants);
-  const snapshots = tempoSnapshotsWithDefaultFollowing(
-    parseTempoBucketPayloads(rawBuckets),
-    participantBasis,
-  );
+  const rawSnapshots = result.sessionBound === true ? [] : parseTempoBucketPayloads(rawBuckets);
+  const snapshots = tempoSnapshotsWithDefaultFollowing(rawSnapshots, participantBasis);
 
   result.tempoTrend = calculateTempoTrend({
     distribution: result.distribution,

@@ -8,11 +8,13 @@ const {
   getInfoQueryMock,
   quickFeedbackResultsQueryMock,
   quickFeedbackVoteMutateMock,
+  quickFeedbackLeaveTempoMutateMock,
   quickFeedbackOnResultsSubscribeMock,
 } = vi.hoisted(() => ({
   getInfoQueryMock: vi.fn(),
   quickFeedbackResultsQueryMock: vi.fn(),
   quickFeedbackVoteMutateMock: vi.fn(),
+  quickFeedbackLeaveTempoMutateMock: vi.fn(),
   quickFeedbackOnResultsSubscribeMock: vi.fn(() => ({ unsubscribe: vi.fn() })),
 }));
 
@@ -24,6 +26,7 @@ vi.mock('../../core/trpc.client', () => ({
     quickFeedback: {
       results: { query: quickFeedbackResultsQueryMock },
       vote: { mutate: quickFeedbackVoteMutateMock },
+      leaveTempo: { mutate: quickFeedbackLeaveTempoMutateMock },
       onResults: { subscribe: quickFeedbackOnResultsSubscribeMock },
     },
   },
@@ -44,6 +47,7 @@ describe('FeedbackVoteComponent', () => {
       currentRound: 1,
     });
     quickFeedbackVoteMutateMock.mockResolvedValue({});
+    quickFeedbackLeaveTempoMutateMock.mockResolvedValue({ ok: true });
 
     TestBed.configureTestingModule({
       imports: [FeedbackVoteComponent],
@@ -377,12 +381,18 @@ describe('FeedbackVoteComponent', () => {
     expect(faster).toBeTruthy();
     expect(following!.getAttribute('aria-pressed')).toBe('true');
     expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(1);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+      value: 'FOLLOWING',
+    });
 
     following!.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(quickFeedbackVoteMutateMock).not.toHaveBeenCalled();
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.textContent ?? '').not.toContain('Danke für dein Feedback!');
     expect(following!.getAttribute('aria-pressed')).toBe('true');
 
@@ -390,7 +400,8 @@ describe('FeedbackVoteComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledWith({
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(2);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
       sessionCode: 'ABC123',
       voterId: expect.any(String),
       value: 'SPEED_UP',
@@ -403,7 +414,7 @@ describe('FeedbackVoteComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(2);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(3);
     expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
       sessionCode: 'ABC123',
       voterId: expect.any(String),
@@ -413,6 +424,107 @@ describe('FeedbackVoteComponent', () => {
     expect(following!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(true);
     expect(faster!.getAttribute('aria-pressed')).toBe('false');
     expect(faster!.classList.contains('feedback-vote__mood-btn--tempo-active')).toBe(false);
+    fixture.destroy();
+  });
+
+  it('entfernt Standalone-Tempo-Auswahlen beim Verlassen nach der Default-Registrierung', async () => {
+    let resolveDefaultRegistration: (() => void) | null = null;
+    quickFeedbackVoteMutateMock.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDefaultRegistration = resolve;
+        }),
+    );
+    quickFeedbackResultsQueryMock.mockResolvedValueOnce({
+      type: 'TEMPO',
+      locked: false,
+      discussion: false,
+      totalVotes: 0,
+      distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+      currentRound: 1,
+    });
+
+    const fixture = TestBed.createComponent(FeedbackVoteComponent);
+    fixture.componentRef.setInput('sessionCode', 'ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+      value: 'FOLLOWING',
+    });
+
+    fixture.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(quickFeedbackLeaveTempoMutateMock).not.toHaveBeenCalled();
+
+    resolveDefaultRegistration?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(quickFeedbackLeaveTempoMutateMock).toHaveBeenCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+    });
+  });
+
+  it('entfernt eingebettete Tempo-Auswahlen beim Verlassen nicht per Standalone-Cleanup', async () => {
+    quickFeedbackResultsQueryMock.mockResolvedValueOnce({
+      type: 'TEMPO',
+      locked: false,
+      discussion: false,
+      totalVotes: 0,
+      distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+      currentRound: 1,
+    });
+
+    const fixture = TestBed.createComponent(FeedbackVoteComponent);
+    fixture.componentRef.setInput('sessionCode', 'ABC123');
+    fixture.componentRef.setInput('embeddedInSession', true);
+    fixture.componentRef.setInput('participantId', 'participant-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledWith({
+      sessionCode: 'ABC123',
+      voterId: 'participant-1',
+      value: 'FOLLOWING',
+    });
+
+    fixture.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(quickFeedbackLeaveTempoMutateMock).not.toHaveBeenCalled();
+  });
+
+  it('nutzt im eingebetteten Tempo-Blitzlicht ohne Participant-ID keine Standalone-ID', async () => {
+    quickFeedbackResultsQueryMock.mockResolvedValueOnce({
+      type: 'TEMPO',
+      locked: false,
+      discussion: false,
+      totalVotes: 0,
+      distribution: { SPEED_UP: 0, FOLLOWING: 0, SLOW_DOWN: 0, LOST: 0 },
+      currentRound: 1,
+    });
+
+    const fixture = TestBed.createComponent(FeedbackVoteComponent);
+    fixture.componentRef.setInput('sessionCode', 'ABC123');
+    fixture.componentRef.setInput('embeddedInSession', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll<HTMLButtonElement>('.feedback-vote__mood-btn'),
+    );
+    const faster = buttons.find((button) => button.textContent?.includes('Schneller'));
+    faster?.click();
+    await fixture.whenStable();
+
+    expect(quickFeedbackVoteMutateMock).not.toHaveBeenCalled();
     fixture.destroy();
   });
 
@@ -442,12 +554,18 @@ describe('FeedbackVoteComponent', () => {
     expect(following).toBeTruthy();
     expect(slower).toBeTruthy();
     expect(following!.getAttribute('aria-pressed')).toBe('true');
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(1);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+      value: 'FOLLOWING',
+    });
 
     slower!.click();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(1);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(2);
     expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
       sessionCode: 'ABC123',
       voterId: expect.any(String),
@@ -460,7 +578,7 @@ describe('FeedbackVoteComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(2);
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledTimes(3);
     expect(quickFeedbackVoteMutateMock).toHaveBeenLastCalledWith({
       sessionCode: 'ABC123',
       voterId: expect.any(String),
@@ -500,6 +618,11 @@ describe('FeedbackVoteComponent', () => {
     expect(following?.getAttribute('aria-pressed')).toBe('true');
     expect(slower?.getAttribute('aria-pressed')).toBe('false');
     expect(localStorage.getItem('qf-tempo-selection:ABC123')).toBeNull();
+    expect(quickFeedbackVoteMutateMock).toHaveBeenCalledWith({
+      sessionCode: 'ABC123',
+      voterId: expect.any(String),
+      value: 'FOLLOWING',
+    });
     fixture.destroy();
   });
 
