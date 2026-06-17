@@ -107,6 +107,8 @@ describe('quizScoring', () => {
     });
 
     expect(exact).toBe(2000);
+    expect(close).toBe(1998);
+    expect(far).toBe(1456);
     expect(close).toBeGreaterThan(far);
     expect(far).toBeGreaterThan(edge);
     expect(edge).toBe(200);
@@ -135,6 +137,7 @@ describe('quizScoring', () => {
     });
 
     expect(exact).toBe(1000);
+    expect(close).toBe(999);
     expect(close).toBeLessThan(exact);
     expect(close).toBeGreaterThan(0);
   });
@@ -154,6 +157,13 @@ describe('quizScoring', () => {
         toleranceBand: { left: 1700, right: 1900 },
       }),
     ).toBeCloseTo(0.1);
+    expect(
+      calculateNumericEstimateScoreRatio({
+        value: 1790,
+        referenceValue: 1789,
+        toleranceBand: { left: 1700, right: 1900 },
+      }),
+    ).toBeCloseTo(0.999);
     expect(
       calculateNumericEstimateScoreRatio({
         value: 1789,

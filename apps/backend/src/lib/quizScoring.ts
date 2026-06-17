@@ -25,6 +25,7 @@ export const SCORED_QUESTION_TYPES = [
 ] as const satisfies readonly QuestionType[];
 
 const NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO = 0.1;
+const NUMERIC_ESTIMATE_MAX_NEAR_MISS_SCORE_RATIO = (MAX_BASE_POINTS - 1) / MAX_BASE_POINTS;
 
 /**
  * Streak-Multiplikator basierend auf der aktuellen Serie (Story 5.5).
@@ -131,11 +132,12 @@ export function calculateNumericEstimateScoreRatio(input: {
     return 0;
   }
 
-  const accuracyRatio = 1 - clamp01(distance / maxDistanceOnSide);
-  return (
+  const normalizedDistance = clamp01(distance / maxDistanceOnSide);
+  const nearnessRatio = 1 - normalizedDistance ** 2;
+  const scoreRatio =
     NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO +
-    (1 - NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO) * accuracyRatio
-  );
+    (1 - NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO) * nearnessRatio;
+  return Math.min(scoreRatio, NUMERIC_ESTIMATE_MAX_NEAR_MISS_SCORE_RATIO);
 }
 
 /**

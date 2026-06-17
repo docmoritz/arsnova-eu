@@ -546,7 +546,7 @@ describe('vote.submit', () => {
     const scores = prismaMock.vote.create.mock.calls.map(
       ([call]) => (call as { data: { score: number } }).data.score,
     );
-    expect(scores).toEqual([1000, 992]);
+    expect(scores).toEqual([1000, 999]);
   });
 
   it('lehnt NUMERIC_ESTIMATE-Werte in Exponentialnotation mit zu vielen Nachkommastellen ab', async () => {
