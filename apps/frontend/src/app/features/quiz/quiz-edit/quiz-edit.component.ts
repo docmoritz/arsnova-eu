@@ -2275,10 +2275,7 @@ export class QuizEditComponent implements OnDestroy {
       ...(this.isNumericEstimateType()
         ? {
             numericToleranceMode: numericEstimateToleranceMode,
-            numericReferenceValue:
-              numericEstimateToleranceMode === 'RELATIVE_PERCENT'
-                ? this.form.controls.numericReferenceValue.value
-                : null,
+            numericReferenceValue: this.form.controls.numericReferenceValue.value,
             numericTolerancePercent:
               numericEstimateToleranceMode === 'RELATIVE_PERCENT'
                 ? this.form.controls.numericTolerancePercent.value

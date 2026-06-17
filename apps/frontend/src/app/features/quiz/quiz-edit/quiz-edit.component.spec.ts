@@ -455,7 +455,7 @@ describe('QuizEditComponent', () => {
     );
   });
 
-  it('speichert absolute NUMERIC_ESTIMATE ohne versteckte relative Referenzwerte', () => {
+  it('bewahrt absolute NUMERIC_ESTIMATE-Referenzwerte beim Speichern', () => {
     const fixture = TestBed.createComponent(QuizEditComponent);
     const component = fixture.componentInstance;
 
@@ -463,10 +463,10 @@ describe('QuizEditComponent', () => {
     component.onTypeChanged();
     component.form.controls.text.setValue('In welchem Jahr war die Revolution?');
     component.form.controls.numericToleranceMode.setValue('ABSOLUTE_INTERVAL');
-    component.form.controls.numericReferenceValue.setValue(-1);
+    component.form.controls.numericReferenceValue.setValue(1789);
     component.form.controls.numericTolerancePercent.setValue(10);
-    component.form.controls.numericIntervalLeft.setValue(1700);
-    component.form.controls.numericIntervalRight.setValue(1800);
+    component.form.controls.numericIntervalLeft.setValue(1788.5);
+    component.form.controls.numericIntervalRight.setValue(1789.5);
     component.form.controls.numericInputType.setValue('INTEGER');
     component.form.controls.numericDecimalPlaces.setValue(null);
 
@@ -478,10 +478,10 @@ describe('QuizEditComponent', () => {
         type: 'NUMERIC_ESTIMATE',
         answers: [],
         numericToleranceMode: 'ABSOLUTE_INTERVAL',
-        numericReferenceValue: null,
+        numericReferenceValue: 1789,
         numericTolerancePercent: null,
-        numericIntervalLeft: 1700,
-        numericIntervalRight: 1800,
+        numericIntervalLeft: 1788.5,
+        numericIntervalRight: 1789.5,
         numericInputType: 'INTEGER',
       }),
     );

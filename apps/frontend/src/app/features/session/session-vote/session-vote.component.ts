@@ -1172,6 +1172,74 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return (result?.points ?? 0) > 0;
   }
 
+  private numericQuestionInputTypeForQuestion(question: CurrentQuestion | null): NumericInputType {
+    const inputType =
+      question && 'numericInputType' in question
+        ? ((question as { numericInputType?: string | null }).numericInputType ?? null)
+        : null;
+    return inputType === 'INTEGER' ? 'INTEGER' : 'DECIMAL';
+  }
+
+  private numericQuestionMaxDecimalPlacesForQuestion(
+    question: CurrentQuestion | null,
+  ): number | null {
+    return question && 'numericDecimalPlaces' in question
+      ? ((question as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+      : null;
+  }
+
+  private numericToleranceBandForQuestion(
+    question: CurrentQuestion | null,
+  ): { left: number; right: number } | null {
+    if (!question || !('type' in question) || question.type !== 'NUMERIC_ESTIMATE') return null;
+    const toleranceMode =
+      'numericToleranceMode' in question
+        ? ((question as { numericToleranceMode?: string | null }).numericToleranceMode ?? null)
+        : null;
+    if (toleranceMode === 'RELATIVE_PERCENT') {
+      const referenceValue =
+        'numericReferenceValue' in question
+          ? ((question as { numericReferenceValue?: number | null }).numericReferenceValue ?? null)
+          : null;
+      const percent =
+        'numericTolerancePercent' in question
+          ? ((question as { numericTolerancePercent?: number | null }).numericTolerancePercent ??
+            null)
+          : null;
+      if (referenceValue === null || referenceValue === 0 || percent === null) return null;
+      const delta = Math.abs(referenceValue) * (percent / 100);
+      return {
+        left: Math.min(referenceValue - delta, referenceValue + delta),
+        right: Math.max(referenceValue - delta, referenceValue + delta),
+      };
+    }
+    if (toleranceMode === 'ABSOLUTE_INTERVAL') {
+      const left =
+        'numericIntervalLeft' in question
+          ? ((question as { numericIntervalLeft?: number | null }).numericIntervalLeft ?? null)
+          : null;
+      const right =
+        'numericIntervalRight' in question
+          ? ((question as { numericIntervalRight?: number | null }).numericIntervalRight ?? null)
+          : null;
+      if (left === null || right === null || left >= right) return null;
+      return { left, right };
+    }
+    return null;
+  }
+
+  private isNumericEstimateResponseCorrectForQuestion(question: CurrentQuestion): boolean {
+    if (!('type' in question) || question.type !== 'NUMERIC_ESTIMATE') {
+      return false;
+    }
+    const value = parseNumericInput(this.numericInputValue(), {
+      inputType: this.numericQuestionInputTypeForQuestion(question),
+      maxDecimalPlaces: this.numericQuestionMaxDecimalPlacesForQuestion(question),
+    });
+    const band = this.numericToleranceBandForQuestion(question);
+    return value !== null && band !== null && value >= band.left && value <= band.right;
+  }
+
   shortTextResultLabel(): string | null {
     const result = this.shortTextEvaluationResult();
     if (!result) {
@@ -1668,42 +1736,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   private numericResultToleranceBand(): { left: number; right: number } | null {
-    const question = this.currentQuestion();
-    if (!question || !('type' in question) || question.type !== 'NUMERIC_ESTIMATE') return null;
-    const toleranceMode =
-      'numericToleranceMode' in question
-        ? ((question as { numericToleranceMode?: string | null }).numericToleranceMode ?? null)
-        : null;
-    if (toleranceMode === 'RELATIVE_PERCENT') {
-      const referenceValue =
-        'numericReferenceValue' in question
-          ? ((question as { numericReferenceValue?: number | null }).numericReferenceValue ?? null)
-          : null;
-      const percent =
-        'numericTolerancePercent' in question
-          ? ((question as { numericTolerancePercent?: number | null }).numericTolerancePercent ??
-            null)
-          : null;
-      if (referenceValue === null || referenceValue === 0 || percent === null) return null;
-      const delta = Math.abs(referenceValue) * (percent / 100);
-      return {
-        left: Math.min(referenceValue - delta, referenceValue + delta),
-        right: Math.max(referenceValue - delta, referenceValue + delta),
-      };
-    }
-    if (toleranceMode === 'ABSOLUTE_INTERVAL') {
-      const left =
-        'numericIntervalLeft' in question
-          ? ((question as { numericIntervalLeft?: number | null }).numericIntervalLeft ?? null)
-          : null;
-      const right =
-        'numericIntervalRight' in question
-          ? ((question as { numericIntervalRight?: number | null }).numericIntervalRight ?? null)
-          : null;
-      if (left === null || right === null || left >= right) return null;
-      return { left, right };
-    }
-    return null;
+    return this.numericToleranceBandForQuestion(this.currentQuestion());
   }
 
   private numericResultReferenceValue(): number | null {
@@ -3221,6 +3254,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
           if ('type' in q && q.type === 'SHORT_TEXT') {
             answeredCorrectly = this.isShortTextResponseCorrectForQuestion(q);
+          } else if ('type' in q && q.type === 'NUMERIC_ESTIMATE') {
+            answeredCorrectly = this.isNumericEstimateResponseCorrectForQuestion(q);
           } else if ('answers' in q) {
             const selected = this.selectedAnswerIds();
             const revealed = (q as QuestionRevealedDTO).answers;

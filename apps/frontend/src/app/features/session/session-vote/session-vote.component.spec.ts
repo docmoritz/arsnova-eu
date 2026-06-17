@@ -1931,7 +1931,8 @@ describe('SessionVoteComponent', () => {
       title: null,
       participantCount: 20,
       teamMode: false,
-      enableRewardEffects: false,
+      enableRewardEffects: true,
+      enableMotivationMessages: true,
       preset: 'SERIOUS',
       enableEmojiReactions: false,
       channels: {
@@ -2003,6 +2004,11 @@ describe('SessionVoteComponent', () => {
     expect(host.textContent).toContain('100');
     expect(host.textContent).toContain('Punkte');
     expect(host.textContent).toContain('Gesamt');
+    expect(component.showRewardEffect()).toBe(true);
+    expect(component.motivationMessage()).toBeTruthy();
+    expect(component.motivationMessage()).not.toMatch(
+      /Knapp daneben|Nächstes Mal|Weiter dranbleiben|Das wird schon|Nicht aufgeben/,
+    );
     fixture.destroy();
   });
 
