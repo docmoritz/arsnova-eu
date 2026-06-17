@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateNumericAnswer, evaluateShortAnswer } from '@arsnova/shared-types';
 import {
+  calculateNumericEstimateScoreRatio,
   calculateVoteScore,
   getStreakMultiplier,
   isExactCorrectSelection,
@@ -72,6 +73,94 @@ describe('quizScoring', () => {
         correctAnswerIds: ['a1', 'a2'],
       }),
     ).toBe(0);
+  });
+
+  it('skaliert NUMERIC_ESTIMATE-Punkte nach Abstand zum Referenzwert', () => {
+    const baseInput = {
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      selectedAnswerIds: [],
+      correctAnswerIds: [],
+      numericEstimateReferenceValue: 1789,
+      numericEstimateToleranceBand: { left: 1700, right: 1900 },
+    };
+
+    const exact = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1789,
+    });
+    const close = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1790,
+    });
+    const far = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1850,
+    });
+    const edge = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1900,
+    });
+    const outside = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1901,
+    });
+
+    expect(exact).toBe(2000);
+    expect(close).toBeGreaterThan(far);
+    expect(far).toBeGreaterThan(edge);
+    expect(edge).toBe(200);
+    expect(outside).toBe(0);
+  });
+
+  it('erhaelt bei NUMERIC_ESTIMATE gleicher Zeit die Reihenfolge nach Genauigkeit', () => {
+    const baseInput = {
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      selectedAnswerIds: [],
+      correctAnswerIds: [],
+      numericEstimateReferenceValue: 1789,
+      numericEstimateToleranceBand: { left: 1700, right: 1900 },
+      responseTimeMs: 5_000,
+      timerDurationMs: 10_000,
+    };
+
+    const exact = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1789,
+    });
+    const close = calculateVoteScore({
+      ...baseInput,
+      numericEstimateValue: 1790,
+    });
+
+    expect(exact).toBe(1000);
+    expect(close).toBeLessThan(exact);
+    expect(close).toBeGreaterThan(0);
+  });
+
+  it('normalisiert NUMERIC_ESTIMATE-Abstaende je Seite des Toleranzbands', () => {
+    expect(
+      calculateNumericEstimateScoreRatio({
+        value: 1700,
+        referenceValue: 1789,
+        toleranceBand: { left: 1700, right: 1900 },
+      }),
+    ).toBeCloseTo(0.1);
+    expect(
+      calculateNumericEstimateScoreRatio({
+        value: 1900,
+        referenceValue: 1789,
+        toleranceBand: { left: 1700, right: 1900 },
+      }),
+    ).toBeCloseTo(0.1);
+    expect(
+      calculateNumericEstimateScoreRatio({
+        value: 1789,
+        referenceValue: 1789,
+        toleranceBand: { left: 1700, right: 1900 },
+      }),
+    ).toBe(1);
   });
 
   it('bewertet SHORT_TEXT nach gemeinsamer Normalisierung', () => {

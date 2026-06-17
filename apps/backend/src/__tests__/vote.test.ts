@@ -503,6 +503,52 @@ describe('vote.submit', () => {
     expect(prismaMock.vote.create).not.toHaveBeenCalled();
   });
 
+  it('bewertet NUMERIC_ESTIMATE bei gleicher Abgabezeit nach Abstand zum Referenzwert', async () => {
+    prismaMock.question.findFirst.mockResolvedValue({
+      id: 'question-1',
+      order: 0,
+      quizId: 'quiz-1',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      timer: 10,
+      shortTextMaxLength: null,
+      shortTextCaseSensitive: false,
+      ratingMin: null,
+      ratingMax: null,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1700,
+      numericIntervalRight: 1900,
+      numericInputType: 'INTEGER',
+      numericDecimalPlaces: null,
+      numericMin: 1500,
+      numericMax: 2000,
+      numericTwoRounds: false,
+      answers: [],
+    });
+
+    await caller.submit({
+      sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      participantId: '7290465d-5982-4b3d-ab47-a2088830d4b0',
+      questionId: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+      numericValue: 1789,
+      responseTimeMs: 5_000,
+    });
+    await caller.submit({
+      sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      participantId: '7290465d-5982-4b3d-ab47-a2088830d4b0',
+      questionId: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+      numericValue: 1790,
+      responseTimeMs: 5_000,
+    });
+
+    const scores = prismaMock.vote.create.mock.calls.map(
+      ([call]) => (call as { data: { score: number } }).data.score,
+    );
+    expect(scores).toEqual([1000, 992]);
+  });
+
   it('lehnt NUMERIC_ESTIMATE-Werte in Exponentialnotation mit zu vielen Nachkommastellen ab', async () => {
     prismaMock.question.findFirst.mockResolvedValue({
       id: 'question-1',

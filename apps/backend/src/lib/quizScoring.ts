@@ -24,6 +24,8 @@ export const SCORED_QUESTION_TYPES = [
   'NUMERIC_ESTIMATE',
 ] as const satisfies readonly QuestionType[];
 
+const NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO = 0.1;
+
 /**
  * Streak-Multiplikator basierend auf der aktuellen Serie (Story 5.5).
  * 0/1 = ×1.0, 2 = ×1.1, 3 = ×1.2, 4 = ×1.3, 5+ = ×1.5.
@@ -72,6 +74,9 @@ interface CalculateVoteScoreInput {
   timerDurationMs?: number | null;
   /** Überschreibt die Korrektheitsprüfung (z.B. für NUMERIC_ESTIMATE, wo keine answerIds existieren). */
   isCorrectOverride?: boolean;
+  numericEstimateValue?: number | null;
+  numericEstimateReferenceValue?: number | null;
+  numericEstimateToleranceBand?: { left: number; right: number } | null;
 }
 
 export function isExactCorrectSelection(
@@ -81,6 +86,56 @@ export function isExactCorrectSelection(
   const selected = new Set(selectedAnswerIds);
   const correct = new Set(correctAnswerIds);
   return selected.size === correct.size && [...selected].every((id) => correct.has(id));
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+export function calculateNumericEstimateScoreRatio(input: {
+  value?: number | null;
+  referenceValue?: number | null;
+  toleranceBand?: { left: number; right: number } | null;
+}): number | null {
+  const value = input.value;
+  const referenceValue = input.referenceValue;
+  const band = input.toleranceBand;
+  if (
+    value === null ||
+    value === undefined ||
+    referenceValue === null ||
+    referenceValue === undefined ||
+    band === null ||
+    band === undefined ||
+    !Number.isFinite(value) ||
+    !Number.isFinite(referenceValue) ||
+    !Number.isFinite(band.left) ||
+    !Number.isFinite(band.right) ||
+    band.left >= band.right
+  ) {
+    return null;
+  }
+
+  if (value < band.left || value > band.right) {
+    return 0;
+  }
+
+  const distance = Math.abs(value - referenceValue);
+  if (distance === 0) {
+    return 1;
+  }
+
+  const sideLimit = value < referenceValue ? band.left : band.right;
+  const maxDistanceOnSide = Math.abs(referenceValue - sideLimit);
+  if (maxDistanceOnSide <= 0) {
+    return 0;
+  }
+
+  const accuracyRatio = 1 - clamp01(distance / maxDistanceOnSide);
+  return (
+    NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO +
+    (1 - NUMERIC_ESTIMATE_MIN_IN_BAND_SCORE_RATIO) * accuracyRatio
+  );
 }
 
 /**
@@ -134,6 +189,26 @@ export function calculateVoteScore(input: CalculateVoteScoreInput): number {
       return 0;
     }
     basePoints = shortTextEvaluation.points;
+  } else if (input.type === 'NUMERIC_ESTIMATE') {
+    const scoreRatio = calculateNumericEstimateScoreRatio({
+      value: input.numericEstimateValue,
+      referenceValue: input.numericEstimateReferenceValue,
+      toleranceBand: input.numericEstimateToleranceBand,
+    });
+    if (scoreRatio !== null) {
+      if (scoreRatio <= 0) {
+        return 0;
+      }
+      basePoints = Math.round(MAX_BASE_POINTS * scoreRatio);
+    } else {
+      const isCorrect =
+        input.isCorrectOverride !== undefined
+          ? input.isCorrectOverride
+          : isExactCorrectSelection(input.selectedAnswerIds, input.correctAnswerIds);
+      if (!isCorrect) {
+        return 0;
+      }
+    }
   } else {
     const isCorrect =
       input.isCorrectOverride !== undefined

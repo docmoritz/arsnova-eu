@@ -414,8 +414,9 @@ export const voteRouter = router({
           : null;
 
       let numericIsCorrectOverride: boolean | undefined;
+      let numericEstimateToleranceBand: { left: number; right: number } | null = null;
       if (questionType === 'NUMERIC_ESTIMATE' && input.numericValue !== undefined) {
-        const band = resolveNumericTolerance(
+        numericEstimateToleranceBand = resolveNumericTolerance(
           resolveNumericEstimateToleranceMode(question.numericToleranceMode),
           {
             referenceValue: question.numericReferenceValue,
@@ -424,7 +425,9 @@ export const voteRouter = router({
             intervalRight: question.numericIntervalRight,
           },
         );
-        numericIsCorrectOverride = band !== null && isNumericValueInBand(input.numericValue, band);
+        numericIsCorrectOverride =
+          numericEstimateToleranceBand !== null &&
+          isNumericValueInBand(input.numericValue, numericEstimateToleranceBand);
       }
 
       const baseScore = calculateVoteScore({
@@ -460,6 +463,11 @@ export const voteRouter = router({
         responseTimeMs,
         timerDurationMs: timerSeconds ? timerSeconds * 1000 : null,
         isCorrectOverride: numericIsCorrectOverride,
+        numericEstimateValue:
+          questionType === 'NUMERIC_ESTIMATE' ? (input.numericValue ?? null) : null,
+        numericEstimateReferenceValue:
+          questionType === 'NUMERIC_ESTIMATE' ? (question.numericReferenceValue ?? null) : null,
+        numericEstimateToleranceBand,
       });
 
       const existing = await prisma.vote.findUnique({
