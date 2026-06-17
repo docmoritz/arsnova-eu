@@ -16,7 +16,10 @@ const browserRoot = path.join(__dirname, '..', 'dist', 'browser');
 const LOCALES = ['de', 'en', 'fr', 'it', 'es'];
 
 /** Relativ zu `dist/browser/<locale>/` — z. B. MOTD-Banner KI-Revolution. */
-const REQUIRED_ASSETS = ['assets/images/AI-REVOLUTION.png'];
+const REQUIRED_ASSETS = [
+  'assets/images/AI-REVOLUTION.png',
+  'assets/images/numeric-estimate-1789-host.png',
+];
 
 function main() {
   if (!fs.existsSync(browserRoot)) {

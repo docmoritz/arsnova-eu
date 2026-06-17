@@ -38,9 +38,10 @@ describe('ensure-schema MOTD runtime seeding', () => {
     );
   });
 
-  it('enthält die aktuelle Tempo-Feedback-Migration in der Dev-Seed-Liste', () => {
+  it('enthält die aktuellen Feature-MOTD-Migrationen in der Dev-Seed-Liste', () => {
     expect(ensureSchema.getMotdFeatureSeedFiles()).toEqual([
       'prisma/migrations/20260604140000_motd_tempo_feedback/migration.sql',
+      'prisma/migrations/20260617133000_motd_numeric_estimate/migration.sql',
     ]);
   });
 
