@@ -612,6 +612,16 @@ describe('QuizStoreService', () => {
           ],
           difficulty: 8,
         },
+        {
+          TYPE: 'RangedQuestion',
+          timer: 60,
+          questionText: 'Schaetzfrage',
+          answerOptionList: [],
+          rangeMin: 0,
+          rangeMax: 1000,
+          correctValue: 420,
+          difficulty: 6,
+        },
       ],
     });
 
@@ -627,10 +637,12 @@ describe('QuizStoreService', () => {
       'SINGLE_CHOICE',
       'SURVEY',
       'SHORT_TEXT',
+      'NUMERIC_ESTIMATE',
     ]);
     expect(imported.quiz.questions[0]?.difficulty).toBe('EASY');
     expect(imported.quiz.questions[1]?.difficulty).toBe('MEDIUM');
     expect(imported.quiz.questions[2]?.difficulty).toBe('HARD');
+    expect(imported.quiz.questions[3]?.difficulty).toBe('MEDIUM');
     expect(imported.quiz.questions[0]?.timer).toBe(30);
     expect(imported.quiz.questions[1]?.answers.every((answer) => !answer.isCorrect)).toBe(true);
     expect(imported.quiz.questions[2]).toMatchObject({
@@ -644,12 +656,32 @@ describe('QuizStoreService', () => {
       shortTextTrimWhitespace: true,
       shortTextNormalizeWhitespace: false,
     });
+    expect(imported.quiz.questions[3]).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      timer: 60,
+      answers: [],
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 420,
+      numericIntervalLeft: 419.5,
+      numericIntervalRight: 420.5,
+      numericInputType: 'INTEGER',
+      numericMin: 0,
+      numericMax: 1000,
+      numericTwoRounds: false,
+    });
     expect(imported.warnings.some((warning) => warning.kind === 'mapped_question')).toBe(true);
     expect(
       imported.warnings.some(
         (warning) =>
           warning.questionNumber === 2 &&
           warning.message === 'Wurde als normale Umfrage importiert.',
+      ),
+    ).toBe(true);
+    expect(
+      imported.warnings.some(
+        (warning) =>
+          warning.questionNumber === 4 &&
+          warning.message === 'Wurde als numerische Schätzfrage importiert.',
       ),
     ).toBe(true);
     expect(
@@ -715,6 +747,43 @@ describe('QuizStoreService', () => {
     ).toBe(true);
   });
 
+  it('importiert arsnova.click-Schaetzfragen mit Dezimalwerten und korrigierten Grenzen', () => {
+    const service = TestBed.inject(QuizStoreService);
+
+    const imported = service.importQuiz({
+      name: 'Click Decimal Range',
+      questionList: [
+        {
+          TYPE: 'RangedQuestion',
+          questionText: 'Schaetze die Kreiszahl.',
+          rangeMin: 4.5,
+          rangeMax: 2.5,
+          correctValue: 3.14,
+        },
+      ],
+    });
+
+    expect(imported.quiz.questions[0]).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 3.14,
+      numericIntervalLeft: 3.135,
+      numericIntervalRight: 3.145,
+      numericInputType: 'DECIMAL',
+      numericDecimalPlaces: 2,
+      numericMin: 2.5,
+      numericMax: 4.5,
+      numericTwoRounds: false,
+    });
+    expect(
+      imported.warnings.some(
+        (warning) =>
+          warning.questionNumber === 1 &&
+          warning.message === 'Vertauschte Bereichsgrenzen der Schätzfrage wurden korrigiert.',
+      ),
+    ).toBe(true);
+  });
+
   it('importiert arsnova.click trotz nicht unterstuetzter Typen mit Warnhinweis', () => {
     const service = TestBed.inject(QuizStoreService);
 
@@ -722,11 +791,8 @@ describe('QuizStoreService', () => {
       name: 'Teilweise kompatibel',
       questionList: [
         {
-          TYPE: 'RangedQuestion',
-          questionText: 'Schaetzfrage',
-          rangeMin: 0,
-          rangeMax: 1000,
-          correctValue: 420,
+          TYPE: 'UnsupportedQuestion',
+          questionText: 'Nicht unterstuetzt',
         },
         {
           TYPE: 'SingleChoiceQuestion',
@@ -747,8 +813,51 @@ describe('QuizStoreService', () => {
         expect.objectContaining({
           kind: 'skipped_question',
           questionNumber: 1,
-          questionText: 'Schaetzfrage',
+          questionText: 'Nicht unterstuetzt',
           message: 'Dieser Fragetyp wird in arsnova.eu noch nicht unterstützt.',
+        }),
+      ]),
+    );
+  });
+
+  it('ueberspringt ungueltige arsnova.click-Schaetzfragen und importiert den Rest', () => {
+    const service = TestBed.inject(QuizStoreService);
+
+    const imported = service.importQuiz({
+      name: 'Teilweise gueltige Schaetzfragen',
+      questionList: [
+        {
+          TYPE: 'RangedQuestion',
+          questionText: 'Ungueltige Schaetzfrage',
+          rangeMin: 5,
+          rangeMax: 5,
+          correctValue: 5,
+        },
+        {
+          TYPE: 'RangedQuestion',
+          questionText: 'Gueltige Schaetzfrage',
+          rangeMin: 0,
+          rangeMax: 10,
+          correctValue: 7,
+        },
+      ],
+    });
+
+    expect(imported.quiz.questions).toHaveLength(1);
+    expect(imported.quiz.questions[0]).toMatchObject({
+      text: 'Gueltige Schaetzfrage',
+      type: 'NUMERIC_ESTIMATE',
+      numericReferenceValue: 7,
+      numericMin: 0,
+      numericMax: 10,
+    });
+    expect(imported.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: 'skipped_question',
+          questionNumber: 1,
+          questionText: 'Ungueltige Schaetzfrage',
+          message: 'Schätzfragen benötigen unterschiedliche Bereichsgrenzen.',
         }),
       ]),
     );

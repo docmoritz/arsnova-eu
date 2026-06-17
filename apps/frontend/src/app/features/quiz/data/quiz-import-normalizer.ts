@@ -18,6 +18,7 @@ type ClickFreeTextFlagKey =
   | 'configUsePunctuation';
 
 const CLICK_TEAM_NAME_LIMIT = 8;
+const NUMERIC_ESTIMATE_MAX_DECIMAL_PLACES = 10;
 
 interface ClickFreeTextAnswerOption {
   text: string;
@@ -310,7 +311,16 @@ function mapQuestion(value: unknown, index: number): MappedQuestionResult {
         warnings,
       });
     case 'RangedQuestion':
-      throw new Error('Dieser Fragetyp wird in arsnova.eu noch nicht unterstützt.');
+      return mapRangedQuestion({
+        question: value,
+        questionNumber,
+        questionText,
+        text,
+        index,
+        timer,
+        difficulty,
+        warnings,
+      });
     default:
       throw new Error('Dieser Fragetyp wird in arsnova.eu noch nicht unterstützt.');
   }
@@ -525,6 +535,112 @@ function mapFreeTextQuestion(params: {
   };
 }
 
+function mapRangedQuestion(params: {
+  question: JsonRecord;
+  questionNumber: number;
+  questionText?: string;
+  text: string;
+  index: number;
+  timer?: number;
+  difficulty: Difficulty;
+  warnings: QuizImportWarning[];
+}): MappedQuestionResult {
+  const {
+    question,
+    questionNumber,
+    questionText,
+    text,
+    index,
+    timer,
+    difficulty,
+    warnings: baseWarnings,
+  } = params;
+  const warnings = [...baseWarnings];
+  let rangeMin = readRequiredNumber(question['rangeMin'], 'Linke Bereichsgrenze');
+  let rangeMax = readRequiredNumber(question['rangeMax'], 'Rechte Bereichsgrenze');
+  let correctValue = readRequiredNumber(question['correctValue'], 'Referenzwert');
+  const rawDecimalPlaces = Math.max(
+    countDecimalPlaces(rangeMin),
+    countDecimalPlaces(rangeMax),
+    countDecimalPlaces(correctValue),
+  );
+  const decimalPlaces = Math.min(rawDecimalPlaces, NUMERIC_ESTIMATE_MAX_DECIMAL_PLACES);
+
+  if (rawDecimalPlaces > NUMERIC_ESTIMATE_MAX_DECIMAL_PLACES) {
+    rangeMin = roundToDecimalPlaces(rangeMin, decimalPlaces);
+    rangeMax = roundToDecimalPlaces(rangeMax, decimalPlaces);
+    correctValue = roundToDecimalPlaces(correctValue, decimalPlaces);
+    warnings.push({
+      kind: 'simplified_question',
+      questionNumber,
+      questionText,
+      message: 'Sehr genaue Zahlenwerte wurden auf die maximal unterstützte Genauigkeit gerundet.',
+      detail: `${NUMERIC_ESTIMATE_MAX_DECIMAL_PLACES} Nachkommastellen`,
+    });
+  }
+
+  if (rangeMin === rangeMax) {
+    throw new Error('Schätzfragen benötigen unterschiedliche Bereichsgrenzen.');
+  }
+
+  let numericMin = Math.min(rangeMin, rangeMax);
+  let numericMax = Math.max(rangeMin, rangeMax);
+  if (rangeMin > rangeMax) {
+    warnings.push({
+      kind: 'simplified_question',
+      questionNumber,
+      questionText,
+      message: 'Vertauschte Bereichsgrenzen der Schätzfrage wurden korrigiert.',
+      detail: `rangeMin=${String(rangeMin)}, rangeMax=${String(rangeMax)}`,
+    });
+  }
+
+  if (correctValue < numericMin || correctValue > numericMax) {
+    numericMin = Math.min(numericMin, correctValue);
+    numericMax = Math.max(numericMax, correctValue);
+    warnings.push({
+      kind: 'simplified_question',
+      questionNumber,
+      questionText,
+      message:
+        'Der Referenzwert lag außerhalb des Click-Bereichs; der Eingabebereich wurde erweitert.',
+    });
+  }
+
+  const exactTolerance = buildExactNumericTolerance(correctValue, decimalPlaces);
+  const numericInputType = decimalPlaces === 0 ? 'INTEGER' : 'DECIMAL';
+  warnings.push({
+    kind: 'mapped_question',
+    questionNumber,
+    questionText,
+    message: 'Wurde als numerische Schätzfrage importiert.',
+    detail:
+      'rangeMin/rangeMax wurden als erlaubter Eingabebereich übernommen; correctValue wurde als Referenzwert mit exakter Bewertung übernommen.',
+  });
+
+  return {
+    question: {
+      text,
+      type: 'NUMERIC_ESTIMATE',
+      difficulty,
+      order: index,
+      ...(timer === undefined ? {} : { timer }),
+      answers: [],
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: correctValue,
+      numericIntervalLeft: exactTolerance.left,
+      numericIntervalRight: exactTolerance.right,
+      numericInputType,
+      ...(numericInputType === 'DECIMAL' ? { numericDecimalPlaces: decimalPlaces } : {}),
+      numericMin,
+      numericMax,
+      numericTwoRounds: false,
+      enabled: true,
+    },
+    warnings,
+  };
+}
+
 function mapChoiceAnswers(
   question: JsonRecord,
   targetType: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE',
@@ -667,6 +783,44 @@ function normalizeTimer(value: unknown): number | undefined {
   }
   const rounded = Math.round(value);
   return rounded >= 5 && rounded <= 300 ? rounded : undefined;
+}
+
+function readRequiredNumber(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`${label} ist unvollständig.`);
+  }
+  return value;
+}
+
+function countDecimalPlaces(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  const normalized = Math.abs(value).toString().toLowerCase();
+  const [mantissa, exponentRaw] = normalized.split('e');
+  const mantissaDecimalPlaces = mantissa?.split('.')[1]?.length ?? 0;
+  if (exponentRaw === undefined) {
+    return mantissaDecimalPlaces;
+  }
+  const exponent = Number(exponentRaw);
+  return Number.isFinite(exponent) ? Math.max(0, mantissaDecimalPlaces - exponent) : 0;
+}
+
+function buildExactNumericTolerance(
+  referenceValue: number,
+  decimalPlaces: number,
+): { left: number; right: number } {
+  const step = 10 ** -decimalPlaces;
+  const delta = step / 2;
+  return {
+    left: roundToDecimalPlaces(referenceValue - delta, decimalPlaces + 1),
+    right: roundToDecimalPlaces(referenceValue + delta, decimalPlaces + 1),
+  };
+}
+
+function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
+  const factor = 10 ** decimalPlaces;
+  return Math.round(value * factor) / factor;
 }
 
 function readRequiredString(value: unknown, label: string): string {

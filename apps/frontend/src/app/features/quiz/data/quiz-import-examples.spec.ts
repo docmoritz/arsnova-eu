@@ -13,8 +13,15 @@ import ratingQuiz from '../../../../../../../docs/examples/quiz-import/quiz-rati
 import wordCloudQuiz from '../../../../../../../docs/examples/quiz-import/quiz-word-cloud-komplett.json';
 import mixedQuiz from '../../../../../../../docs/examples/quiz-import/quiz-mixed-realistisch.json';
 import compactFeedbackQuiz from '../../../../../../../docs/examples/quiz-import/quiz-unterrichtsfeedback-kompakt.json';
+import arsnovaClickMaximalExport from '../../../../../../../docs/examples/quiz-import/arsnova-click-maximal-export.json';
 
-type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'SURVEY' | 'FREETEXT' | 'RATING';
+type QuestionType =
+  | 'SINGLE_CHOICE'
+  | 'MULTIPLE_CHOICE'
+  | 'SURVEY'
+  | 'FREETEXT'
+  | 'RATING'
+  | 'NUMERIC_ESTIMATE';
 
 interface FixtureExpectation {
   payload: QuizExport;
@@ -114,6 +121,13 @@ describe('Quiz example imports (all formats)', () => {
             expect((question.ratingLabelMin?.length ?? 0) > 0).toBe(true);
             expect((question.ratingLabelMax?.length ?? 0) > 0).toBe(true);
             break;
+          case 'NUMERIC_ESTIMATE':
+            expect(question.answers.length).toBe(0);
+            expect(question.numericToleranceMode).toBe('ABSOLUTE_INTERVAL');
+            expect(typeof question.numericReferenceValue).toBe('number');
+            expect(typeof question.numericMin).toBe('number');
+            expect(typeof question.numericMax).toBe('number');
+            break;
         }
       }
     }
@@ -159,5 +173,30 @@ describe('Quiz example imports (all formats)', () => {
       expect(roundtrip.questions[0]?.type).toBe(imported.questions[0]?.type);
       expect(roundtrip.questions[0]?.text).toBe(imported.questions[0]?.text);
     }
+  });
+
+  it('importiert das arsnova.click-Maximalbeispiel inklusive RangedQuestion', () => {
+    const service = TestBed.inject(QuizStoreService);
+
+    const imported = service.importQuiz(arsnovaClickMaximalExport).quiz;
+    const estimateQuestion = imported.questions.find(
+      (question) => question.text === 'Schaetzfrage',
+    );
+
+    expect(imported.name).toBe('Maximal Export Quiz');
+    expect(imported.questions).toHaveLength(8);
+    expect(imported.questions.map((question) => question.type)).toContain('NUMERIC_ESTIMATE');
+    expect(estimateQuestion).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      timer: 60,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 420,
+      numericIntervalLeft: 419.5,
+      numericIntervalRight: 420.5,
+      numericInputType: 'INTEGER',
+      numericMin: 0,
+      numericMax: 1000,
+      numericTwoRounds: false,
+    });
   });
 });

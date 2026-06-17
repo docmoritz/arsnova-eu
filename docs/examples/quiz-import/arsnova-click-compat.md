@@ -18,16 +18,16 @@ wie `arsnova.eu` es derzeit importiert.
 
 ## Aktuelles Mapping nach arsnova.eu
 
-| arsnova.click                   | arsnova.eu        | Status     | Bemerkung                                                                       |
-| ------------------------------- | ----------------- | ---------- | ------------------------------------------------------------------------------- |
-| `SingleChoiceQuestion`          | `SINGLE_CHOICE`   | importiert | direktes Mapping                                                                |
-| `YesNoSingleChoiceQuestion`     | `SINGLE_CHOICE`   | importiert | Spezialisierung geht verloren                                                   |
-| `TrueFalseSingleChoiceQuestion` | `SINGLE_CHOICE`   | importiert | Spezialisierung geht verloren                                                   |
-| `MultipleChoiceQuestion`        | `MULTIPLE_CHOICE` | importiert | direktes Mapping                                                                |
-| `SurveyQuestion`                | `SURVEY`          | importiert | alle Antworten werden als nicht-korrekt normalisiert                            |
-| `ABCDSurveyQuestion`            | `SURVEY`          | importiert | Spezialtyp geht verloren                                                        |
-| `FreeTextQuestion`              | `SHORT_TEXT`      | importiert | Musterloesungen, Gross-/Kleinschreibung und Trim werden best effort uebernommen |
-| `RangedQuestion`                | kein Pendant      | abgelehnt  | aktuelle Fehlermeldung statt stiller Degradation                                |
+| arsnova.click                   | arsnova.eu         | Status     | Bemerkung                                                                                               |
+| ------------------------------- | ------------------ | ---------- | ------------------------------------------------------------------------------------------------------- |
+| `SingleChoiceQuestion`          | `SINGLE_CHOICE`    | importiert | direktes Mapping                                                                                        |
+| `YesNoSingleChoiceQuestion`     | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                                           |
+| `TrueFalseSingleChoiceQuestion` | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                                           |
+| `MultipleChoiceQuestion`        | `MULTIPLE_CHOICE`  | importiert | direktes Mapping                                                                                        |
+| `SurveyQuestion`                | `SURVEY`           | importiert | alle Antworten werden als nicht-korrekt normalisiert                                                    |
+| `ABCDSurveyQuestion`            | `SURVEY`           | importiert | Spezialtyp geht verloren                                                                                |
+| `FreeTextQuestion`              | `SHORT_TEXT`       | importiert | Musterloesungen, Gross-/Kleinschreibung und Trim werden best effort uebernommen                         |
+| `RangedQuestion`                | `NUMERIC_ESTIMATE` | importiert | `rangeMin/rangeMax` als erlaubter Eingabebereich, `correctValue` als Referenzwert mit exakter Bewertung |
 
 ## Aktuell uebernommene Session-Felder
 
@@ -63,13 +63,10 @@ wie `arsnova.eu` es derzeit importiert.
 - `questionList[].requiredForToken`
 - `FreeTextAnswerOption.configUseKeywords` (bewusst nicht als arsnova.eu-Schluesselwortbewertung uebernommen)
 - `FreeTextAnswerOption.configUsePunctuation`
-- `RangedQuestion.rangeMin`
-- `RangedQuestion.rangeMax`
-- `RangedQuestion.correctValue`
+- `RangedQuestion`-spezifische Toleranzvorgaben, da der Click-Snapshot nur Bereich und Referenzwert exportiert
 
 ## Offene Folgearbeiten fuer spaetere Angleichung
 
-1. Pruefen, ob `RangedQuestion` in `arsnova.eu` einen neuen Fragetyp braucht oder als `RATING`/`FREETEXT` bewusst umgedeutet werden soll.
-2. `FreeTextQuestion.configUseKeywords`, `questionList[].tags` und vergleichbare keywordartige click-Metadaten bleiben bewusst ohne arsnova.eu-Entsprechung; der Import darf sie nur ignorieren bzw. als Best-Effort-Abweichung melden.
-3. Klaeren, ob `ABCDSurveyQuestion`, `YesNoSingleChoiceQuestion` und `TrueFalseSingleChoiceQuestion` als eigene UI-Varianten sichtbar bleiben sollen.
-4. Festlegen, ob Musik-, Theme- und Nickname-Presets in `arsnova.eu` ueberhaupt eine fachliche Entsprechung bekommen sollen.
+1. `FreeTextQuestion.configUseKeywords`, `questionList[].tags` und vergleichbare keywordartige click-Metadaten bleiben bewusst ohne arsnova.eu-Entsprechung; der Import darf sie nur ignorieren bzw. als Best-Effort-Abweichung melden.
+2. Klaeren, ob `ABCDSurveyQuestion`, `YesNoSingleChoiceQuestion` und `TrueFalseSingleChoiceQuestion` als eigene UI-Varianten sichtbar bleiben sollen.
+3. Festlegen, ob Musik-, Theme- und Nickname-Presets in `arsnova.eu` ueberhaupt eine fachliche Entsprechung bekommen sollen.
