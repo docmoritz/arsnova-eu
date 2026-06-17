@@ -1559,9 +1559,26 @@
                                           >
                                             Runde 1
                                           </h3>
-                                          <p class="session-host__numeric-stats">
-                                            {{ numericStatsLabel(rc.round1Stats, q) }}
-                                          </p>
+                                          <dl class="session-host__numeric-stat-list">
+                                            @for (
+                                              item of numericStatsItems(rc.round1Stats, q);
+                                              track item.id
+                                            ) {
+                                              <div class="session-host__numeric-stat-item">
+                                                <dt class="session-host__numeric-stat-label">
+                                                  {{ item.label }}
+                                                </dt>
+                                                <dd class="session-host__numeric-stat-value">
+                                                  {{ item.value }}
+                                                </dd>
+                                                @if (item.caption) {
+                                                  <dd class="session-host__numeric-stat-caption">
+                                                    {{ item.caption }}
+                                                  </dd>
+                                                }
+                                              </div>
+                                            }
+                                          </dl>
                                         </section>
                                         <section class="session-host__numeric-detail-card">
                                           <h3
@@ -1570,11 +1587,28 @@
                                           >
                                             Runde 2
                                           </h3>
-                                          <p
-                                            class="session-host__numeric-stats session-host__numeric-stats--r2"
+                                          <dl
+                                            class="session-host__numeric-stat-list session-host__numeric-stat-list--r2"
                                           >
-                                            {{ numericStatsLabel(rc.round2Stats, q) }}
-                                          </p>
+                                            @for (
+                                              item of numericStatsItems(rc.round2Stats, q);
+                                              track item.id
+                                            ) {
+                                              <div class="session-host__numeric-stat-item">
+                                                <dt class="session-host__numeric-stat-label">
+                                                  {{ item.label }}
+                                                </dt>
+                                                <dd class="session-host__numeric-stat-value">
+                                                  {{ item.value }}
+                                                </dd>
+                                                @if (item.caption) {
+                                                  <dd class="session-host__numeric-stat-caption">
+                                                    {{ item.caption }}
+                                                  </dd>
+                                                }
+                                              </div>
+                                            }
+                                          </dl>
                                         </section>
                                       </div>
                                       @if (rc.pairedAnalysis) {
@@ -1582,7 +1616,7 @@
                                           class="session-host__numeric-paired"
                                           i18n="@@sessionHost.numericPairedImproved"
                                         >
-                                          Paarweise Δ: {{ rc.pairedAnalysis.closerCount }} näher,
+                                          Paarvergleich: {{ rc.pairedAnalysis.closerCount }} näher,
                                           {{ rc.pairedAnalysis.fartherCount }} weiter weg,
                                           {{ rc.pairedAnalysis.unchangedCount }} gleich ({{
                                             rc.pairedAnalysis.pairedCount
@@ -1598,7 +1632,7 @@
                                       @if (rc.deltaHistogram && rc.deltaHistogram.length > 0) {
                                         <div class="session-host__numeric-delta">
                                           <span i18n="@@sessionHost.numericDeltaHistogramLabel"
-                                            >Δx-Verteilung</span
+                                            >Veränderung pro Person</span
                                           >
                                           <div class="session-host__numeric-histogram">
                                             @for (bin of rc.deltaHistogram; track bin.from) {
@@ -1812,9 +1846,23 @@
                                       >
                                         Ergebnisrunde
                                       </h3>
-                                      <p class="session-host__numeric-stats">
-                                        {{ numericStatsLabel(stats, q) }}
-                                      </p>
+                                      <dl class="session-host__numeric-stat-list">
+                                        @for (item of numericStatsItems(stats, q); track item.id) {
+                                          <div class="session-host__numeric-stat-item">
+                                            <dt class="session-host__numeric-stat-label">
+                                              {{ item.label }}
+                                            </dt>
+                                            <dd class="session-host__numeric-stat-value">
+                                              {{ item.value }}
+                                            </dd>
+                                            @if (item.caption) {
+                                              <dd class="session-host__numeric-stat-caption">
+                                                {{ item.caption }}
+                                              </dd>
+                                            }
+                                          </div>
+                                        }
+                                      </dl>
                                     </section>
                                   </div>
                                 </details>

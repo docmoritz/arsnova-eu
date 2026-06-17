@@ -4864,13 +4864,6 @@ button.session-host__btn-discussion {
   line-height: 1.25;
 }
 
-.session-host__numeric-stats {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
-  margin: 0;
-  line-height: 1.45;
-}
-
 .session-host__numeric-details {
   border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 78%, transparent);
   border-radius: var(--mat-sys-corner-medium, 8px);
@@ -4947,6 +4940,63 @@ button.session-host__btn-discussion {
   color: var(--mat-sys-primary);
 }
 
+.session-host__numeric-stat-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.session-host__numeric-stat-item {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 48%, transparent);
+  border-radius: var(--mat-sys-corner-extra-small, 4px);
+  background: color-mix(in srgb, var(--mat-sys-surface-container-lowest) 62%, transparent);
+}
+
+.session-host__numeric-stat-label,
+.session-host__numeric-stat-value,
+.session-host__numeric-stat-caption {
+  margin: 0;
+  min-width: 0;
+}
+
+.session-host__numeric-stat-label {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.session-host__numeric-stat-value {
+  overflow-wrap: anywhere;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.session-host__numeric-stat-caption {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+  line-height: 1.2;
+}
+
+.session-host__numeric-stat-list--r2 {
+  .session-host__numeric-stat-item {
+    border-color: color-mix(in srgb, var(--mat-sys-primary) 36%, transparent);
+    background: color-mix(in srgb, var(--mat-sys-primary-container) 18%, transparent);
+  }
+
+  .session-host__numeric-stat-value {
+    color: var(--mat-sys-primary);
+  }
+}
+
 .session-host__numeric-scale-meta {
   display: flex;
   flex-wrap: wrap;
@@ -4966,10 +5016,6 @@ button.session-host__btn-discussion {
     font-size: 1rem;
     color: var(--mat-sys-primary);
   }
-}
-
-.session-host__numeric-stats--r2 {
-  color: var(--mat-sys-primary);
 }
 
 .session-host__numeric-ref {

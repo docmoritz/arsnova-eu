@@ -140,6 +140,13 @@ import {
 } from './foyer-entrance-layer.component';
 import { buildFoyerChipLabel } from './foyer-chip-label.util';
 
+type NumericStatsDisplayItem = {
+  id: string;
+  label: string;
+  value: string;
+  caption: string | null;
+};
+
 const HOST_AUX_POLL_MS = 3000;
 const HOST_CLOCK_POLL_MS = 15000;
 const QA_WORD_CLOUD_ANALYSIS_DEBOUNCE_MS = 180;
@@ -3717,6 +3724,97 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return parts.join(' · ');
   }
 
+  numericStatsItems(
+    stats: NumericStatsDTO,
+    question: HostCurrentQuestionDTO | null,
+  ): NumericStatsDisplayItem[] {
+    const items: NumericStatsDisplayItem[] = [
+      {
+        id: 'count',
+        label: $localize`:@@sessionHost.numericStatCountLabel:Schätzungen`,
+        value: formatNumber(stats.n, this.localeId, '1.0-0'),
+        caption: $localize`:@@sessionHost.numericStatCountCaption:gültige Antworten`,
+      },
+    ];
+    if (stats.mean !== null) {
+      items.push({
+        id: 'mean',
+        label: $localize`:@@sessionHost.numericStatMeanLabel:Mittelwert`,
+        value: this.formatNumericHostValue(stats.mean, question, '1.0-2'),
+        caption: $localize`:@@sessionHost.numericStatMeanCaption:Durchschnitt aller Schätzungen`,
+      });
+    }
+    if (stats.median !== null) {
+      items.push({
+        id: 'median',
+        label: $localize`:@@sessionHost.numericStatMedianLabel:Median`,
+        value: this.formatNumericHostValue(stats.median, question, '1.0-2'),
+        caption: $localize`:@@sessionHost.numericStatMedianCaption:Mitte der sortierten Werte`,
+      });
+    }
+    if (stats.stdDev !== null) {
+      items.push({
+        id: 'stdDev',
+        label: $localize`:@@sessionHost.numericStatStdDevLabel:Streuung`,
+        value: this.formatNumericHostValue(stats.stdDev, question, '1.0-2'),
+        caption: $localize`:@@sessionHost.numericStatStdDevCaption:Standardabweichung`,
+      });
+    }
+    if (stats.q1 !== null && stats.q3 !== null && stats.iqr !== null) {
+      items.push({
+        id: 'middle50',
+        label: $localize`:@@sessionHost.numericStatMiddle50Label:Mittlere 50 %`,
+        value: `${this.formatNumericHostValue(stats.q1, question, '1.0-2')}–${this.formatNumericHostValue(
+          stats.q3,
+          question,
+          '1.0-2',
+        )}`,
+        caption: $localize`:@@sessionHost.numericStatMiddle50Caption:Breite ${this.formatNumericHostValue(
+          stats.iqr,
+          question,
+          '1.0-2',
+        )}:iqr:`,
+      });
+    }
+    if (stats.min !== null && stats.max !== null) {
+      items.push({
+        id: 'range',
+        label: $localize`:@@sessionHost.numericStatRangeLabel:Spanne`,
+        value: `${this.formatNumericHostValue(stats.min, question, '1.0-2')}–${this.formatNumericHostValue(
+          stats.max,
+          question,
+          '1.0-2',
+        )}`,
+        caption: $localize`:@@sessionHost.numericStatRangeCaption:kleinste bis größte Schätzung`,
+      });
+    }
+    if (stats.inBandPercent !== null) {
+      items.push({
+        id: 'inBand',
+        label: $localize`:@@sessionHost.numericStatInBandLabel:Im Band`,
+        value: `${formatNumber(stats.inBandCount, this.localeId, '1.0-0')}/${formatNumber(
+          stats.n,
+          this.localeId,
+          '1.0-0',
+        )}`,
+        caption: $localize`:@@sessionHost.numericStatInBandCaption:${formatNumber(
+          stats.inBandPercent,
+          this.localeId,
+          '1.0-1',
+        )}:percent: % akzeptiert`,
+      });
+    }
+    if (stats.meanAbsoluteError !== null) {
+      items.push({
+        id: 'meanAbsoluteError',
+        label: $localize`:@@sessionHost.numericStatMeanAbsoluteErrorLabel:Mittlerer Abstand`,
+        value: this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2'),
+        caption: $localize`:@@sessionHost.numericStatMeanAbsoluteErrorCaption:zur Referenz`,
+      });
+    }
+    return items;
+  }
+
   numericStatsPrimaryCaption(stats: NumericStatsDTO): string {
     if (stats.median !== null) {
       return $localize`:@@sessionHost.numericPrimaryMedian:Median`;
@@ -3773,7 +3871,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   numericStatsErrorCaption(): string {
-    return $localize`:@@sessionHost.numericMeanAbsoluteErrorCaption:Ø Abstand zur Referenz`;
+    return $localize`:@@sessionHost.numericMeanAbsoluteErrorCaption:Mittlerer Abstand zur Referenz`;
   }
 
   numericPairedInsightValue(
@@ -3799,7 +3897,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return null;
     }
     const sign = delta > 0 ? '+' : '';
-    return `Δ ${sign}${this.formatNumericHostValue(delta, question, '1.0-2')}`;
+    return `${sign}${this.formatNumericHostValue(delta, question, '1.0-2')}`;
   }
 
   numericRoundDeltaCaption(roundComparison: NumericRoundComparisonDTO): string {
@@ -3811,11 +3909,19 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   numericRoundDeltaLabel(roundComparison: NumericRoundComparisonDTO): string {
     const parts: string[] = [];
     if (roundComparison.meanDelta !== null && roundComparison.meanDelta !== undefined) {
-      parts.push(`ΔØ ${formatNumber(roundComparison.meanDelta, this.localeId, '1.0-2')}`);
+      const sign = roundComparison.meanDelta > 0 ? '+' : '';
+      parts.push(
+        $localize`:@@sessionHost.numericMeanDeltaReadable:Mittelwert ${sign}${formatNumber(
+          roundComparison.meanDelta,
+          this.localeId,
+          '1.0-2',
+        )}:delta:`,
+      );
     }
     if (roundComparison.medianDelta !== null && roundComparison.medianDelta !== undefined) {
+      const sign = roundComparison.medianDelta > 0 ? '+' : '';
       parts.push(
-        $localize`:@@sessionHost.numericMedianDelta:Δ Median ${formatNumber(
+        $localize`:@@sessionHost.numericMedianDelta:Median ${sign}${formatNumber(
           roundComparison.medianDelta,
           this.localeId,
           '1.0-2',
@@ -3826,8 +3932,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       roundComparison.inBandPercentDelta !== null &&
       roundComparison.inBandPercentDelta !== undefined
     ) {
+      const sign = roundComparison.inBandPercentDelta > 0 ? '+' : '';
       parts.push(
-        `Δ Band ${formatNumber(roundComparison.inBandPercentDelta, this.localeId, '1.0-1')} pp`,
+        $localize`:@@sessionHost.numericInBandDeltaReadable:Im Band ${sign}${formatNumber(
+          roundComparison.inBandPercentDelta,
+          this.localeId,
+          '1.0-1',
+        )}:delta: Prozentpunkte`,
       );
     }
     return parts.join(' · ');
