@@ -960,25 +960,22 @@ export class QuizPreviewComponent implements OnDestroy {
     );
   }
 
-  private buildLiveStartPayload(mode: LiveStartMode): QuizUploadInput {
-    const payload = this.quizStore.getUploadPayload(this.id);
+  private liveStartQuestionIndex(
+    mode: LiveStartMode,
+    questionCount = this.questions().length,
+  ): number {
     if (mode !== 'current') {
-      return payload;
+      return 0;
     }
     const normalizedStartIndex = Math.max(
       0,
-      Math.min(this.currentIndex(), Math.max(0, payload.questions.length - 1)),
+      Math.min(this.currentIndex(), Math.max(0, questionCount - 1)),
     );
-    if (normalizedStartIndex === 0) {
-      return payload;
-    }
-    return {
-      ...payload,
-      questions: payload.questions.slice(normalizedStartIndex).map((question, index) => ({
-        ...question,
-        order: index,
-      })),
-    };
+    return normalizedStartIndex;
+  }
+
+  private buildLiveStartPayload(_mode: LiveStartMode): QuizUploadInput {
+    return this.quizStore.getUploadPayload(this.id);
   }
 
   private async startLiveSession(mode: LiveStartMode): Promise<void> {
@@ -989,6 +986,7 @@ export class QuizPreviewComponent implements OnDestroy {
     }
     try {
       let payload = this.buildLiveStartPayload(mode);
+      const startQuestionIndex = this.liveStartQuestionIndex(mode, payload.questions.length);
       const presetKey = homePresetOptionsKeyForQuizPreset(payload.preset);
       try {
         const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(presetKey) : null;
@@ -1048,6 +1046,7 @@ export class QuizPreviewComponent implements OnDestroy {
       const result: CreateSessionOutput = await trpc.session.create.mutate({
         quizId: uploadedQuizId,
         type: 'QUIZ',
+        ...(startQuestionIndex > 0 ? { startQuestionIndex } : {}),
       });
 
       setHostToken(result.code, result.hostToken);

@@ -62,6 +62,7 @@ describe('session.create (Story 2.1a)', () => {
       teamCount: null,
       teamAssignment: 'AUTO',
       teamNames: [],
+      _count: { questions: 3 },
     });
     prismaMock.session.create.mockResolvedValue({
       id: SESSION_ID,
@@ -91,6 +92,7 @@ describe('session.create (Story 2.1a)', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'LOBBY',
+          currentQuestion: null,
           type: 'QUIZ',
           quizId: QUIZ_ID,
           qaEnabled: false,
@@ -110,6 +112,27 @@ describe('session.create (Story 2.1a)', () => {
         }),
       }),
     );
+  });
+
+  it('setzt beim Start ab bestimmter Frage nur den initialen Fragenzeiger', async () => {
+    await caller.create({ quizId: QUIZ_ID, startQuestionIndex: 2 });
+
+    expect(prismaMock.session.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          quizId: QUIZ_ID,
+          currentQuestion: 1,
+        }),
+      }),
+    );
+  });
+
+  it('weist einen Startindex außerhalb des Quiz zurück', async () => {
+    await expect(caller.create({ quizId: QUIZ_ID, startQuestionIndex: 3 })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+
+    expect(prismaMock.session.create).not.toHaveBeenCalled();
   });
 
   it('setzt Q&A-Vorab-Moderation standardmäßig an wenn Q&A aktiviert', async () => {

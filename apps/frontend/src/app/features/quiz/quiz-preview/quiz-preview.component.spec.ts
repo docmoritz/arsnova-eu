@@ -595,7 +595,7 @@ describe('QuizPreviewComponent', () => {
     expect(saveButton?.disabled).toBe(true);
   });
 
-  it('startet ab aktueller Frage nur mit dem verbleibenden Fragenblock', () => {
+  it('startet ab aktueller Frage mit vollständigem Upload-Payload und separatem Startindex', () => {
     const appendedQuestion = {
       id: 'trailing-question',
       text: 'Dritte Frage',
@@ -622,12 +622,14 @@ describe('QuizPreviewComponent', () => {
 
       const payload = component['buildLiveStartPayload']('current');
 
-      expect(payload.questions).toHaveLength(2);
-      expect(payload.questions.map((question) => question.text)).toEqual([
-        'Welche Aussage stimmt?',
-        'Dritte Frage',
-      ]);
-      expect(payload.questions.map((question) => question.order)).toEqual([0, 1]);
+      expect(payload.questions).toHaveLength(3);
+      expect(payload.questions.map((question) => question.text)).toEqual(
+        quiz.questions.map((question) => question.text),
+      );
+      expect(payload.questions.map((question) => question.order)).toEqual(
+        quiz.questions.map((question) => question.order),
+      );
+      expect(component['liveStartQuestionIndex']('current', payload.questions.length)).toBe(1);
     } finally {
       quiz.questions.pop();
     }

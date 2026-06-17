@@ -1887,6 +1887,7 @@ export const CreateSessionInputSchema = z
   .object({
     type: SessionTypeEnum.optional().default('QUIZ'), // Story 8.1: Quiz oder Q&A
     quizId: z.uuid().optional(), // Pflicht bei Quiz-Session, optional bei kanalbasiertem Q&A/Blitzlicht
+    startQuestionIndex: z.number().int().min(0).optional(), // Optionaler 0-basierter Startpunkt für Quiz-Sessions
     title: z.string().trim().max(200).optional(), // Story 8.1: Titel für Q&A-Runde
     moderationMode: z.boolean().optional().default(true), // Story 8.4 / Q&A: Vorab-Moderation (Default an)
     qaEnabled: z.boolean().optional().default(false), // ADR-0009: Q&A-Kanal in Quiz-Session
@@ -1914,6 +1915,14 @@ export const CreateSessionInputSchema = z
         code: z.ZodIssueCode.custom,
         path: ['quizId'],
         message: 'Q&A-Sessions dürfen keine quizId enthalten.',
+      });
+    }
+
+    if ((value.startQuestionIndex ?? 0) > 0 && !value.quizId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['startQuestionIndex'],
+        message: 'Eine Startfrage ist nur für Quiz-Sessions mit quizId möglich.',
       });
     }
   });

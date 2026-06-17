@@ -605,6 +605,7 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
       }
       const isActive = session.status === 'ACTIVE';
+      const visibleCurrentQuestion = session.status === 'LOBBY' ? null : session.currentQuestion;
       const currentTimer =
         isActive && session.currentQuestion !== null && session.currentRound !== 2
           ? resolveEffectiveQuestionTimer(
@@ -617,7 +618,7 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
       const channels = buildSessionChannels(session);
       return {
         status: session.status,
-        currentQuestion: session.currentQuestion,
+        currentQuestion: visibleCurrentQuestion,
         currentRound: session.currentRound,
         channels,
         preferredChannel: resolvePreferredLiveChannel(code, channels),
@@ -2551,6 +2552,7 @@ async function buildHostCurrentQuestionDto(
   session: HostCurrentQuestionSession | null,
 ): Promise<z.infer<typeof HostCurrentQuestionDTOSchema> | null> {
   if (!session?.quiz) return null;
+  if (session.status === 'LOBBY') return null;
   const idx = session.currentQuestion;
   if (idx === null || idx === undefined) return null;
   const questions = session.quiz.questions;
@@ -2932,12 +2934,27 @@ export const sessionRouter = router({
                 teamCount: true,
                 teamAssignment: true,
                 teamNames: true,
+                _count: { select: { questions: true } },
               },
             })
           : null;
       if (input.quizId && !quiz) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Quiz nicht gefunden.' });
       }
+      const startQuestionIndex = input.startQuestionIndex ?? 0;
+      if (startQuestionIndex > 0 && !quiz) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Eine Startfrage ist nur für Quiz-Sessions möglich.',
+        });
+      }
+      if (quiz && startQuestionIndex > 0 && startQuestionIndex >= quiz._count.questions) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Startfrage liegt außerhalb des Quiz.',
+        });
+      }
+      const initialCurrentQuestion = startQuestionIndex > 0 ? startQuestionIndex - 1 : null;
 
       const legacyQaOnlySession = input.type === 'Q_AND_A';
       const qaEnabled = legacyQaOnlySession || input.qaEnabled === true;
@@ -2971,6 +2988,7 @@ export const sessionRouter = router({
           quickFeedbackOpen,
           ...buildSessionOnboardingUpdate(onboardingProfile),
           status: 'LOBBY',
+          currentQuestion: initialCurrentQuestion,
           quizStarted: false,
         },
       });
@@ -4391,6 +4409,7 @@ export const sessionRouter = router({
         },
       });
       if (!session?.quiz) return null;
+      if (session.status === 'LOBBY') return null;
       const quiz = session.quiz;
       const idx = session.currentQuestion;
       if (idx === null || idx === undefined) return null;
