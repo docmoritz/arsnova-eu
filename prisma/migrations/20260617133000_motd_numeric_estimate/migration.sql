@@ -20,7 +20,7 @@ INSERT INTO "Motd" (
   '2026-06-17 00:00:00'::timestamp(3),
   '2026-11-30 23:59:59.999'::timestamp(3),
   true,
-  2,
+  3,
   NULL,
   NOW(),
   NOW()
@@ -40,9 +40,11 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'de',
-  $mdde$![Host-Ansicht einer numerischen Schätzfrage zur Französischen Revolution](/assets/images/numeric-estimate-1789-host.png)
+  $mdde$# Schätzen, diskutieren, vergleichen
 
-Schätzen, diskutieren, vergleichen: Mit diesem Frageformat kannst du in arsnova.eu echte Zahlen einschätzen lassen, entweder in einer einfachen Runde oder in zwei Runden mit kurzer Diskussion dazwischen.
+![Host-Ansicht einer numerischen Schätzfrage zur Französischen Revolution](/assets/images/numeric-estimate-1789-host.png)
+
+Mit der **numerischen Schätzfrage** kannst du in arsnova.eu echte Zahlen einschätzen lassen, entweder in einer einfachen Runde oder in zwei Runden mit kurzer Diskussion dazwischen.
 
 **Wofür sie gedacht ist**
 
@@ -68,9 +70,11 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'en',
-  $mden$![Host view of a numeric estimate question about the French Revolution](/assets/images/numeric-estimate-1789-host.png)
+  $mden$# Estimate, discuss, compare
 
-Estimate, discuss, compare: This question format lets you collect real number estimates in arsnova.eu, either in a single round or in two rounds with a short discussion in between.
+![Host view of a numeric estimate question about the French Revolution](/assets/images/numeric-estimate-1789-host.png)
+
+The **numeric estimate question** lets you collect real number estimates in arsnova.eu, either in a single round or in two rounds with a short discussion in between.
 
 **What it is for**
 
@@ -96,9 +100,11 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'fr',
-  $mdfr$![Vue hôte d'une question d'estimation numérique sur la Révolution française](/assets/images/numeric-estimate-1789-host.png)
+  $mdfr$# Estimer, discuter, comparer
 
-Estimer, discuter, comparer : ce format de question permet de recueillir de vraies estimations chiffrées dans arsnova.eu, en un seul tour ou en deux tours avec une courte discussion entre les deux.
+![Vue hôte d'une question d'estimation numérique sur la Révolution française](/assets/images/numeric-estimate-1789-host.png)
+
+La **question d'estimation numérique** permet de recueillir de vraies estimations chiffrées dans arsnova.eu, en un seul tour ou en deux tours avec une courte discussion entre les deux.
 
 **À quoi elle sert**
 
@@ -124,9 +130,11 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'es',
-  $mdes$![Vista del anfitrión de una pregunta de estimación numérica sobre la Revolución francesa](/assets/images/numeric-estimate-1789-host.png)
+  $mdes$# Estimar, debatir, comparar
 
-Estimar, debatir, comparar: este formato de pregunta permite recoger estimaciones con números reales en arsnova.eu, en una sola ronda o en dos rondas con una breve discusión intermedia.
+![Vista del anfitrión de una pregunta de estimación numérica sobre la Revolución francesa](/assets/images/numeric-estimate-1789-host.png)
+
+La **pregunta de estimación numérica** permite recoger estimaciones con números reales en arsnova.eu, en una sola ronda o en dos rondas con una breve discusión intermedia.
 
 **Para qué sirve**
 
@@ -152,9 +160,11 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'it',
-  $mdit$![Vista host di una domanda di stima numerica sulla Rivoluzione francese](/assets/images/numeric-estimate-1789-host.png)
+  $mdit$# Stimare, discutere, confrontare
 
-Stimare, discutere, confrontare: questo formato di domanda permette di raccogliere stime con numeri reali in arsnova.eu, in un solo turno oppure in due turni con una breve discussione intermedia.
+![Vista host di una domanda di stima numerica sulla Rivoluzione francese](/assets/images/numeric-estimate-1789-host.png)
+
+La **domanda di stima numerica** permette di raccogliere stime con numeri reali in arsnova.eu, in un solo turno oppure in due turni con una breve discussione intermedia.
 
 **A cosa serve**
 
