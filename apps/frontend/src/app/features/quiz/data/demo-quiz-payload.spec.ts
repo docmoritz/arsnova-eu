@@ -4,7 +4,7 @@ import { getDemoQuizPayload, getDemoQuizSeedFingerprint } from './demo-quiz-payl
 describe('getDemoQuizSeedFingerprint', () => {
   it('ändert sich mit exportVersion, Motiv-URL und komplettem Payload (Demo-Reseed)', () => {
     const de = getDemoQuizSeedFingerprint('de');
-    expect(de).toMatch(/^de\|25\|/);
+    expect(de).toMatch(/^de\|26\|/);
     expect(de).toContain(
       'https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg',
     );
@@ -22,6 +22,58 @@ describe('getDemoQuizSeedFingerprint', () => {
 
     expect(payload.quiz?.questions?.[1]?.skipReadingPhase).toBe(true);
     expect(payload.quiz?.questions?.[3]?.skipReadingPhase).toBe(true);
+  });
+
+  it('enthält eine zweirundige Schätzfrage zur Französischen Revolution in allen Locales', () => {
+    const expectedHeadlineByLocale = {
+      de: 'In welchem Jahr begann die Französische Revolution?',
+      en: 'In which year did the French Revolution begin?',
+      es: '¿En qué año comenzó la Revolución francesa?',
+      fr: 'En quelle année la Révolution française a-t-elle commencé ?',
+      it: 'In quale anno iniziò la Rivoluzione francese?',
+    } as const;
+
+    for (const [locale, headline] of Object.entries(expectedHeadlineByLocale)) {
+      const payload = getDemoQuizPayload(locale as keyof typeof expectedHeadlineByLocale) as {
+        exportVersion?: number;
+        quiz?: {
+          questions?: Array<{
+            text?: string;
+            type?: string;
+            order?: number;
+            answers?: Array<{ text?: string; isCorrect?: boolean }>;
+            numericToleranceMode?: string;
+            numericReferenceValue?: number;
+            numericIntervalLeft?: number;
+            numericIntervalRight?: number;
+            numericInputType?: string;
+            numericMin?: number;
+            numericMax?: number;
+            numericTwoRounds?: boolean;
+          }>;
+        };
+      };
+
+      const estimateQuestion = payload.quiz?.questions?.find(
+        (question) => question.type === 'NUMERIC_ESTIMATE',
+      );
+
+      expect(payload.exportVersion).toBe(26);
+      expect(payload.quiz?.questions).toHaveLength(10);
+      expect(estimateQuestion?.text).toContain(headline);
+      expect(estimateQuestion).toMatchObject({
+        order: 7,
+        answers: [],
+        numericToleranceMode: 'ABSOLUTE_INTERVAL',
+        numericReferenceValue: 1789,
+        numericIntervalLeft: 1788.5,
+        numericIntervalRight: 1789.5,
+        numericInputType: 'INTEGER',
+        numericMin: 1700,
+        numericMax: 1900,
+        numericTwoRounds: true,
+      });
+    }
   });
 
   it('nutzt fuer die KI-oder-Foto-Frage ein lokales Asset und neutrale Alt-Texte', () => {

@@ -1,4 +1,6 @@
-import { TestBed } from '@angular/core/testing';
+import { registerLocaleData } from '@angular/common';
+import localeDe from '@angular/common/locales/de';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { QaQuestionDTO } from '@arsnova/shared-types';
@@ -19,6 +21,8 @@ import {
   setConfirmedParticipantTeam,
 } from '../../../core/participant-team-confirmation';
 import { ThemePresetService } from '../../../core/theme-preset.service';
+
+registerLocaleData(localeDe);
 
 const {
   getInfoQueryMock,
@@ -106,6 +110,24 @@ vi.mock('../../../core/trpc.client', () => ({
 }));
 
 const MOCK_SERVER_TIME = '2026-03-24T12:00:00.000Z';
+
+async function findNumericEstimateInput(
+  fixture: ComponentFixture<SessionVoteComponent>,
+): Promise<HTMLInputElement> {
+  let input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+    '#vote-numeric-input',
+  );
+  for (let attempt = 0; attempt < 10 && !input; attempt += 1) {
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+    input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#vote-numeric-input',
+    );
+  }
+  expect(input).toBeTruthy();
+  return input!;
+}
 
 describe('SessionVoteComponent', () => {
   it('liefert phasenabhängige Einsprung-Anker mit korrekten Fallbacks', () => {
@@ -1466,6 +1488,27 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('fragt bei direktem Scorecard-Laden keine unbewerteten Fragetypen ab', async () => {
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.participantId.set('11111111-1111-4111-8111-111111111111');
+    component.currentQuestion.set({
+      id: 'survey-direct-scorecard-guard',
+      text: 'Wie fandest du das?',
+      type: 'SURVEY',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [],
+      totalVotes: 0,
+    } as never);
+
+    await component.loadScorecard(0);
+
+    expect(getPersonalScorecardQueryMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
   it('sendet SHORT_TEXT-Antworten als freie Textabgabe', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
@@ -1791,6 +1834,249 @@ describe('SessionVoteComponent', () => {
     await component.submitVote();
 
     expect(voteSubmitMutateMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('blockiert NUMERIC_ESTIMATE-Dezimalwerte wenn Ganzzahl konfiguriert ist', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'numeric-estimate-integer',
+      text: 'Wie viele Personen sind im Raum?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [],
+      activeAt: MOCK_SERVER_TIME,
+      currentRound: 1,
+      numericInputType: 'INTEGER',
+      numericDecimalPlaces: null,
+      numericMin: 0,
+      numericMax: 100,
+      numericTwoRounds: false,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    const input = await findNumericEstimateInput(fixture);
+    expect(input?.type).toBe('text');
+    expect(input?.getAttribute('inputmode')).toBe('numeric');
+    expect(input?.getAttribute('aria-invalid')).toBeNull();
+    expect(input?.getAttribute('aria-describedby')).toBeNull();
+
+    component.numericInputValue.set('3.14');
+    fixture.detectChanges();
+
+    expect(component.numericValidationError()).toContain('ganze Zahl');
+    expect(component.voteSubmitDisabled()).toBe(true);
+    expect(input?.getAttribute('aria-invalid')).toBe('true');
+    expect(input?.getAttribute('aria-describedby')).toBe('vote-numeric-input-error');
+
+    const error = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '#vote-numeric-input-error',
+    );
+    expect(error?.textContent).toContain('ganze Zahl');
+
+    await component.submitVote();
+
+    expect(voteSubmitMutateMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('blockiert NUMERIC_ESTIMATE-Werte mit zu vielen Nachkommastellen lokal', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'numeric-estimate-decimal',
+      text: 'Wie groß ist die Strecke?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [],
+      activeAt: MOCK_SERVER_TIME,
+      currentRound: 1,
+      numericInputType: 'DECIMAL',
+      numericDecimalPlaces: 2,
+      numericMin: null,
+      numericMax: null,
+      numericTwoRounds: false,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    const input = await findNumericEstimateInput(fixture);
+    expect(input?.type).toBe('text');
+    expect(input?.getAttribute('inputmode')).toBe('decimal');
+    input!.value = '3,14';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    expect(component.numericInputValue()).toBe('3,14');
+    expect(component.numericParsedValue()).toBe(3.14);
+
+    component.numericInputValue.set('1.000,5');
+    fixture.detectChanges();
+
+    expect(component.numericParsedValue()).toBeNull();
+    expect(component.numericValidationError()).toContain('gültige Zahl');
+    expect(component.numericValidationError()).not.toContain('Nachkommastellen');
+
+    component.numericInputValue.set('3,141');
+    fixture.detectChanges();
+
+    expect(component.numericValidationError()).toContain('Maximal 2 Nachkommastellen');
+
+    await component.submitVote();
+
+    expect(voteSubmitMutateMock).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('zeigt bei NUMERIC_ESTIMATE-Ergebnissen Referenz, akzeptierten Wert und Rundenvergleich', async () => {
+    const participantId = '11111111-1111-4111-8111-111111111111';
+    localStorage.setItem(
+      `arsnova-vote-response-ABC123-${participantId}-french-revolution-1`,
+      JSON.stringify({ numericValue: 1750, sent: true, updatedAt: MOCK_SERVER_TIME }),
+    );
+    localStorage.setItem(
+      `arsnova-vote-response-ABC123-${participantId}-french-revolution-2`,
+      JSON.stringify({ numericValue: 1789, sent: true, updatedAt: MOCK_SERVER_TIME }),
+    );
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'RESULTS',
+      quizName: 'Q',
+      title: null,
+      participantCount: 20,
+      teamMode: false,
+      enableRewardEffects: true,
+      enableMotivationMessages: true,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'french-revolution',
+      text: 'In welchem Jahr begann die Französische Revolution?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [],
+      activeAt: MOCK_SERVER_TIME,
+      currentRound: 2,
+      numericInputType: 'INTEGER',
+      numericDecimalPlaces: null,
+      numericMin: 1600,
+      numericMax: 2000,
+      numericTwoRounds: true,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1788.5,
+      numericIntervalRight: 1789.5,
+      totalVotes: 20,
+      participantCount: 20,
+    });
+    getPersonalScorecardQueryMock.mockResolvedValueOnce({
+      questionOrder: 1,
+      totalQuestions: 1,
+      wasCorrect: true,
+      questionScore: 100,
+      baseScore: 100,
+      streakCount: 1,
+      streakMultiplier: 1,
+      currentRank: 3,
+      previousRank: null,
+      rankChange: 0,
+      totalScore: 100,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.voteSent.set(true);
+    component.numericInputValue.set('1789');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Deine Antwort: 1789');
+    expect(host.textContent).toContain('Im Toleranzband');
+    expect(host.textContent).toContain('Referenzwert: 1789');
+    expect(host.textContent).toContain('Akzeptierter Wert: 1789');
+    expect(host.textContent).toContain('Genau am Referenzwert');
+    expect(host.textContent).toContain('39 näher am Referenzwert als in Runde 1');
+    expect(getPersonalScorecardQueryMock).toHaveBeenCalledWith({
+      code: 'ABC123',
+      participantId,
+      questionIndex: 0,
+      round: 2,
+    });
+    expect(host.textContent).toContain('100');
+    expect(host.textContent).toContain('Punkte');
+    expect(host.textContent).toContain('Gesamt');
+    expect(component.showRewardEffect()).toBe(true);
+    expect(component.motivationMessage()).toBeTruthy();
+    expect(component.motivationMessage()).not.toMatch(
+      /Knapp daneben|Nächstes Mal|Weiter dranbleiben|Das wird schon|Nicht aufgeben/,
+    );
     fixture.destroy();
   });
 

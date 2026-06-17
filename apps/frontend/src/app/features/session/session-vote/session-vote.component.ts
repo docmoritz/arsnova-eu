@@ -14,7 +14,7 @@ import {
   afterNextRender,
   untracked,
 } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, formatNumber } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 import { MatButton } from '@angular/material/button';
@@ -42,10 +42,15 @@ import { localizePath, resolveLocalizedJoinUrl } from '../../../core/locale-rout
 import {
   evaluateNumericAnswer,
   evaluateShortAnswer,
+  isNumericToleranceMode,
   normalizeShortTextValue,
+  parseNumericInput,
+  resolveNumericEstimateToleranceMode,
   resolveNumericQuestionEvaluationSettings,
+  resolveNumericTolerance,
   resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
+  type NumericInputType,
   type NicknameTheme,
   type ParticipantDTO,
   type PersonalScorecardDTO,
@@ -121,6 +126,7 @@ type StoredVoteResponse = {
   answerIds?: string[];
   freeText?: string;
   ratingValue?: number;
+  numericValue?: number;
   sent: true;
   updatedAt: string;
 };
@@ -181,7 +187,12 @@ function pickRandom(arr: string[]): string {
 }
 
 function isScoredQuestionType(type: CurrentQuestion['type'] | null | undefined): boolean {
-  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE' || type === 'SHORT_TEXT';
+  return (
+    type === 'SINGLE_CHOICE' ||
+    type === 'MULTIPLE_CHOICE' ||
+    type === 'SHORT_TEXT' ||
+    type === 'NUMERIC_ESTIMATE'
+  );
 }
 
 function isNumericShortTextEvaluationResult(
@@ -362,6 +373,13 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly readingReadySubmitting = signal(false);
   readonly freeTextValue = signal('');
   readonly ratingValue = signal<number | null>(null);
+  readonly numericInputValue = signal<string>('');
+  readonly numericParsedValue = computed<number | null>(() => {
+    return parseNumericInput(this.numericInputValue(), {
+      inputType: this.numericQuestionInputType(),
+      maxDecimalPlaces: this.numericQuestionMaxDecimalPlaces(),
+    });
+  });
   readonly debounced = signal(false);
   readonly countdownSeconds = signal<number | null>(null);
   readonly motivationMessage = signal<string | null>(null);
@@ -1135,6 +1153,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
     return 'partial';
   });
+  readonly isNumericEstimate = computed(() => {
+    const q = this.currentQuestion();
+    return q && 'type' in q && q.type === 'NUMERIC_ESTIMATE';
+  });
 
   questionUsesCorrectness(type: string | null | undefined): boolean {
     return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE' || type === 'SHORT_TEXT';
@@ -1150,6 +1172,56 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   private isShortTextResponseCorrectForQuestion(question: CurrentQuestion): boolean {
     const result = this.evaluateShortTextResponse(question);
     return (result?.points ?? 0) > 0;
+  }
+
+  private numericQuestionInputTypeForQuestion(question: CurrentQuestion | null): NumericInputType {
+    const inputType =
+      question && 'numericInputType' in question
+        ? ((question as { numericInputType?: string | null }).numericInputType ?? null)
+        : null;
+    return inputType === 'INTEGER' ? 'INTEGER' : 'DECIMAL';
+  }
+
+  private numericQuestionMaxDecimalPlacesForQuestion(
+    question: CurrentQuestion | null,
+  ): number | null {
+    return question && 'numericDecimalPlaces' in question
+      ? ((question as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+      : null;
+  }
+
+  private numericToleranceBandForQuestion(
+    question: CurrentQuestion | null,
+  ): { left: number; right: number } | null {
+    if (!question || !('type' in question) || question.type !== 'NUMERIC_ESTIMATE') return null;
+    const numericQuestion = question as {
+      numericToleranceMode?: string | null;
+      numericReferenceValue?: number | null;
+      numericTolerancePercent?: number | null;
+      numericIntervalLeft?: number | null;
+      numericIntervalRight?: number | null;
+    };
+    return resolveNumericTolerance(
+      resolveNumericEstimateToleranceMode(numericQuestion.numericToleranceMode),
+      {
+        referenceValue: numericQuestion.numericReferenceValue ?? null,
+        tolerancePercent: numericQuestion.numericTolerancePercent ?? null,
+        intervalLeft: numericQuestion.numericIntervalLeft ?? null,
+        intervalRight: numericQuestion.numericIntervalRight ?? null,
+      },
+    );
+  }
+
+  private isNumericEstimateResponseCorrectForQuestion(question: CurrentQuestion): boolean {
+    if (!('type' in question) || question.type !== 'NUMERIC_ESTIMATE') {
+      return false;
+    }
+    const value = parseNumericInput(this.numericInputValue(), {
+      inputType: this.numericQuestionInputTypeForQuestion(question),
+      maxDecimalPlaces: this.numericQuestionMaxDecimalPlacesForQuestion(question),
+    });
+    const band = this.numericToleranceBandForQuestion(question);
+    return value !== null && band !== null && value >= band.left && value <= band.right;
   }
 
   shortTextResultLabel(): string | null {
@@ -1264,7 +1336,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     if (usesNumericShortTextEvaluation(question.shortTextEvaluationKind)) {
       const numericSettings = resolveNumericQuestionEvaluationSettings({
         numericInputKind: question.numericInputKind ?? null,
-        numericToleranceMode: question.numericToleranceMode ?? null,
+        numericToleranceMode: isNumericToleranceMode(question.numericToleranceMode)
+          ? question.numericToleranceMode
+          : null,
         numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
         numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
         numericUnitFamily: question.numericUnitFamily ?? null,
@@ -1337,7 +1411,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return (
       this.selectedAnswerIds().size > 0 ||
       this.freeTextValue().trim().length > 0 ||
-      this.ratingValue() !== null
+      this.ratingValue() !== null ||
+      this.numericInputValue().trim().length > 0
     );
   }
 
@@ -1357,6 +1432,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.selectedAnswerIds.set(new Set(parsed.answerIds ?? []));
       this.freeTextValue.set(parsed.freeText ?? '');
       this.ratingValue.set(typeof parsed.ratingValue === 'number' ? parsed.ratingValue : null);
+      if (typeof parsed.numericValue === 'number') {
+        this.numericInputValue.set(String(parsed.numericValue));
+      }
       this.voteSent.set(parsed.sent === true);
     } catch {
       /* noop */
@@ -1368,6 +1446,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     answerIds: string[],
     freeText: string | undefined,
     ratingValue: number | undefined,
+    numericValue?: number,
   ): void {
     const key = this.voteResponseStorageKey(question.id, this.questionRoundForStorage(question));
     if (!key || typeof localStorage === 'undefined') {
@@ -1378,6 +1457,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       answerIds: answerIds.length > 0 ? answerIds : undefined,
       freeText: freeText || undefined,
       ratingValue,
+      numericValue,
       sent: true,
       updatedAt: new Date().toISOString(),
     };
@@ -1392,7 +1472,13 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly showVoteSubmitAction = computed(() => {
     if (this.showSessionEndGate() || this.isFinished()) return false;
     if (this.activeChannel() !== 'quiz' || !this.isActive() || this.voteSent()) return false;
-    return this.hasAnswers() || this.isFreetext() || this.isShortText() || this.isRating();
+    return (
+      this.hasAnswers() ||
+      this.isFreetext() ||
+      this.isShortText() ||
+      this.isRating() ||
+      this.isNumericEstimate()
+    );
   });
   readonly voteSubmitDisabled = computed(() => {
     if (!this.showVoteSubmitAction()) return true;
@@ -1408,6 +1494,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
     if (this.isRating()) {
       return this.ratingValue() === null;
+    }
+    if (this.isNumericEstimate()) {
+      return this.numericValidationError() !== null;
     }
     return true;
   });
@@ -1508,6 +1597,289 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     if (this.voteSent() || !this.isActive() || this.timerExpired()) return;
     this.ratingValue.set(value);
     this.cdr.detectChanges();
+  }
+
+  private numericQuestionInputType(): NumericInputType {
+    const q = this.currentQuestion();
+    const inputType =
+      q && 'numericInputType' in q
+        ? ((q as { numericInputType?: string | null }).numericInputType ?? null)
+        : null;
+    return inputType === 'INTEGER' ? 'INTEGER' : 'DECIMAL';
+  }
+
+  private numericQuestionMaxDecimalPlaces(): number | null {
+    const q = this.currentQuestion();
+    return q && 'numericDecimalPlaces' in q
+      ? ((q as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+      : null;
+  }
+
+  numericInputMin(): number | null {
+    const q = this.currentQuestion();
+    return q && 'numericMin' in q
+      ? ((q as { numericMin?: number | null }).numericMin ?? null)
+      : null;
+  }
+
+  numericInputMax(): number | null {
+    const q = this.currentQuestion();
+    return q && 'numericMax' in q
+      ? ((q as { numericMax?: number | null }).numericMax ?? null)
+      : null;
+  }
+
+  numericIsInteger(): boolean {
+    return this.numericQuestionInputType() === 'INTEGER';
+  }
+
+  numericDecimalPlaces(): number {
+    const q = this.currentQuestion();
+    const places =
+      q && 'numericDecimalPlaces' in q
+        ? ((q as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+        : null;
+    return places ?? 2;
+  }
+
+  private numericResultDigits(question: CurrentQuestion | null = this.currentQuestion()): string {
+    const inputType =
+      question && 'numericInputType' in question
+        ? ((question as { numericInputType?: string | null }).numericInputType ?? null)
+        : null;
+    const decimalPlaces =
+      question && 'numericDecimalPlaces' in question
+        ? ((question as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+        : null;
+    if (inputType === 'INTEGER' || decimalPlaces === 0) {
+      return '1.0-0';
+    }
+    return `1.0-${Math.max(0, Math.min(4, decimalPlaces ?? 2))}`;
+  }
+
+  private formatNumericResultValue(value: number): string {
+    const question = this.currentQuestion();
+    const digits = this.numericResultDigits(question);
+    if (this.numericResultUsesYearFormat(question)) {
+      return this.formatNumberWithoutGrouping(value, digits);
+    }
+    return formatNumber(value, getEffectiveLocale(), digits);
+  }
+
+  private numericResultUsesYearFormat(question: CurrentQuestion | null): boolean {
+    if (!question || !this.numericResultUsesIntegerFormat(question)) {
+      return false;
+    }
+    const text = 'text' in question ? question.text : '';
+    const textLooksLikeYear =
+      /\b(jahr|jahreszahl|year|année|annee|año|ano|anno)\b/i.test(text) || /\bwann\b/i.test(text);
+    if (textLooksLikeYear) {
+      return true;
+    }
+    const min =
+      'numericMin' in question
+        ? ((question as { numericMin?: number | null }).numericMin ?? null)
+        : null;
+    const max =
+      'numericMax' in question
+        ? ((question as { numericMax?: number | null }).numericMax ?? null)
+        : null;
+    return (
+      typeof min === 'number' &&
+      typeof max === 'number' &&
+      min >= 1000 &&
+      max <= 2200 &&
+      max - min <= 1000
+    );
+  }
+
+  private formatNumberWithoutGrouping(value: number, digits: string): string {
+    const match = /^(\d+)\.(\d+)-(\d+)$/.exec(digits);
+    const minimumIntegerDigits = match ? Number(match[1]) : 1;
+    const minimumFractionDigits = match ? Number(match[2]) : 0;
+    const maximumFractionDigits = match ? Number(match[3]) : 2;
+    return new Intl.NumberFormat(getEffectiveLocale(), {
+      minimumIntegerDigits,
+      minimumFractionDigits,
+      maximumFractionDigits,
+      useGrouping: false,
+    }).format(value);
+  }
+
+  numericResultAnswerLabel(): string | null {
+    const value = this.numericParsedValue();
+    return value === null ? null : this.formatNumericResultValue(value);
+  }
+
+  private numericResultToleranceBand(): { left: number; right: number } | null {
+    return this.numericToleranceBandForQuestion(this.currentQuestion());
+  }
+
+  private numericResultReferenceValue(): number | null {
+    const question = this.currentQuestion();
+    return question && 'numericReferenceValue' in question
+      ? ((question as { numericReferenceValue?: number | null }).numericReferenceValue ?? null)
+      : null;
+  }
+
+  private numericResultUsesIntegerFormat(
+    question: CurrentQuestion | null = this.currentQuestion(),
+  ): boolean {
+    const inputType =
+      question && 'numericInputType' in question
+        ? ((question as { numericInputType?: string | null }).numericInputType ?? null)
+        : null;
+    const decimalPlaces =
+      question && 'numericDecimalPlaces' in question
+        ? ((question as { numericDecimalPlaces?: number | null }).numericDecimalPlaces ?? null)
+        : null;
+    return question !== null && (inputType === 'INTEGER' || decimalPlaces === 0);
+  }
+
+  numericResultInBand(): boolean | null {
+    const value = this.numericParsedValue();
+    const band = this.numericResultToleranceBand();
+    if (value === null || band === null) return null;
+    return value >= band.left && value <= band.right;
+  }
+
+  numericResultStatusLabel(): string | null {
+    const inBand = this.numericResultInBand();
+    if (inBand === null) return null;
+    return inBand
+      ? $localize`:@@sessionVote.numericResultInBand:Im Toleranzband`
+      : $localize`:@@sessionVote.numericResultOutOfBand:Außerhalb des Toleranzbands`;
+  }
+
+  numericResultReferenceLabel(): string | null {
+    const referenceValue = this.numericResultReferenceValue();
+    if (referenceValue === null) return null;
+    return $localize`:@@sessionVote.numericResultReference:Referenzwert: ${this.formatNumericResultValue(
+      referenceValue,
+    )}:reference:`;
+  }
+
+  numericResultToleranceLabel(): string | null {
+    const band = this.numericResultToleranceBand();
+    if (!band) return null;
+    if (this.numericResultUsesIntegerFormat()) {
+      const acceptedLeft = Math.ceil(band.left);
+      const acceptedRight = Math.floor(band.right);
+      if (acceptedLeft > acceptedRight) return null;
+      if (acceptedLeft === acceptedRight) {
+        return $localize`:@@sessionVote.numericResultAcceptedSingle:Akzeptierter Wert: ${this.formatNumericResultValue(
+          acceptedLeft,
+        )}:value:`;
+      }
+      return $localize`:@@sessionVote.numericResultAcceptedRange:Akzeptierte Werte: ${this.formatNumericResultValue(
+        acceptedLeft,
+      )}:left: bis ${this.formatNumericResultValue(acceptedRight)}:right:`;
+    }
+    return $localize`:@@sessionVote.numericResultToleranceBand:Toleranzband: ${this.formatNumericResultValue(
+      band.left,
+    )}:left: bis ${this.formatNumericResultValue(band.right)}:right:`;
+  }
+
+  numericResultDistanceLabel(): string | null {
+    const value = this.numericParsedValue();
+    const referenceValue = this.numericResultReferenceValue();
+    if (value === null || referenceValue === null) return null;
+    const distance = Math.abs(value - referenceValue);
+    if (distance === 0) {
+      return $localize`:@@sessionVote.numericResultExact:Genau am Referenzwert`;
+    }
+    return $localize`:@@sessionVote.numericResultDistance:Abweichung zum Referenzwert: ${this.formatNumericResultValue(
+      distance,
+    )}:distance:`;
+  }
+
+  private storedNumericVoteValueForRound(round: number): number | null {
+    const question = this.currentQuestion();
+    if (!question || !('id' in question)) return null;
+    const key = this.voteResponseStorageKey(question.id, round);
+    if (!key || typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as StoredVoteResponse;
+      return typeof parsed.numericValue === 'number' ? parsed.numericValue : null;
+    } catch {
+      return null;
+    }
+  }
+
+  numericResultRoundComparisonLabel(): string | null {
+    const referenceValue = this.numericResultReferenceValue();
+    const round1Value = this.storedNumericVoteValueForRound(1);
+    const round2Value = this.numericParsedValue() ?? this.storedNumericVoteValueForRound(2);
+    if (referenceValue === null || round1Value === null || round2Value === null) return null;
+    const before = Math.abs(round1Value - referenceValue);
+    const after = Math.abs(round2Value - referenceValue);
+    if (after < before) {
+      return $localize`:@@sessionVote.numericResultImproved:${this.formatNumericResultValue(
+        before - after,
+      )}:delta: näher am Referenzwert als in Runde 1`;
+    }
+    if (after > before) {
+      return $localize`:@@sessionVote.numericResultWorse:${this.formatNumericResultValue(
+        after - before,
+      )}:delta: weiter weg vom Referenzwert als in Runde 1`;
+    }
+    return $localize`:@@sessionVote.numericResultUnchanged:Gleich nah am Referenzwert wie in Runde 1`;
+  }
+
+  numericOutOfRange(): boolean {
+    const v = this.numericParsedValue();
+    if (v === null) return false;
+    const min = this.numericInputMin();
+    const max = this.numericInputMax();
+    if (min !== null && v < min) return true;
+    if (max !== null && v > max) return true;
+    return false;
+  }
+
+  numericInputInvalid(): boolean {
+    return this.numericInputValue().trim().length > 0 && this.numericValidationError() !== null;
+  }
+
+  numericValidationError(): string | null {
+    if (!this.isNumericEstimate()) return null;
+    const raw = this.numericInputValue().trim();
+    if (!raw) {
+      return $localize`:@@sessionVote.numericRequired:Bitte gib eine Zahl ein.`;
+    }
+    if (this.numericParsedValue() === null) {
+      if (this.numericQuestionInputType() === 'INTEGER') {
+        return $localize`:@@sessionVote.numericIntegerRequired:Bitte gib eine ganze Zahl im unterstützten Format ein.`;
+      }
+      const maxDecimalPlaces = this.numericQuestionMaxDecimalPlaces();
+      const rawDecimalPlaces = this.numericRawDecimalPlaces(raw);
+      if (
+        maxDecimalPlaces !== null &&
+        rawDecimalPlaces !== null &&
+        rawDecimalPlaces > maxDecimalPlaces
+      ) {
+        return $localize`:@@sessionVote.numericDecimalPlacesExceeded:Maximal ${maxDecimalPlaces}:maxDecimalPlaces: Nachkommastellen erlaubt.`;
+      }
+      return $localize`:@@sessionVote.numericInvalid:Bitte gib eine gültige Zahl im unterstützten Format ein.`;
+    }
+    const min = this.numericInputMin();
+    const max = this.numericInputMax();
+    const parsed = this.numericParsedValue()!;
+    if (min !== null && parsed < min) {
+      return $localize`:@@sessionVote.numericBelowMin:Bitte gib einen Wert von mindestens ${min}:min: ein.`;
+    }
+    if (max !== null && parsed > max) {
+      return $localize`:@@sessionVote.numericAboveMax:Bitte gib einen Wert von höchstens ${max}:max: ein.`;
+    }
+    return null;
+  }
+
+  private numericRawDecimalPlaces(raw: string): number | null {
+    const normalized = raw.trim().replace(/\s+/g, '').replace(',', '.');
+    const match = /^-?\d+(?:\.(\d+))?$/.exec(normalized);
+    if (!match) return null;
+    return match[1]?.length ?? 0;
   }
 
   getColor(index: number): string {
@@ -2170,6 +2542,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     this.voteError.set(null);
     this.freeTextValue.set('');
     this.ratingValue.set(null);
+    this.numericInputValue.set('');
     this.motivationMessage.set(null);
     this.timeoutMessage.set(null);
     this.showRewardEffect.set(false);
@@ -2833,6 +3206,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         this.readingReadySubmitting.set(false);
         this.freeTextValue.set('');
         this.ratingValue.set(null);
+        this.numericInputValue.set('');
         this.motivationMessage.set(null);
         this.timeoutMessage.set(null);
         this.showRewardEffect.set(false);
@@ -2862,6 +3236,8 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
           if ('type' in q && q.type === 'SHORT_TEXT') {
             answeredCorrectly = this.isShortTextResponseCorrectForQuestion(q);
+          } else if ('type' in q && q.type === 'NUMERIC_ESTIMATE') {
+            answeredCorrectly = this.isNumericEstimateResponseCorrectForQuestion(q);
           } else if ('answers' in q) {
             const selected = this.selectedAnswerIds();
             const revealed = (q as QuestionRevealedDTO).answers;
@@ -2901,7 +3277,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         const qOrder = (q as { order: number }).order;
         if (qOrder !== this.scorecardQuestionIndex) {
           this.scorecardQuestionIndex = qOrder;
-          void this.loadScorecard(qOrder);
+          void this.loadScorecard(qOrder, 'type' in q ? q.type : null);
         }
       }
 
@@ -3138,6 +3514,16 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
             : this.freeTextValue().trim()
           : undefined;
     const rating = q.type === 'RATING' ? (this.ratingValue() ?? undefined) : undefined;
+    const numericValue =
+      q.type === 'NUMERIC_ESTIMATE' ? (this.numericParsedValue() ?? undefined) : undefined;
+
+    if (q.type === 'NUMERIC_ESTIMATE') {
+      const validationError = this.numericValidationError();
+      if (validationError) {
+        this.voteError.set(validationError);
+        return;
+      }
+    }
 
     if (q.type === 'SHORT_TEXT') {
       const validationError = this.shortTextValidationError();
@@ -3165,9 +3551,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         answerIds: answerIds.length > 0 ? answerIds : undefined,
         freeText: freeText || undefined,
         ratingValue: rating,
+        numericValue,
         round: this.currentRound(),
       });
-      this.storeVoteResponse(q, answerIds, freeText, rating);
+      this.storeVoteResponse(q, answerIds, freeText, rating, numericValue);
       try {
         navigator.vibrate?.(10);
       } catch {
@@ -3203,9 +3590,12 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
   }
 
-  async loadScorecard(questionIndex: number): Promise<void> {
+  async loadScorecard(
+    questionIndex: number,
+    questionType: CurrentQuestion['type'] | null | undefined = this.currentQuestion()?.type,
+  ): Promise<void> {
     const pid = this.participantId();
-    if (!this.code || !pid || !this.currentQuestionIsScored()) return;
+    if (!this.code || !pid || !isScoredQuestionType(questionType)) return;
     try {
       const sc = await trpc.session.getPersonalScorecard.query({
         code: this.code,

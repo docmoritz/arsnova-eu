@@ -8,6 +8,7 @@ import {
   SubmitVoteOutputSchema,
   evaluateNumericAnswer,
   evaluateShortAnswer,
+  hasAtMostNumericDecimalPlaces,
   normalizeShortTextValue,
   resolveEffectiveQuestionTimer,
   resolveNumericQuestionEvaluationSettings,
@@ -15,11 +16,15 @@ import {
   resolveShortTextMaxLength,
   usesNumericShortTextEvaluation,
   usesShortTextUnitEvaluation,
+  resolveNumericTolerance,
+  isNumericValueInBand,
+  isNumericToleranceMode,
+  resolveNumericEstimateToleranceMode,
   type QuestionType,
   type Difficulty,
   type NumericInputKind,
-  type NumericToleranceMode,
   type NumericUnitFamily,
+  type NumericInputType,
   type ShortAnswerEvaluationMode,
   type ShortTextEvaluationKind,
   type ToleranceLevel,
@@ -36,6 +41,10 @@ import {
 import { touchParticipantPresence } from '../lib/presence';
 import { recordVoteActivity } from '../lib/loadSignal';
 import { invalidateCurrentQuestionCachesForCode, recordVoteCachesForCode } from './session';
+
+function normalizeNumericInputType(value: string | null | undefined): NumericInputType {
+  return value === 'INTEGER' ? 'INTEGER' : 'DECIMAL';
+}
 
 export const voteRouter = router({
   submit: publicProcedure
@@ -126,6 +135,16 @@ export const voteRouter = router({
       }
 
       const questionType = question.type as QuestionType;
+      if (
+        questionType === 'NUMERIC_ESTIMATE' &&
+        round === 2 &&
+        question.numericTwoRounds !== true
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Diese Schätzfrage ist nicht für eine zweite Runde konfiguriert.',
+        });
+      }
       const responseTimeMs = hasServerQuestionStart
         ? Math.max(0, requestReceivedAtMs - statusChangedAtMs)
         : (input.responseTimeMs ?? null);
@@ -151,8 +170,9 @@ export const voteRouter = router({
       const numericSettings = resolveNumericQuestionEvaluationSettings({
         numericInputKind:
           (question.numericInputKind as NumericInputKind | null | undefined) ?? null,
-        numericToleranceMode:
-          (question.numericToleranceMode as NumericToleranceMode | null | undefined) ?? null,
+        numericToleranceMode: isNumericToleranceMode(question.numericToleranceMode)
+          ? question.numericToleranceMode
+          : null,
         numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? null,
         numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? null,
         numericUnitFamily:
@@ -292,6 +312,58 @@ export const voteRouter = router({
             }
           }
           break;
+        case 'NUMERIC_ESTIMATE': {
+          if (answerIds.length > 0) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Numerische Schätzfragen akzeptieren keine Antwortoptionen.',
+            });
+          }
+          if (input.numericValue === undefined || input.numericValue === null) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Für numerische Schätzfragen ist ein Zahlenwert erforderlich.',
+            });
+          }
+          if (!isFinite(input.numericValue)) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Ungültiger Zahlenwert.' });
+          }
+          const numMin = question.numericMin;
+          const numMax = question.numericMax;
+          if (numMin !== null && numMin !== undefined && input.numericValue < numMin) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Der Wert muss mindestens ${numMin} betragen.`,
+            });
+          }
+          if (numMax !== null && numMax !== undefined && input.numericValue > numMax) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `Der Wert darf höchstens ${numMax} betragen.`,
+            });
+          }
+          const numInputType = normalizeNumericInputType(question.numericInputType);
+          if (numInputType === 'INTEGER' && !Number.isInteger(input.numericValue)) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Für diese Frage ist eine ganze Zahl erforderlich.',
+            });
+          }
+          if (
+            numInputType === 'DECIMAL' &&
+            question.numericDecimalPlaces !== null &&
+            question.numericDecimalPlaces !== undefined
+          ) {
+            const decimals = question.numericDecimalPlaces;
+            if (!hasAtMostNumericDecimalPlaces(input.numericValue, decimals)) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `Maximal ${decimals} Nachkommastellen erlaubt.`,
+              });
+            }
+          }
+          break;
+        }
         default:
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Unbekannter Fragetyp.' });
       }
@@ -306,6 +378,12 @@ export const voteRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'ratingValue ist nur für Rating-Fragen erlaubt.',
+        });
+      }
+      if (questionType !== 'NUMERIC_ESTIMATE' && input.numericValue !== undefined) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'numericValue ist nur für numerische Schätzfragen erlaubt.',
         });
       }
 
@@ -334,6 +412,20 @@ export const voteRouter = router({
                 answer.isCorrect && answer.text === shortTextEvaluation.matchedModelAnswer,
             ) ?? null)
           : null;
+
+      let numericIsCorrectOverride: boolean | undefined;
+      if (questionType === 'NUMERIC_ESTIMATE' && input.numericValue !== undefined) {
+        const band = resolveNumericTolerance(
+          resolveNumericEstimateToleranceMode(question.numericToleranceMode),
+          {
+            referenceValue: question.numericReferenceValue,
+            tolerancePercent: question.numericTolerancePercent,
+            intervalLeft: question.numericIntervalLeft,
+            intervalRight: question.numericIntervalRight,
+          },
+        );
+        numericIsCorrectOverride = band !== null && isNumericValueInBand(input.numericValue, band);
+      }
 
       const baseScore = calculateVoteScore({
         type: questionType,
@@ -367,6 +459,7 @@ export const voteRouter = router({
           : true,
         responseTimeMs,
         timerDurationMs: timerSeconds ? timerSeconds * 1000 : null,
+        isCorrectOverride: numericIsCorrectOverride,
       });
 
       const existing = await prisma.vote.findUnique({
@@ -424,6 +517,7 @@ export const voteRouter = router({
           questionId: input.questionId,
           freeText,
           ratingValue: input.ratingValue ?? null,
+          numericValue: input.numericValue ?? null,
           responseTimeMs,
           score,
           streakCount,
@@ -441,6 +535,7 @@ export const voteRouter = router({
           questionType,
           isCorrect:
             questionType === 'SHORT_TEXT' ? (shortTextEvaluation?.points ?? 0) > 0 : undefined,
+          numericValue: input.numericValue ?? null,
         });
         invalidateCurrentQuestionCachesForCode(participant.session.code);
       }

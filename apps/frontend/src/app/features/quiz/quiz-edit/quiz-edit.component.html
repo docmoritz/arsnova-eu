@@ -615,6 +615,131 @@
           </mat-form-field>
         }
 
+        @if (hasNumericConfig()) {
+          <div class="quiz-edit-form__section-label" i18n>Eingabetyp</div>
+          <div class="quiz-edit-form__grid">
+            <mat-form-field appearance="outline">
+              <mat-label i18n="@@quizEdit.numericEstimateInputTypeLabel">Zahlentyp</mat-label>
+              <mat-select formControlName="numericInputType">
+                <mat-option value="INTEGER" i18n="@@quizEdit.numericEstimateIntegerOption"
+                  >Ganzzahl</mat-option
+                >
+                <mat-option value="DECIMAL" i18n="@@quizEdit.numericEstimateDecimalOption"
+                  >Dezimalzahl</mat-option
+                >
+              </mat-select>
+            </mat-form-field>
+            @if (numericIsDecimalInput()) {
+              <mat-form-field appearance="outline">
+                <mat-label i18n="@@quizEdit.numericEstimateDecimalPlacesLabel"
+                  >Max. Nachkommastellen</mat-label
+                >
+                <input
+                  matInput
+                  type="number"
+                  formControlName="numericDecimalPlaces"
+                  min="0"
+                  max="10"
+                />
+              </mat-form-field>
+            }
+          </div>
+
+          <div
+            class="quiz-edit-form__section-label"
+            i18n="@@quizEdit.numericEstimateToleranceSection"
+          >
+            Toleranzmodus
+          </div>
+          <mat-form-field appearance="outline">
+            <mat-label i18n="@@quizEdit.numericEstimateToleranceModeLabel">Modus</mat-label>
+            <mat-select formControlName="numericToleranceMode">
+              <mat-option
+                value="ABSOLUTE_INTERVAL"
+                i18n="@@quizEdit.numericEstimateAbsoluteIntervalOption"
+                >Absolutes Intervall [L, R]</mat-option
+              >
+              <mat-option
+                value="RELATIVE_PERCENT"
+                i18n="@@quizEdit.numericEstimateRelativePercentOption"
+                >Relatives Toleranzband (V ± p%)</mat-option
+              >
+            </mat-select>
+          </mat-form-field>
+
+          @if (numericIsAbsoluteMode()) {
+            <div class="quiz-edit-form__grid">
+              <mat-form-field appearance="outline">
+                <mat-label i18n="@@quizEdit.numericEstimateIntervalLeftLabel"
+                  >Linke Grenze L</mat-label
+                >
+                <input matInput type="number" formControlName="numericIntervalLeft" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label i18n="@@quizEdit.numericEstimateIntervalRightLabel"
+                  >Rechte Grenze R</mat-label
+                >
+                <input matInput type="number" formControlName="numericIntervalRight" />
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline">
+              <mat-label i18n="@@quizEdit.numericEstimateAbsoluteReferenceValueLabel"
+                >Referenzwert für Auswertung</mat-label
+              >
+              <input matInput type="number" formControlName="numericReferenceValue" />
+              <mat-hint i18n="@@quizEdit.numericEstimateAbsoluteReferenceValueHint"
+                >Optional für Referenzlinie, Fehlermaß und Rundenvergleich</mat-hint
+              >
+            </mat-form-field>
+          }
+          @if (numericIsRelativeMode()) {
+            <div class="quiz-edit-form__grid">
+              <mat-form-field appearance="outline">
+                <mat-label i18n="@@quizEdit.numericEstimateReferenceValueLabel"
+                  >Referenzwert V</mat-label
+                >
+                <input matInput type="number" formControlName="numericReferenceValue" />
+                <mat-hint i18n="@@quizEdit.numericEstimateReferenceValueHint"
+                  >Muss ≠ 0 sein</mat-hint
+                >
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label i18n="@@quizEdit.numericEstimateTolerancePercentLabel"
+                  >Toleranz p (%)</mat-label
+                >
+                <input
+                  matInput
+                  type="number"
+                  formControlName="numericTolerancePercent"
+                  min="0"
+                  max="100"
+                />
+              </mat-form-field>
+            </div>
+          }
+
+          <div class="quiz-edit-form__section-label" i18n="@@quizEdit.numericEstimateBoundsSection">
+            Plausibilitätsgrenzen (optional)
+          </div>
+          <div class="quiz-edit-form__grid">
+            <mat-form-field appearance="outline">
+              <mat-label i18n="@@quizEdit.numericEstimateMinLabel">Min-Eingabe</mat-label>
+              <input matInput type="number" formControlName="numericMin" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label i18n="@@quizEdit.numericEstimateMaxLabel">Max-Eingabe</mat-label>
+              <input matInput type="number" formControlName="numericMax" />
+            </mat-form-field>
+          </div>
+
+          <mat-slide-toggle
+            formControlName="numericTwoRounds"
+            i18n="@@quizEdit.numericEstimateTwoRoundsToggle"
+          >
+            Zwei Abstimmungsrunden (Peer Instruction)
+          </mat-slide-toggle>
+        }
+
         @if (hasRatingConfig()) {
           <div class="quiz-edit-form__grid">
             <mat-form-field appearance="outline">

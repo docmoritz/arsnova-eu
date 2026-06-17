@@ -1113,13 +1113,119 @@
                 <strong>{{ ratingValue() ?? '–' }}</strong>
               </p>
             </div>
+          } @else if (isNumericEstimate() && isActive()) {
+            <div class="vote-numeric">
+              <label
+                class="vote-numeric__label"
+                for="vote-numeric-input"
+                i18n="@@sessionVote.numericLabel"
+              >
+                Deine Schätzung
+              </label>
+              <input
+                id="vote-numeric-input"
+                class="vote-numeric__input"
+                [class.vote-numeric__input--invalid]="numericInputInvalid()"
+                type="text"
+                [value]="numericInputValue()"
+                (input)="numericInputValue.set($any($event.target).value)"
+                [disabled]="voteSent() || timerExpired()"
+                [attr.inputmode]="numericIsInteger() ? 'numeric' : 'decimal'"
+                [attr.aria-invalid]="numericInputInvalid() ? 'true' : null"
+                [attr.aria-describedby]="numericInputInvalid() ? 'vote-numeric-input-error' : null"
+                autocomplete="off"
+                i18n-placeholder="@@sessionVote.numericPlaceholder"
+                placeholder="Zahl eingeben…"
+              />
+              @if (numericInputInvalid()) {
+                <p id="vote-numeric-input-error" class="vote-numeric__range-hint" role="alert">
+                  {{ numericValidationError() }}
+                </p>
+              }
+            </div>
+          } @else if (isNumericEstimate() && isResults()) {
+            <div class="vote-numeric vote-numeric--result">
+              <p class="vote-numeric__result-label">
+                <span i18n="@@sessionVote.numericResultPrefix">Deine Antwort:</span>
+                <strong>
+                  @if (numericParsedValue() !== null) {
+                    {{ numericResultAnswerLabel() }}
+                  } @else {
+                    –
+                  }
+                </strong>
+              </p>
+              @if (numericResultStatusLabel(); as statusLabel) {
+                <p
+                  class="vote-numeric__result-status"
+                  [class.vote-numeric__result-status--in-band]="numericResultInBand() === true"
+                  [class.vote-numeric__result-status--out-of-band]="numericResultInBand() === false"
+                >
+                  <mat-icon aria-hidden="true">{{
+                    numericResultInBand() === true ? 'check_circle' : 'info'
+                  }}</mat-icon>
+                  <span>{{ statusLabel }}</span>
+                </p>
+              }
+              @if (currentQuestionIsScored() && scorecard(); as sc) {
+                <div
+                  id="vote-result-score"
+                  class="vote-numeric__score-summary"
+                  role="region"
+                  aria-labelledby="numeric-score-heading"
+                >
+                  <span class="vote-numeric__score-eyebrow" id="numeric-score-heading">{{
+                    vpc.voteScorecardHeading(isPlayfulPreset())
+                  }}</span>
+                  <strong class="vote-numeric__score-value">
+                    {{ sc.questionScore | number }}
+                    <span i18n>Punkte</span>
+                  </strong>
+                  <span class="vote-numeric__score-meta">
+                    <span i18n>Gesamt</span>
+                    {{ sc.totalScore | number }}
+                    @if (sc.currentRank > 0) {
+                      · #{{ sc.currentRank }}
+                    }
+                  </span>
+                </div>
+              }
+              <div class="vote-numeric__result-details">
+                @if (numericResultReferenceLabel(); as referenceLabel) {
+                  <p>
+                    <mat-icon aria-hidden="true">adjust</mat-icon>
+                    <span>{{ referenceLabel }}</span>
+                  </p>
+                }
+                @if (numericResultToleranceLabel(); as toleranceLabel) {
+                  <p>
+                    <mat-icon aria-hidden="true">linear_scale</mat-icon>
+                    <span>{{ toleranceLabel }}</span>
+                  </p>
+                }
+                @if (numericResultDistanceLabel(); as distanceLabel) {
+                  <p>
+                    <mat-icon aria-hidden="true">straighten</mat-icon>
+                    <span>{{ distanceLabel }}</span>
+                  </p>
+                }
+                @if (numericResultRoundComparisonLabel(); as comparisonLabel) {
+                  <p>
+                    <mat-icon aria-hidden="true">swap_vert</mat-icon>
+                    <span>{{ comparisonLabel }}</span>
+                  </p>
+                }
+              </div>
+            </div>
           }
 
           @if (voteSent()) {
-            <div class="vote-sent" role="status" aria-live="polite">
-              <mat-icon>check_circle</mat-icon>
-              <span>{{ vpc.voteSentLabel(isPlayfulPreset()) }}</span>
-            </div>
+            @if (isActive()) {
+              <div class="vote-sent" role="status" aria-live="polite">
+                <mat-icon>check_circle</mat-icon>
+                <span>{{ vpc.voteSentLabel(isPlayfulPreset()) }}</span>
+              </div>
+            }
             @if (motivationMessage()) {
               <p class="vote-motivation" id="vote-result-message" aria-live="polite">
                 {{ motivationMessage() }}
@@ -1136,7 +1242,7 @@
             </div>
           }
 
-          @if (currentQuestionIsScored() && scorecard(); as sc) {
+          @if (!isNumericEstimate() && currentQuestionIsScored() && scorecard(); as sc) {
             <div
               id="vote-result-score"
               class="vote-scorecard"

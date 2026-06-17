@@ -360,3 +360,73 @@ describe('session.revealResults (Story 2.3)', () => {
     });
   });
 });
+
+describe('session peer-instruction steering gates', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('lehnt die Diskussionsphase fuer NUMERIC_ESTIMATE ohne Zwei-Runden-Konfiguration ab', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: SESSION_ID,
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      quiz: {
+        questions: [{ type: 'NUMERIC_ESTIMATE', numericTwoRounds: false }],
+      },
+    });
+
+    await expect(caller.startDiscussion({ code: CODE })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: 'Diese Frage ist nicht für eine zweite Runde konfiguriert.',
+    });
+    expect(prismaMock.session.update).not.toHaveBeenCalled();
+  });
+
+  it('startet die Diskussionsphase fuer NUMERIC_ESTIMATE mit Zwei-Runden-Konfiguration', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: SESSION_ID,
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      quiz: {
+        questions: [{ type: 'NUMERIC_ESTIMATE', numericTwoRounds: true }],
+      },
+    });
+    prismaMock.session.update.mockResolvedValue({
+      id: SESSION_ID,
+      status: 'DISCUSSION',
+      currentQuestion: 0,
+    });
+
+    const result = await caller.startDiscussion({ code: CODE });
+
+    expect(result).toEqual(
+      expect.objectContaining({ status: 'DISCUSSION', currentQuestion: 0, currentRound: 1 }),
+    );
+    expect(prismaMock.session.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: SESSION_ID },
+        data: expect.objectContaining({ status: 'DISCUSSION' }),
+      }),
+    );
+  });
+
+  it('lehnt Runde 2 fuer NUMERIC_ESTIMATE ohne Zwei-Runden-Konfiguration ab', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: SESSION_ID,
+      status: 'DISCUSSION',
+      currentQuestion: 0,
+      quiz: {
+        questions: [{ type: 'NUMERIC_ESTIMATE', numericTwoRounds: false }],
+      },
+    });
+
+    await expect(caller.startSecondRound({ code: CODE })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: 'Diese Frage ist nicht für eine zweite Runde konfiguriert.',
+    });
+    expect(prismaMock.session.update).not.toHaveBeenCalled();
+  });
+});

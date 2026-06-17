@@ -4467,6 +4467,220 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('aktualisiert die sichtbare Host-Frage, wenn Numeric-Ergebnisse nachgeladen werden', () => {
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    const baseQuestion = {
+      questionId: '66666666-6666-4666-8666-666666666666',
+      order: 0,
+      totalQuestions: 1,
+      text: 'Schätze den Messwert der Kalibrierprobe.',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 2,
+      timer: null,
+      answers: [],
+      totalVotes: 3,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL' as const,
+      numericReferenceValue: 100,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 95,
+      numericIntervalRight: 105,
+      numericInputType: 'DECIMAL' as const,
+      numericDecimalPlaces: 1,
+      numericMin: 0,
+      numericMax: 200,
+      numericTwoRounds: true,
+    };
+    const emptyStats = {
+      n: 0,
+      mean: null,
+      median: null,
+      stdDev: null,
+      q1: null,
+      q3: null,
+      iqr: null,
+      min: null,
+      max: null,
+      inBandCount: 0,
+      inBandPercent: null,
+      meanAbsoluteError: null,
+      meanRelativeError: null,
+    };
+    const round2Stats = {
+      n: 3,
+      mean: 101.9333,
+      median: 101.1,
+      stdDev: 2.09,
+      q1: 99.9,
+      q3: 104.8,
+      iqr: 4.9,
+      min: 99.9,
+      max: 104.8,
+      inBandCount: 3,
+      inBandPercent: 100,
+      meanAbsoluteError: 2,
+      meanRelativeError: 2,
+    };
+    const nextQuestion = {
+      ...baseQuestion,
+      numericStats: round2Stats,
+      numericHistogram: [{ from: 99.9, to: 104.8, count: 3, inBand: true }],
+      numericRoundComparison: {
+        round1Stats: { ...emptyStats, n: 3, inBandCount: 2, inBandPercent: 66.6667 },
+        round2Stats,
+        round1Histogram: [{ from: 98.2, to: 120, count: 3, inBand: false }],
+        round2Histogram: [{ from: 99.9, to: 104.8, count: 3, inBand: true }],
+        meanDelta: -4.9333,
+        medianDelta: -1.3,
+        inBandPercentDelta: 33.3333,
+        deltaHistogram: [{ from: -15.2, to: 2.9, count: 3, inBand: false }],
+        pairedAnalysis: {
+          pairedCount: 3,
+          closerCount: 3,
+          fartherCount: 0,
+          unchangedCount: 0,
+        },
+      },
+    };
+
+    component.statusUpdate.set({ status: 'RESULTS', currentQuestion: 0, currentRound: 2 });
+    component.currentQuestionForHost.set(baseQuestion);
+    (
+      component as unknown as {
+        syncCurrentQuestionForHost: (next: typeof nextQuestion | null) => void;
+      }
+    ).syncCurrentQuestionForHost(nextQuestion);
+
+    expect(
+      component.displayedCurrentQuestionForHost()?.numericRoundComparison?.pairedAnalysis
+        ?.closerCount,
+    ).toBe(3);
+    fixture.destroy();
+  });
+
+  it('formatiert Jahreszahlen in Numeric-Estimate-Hostlabels ohne Tausenderpunkt', () => {
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    const question = {
+      questionId: '66666666-6666-4666-8666-666666666666',
+      order: 0,
+      totalQuestions: 1,
+      text: 'In welchem Jahr begann die Französische Revolution?',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 2,
+      timer: null,
+      answers: [],
+      totalVotes: 20,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL' as const,
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1788.5,
+      numericIntervalRight: 1789.5,
+      numericInputType: 'INTEGER' as const,
+      numericDecimalPlaces: null,
+      numericMin: 1600,
+      numericMax: 2000,
+      numericTwoRounds: true,
+    };
+
+    expect(
+      component.numericHistogramRangeEdgeLabel(
+        question,
+        [{ from: 1740, to: 1830, count: 20, inBand: false }],
+        'min',
+      ),
+    ).toBe('1740');
+    expect(component.numericReferenceLabel(question)).toBe('Referenz 1789');
+    expect(component.numericToleranceBandLabel(question)).toBe('Akzeptierter Wert 1789');
+    const stats = {
+      n: 20,
+      mean: 1789.15,
+      median: 1789,
+      stdDev: 1.01,
+      q1: 1789,
+      q3: 1789,
+      iqr: 0,
+      min: 1787,
+      max: 1792,
+      inBandCount: 13,
+      inBandPercent: 65,
+      meanAbsoluteError: 0.55,
+      meanRelativeError: null,
+    };
+    expect(component.numericStatsPrimaryCaption(stats)).toBe('Median');
+    expect(component.numericStatsPrimaryValue(stats, question)).toBe('1789');
+    expect(component.numericStatsInBandValue(stats)).toBe('13/20');
+    expect(component.numericStatsInBandCaption(stats)).toBe('65 % im akzeptierten Bereich');
+    expect(component.numericStatsLabel(stats, question)).toContain('Ø 1789.15');
+    fixture.destroy();
+  });
+
+  it('zeigt das Host-Scoreboard bei NUMERIC_ESTIMATE-Ergebnissen', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'RESULTS' });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'RESULTS', currentQuestion: 0 });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getLeaderboardQueryMock.mockResolvedValue([
+      { rank: 1, nickname: 'Ada', totalScore: 120 },
+      { rank: 2, nickname: 'Linus', totalScore: 90 },
+    ]);
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: '66666666-6666-4666-8666-666666666666',
+      order: 0,
+      totalQuestions: 1,
+      text: 'In welchem Jahr begann die Französische Revolution?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      currentRound: 2,
+      timer: null,
+      answers: [],
+      totalVotes: 20,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1788.5,
+      numericIntervalRight: 1789.5,
+      numericInputType: 'INTEGER',
+      numericDecimalPlaces: null,
+      numericMin: 1600,
+      numericMax: 2000,
+      numericTwoRounds: true,
+      numericStats: {
+        n: 20,
+        mean: 1789.15,
+        median: 1789,
+        stdDev: 1.01,
+        q1: 1789,
+        q3: 1789,
+        iqr: 0,
+        min: 1787,
+        max: 1792,
+        inBandCount: 13,
+        inBandPercent: 65,
+        meanAbsoluteError: 0.55,
+        meanRelativeError: null,
+      },
+      numericHistogram: [{ from: 1786, to: 1793, count: 20, inBand: false }],
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+
+    const interim = fixture.nativeElement.querySelector('.session-host__interim-leaderboard');
+    expect(interim).not.toBeNull();
+    expect(interim?.textContent ?? '').toContain('Ada');
+    expect(interim?.textContent ?? '').toContain('120 Pkt.');
+    fixture.destroy();
+  });
+
   it('gibt Antwortoptionen-Aktion frei, waehrend die neue Host-Frage noch nachlaedt', async () => {
     const loadedQuestion = {
       questionId: 'bbbbbbbb-2222-4222-8222-222222222222',

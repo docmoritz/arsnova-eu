@@ -332,4 +332,40 @@ describe('session.getLeaderboard', () => {
       }),
     ]);
   });
+
+  it('zaehlt positive NUMERIC_ESTIMATE-Scores als richtige Antworten im Leaderboard', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: 'sess-1',
+      quiz: {
+        showLeaderboard: true,
+        questions: [{ type: 'NUMERIC_ESTIMATE' }],
+      },
+      participants: [{ id: 'p1', nickname: 'Ada' }],
+    });
+    prismaMock.vote.findMany.mockResolvedValue([
+      {
+        participantId: 'p1',
+        questionId: 'q1',
+        round: 1,
+        score: 1000,
+        responseTimeMs: 1800,
+        question: {
+          type: 'NUMERIC_ESTIMATE',
+          answers: [],
+        },
+        selectedAnswers: [],
+      },
+    ]);
+
+    const result = await caller.getLeaderboard({ code: 'ABC123' });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        nickname: 'Ada',
+        totalScore: 1000,
+        correctCount: 1,
+        totalQuestions: 1,
+      }),
+    ]);
+  });
 });
