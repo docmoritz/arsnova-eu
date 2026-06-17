@@ -6,6 +6,7 @@
   - `features`: routed areas: home, join, quiz, session, feedback, admin, news archive, legal, help.
 - Routing (`app.routes.ts`) lazy-loads feature components. Session entry `/session/:code` redirects to role-specific views. Host and present routes check local host token before navigation; this is UX only, not the backend permission boundary.
 - Local dev proxy (`proxy.conf.json`): `/trpc` -> `127.0.0.1:3000`, `/trpc-ws` -> `127.0.0.1:3001`, `/yjs-ws` -> `127.0.0.1:3002`.
+- Host session routes depend on sessionStorage host tokens (`arsnova-host-token:<CODE>`). HTTP tRPC headers are resolved per request, but WS subscriptions can suffer from timing/reconnect issues; host components should tolerate host-only subscription errors with throttled fallback polling rather than tight resubscribe loops.
 - i18n:
   - Angular source locale is `de`.
   - Translation files: `src/locale/messages.en.xlf`, `.fr.xlf`, `.es.xlf`, `.it.xlf`; source `messages.xlf`.

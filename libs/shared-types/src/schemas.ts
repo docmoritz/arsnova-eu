@@ -2201,6 +2201,18 @@ export const HostCurrentQuestionDTOSchema = z.object({
 });
 export type HostCurrentQuestionDTO = z.infer<typeof HostCurrentQuestionDTOSchema>;
 
+/** DTO: Leichter Live-Fortschritt fuer die Host-Ansicht waehrend ACTIVE. */
+export const HostVoteProgressDTOSchema = z.object({
+  questionId: z.string().uuid(),
+  questionOrder: z.number().int().min(0),
+  round: z.number().int().min(1).max(2),
+  totalVotes: z.number().int().min(0),
+  correctVoterCount: z.number().int().min(0).optional(),
+  incorrectVoterCount: z.number().int().min(0).optional(),
+  peerInstructionSuggestion: PeerInstructionSuggestionDTOSchema.optional(),
+});
+export type HostVoteProgressDTO = z.infer<typeof HostVoteProgressDTOSchema>;
+
 /** Input: Einer Session beitreten (Story 3.1) */
 export const JoinSessionInputSchema = z.object({
   code: z.string().length(6, { error: 'Session-Code muss 6 Zeichen lang sein' }),
@@ -2438,6 +2450,13 @@ export const SessionInfoDTOSchema = z.object({
   code: z.string(),
   type: SessionTypeEnum,
   status: SessionStatusEnum,
+  /**
+   * Neutraler Quiz-Fortschritt fuer Reload/Reconnect. Enthält keine Antwort-,
+   * Korrektheits- oder Ergebnisdaten.
+   */
+  currentQuestion: z.number().int().min(0).nullable().optional(),
+  /** Aktuelle Abstimmungsrunde, falls der Quiz-Kanal bereits läuft. */
+  currentRound: z.number().int().min(1).max(2).optional(),
   /** ISO-8601-Serverzeit bei dieser Antwort (Client-Uhrenoffset für Countdown-Sync). */
   serverTime: z.string(),
   quizName: z.string().nullable(),

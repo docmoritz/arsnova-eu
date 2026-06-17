@@ -35,12 +35,13 @@ import { checkVoteRate } from '../lib/rateLimit';
 import {
   calculateVoteScore,
   getStreakMultiplier,
+  isExactCorrectSelection,
   questionAffectsStreak,
   SCORED_QUESTION_TYPES,
 } from '../lib/quizScoring';
 import { touchParticipantPresence } from '../lib/presence';
 import { recordVoteActivity } from '../lib/loadSignal';
-import { invalidateCurrentQuestionCachesForCode, recordVoteCachesForCode } from './session';
+import { invalidateHostVoteProgressForCode, recordVoteCachesForCode } from './session';
 
 function normalizeNumericInputType(value: string | null | undefined): NumericInputType {
   return value === 'INTEGER' ? 'INTEGER' : 'DECIMAL';
@@ -537,15 +538,20 @@ export const voteRouter = router({
         },
       });
       if (participant.session.code) {
+        const progressIsCorrect =
+          questionType === 'SHORT_TEXT'
+            ? (shortTextEvaluation?.points ?? 0) > 0
+            : questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE'
+              ? isExactCorrectSelection(answerIds, correctAnswerIds)
+              : undefined;
         recordVoteCachesForCode(participant.session.code, input.questionId, round, {
           answerIds: shortTextMatchedAnswer ? [shortTextMatchedAnswer.id] : answerIds,
           freeText,
           questionType,
-          isCorrect:
-            questionType === 'SHORT_TEXT' ? (shortTextEvaluation?.points ?? 0) > 0 : undefined,
+          isCorrect: progressIsCorrect,
           numericValue: input.numericValue ?? null,
         });
-        invalidateCurrentQuestionCachesForCode(participant.session.code);
+        invalidateHostVoteProgressForCode(participant.session.code);
       }
       return { voteId: vote.id };
     }),

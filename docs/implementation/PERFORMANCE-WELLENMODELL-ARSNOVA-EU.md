@@ -421,7 +421,7 @@ Fuer arsnova.eu wuerde ich aktuell in dieser Reihenfolge priorisieren:
 
 ## Bereits umgesetzte Entschaerfungen
 
-Stand 2026-05-09 bereits umgesetzt:
+Stand 2026-06-17 bereits umgesetzt:
 
 - Footer-Status von den vollen Serverstats entkoppelt
 - Footer-Polling auf Live-Routen deaktiviert
@@ -438,6 +438,8 @@ Stand 2026-05-09 bereits umgesetzt:
 - getrennte Vote-Count- und Ergebnisaggregat-Caches fuer laufende Frage-/Rundenkontexte
 - `onStatusChanged` von starrem Polling auf signalgetriebene Subscription mit seltenem Resync umgestellt
 - `onParticipantJoined` von starrem Polling auf signalgetriebene Subscription mit seltenem Timeout-Resync umgestellt
+- Host-Live-Fortschritt bei Vote-Spitzen von `HostCurrentQuestionDTO` auf `HostVoteProgressDTO` getrennt
+- vote-getriebene Progress-Signale kurz gebuendelt; Status- und Fragewechsel bleiben sofort
 - Host- und Presenter-Polling auf sichtbare Tabs und kontextrelevante Datenpfade begrenzt
 - interne EventEmitter fuer Session-Signale auf hohe Parallelitaet vorbereitet, damit 500 Subscriptions keine Listener-Warnungen ausloesen
 
@@ -451,6 +453,7 @@ Bereits erreicht:
 - geringere redundante Lese-Arbeit in kurzen Hotpath-Fenstern
 - kurze Read-Caches koennen aggressiv bleiben, ohne dass neue Votes oder Host-Aktionen bis zum TTL-Ende unsichtbar bleiben
 - neue Votes zwingen nicht mehr automatisch zu frischen `count(*)`- oder Ergebnis-Reads, solange der laufende Fragekontext unveraendert bleibt
+- neue Votes invalidieren nicht mehr den vollstaendigen Host-Fragenkanal; die Host-UI erhaelt nur einen kleinen Progress-Snapshot
 - bei gesunder Realtime-Verbindung entfaellt die fruehere HTTP-Doppellast des Vote-Fallbacks weitgehend
 - Status-Subscriptions verursachen im Leerlauf deutlich weniger Datenbankarbeit
 - offene Host- und Presenter-Tabs tragen spuerbar weniger periodische Nebenlast
@@ -504,6 +507,43 @@ Das Wellenmodell wurde durch den Lauf nicht widerlegt, sondern bestaetigt:
 - die Ueberfuehrung von pollingbasierten Pfaden in signalgetriebene Realtime-Pfade war ein zentraler Hebel
 
 Weiterhin offen bleibt die produktionsnahe Verifikation auf dem Hetzner-Zielsystem unter realem Monitoring und mit realistischen Netzbedingungen vor Ort.
+
+## Lokaler Host-Progress-Retest am 2026-06-17
+
+Nach der Trennung von Host-Fragenpayload und Host-Vote-Fortschritt wurde ein gezielter lokaler Last-Smoke fuer eine numerische Schaetzfrage ergaenzt:
+
+```bash
+npm run load:smoke:host-vote-progress
+```
+
+Der Smoke erstellt eine echte Session, subscribed parallel auf:
+
+- `session.onCurrentQuestionForHostChanged`
+- `session.onHostVoteProgressChanged`
+
+Danach treten standardmaessig `200` Teilnehmende bei und geben nahezu parallel eine `NUMERIC_ESTIMATE`-Stimme ab.
+
+Beobachteter Lauf am 2026-06-17:
+
+| Kennzahl                              |       Wert |
+| ------------------------------------- | ---------: |
+| Teilnehmende / Votes                  |        200 |
+| fehlgeschlagene Vote-Requests         |          0 |
+| Subscription-Fehler                   |          0 |
+| Vote-Spike-Dauer                      |     296 ms |
+| Vote-Submit `p50`                     |     295 ms |
+| Vote-Submit `p95`                     |     296 ms |
+| `onCurrentQuestionForHostChanged`     |  1 Message |
+| vote-tragende Current-Question-Events |          0 |
+| `onHostVoteProgressChanged`           | 2 Messages |
+| Progress-Snapshot `totalVotes`        |        200 |
+
+Wertung:
+
+- Der Host-Current-Question-Kanal wurde durch die Vote-Spitze nicht geflutet.
+- Der Host erhielt den Endstand ueber den kleinen Progress-Kanal.
+- Die kurze serverseitige Buendelung reduziert Fan-out-Spitzen, ohne den fachlich sichtbaren Fortschritt zu verlieren.
+- Der Test ersetzt keinen grossen Produktionslasttest, deckt aber genau den geaenderten Eventmechanismus ab.
 
 ## Produktionsbefund am 2026-05-09
 

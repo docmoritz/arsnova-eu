@@ -119,6 +119,22 @@ BASE_URL=http://localhost:4200 npm run smoke:unified-session -w @arsnova/fronten
 
 Für Performance-/Lastarbeit liegen ergänzend Arbeitsbausteine in `scripts/load/` und `docs/implementation/LASTTEST-ARSNOVA-ARCHITEKTUR-ARBEITSAUFTRAG.md`. Sie sind bewusst nicht Teil der Standard-CI-Gates.
 
+### Host-Vote-Progress-Last-Smoke
+
+Nach Änderungen am Host-Realtime- oder Vote-Eventpfad sollte zusätzlich der gezielte Host-Progress-Smoke laufen:
+
+```bash
+npm run dev:backend
+npm run load:smoke:host-vote-progress
+```
+
+Der Smoke erstellt eine numerische Schätzfrage, subscribed auf `onCurrentQuestionForHostChanged` und `onHostVoteProgressChanged`, lässt standardmäßig `200` Teilnehmende parallel abstimmen und prüft:
+
+- `vote.submit` aktualisiert den Host-Fortschritt vollständig.
+- `onCurrentQuestionForHostChanged` wird durch Votes nicht geflutet.
+- `onHostVoteProgressChanged` bleibt durch serverseitige Bündelung klein.
+- Der finale `totalVotes`-Snapshot stimmt mit der Zahl der Votes überein.
+
 ---
 
 ## Wo Tests liegen

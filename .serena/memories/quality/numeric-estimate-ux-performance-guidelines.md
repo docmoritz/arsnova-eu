@@ -35,6 +35,7 @@ Erkenntnisse aus manueller Smoke-/Review-Arbeit zur Schätzfrage im Chat.
 ## Performance und Datenschutz bei ca. 200 Teilnehmenden
 
 - Während `ACTIVE` nur neutralen Fortschritt aktualisieren, keine Ergebnisdaten berechnen oder ausliefern.
+- Host-Live-Fortschritt läuft über `HostVoteProgressDTO`/`onHostVoteProgressChanged`; Vote-Abgaben dürfen nicht pro Vote die vollständige Host-Current-Question invalidieren oder neu emittieren. Vote-getriebene Progress-Signale sollten serverseitig kurz gebündelt werden, Status-/Fragewechsel aber sofort signalisieren.
 - Histogramm, Statistik und Paaranalyse erst nach Ergebnisfreigabe berechnen/rendern.
 - Host-UI soll nicht bei jeder Stimmabgabe große Ergebnisobjekte neu rendern; teure Daten erst lazy nach Freigabe/Expander laden oder darstellen.
 - Keine vollständigen Vote-Listen an Clients senden, wenn aggregierte Daten ausreichen.
@@ -47,3 +48,4 @@ Erkenntnisse aus manueller Smoke-/Review-Arbeit zur Schätzfrage im Chat.
 - Der Smoke-Test soll Dark Theme, zwei Teams, Host und mehrere Clients abdecken.
 - Für Review-Zwecke Screenshots pro Interaktion auf Host und Client erzeugen, inklusive geöffnetem Statistik-Expander in der Host-Ansicht.
 - Relevantes Szenario: Frage nach dem Jahr der Französischen Revolution, ca. 20 simulierte Abstimmungen, zwei Runden, Prüfung dass Clients nach Ergebnisfreigabe Auswertung/persönlichen Score bekommen.
+- Last-Smoke fuer den Host-Eventpfad: `npm run load:smoke:host-vote-progress` erzeugt eine Numerik-Session, subscribed auf Host-Current-Question und Host-Vote-Progress, schickt standardmaessig 200 parallele Votes und erwartet keine vote-getriebenen Current-Question-Events.

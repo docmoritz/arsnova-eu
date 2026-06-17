@@ -205,6 +205,54 @@ describe('session.getInfo (ADR-0009)', () => {
     expect(result.teamMode).toBe(false);
   });
 
+  it('liefert den laufenden Quiz-Fortschritt fuer aktive Sessions', async () => {
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      title: null,
+      quizId: QUIZ_ID,
+      currentQuestion: 7,
+      currentRound: 1,
+      quizStarted: true,
+      qaEnabled: false,
+      qaOpen: false,
+      qaTitle: null,
+      qaModerationMode: true,
+      quickFeedbackEnabled: false,
+      quickFeedbackOpen: false,
+      _count: { participants: 12 },
+    });
+    prismaMock.quiz.findUnique.mockResolvedValue({
+      name: 'Demo Quiz',
+      nicknameTheme: 'NOBEL_LAUREATES',
+      allowCustomNicknames: true,
+      anonymousMode: false,
+      showLeaderboard: true,
+      enableSoundEffects: true,
+      enableRewardEffects: true,
+      enableMotivationMessages: true,
+      enableEmojiReactions: true,
+      readingPhaseEnabled: true,
+      defaultTimer: 30,
+      backgroundMusic: null,
+      teamMode: false,
+      teamCount: null,
+      teamAssignment: null,
+      bonusTokenCount: null,
+      preset: 'PLAYFUL',
+      motifImageUrl: null,
+      teamNames: [],
+    });
+
+    const result = await caller.getInfo({ code: 'abc123' });
+
+    expect(result.status).toBe('ACTIVE');
+    expect(result.currentQuestion).toBe(7);
+    expect(result.currentRound).toBe(1);
+  });
+
   it('nutzt kurzzeitig einen Cache fuer wiederholte getInfo-Abfragen derselben Session', async () => {
     prismaMock.session.findUnique.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',

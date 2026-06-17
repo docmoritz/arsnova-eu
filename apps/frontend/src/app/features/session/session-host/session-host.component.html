@@ -1262,12 +1262,13 @@
                               >
                                 Warte auf Schätzungen…
                               </p>
-                              @if ((q.totalVotes ?? 0) > 0) {
+                              @let numericVoteCount = hostVoteCount(q);
+                              @if (numericVoteCount > 0) {
                                 <p
                                   class="session-host__numeric-vote-count"
                                   i18n="@@sessionHost.numericVoteCount"
                                 >
-                                  {{ q.totalVotes }} Antworten eingegangen
+                                  {{ numericVoteCount }} Antworten eingegangen
                                 </p>
                               }
                             } @else if (effectiveStatus() === 'RESULTS') {

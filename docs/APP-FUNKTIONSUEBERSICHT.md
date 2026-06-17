@@ -914,6 +914,7 @@ Fachlich relevante Realtime-Bausteine:
 
 - Status-Subscriptions
 - Current-Question-Subscriptions
+- Host-Vote-Progress-Subscriptions für neutrale Live-Zähler während `ACTIVE`
 - Teilnehmer-Subscriptions
 - Blitzlicht-Subscriptions
 - Q&A-Refresh-Mechanismen

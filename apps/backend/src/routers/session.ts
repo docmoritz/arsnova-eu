@@ -31,6 +31,7 @@ import {
   SessionTeamsPayloadSchema,
   SessionStatusUpdateSchema,
   HostCurrentQuestionDTOSchema,
+  HostVoteProgressDTOSchema,
   QuestionStudentDTOSchema,
   QuestionPreviewDTOSchema,
   QuestionRevealedDTOSchema,
@@ -64,6 +65,7 @@ import {
   type LeaderboardEntryDTO,
   type NicknameTheme,
   type PeerInstructionSuggestionDTO,
+  type HostVoteProgressDTO,
   type TeamLeaderboardEntryDTO,
   type TeamAssignment,
   type ToleranceLevel,
@@ -194,6 +196,7 @@ const PARTICIPANT_MEMBERSHIP_CACHE_TTL_MS = 30_000;
 const VOTE_COUNT_CACHE_TTL_MS = 15 * 60_000;
 const VOTE_SUMMARY_CACHE_TTL_MS = 15 * 60_000;
 const CURRENT_QUESTION_EVENT_WAIT_MS = 10_000;
+const VOTE_PROGRESS_SIGNAL_DEBOUNCE_MS = 150;
 const STATUS_EVENT_WAIT_ACTIVE_MS = 10_000;
 const STATUS_EVENT_WAIT_IDLE_MS = 30_000;
 const PARTICIPANT_EVENT_WAIT_ACTIVE_MS = 10_000;
@@ -268,9 +271,13 @@ const sessionParticipantEvents = new EventEmitter();
 const sessionParticipantVersions = new Map<string, number>();
 const sessionCurrentQuestionEvents = new EventEmitter();
 const sessionCurrentQuestionVersions = new Map<string, number>();
+const sessionVoteProgressEvents = new EventEmitter();
+const sessionVoteProgressVersions = new Map<string, number>();
+const sessionVoteProgressTimers = new Map<string, ReturnType<typeof setTimeout>>();
 sessionStatusEvents.setMaxListeners(0);
 sessionParticipantEvents.setMaxListeners(0);
 sessionCurrentQuestionEvents.setMaxListeners(0);
+sessionVoteProgressEvents.setMaxListeners(0);
 
 function getCachedValue<T>(cache: Map<string, CacheEntry<T>>, key: string): T | null {
   const entry = cache.get(key);
@@ -336,12 +343,16 @@ function clearSessionReadCaches(code?: string): void {
     participantMembershipInFlight.clear();
     voteCountInFlight.clear();
     voteSummaryInFlight.clear();
+    for (const timer of sessionVoteProgressTimers.values()) {
+      clearTimeout(timer);
+    }
+    sessionVoteProgressTimers.clear();
     return;
   }
   sessionInfoCache.delete(code);
   statusSnapshotCache.delete(code);
   participantsSnapshotCache.delete(code);
-  currentQuestionCache.delete(code);
+  clearCurrentQuestionCache(code);
   participantNicknameCache.delete(code);
   clearVoteCaches(code);
   for (const key of participantMembershipCache.keys()) {
@@ -352,7 +363,11 @@ function clearSessionReadCaches(code?: string): void {
   sessionInfoInFlight.delete(code);
   statusSnapshotInFlight.delete(code);
   participantsSnapshotInFlight.delete(code);
-  currentQuestionInFlight.delete(code);
+  const voteProgressTimer = sessionVoteProgressTimers.get(code);
+  if (voteProgressTimer) {
+    clearTimeout(voteProgressTimer);
+    sessionVoteProgressTimers.delete(code);
+  }
   for (const key of participantMembershipInFlight.keys()) {
     if (key.startsWith(`${code}:`)) {
       participantMembershipInFlight.delete(key);
@@ -365,9 +380,11 @@ export function resetSessionReadCachesForTests(): void {
   sessionStatusVersions.clear();
   sessionParticipantVersions.clear();
   sessionCurrentQuestionVersions.clear();
+  sessionVoteProgressVersions.clear();
   sessionStatusEvents.removeAllListeners();
   sessionParticipantEvents.removeAllListeners();
   sessionCurrentQuestionEvents.removeAllListeners();
+  sessionVoteProgressEvents.removeAllListeners();
 }
 
 function clearSessionInfoCache(code: string): void {
@@ -388,6 +405,16 @@ function clearParticipantsSnapshotCache(code: string): void {
 function clearCurrentQuestionCache(code: string): void {
   currentQuestionCache.delete(code);
   currentQuestionInFlight.delete(code);
+  for (const key of currentQuestionCache.keys()) {
+    if (key.startsWith(`${code}:`)) {
+      currentQuestionCache.delete(key);
+    }
+  }
+  for (const key of currentQuestionInFlight.keys()) {
+    if (key.startsWith(`${code}:`)) {
+      currentQuestionInFlight.delete(key);
+    }
+  }
 }
 
 function clearVoteCaches(code: string): void {
@@ -442,6 +469,10 @@ function sessionCurrentQuestionEventName(code: string): string {
   return `current-question:${code}`;
 }
 
+function sessionVoteProgressEventName(code: string): string {
+  return `vote-progress:${code}`;
+}
+
 function emitSessionStatusSignal(code: string): void {
   const normalizedCode = code.toUpperCase();
   const nextVersion = (sessionStatusVersions.get(normalizedCode) ?? 0) + 1;
@@ -463,6 +494,34 @@ function emitSessionCurrentQuestionSignal(code: string): void {
   sessionCurrentQuestionEvents.emit(sessionCurrentQuestionEventName(normalizedCode), nextVersion);
 }
 
+function emitSessionVoteProgressSignalNow(normalizedCode: string): void {
+  const nextVersion = (sessionVoteProgressVersions.get(normalizedCode) ?? 0) + 1;
+  sessionVoteProgressVersions.set(normalizedCode, nextVersion);
+  sessionVoteProgressEvents.emit(sessionVoteProgressEventName(normalizedCode), nextVersion);
+}
+
+function emitSessionVoteProgressSignal(code: string, options: { immediate?: boolean } = {}): void {
+  const normalizedCode = code.toUpperCase();
+  const pendingTimer = sessionVoteProgressTimers.get(normalizedCode);
+  if (options.immediate) {
+    if (pendingTimer) {
+      clearTimeout(pendingTimer);
+      sessionVoteProgressTimers.delete(normalizedCode);
+    }
+    emitSessionVoteProgressSignalNow(normalizedCode);
+    return;
+  }
+  if (pendingTimer) {
+    return;
+  }
+  const timer = setTimeout(() => {
+    sessionVoteProgressTimers.delete(normalizedCode);
+    emitSessionVoteProgressSignalNow(normalizedCode);
+  }, VOTE_PROGRESS_SIGNAL_DEBOUNCE_MS);
+  timer.unref?.();
+  sessionVoteProgressTimers.set(normalizedCode, timer);
+}
+
 function getSessionStatusSignalVersion(code: string): number {
   return sessionStatusVersions.get(code.toUpperCase()) ?? 0;
 }
@@ -473,6 +532,10 @@ function getSessionParticipantSignalVersion(code: string): number {
 
 function getSessionCurrentQuestionSignalVersion(code: string): number {
   return sessionCurrentQuestionVersions.get(code.toUpperCase()) ?? 0;
+}
+
+function getSessionVoteProgressSignalVersion(code: string): number {
+  return sessionVoteProgressVersions.get(code.toUpperCase()) ?? 0;
 }
 
 async function waitForSessionStatusSignal(
@@ -532,6 +595,36 @@ async function waitForSessionCurrentQuestionSignal(
     };
 
     sessionCurrentQuestionEvents.on(eventName, onSignal);
+  });
+}
+
+async function waitForSessionVoteProgressSignal(
+  code: string,
+  currentVersion: number,
+  timeoutMs: number,
+): Promise<void> {
+  const normalizedCode = code.toUpperCase();
+  if (getSessionVoteProgressSignalVersion(normalizedCode) !== currentVersion) {
+    return;
+  }
+  await new Promise<void>((resolve) => {
+    const eventName = sessionVoteProgressEventName(normalizedCode);
+    let timer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      sessionVoteProgressEvents.off(eventName, onSignal);
+      timer = null;
+      resolve();
+    }, timeoutMs);
+
+    const onSignal = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      sessionVoteProgressEvents.off(eventName, onSignal);
+      resolve();
+    };
+
+    sessionVoteProgressEvents.on(eventName, onSignal);
   });
 }
 
@@ -670,6 +763,7 @@ export function invalidateSessionStatusCachesForCode(code: string): void {
   emitSessionStatusSignal(normalizedCode);
   emitSessionParticipantSignal(normalizedCode);
   emitSessionCurrentQuestionSignal(normalizedCode);
+  emitSessionVoteProgressSignal(normalizedCode, { immediate: true });
 }
 
 export function invalidateJoinCachesForCode(code: string): void {
@@ -685,6 +779,12 @@ export function invalidateCurrentQuestionCachesForCode(code: string): void {
   const normalizedCode = code.toUpperCase();
   clearCurrentQuestionCache(normalizedCode);
   emitSessionCurrentQuestionSignal(normalizedCode);
+}
+
+export function invalidateHostVoteProgressForCode(code: string): void {
+  const normalizedCode = code.toUpperCase();
+  clearCurrentQuestionCache(normalizedCode);
+  emitSessionVoteProgressSignal(normalizedCode);
 }
 
 export function resetVoteAggregationCachesForTests(): void {
@@ -992,10 +1092,26 @@ async function getVoteSummaryCached(
         select: { selectedAnswers: { select: { answerOptionId: true } } },
       });
       const answerVoteCounts: Record<string, number> = {};
+      const correctAnswerIds =
+        questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE'
+          ? (options?.answers ?? []).filter((answer) => answer.isCorrect).map((answer) => answer.id)
+          : [];
+      let correctVoteCount = 0;
+      let incorrectVoteCount = 0;
       for (const vote of votes) {
+        const selectedAnswerIds = vote.selectedAnswers.map(
+          (selectedAnswer) => selectedAnswer.answerOptionId,
+        );
         for (const selectedAnswer of vote.selectedAnswers) {
           answerVoteCounts[selectedAnswer.answerOptionId] =
             (answerVoteCounts[selectedAnswer.answerOptionId] ?? 0) + 1;
+        }
+        if (correctAnswerIds.length > 0) {
+          if (isExactCorrectSelection(selectedAnswerIds, correctAnswerIds)) {
+            correctVoteCount += 1;
+          } else {
+            incorrectVoteCount += 1;
+          }
         }
       }
       return {
@@ -1003,8 +1119,8 @@ async function getVoteSummaryCached(
         answerVoteCounts,
         freeTextResponses: [],
         incorrectFreeTextResponses: [],
-        correctVoteCount: 0,
-        incorrectVoteCount: 0,
+        correctVoteCount,
+        incorrectVoteCount,
         numericValues: [],
       };
     },
@@ -1056,6 +1172,16 @@ export function recordVoteCachesForCode(
         if (trimmedFreeText) {
           nextSummary.incorrectFreeTextResponses.push(trimmedFreeText);
         }
+      }
+    }
+    if (
+      (payload.questionType === 'SINGLE_CHOICE' || payload.questionType === 'MULTIPLE_CHOICE') &&
+      payload.isCorrect !== undefined
+    ) {
+      if (payload.isCorrect) {
+        nextSummary.correctVoteCount += 1;
+      } else {
+        nextSummary.incorrectVoteCount += 1;
       }
     }
     if (payload.numericValue !== null && payload.numericValue !== undefined) {
@@ -2902,6 +3028,117 @@ async function fetchHostCurrentQuestion(
   return buildHostCurrentQuestionDto(session);
 }
 
+async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO | null> {
+  const normalizedCode = code.toUpperCase();
+  const session = await prisma.session.findUnique({
+    where: { code: normalizedCode },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      currentQuestion: true,
+      currentRound: true,
+      quiz: {
+        select: {
+          questions: {
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              order: true,
+              type: true,
+              shortTextEvaluationKind: true,
+              shortTextMaxLength: true,
+              shortTextCaseSensitive: true,
+              shortTextEvaluationMode: true,
+              shortTextToleranceLevel: true,
+              shortTextAllowPartialCredit: true,
+              shortTextTrimWhitespace: true,
+              shortTextNormalizeWhitespace: true,
+              numericInputKind: true,
+              numericToleranceMode: true,
+              numericAbsoluteTolerance: true,
+              numericRelativeTolerancePercent: true,
+              numericUnitFamily: true,
+              numericRequireUnit: true,
+              numericAcceptEquivalentUnits: true,
+              answers: { select: { id: true, text: true, isCorrect: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!session?.quiz || session.status !== 'ACTIVE') {
+    return null;
+  }
+  const questionIndex = session.currentQuestion;
+  if (questionIndex === null || questionIndex === undefined) {
+    return null;
+  }
+  const question = session.quiz.questions[questionIndex] ?? null;
+  if (!question) {
+    return null;
+  }
+
+  const round = session.currentRound ?? 1;
+  const questionType = question.type as QuestionType;
+  const base = {
+    questionId: question.id,
+    questionOrder: question.order,
+    round,
+  };
+
+  if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
+    const voteSummary = await getVoteSummaryCached(
+      session.code,
+      session.id,
+      question.id,
+      round,
+      questionType,
+      { answers: question.answers },
+    );
+    return {
+      ...base,
+      totalVotes: voteSummary.totalVotes,
+      correctVoterCount: voteSummary.correctVoteCount,
+      incorrectVoterCount: voteSummary.incorrectVoteCount,
+      peerInstructionSuggestion: buildPeerInstructionSuggestion(
+        questionType,
+        round,
+        voteSummary.correctVoteCount,
+        voteSummary.totalVotes,
+      ),
+    };
+  }
+
+  if (questionType === 'SHORT_TEXT') {
+    const voteSummary = await getVoteSummaryCached(
+      session.code,
+      session.id,
+      question.id,
+      round,
+      questionType,
+      {
+        answers: question.answers,
+        ...resolveShortTextQuestionConfig(question),
+      },
+    );
+    return {
+      ...base,
+      totalVotes: voteSummary.totalVotes,
+      correctVoterCount: voteSummary.correctVoteCount,
+      incorrectVoterCount: voteSummary.incorrectVoteCount,
+    };
+  }
+
+  const totalVotes = await getVoteCountCached(session.code, session.id, question.id, round);
+  return {
+    ...base,
+    totalVotes,
+  };
+}
+
 export const sessionRouter = router({
   /** Session erstellen (Story 2.1a). Rate-Limit: 10/h pro IP (Story 0.5). */
   create: publicProcedure
@@ -3593,11 +3830,15 @@ export const sessionRouter = router({
               : null;
           const onboardingProfile = resolveSessionOnboardingProfile(session, q);
           const channels = buildSessionChannels(session);
+          const visibleCurrentQuestion =
+            session.status === 'LOBBY' ? null : session.currentQuestion;
           return {
             id: session.id,
             code: session.code,
             type: session.type,
             status: session.status,
+            currentQuestion: visibleCurrentQuestion,
+            currentRound: session.currentRound,
             quizName: q?.name ?? null,
             quizMotifImageUrl: q?.motifImageUrl ?? null,
             title: session.title ?? null,
@@ -4360,6 +4601,11 @@ export const sessionRouter = router({
     .output(HostCurrentQuestionDTOSchema.nullable())
     .query(async ({ input }) => fetchHostCurrentQuestion(input.code)),
 
+  getHostVoteProgress: hostProcedure
+    .input(GetSessionInfoInputSchema)
+    .output(HostVoteProgressDTOSchema.nullable())
+    .query(async ({ input }) => fetchHostVoteProgress(input.code)),
+
   onCurrentQuestionForHostChanged: hostProcedure
     .input(GetSessionInfoInputSchema)
     .subscription(async function* ({ input }) {
@@ -4374,6 +4620,27 @@ export const sessionRouter = router({
         }
         const currentVersion = getSessionCurrentQuestionSignalVersion(code);
         await waitForSessionCurrentQuestionSignal(
+          code,
+          currentVersion,
+          CURRENT_QUESTION_EVENT_WAIT_MS,
+        );
+      }
+    }),
+
+  onHostVoteProgressChanged: hostProcedure
+    .input(GetSessionInfoInputSchema)
+    .subscription(async function* ({ input }) {
+      const code = input.code.toUpperCase();
+      let lastJson = '';
+      while (true) {
+        const payload = await fetchHostVoteProgress(code);
+        const json = JSON.stringify(payload);
+        if (json !== lastJson) {
+          lastJson = json;
+          yield payload;
+        }
+        const currentVersion = getSessionVoteProgressSignalVersion(code);
+        await waitForSessionVoteProgressSignal(
           code,
           currentVersion,
           CURRENT_QUESTION_EVENT_WAIT_MS,

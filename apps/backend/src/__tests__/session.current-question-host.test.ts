@@ -30,7 +30,7 @@ vi.mock('../lib/hostAuth', async () => {
   });
 });
 
-import { sessionRouter } from '../routers/session';
+import { resetVoteAggregationCachesForTests, sessionRouter } from '../routers/session';
 
 const caller = sessionRouter.createCaller({ req: {} as never });
 const CODE = 'ABC123';
@@ -41,6 +41,7 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
     hostAuthMocks.extractHostTokenMock.mockReturnValue('host-token-123');
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
+    resetVoteAggregationCachesForTests();
     prismaMock.vote.findMany.mockResolvedValue([]);
     prismaMock.vote.count.mockResolvedValue(0);
   });
@@ -296,6 +297,85 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
         sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
         questionId,
         round: 1,
+      },
+    });
+  });
+
+  it('liefert aktiven NUMERIC_ESTIMATE-Fortschritt ohne Rohwerte oder Histogramme zu laden', async () => {
+    const questionId = 'cccccccc-3333-4333-8333-333333333333';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      code: CODE,
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      quiz: {
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            type: 'NUMERIC_ESTIMATE',
+            answers: [],
+          },
+        ],
+      },
+    });
+    prismaMock.vote.count.mockResolvedValueOnce(17);
+
+    const result = await caller.getHostVoteProgress({ code: CODE });
+
+    expect(result).toEqual({
+      questionId,
+      questionOrder: 0,
+      round: 1,
+      totalVotes: 17,
+    });
+    expect(prismaMock.vote.findMany).not.toHaveBeenCalled();
+  });
+
+  it('liefert Choice-Fortschritt mit Peer-Instruction-Signal ohne Vote-Verteilung', async () => {
+    const questionId = '11111111-1111-4111-8111-111111111111';
+    const correctId = 'aaaaaaaa-1111-4111-8111-111111111111';
+    const wrongId = 'bbbbbbbb-2222-4222-8222-222222222222';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      code: CODE,
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      quiz: {
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            type: 'SINGLE_CHOICE',
+            answers: [
+              { id: correctId, text: '4', isCorrect: true },
+              { id: wrongId, text: '3', isCorrect: false },
+            ],
+          },
+        ],
+      },
+    });
+    prismaMock.vote.findMany.mockResolvedValue([
+      { selectedAnswers: [{ answerOptionId: correctId }] },
+      { selectedAnswers: [{ answerOptionId: correctId }] },
+      { selectedAnswers: [{ answerOptionId: wrongId }] },
+      { selectedAnswers: [{ answerOptionId: wrongId }] },
+    ]);
+
+    const result = await caller.getHostVoteProgress({ code: CODE });
+
+    expect(result).toEqual({
+      questionId,
+      questionOrder: 0,
+      round: 1,
+      totalVotes: 4,
+      correctVoterCount: 2,
+      incorrectVoterCount: 2,
+      peerInstructionSuggestion: {
+        suggested: true,
+        reason: 'CORRECTNESS_WINDOW',
       },
     });
   });

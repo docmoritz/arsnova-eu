@@ -86,7 +86,8 @@ sequenceDiagram
   BE-->>V: QuestionStudentDTO (Eingabeformat, keine Lösung)
   V->>BE: vote.submit(numericValue, round=1)
   BE->>DB: Vote speichern und serverseitig validieren
-  BE-->>H: neutraler Fortschritt (n von N)
+  BE-->>H: onHostVoteProgressChanged(HostVoteProgressDTO)
+  Note over BE,H: Nur neutraler Fortschritt; kein HostCurrentQuestionDTO pro Vote
 
   opt zweite Runde aktiviert
     H->>BE: session.startDiscussion
@@ -95,7 +96,7 @@ sequenceDiagram
     BE-->>V: Runde 2 aktiv
     V->>BE: vote.submit(numericValue, round=2)
     BE->>DB: Vote getrennt nach Runde speichern
-    BE-->>H: neutraler Fortschritt Runde 2
+    BE-->>H: HostVoteProgressDTO fuer Runde 2
   end
 
   H->>BE: session.revealResults
@@ -125,6 +126,13 @@ Nicht erlaubt vor Freigabe:
 - `isCorrect` oder äquivalente Lösungsindikatoren
 
 Der aktive Host-Pfad zählt deshalb nur Votes. Detaildaten werden erst in `RESULTS` geladen und aggregiert.
+
+Technisch ist der aktive Host-Live-Pfad von der vollständigen Host-Frage getrennt:
+
+- `HostCurrentQuestionDTO` transportiert Frage, Konfiguration und nach Freigabe Ergebnisdaten.
+- `HostVoteProgressDTO` transportiert während `ACTIVE` nur `questionId`, `questionOrder`, `round`, `totalVotes` und optional abstrakte Korrekt-/Peer-Instruction-Zähler für Fragetypen ohne Lösungsverrat.
+- `vote.submit` invalidiert nach einer Abgabe nicht mehr den vollständigen Host-Fragenkanal, sondern nur den Vote-Progress-Kanal.
+- Vote-getriebene Progress-Signale werden kurz gebündelt; Status- und Fragewechsel signalisieren weiterhin sofort.
 
 ## Punkte und Korrektheit
 
@@ -219,6 +227,7 @@ Abgesicherte Bereiche:
 - Host: keine Ergebnisdaten während `ACTIVE`, Histogramm/Statistik erst in `RESULTS`, Rundenvergleich aus gemeinsamer Vote-Abfrage.
 - Vote: Text-Input mit `inputmode`, Komma/Punkt-Unterstützung, rundenbezogene lokale Antworten, persönliche Scorecard und Nähe-Motivation.
 - Smoke-Test: `apps/frontend/scripts/check-numeric-estimate-flow.mjs` mit Dark Theme, zwei Teams, 20 simulierten Abstimmungen und zwei Runden.
+- Last-Smoke: `npm run load:smoke:host-vote-progress` mit standardmäßig 200 parallelen Votes prüft, dass Vote-Spitzen den Host-Progress aktualisieren, ohne den vollständigen Host-Fragenkanal zu fluten.
 
 ## Implementierungsanker
 
@@ -230,3 +239,4 @@ Abgesicherte Bereiche:
 - Host-Ansicht: [`apps/frontend/src/app/features/session/session-host/session-host.component.ts`](../../apps/frontend/src/app/features/session/session-host/session-host.component.ts)
 - Vote-Ansicht: [`apps/frontend/src/app/features/session/session-vote/session-vote.component.ts`](../../apps/frontend/src/app/features/session/session-vote/session-vote.component.ts)
 - Smoke-Test: [`apps/frontend/scripts/check-numeric-estimate-flow.mjs`](../../apps/frontend/scripts/check-numeric-estimate-flow.mjs)
+- Last-Smoke: [`scripts/load/host-vote-progress-200.mjs`](../../scripts/load/host-vote-progress-200.mjs)

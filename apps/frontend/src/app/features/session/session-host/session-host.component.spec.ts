@@ -19,6 +19,7 @@ const {
   getTeamsQueryMock,
   getLiveFreetextQueryMock,
   getCurrentQuestionForHostQueryMock,
+  getHostVoteProgressQueryMock,
   getLeaderboardQueryMock,
   getTeamLeaderboardQueryMock,
   getExportDataQueryMock,
@@ -48,6 +49,7 @@ const {
   onParticipantJoinedSubscribeMock,
   onStatusChangedSubscribeMock,
   onCurrentQuestionForHostChangedSubscribeMock,
+  onHostVoteProgressChangedSubscribeMock,
   clearHostTokenMock,
   dialogOpenMock,
 } = vi.hoisted(() => ({
@@ -57,6 +59,7 @@ const {
   getTeamsQueryMock: vi.fn(),
   getLiveFreetextQueryMock: vi.fn(),
   getCurrentQuestionForHostQueryMock: vi.fn(),
+  getHostVoteProgressQueryMock: vi.fn(),
   getLeaderboardQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
   getExportDataQueryMock: vi.fn(),
@@ -86,6 +89,7 @@ const {
   onParticipantJoinedSubscribeMock: vi.fn(() => ({ unsubscribe: unsubscribeMock })),
   onStatusChangedSubscribeMock: vi.fn(() => ({ unsubscribe: unsubscribeMock })),
   onCurrentQuestionForHostChangedSubscribeMock: vi.fn(() => ({ unsubscribe: unsubscribeMock })),
+  onHostVoteProgressChangedSubscribeMock: vi.fn(() => ({ unsubscribe: unsubscribeMock })),
   clearHostTokenMock: vi.fn(),
   dialogOpenMock: vi.fn(),
 }));
@@ -101,6 +105,7 @@ vi.mock('../../../core/trpc.client', () => ({
       getTeams: { query: getTeamsQueryMock },
       getLiveFreetext: { query: getLiveFreetextQueryMock },
       getCurrentQuestionForHost: { query: getCurrentQuestionForHostQueryMock },
+      getHostVoteProgress: { query: getHostVoteProgressQueryMock },
       getLeaderboard: { query: getLeaderboardQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
       getExportData: { query: getExportDataQueryMock },
@@ -122,6 +127,7 @@ vi.mock('../../../core/trpc.client', () => ({
       onParticipantJoined: { subscribe: onParticipantJoinedSubscribeMock },
       onStatusChanged: { subscribe: onStatusChangedSubscribeMock },
       onCurrentQuestionForHostChanged: { subscribe: onCurrentQuestionForHostChangedSubscribeMock },
+      onHostVoteProgressChanged: { subscribe: onHostVoteProgressChangedSubscribeMock },
     },
     quiz: {
       upload: { mutate: quizUploadMutateMock },
@@ -310,9 +316,13 @@ describe('SessionHostComponent', () => {
     onCurrentQuestionForHostChangedSubscribeMock.mockImplementation(() => ({
       unsubscribe: unsubscribeMock,
     }));
+    onHostVoteProgressChangedSubscribeMock.mockImplementation(() => ({
+      unsubscribe: unsubscribeMock,
+    }));
     getTeamsQueryMock.mockResolvedValue({ teams: [], teamCount: 0 });
     getLiveFreetextQueryMock.mockResolvedValue({ ...defaultLiveFreetext });
     getCurrentQuestionForHostQueryMock.mockResolvedValue(null);
+    getHostVoteProgressQueryMock.mockResolvedValue(null);
     getLeaderboardQueryMock.mockResolvedValue([]);
     getTeamLeaderboardQueryMock.mockResolvedValue([]);
     qaListQueryMock.mockResolvedValue([]);
@@ -579,25 +589,20 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
-  it('aktualisiert den Host-Abstimmungsfortschritt ueber die Current-Question-Subscription waehrend ACTIVE', async () => {
+  it('aktualisiert den Host-Abstimmungsfortschritt ueber die Vote-Progress-Subscription waehrend ACTIVE', async () => {
     let onData:
       | ((
           data: {
             questionId: string;
-            order: number;
-            totalQuestions: number;
-            text: string;
-            type: 'SINGLE_CHOICE';
-            difficulty: 'MEDIUM';
-            timer: number;
-            answers: Array<{ id: string; text: string; isCorrect: boolean }>;
+            questionOrder: number;
+            round: number;
             totalVotes: number;
-            currentRound: number;
+            correctVoterCount?: number;
           } | null,
         ) => void)
       | undefined;
 
-    onCurrentQuestionForHostChangedSubscribeMock.mockImplementation(
+    onHostVoteProgressChangedSubscribeMock.mockImplementation(
       (_input, observer: { onData?: typeof onData }) => {
         onData = observer.onData;
         return { unsubscribe: unsubscribeMock };
@@ -607,7 +612,10 @@ describe('SessionHostComponent', () => {
       ...defaultSession,
       status: 'ACTIVE',
       participantCount: 501,
+      currentQuestion: 0,
+      currentRound: 1,
     });
+    getParticipantsQueryMock.mockResolvedValue({ participantCount: 501, participants: [] });
     getCurrentQuestionForHostQueryMock.mockResolvedValue({
       questionId: '11111111-1111-4111-8111-111111111111',
       order: 0,
@@ -631,22 +639,20 @@ describe('SessionHostComponent', () => {
 
     onData?.({
       questionId: '11111111-1111-4111-8111-111111111111',
-      order: 0,
-      totalQuestions: 1,
-      text: 'Was ist 2+2?',
-      type: 'SINGLE_CHOICE',
-      difficulty: 'MEDIUM',
-      timer: 30,
-      answers: [
-        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: '3', isCorrect: false },
-        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: '4', isCorrect: true },
-      ],
+      questionOrder: 0,
+      round: 1,
       totalVotes: 1,
-      currentRound: 1,
+      correctVoterCount: 1,
     });
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.currentQuestionForHost()?.totalVotes).toBe(1);
+    expect(fixture.componentInstance.currentQuestionForHost()?.totalVotes).toBe(0);
+    expect(
+      fixture.componentInstance.hostVoteCount(
+        fixture.componentInstance.displayedCurrentQuestionForHost(),
+      ),
+    ).toBe(1);
+    expect(fixture.componentInstance.liveVoteProgress()?.votes).toBe(1);
     fixture.destroy();
   });
 
@@ -4467,6 +4473,82 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
+  it('nutzt den getInfo-Fragenindex bis das Realtime-Statusupdate eintrifft', async () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    const question = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 7,
+      totalQuestions: 10,
+      text: 'In welchem Jahr begann die Französische Revolution?',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+
+    component.statusUpdate.set(null);
+    component.session.set({
+      ...defaultSession,
+      status: 'ACTIVE',
+      currentQuestion: 7,
+      currentRound: 1,
+    });
+    component.currentQuestionForHost.set(question);
+    fixture.detectChanges();
+
+    expect(component.hasCurrentQuizQuestionForHost()).toBe(true);
+    expect(component.displayedCurrentQuestionForHost()?.questionId).toBe(question.questionId);
+
+    (
+      component as unknown as {
+        syncCurrentQuestionForHost: (next: typeof question | null) => void;
+      }
+    ).syncCurrentQuestionForHost(null);
+
+    expect(component.displayedCurrentQuestionForHost()?.questionId).toBe(question.questionId);
+    fixture.destroy();
+  });
+
+  it('drosselt Realtime-Resubscribe nach Host-Fragen-Subscriptionfehlern', async () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(() => onCurrentQuestionForHostChangedSubscribeMock.mock.calls.length > 0, {
+      timeout: 5000,
+      interval: 25,
+    });
+
+    const callsBeforeError = onCurrentQuestionForHostChangedSubscribeMock.mock.calls.length;
+    const currentQuestionErrorHandler = onCurrentQuestionForHostChangedSubscribeMock.mock
+      .calls[0]?.[1]?.onError as (() => void) | undefined;
+    expect(currentQuestionErrorHandler).toBeTypeOf('function');
+
+    vi.useFakeTimers();
+    try {
+      currentQuestionErrorHandler?.();
+      await Promise.resolve();
+
+      expect(onCurrentQuestionForHostChangedSubscribeMock).toHaveBeenCalledTimes(callsBeforeError);
+
+      await vi.advanceTimersByTimeAsync(4999);
+      expect(onCurrentQuestionForHostChangedSubscribeMock).toHaveBeenCalledTimes(callsBeforeError);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(onCurrentQuestionForHostChangedSubscribeMock).toHaveBeenCalledTimes(
+        callsBeforeError + 1,
+      );
+    } finally {
+      fixture.destroy();
+      vi.useRealTimers();
+    }
+  });
+
   it('aktualisiert die sichtbare Host-Frage, wenn Numeric-Ergebnisse nachgeladen werden', () => {
     const fixture = setup();
     const component = fixture.componentInstance;
@@ -5537,7 +5619,7 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
-  it('ruft onParticipantJoined, onStatusChanged und onCurrentQuestionForHostChanged subscribe auf', async () => {
+  it('ruft Host-Realtime-Subscriptions auf', async () => {
     getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
     const fixture = setup();
     fixture.detectChanges();
@@ -5556,8 +5638,12 @@ describe('SessionHostComponent', () => {
       { code: 'ABC123' },
       expect.objectContaining({ onData: expect.any(Function) }),
     );
+    expect(onHostVoteProgressChangedSubscribeMock).toHaveBeenCalledWith(
+      { code: 'ABC123' },
+      expect.objectContaining({ onData: expect.any(Function) }),
+    );
     fixture.destroy();
-    expect(unsubscribeMock).toHaveBeenCalledTimes(3);
+    expect(unsubscribeMock).toHaveBeenCalledTimes(4);
   });
 
   it('zeigt im spielerischen Quiz-Foyer nur fuer echte Neuzugaenge einen Arrival-Chip', async () => {

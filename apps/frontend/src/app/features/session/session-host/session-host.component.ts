@@ -79,6 +79,7 @@ import type {
   AnalyzeWordCloudInput,
   AnalyzeWordCloudOutput,
   HostCurrentQuestionDTO,
+  HostVoteProgressDTO,
   LeaderboardEntryDTO,
   NicknameTheme,
   NumericRoundComparisonDTO,
@@ -149,6 +150,7 @@ type NumericStatsDisplayItem = {
 
 const HOST_AUX_POLL_MS = 3000;
 const HOST_CLOCK_POLL_MS = 15000;
+const HOST_REALTIME_RESUBSCRIBE_MS = 5000;
 const QA_WORD_CLOUD_ANALYSIS_DEBOUNCE_MS = 180;
 const FOYER_MAX_ACTIVE_CHIPS = 6;
 const FOYER_CHIP_LIFETIME_MS = 1100;
@@ -428,10 +430,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private participantSub: Unsubscribable | null = null;
   private statusSub: Unsubscribable | null = null;
   private currentQuestionSub: Unsubscribable | null = null;
+  private voteProgressSub: Unsubscribable | null = null;
   private qaSub: Unsubscribable | null = null;
   private qaSubscriptionKey: string | null = null;
   private hostRealtimeFallbackActive = false;
+  private hostRealtimeFallbackRefreshInFlight = false;
+  private hostRealtimeSubscriptionRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private currentQuestionRefreshRunId = 0;
+  private hostVoteProgressRefreshRunId = 0;
   private participantBaselineReady = false;
   private knownParticipantIds = new Set<string>();
   private foyerArrivalSequence = 0;
@@ -504,6 +510,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.ensureParticipantSubscription();
     this.ensureStatusSubscription();
     this.ensureCurrentQuestionSubscription();
+    this.ensureVoteProgressSubscription();
     this.startHostPolling();
     this.runAuxiliaryPollCycle();
     if (this.hostRealtimeFallbackActive) {
@@ -513,20 +520,18 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   readonly feedbackSummary = signal<SessionFeedbackSummary | null>(null);
   /** Aktuelle Frage für Host (Text + Antwortoptionen), null wenn keine Frage aktiv. */
   readonly currentQuestionForHost = signal<HostCurrentQuestionDTO | null>(null);
+  readonly hostVoteProgress = signal<HostVoteProgressDTO | null>(null);
   readonly displayedCurrentQuestionForHost = computed(() => {
     const question = this.currentQuestionForHost();
     if (!question) return null;
-    const statusUpdate = this.statusUpdate();
-    if (!statusUpdate) return question;
-    const currentQuestion = statusUpdate.currentQuestion;
-    if (typeof currentQuestion !== 'number') {
-      return currentQuestion === null ? null : question;
-    }
+    const currentQuestion = this.effectiveCurrentQuestionState();
+    if (currentQuestion === undefined) return question;
+    if (currentQuestion === null) return null;
     return currentQuestion === question.order ? question : null;
   });
   readonly hasCurrentQuizQuestionForHost = computed(() => {
     if (this.displayedCurrentQuestionForHost() !== null) return true;
-    return typeof this.statusUpdate()?.currentQuestion === 'number';
+    return typeof this.effectiveCurrentQuestionState() === 'number';
   });
   readonly isHostQuestionDetailsPending = computed(
     () => this.hasCurrentQuizQuestionForHost() && this.displayedCurrentQuestionForHost() === null,
@@ -1147,9 +1152,39 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   /** Stimmenzahl der aktuellen Frage (für Vergleich mit Teilnehmerzahl). */
   private getVoteCountForCurrentQuestion(q: HostCurrentQuestionDTO | null): number {
     if (!q) return 0;
+    const progress = this.hostVoteProgress();
+    if (this.hostVoteProgressMatchesQuestion(progress, q)) {
+      return progress.totalVotes;
+    }
     if (q.type === 'RATING') return q.ratingCount ?? 0;
     if (q.type === 'FREETEXT') return q.freeTextResponses?.length ?? 0;
     return q.totalVotes ?? 0;
+  }
+
+  hostVoteCount(q: HostCurrentQuestionDTO | null): number {
+    return this.getVoteCountForCurrentQuestion(q);
+  }
+
+  private hostVoteProgressMatchesQuestion(
+    progress: HostVoteProgressDTO | null,
+    q: HostCurrentQuestionDTO | null,
+  ): progress is HostVoteProgressDTO {
+    return (
+      progress !== null &&
+      q !== null &&
+      progress.questionId === q.questionId &&
+      progress.questionOrder === q.order &&
+      progress.round === (q.currentRound ?? 1) &&
+      this.effectiveStatus() === 'ACTIVE'
+    );
+  }
+
+  private hostPeerInstructionSuggestion(q: HostCurrentQuestionDTO | null) {
+    const progress = this.hostVoteProgress();
+    if (this.hostVoteProgressMatchesQuestion(progress, q)) {
+      return progress.peerInstructionSuggestion ?? null;
+    }
+    return q?.peerInstructionSuggestion ?? null;
   }
 
   readonly liveVoteProgress = computed(() => {
@@ -1189,7 +1224,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return (
       this.effectiveStatus() === 'ACTIVE' &&
       q?.currentRound === 1 &&
-      q?.peerInstructionSuggestion?.suggested === true &&
+      this.hostPeerInstructionSuggestion(q)?.suggested === true &&
       (this.allHaveVoted() || this.countdownEnded())
     );
   }
@@ -1611,6 +1646,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     await this.generateQrCode();
     await this.refreshLiveFreetext();
     await this.refreshCurrentQuestionForHost();
+    await this.refreshHostVoteProgress();
     this.syncMusic();
     this.startHostPolling();
     this.syncMusic();
@@ -1619,6 +1655,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.ensureParticipantSubscription();
       this.ensureStatusSubscription();
       this.ensureCurrentQuestionSubscription();
+      this.ensureVoteProgressSubscription();
 
       this.document.addEventListener('click', this.unlockListener, { once: true });
       this.document.addEventListener('keydown', this.unlockListener, { once: true });
@@ -1642,7 +1679,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       { code: this.code.toUpperCase() },
       {
         onData: (data) => {
-          this.hostRealtimeFallbackActive = false;
           this.updateParticipantsPayload(data);
         },
         onError: () => {
@@ -1662,7 +1698,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       { code: this.code.toUpperCase() },
       {
         onData: (data) => {
-          this.hostRealtimeFallbackActive = false;
           if (data.serverTime) {
             recordServerTimeIso(data.serverTime);
           }
@@ -1701,11 +1736,31 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       {
         onData: (data) => {
           this.hostRealtimeFallbackActive = false;
+          this.clearHostRealtimeSubscriptionRetry();
           this.syncCurrentQuestionForHost(data);
         },
         onError: () => {
           this.currentQuestionSub?.unsubscribe();
           this.currentQuestionSub = null;
+          this.burstHostFallbackAfterWsGap();
+        },
+      },
+    );
+  }
+
+  private ensureVoteProgressSubscription(): void {
+    if (!this.code || this.voteProgressSub) {
+      return;
+    }
+    this.voteProgressSub = trpc.session.onHostVoteProgressChanged.subscribe(
+      { code: this.code.toUpperCase() },
+      {
+        onData: (data) => {
+          this.syncHostVoteProgress(data);
+        },
+        onError: () => {
+          this.voteProgressSub?.unsubscribe();
+          this.voteProgressSub = null;
           this.burstHostFallbackAfterWsGap();
         },
       },
@@ -1748,7 +1803,15 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   private runRealtimeFallbackCycle(): void {
-    void this.refreshRealtimeHostFallback();
+    if (this.hostRealtimeFallbackRefreshInFlight) {
+      return;
+    }
+    this.hostRealtimeFallbackRefreshInFlight = true;
+    void this.refreshRealtimeHostFallback()
+      .catch(() => undefined)
+      .finally(() => {
+        this.hostRealtimeFallbackRefreshInFlight = false;
+      });
   }
 
   private async refreshAuxiliaryHostData(): Promise<void> {
@@ -1780,6 +1843,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
     await this.refreshParticipantsPayload();
     await this.refreshCurrentQuestionForHost();
+    await this.refreshHostVoteProgress();
     if (this.session()?.teamMode && this.effectiveStatus() === 'LOBBY') {
       await this.refreshLobbyTeams();
     }
@@ -1820,11 +1884,37 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   /** Ein Poll-Zyklus ohne auf das Intervall zu warten (z. B. nach WS-Subscription-Fehler beim Deploy). */
   private burstHostFallbackAfterWsGap(): void {
     this.hostRealtimeFallbackActive = true;
-    this.ensureParticipantSubscription();
-    this.ensureStatusSubscription();
-    this.ensureCurrentQuestionSubscription();
+    this.startHostPolling();
     this.runRealtimeFallbackCycle();
     this.runAuxiliaryPollCycle();
+    this.scheduleHostRealtimeSubscriptionRetry();
+  }
+
+  private scheduleHostRealtimeSubscriptionRetry(): void {
+    if (this.hostRealtimeSubscriptionRetryTimer) {
+      return;
+    }
+    if (typeof document !== 'undefined' && document.hidden) {
+      return;
+    }
+    this.hostRealtimeSubscriptionRetryTimer = setTimeout(() => {
+      this.hostRealtimeSubscriptionRetryTimer = null;
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
+      this.ensureParticipantSubscription();
+      this.ensureStatusSubscription();
+      this.ensureCurrentQuestionSubscription();
+      this.ensureVoteProgressSubscription();
+    }, HOST_REALTIME_RESUBSCRIBE_MS);
+  }
+
+  private clearHostRealtimeSubscriptionRetry(): void {
+    if (!this.hostRealtimeSubscriptionRetryTimer) {
+      return;
+    }
+    clearTimeout(this.hostRealtimeSubscriptionRetryTimer);
+    this.hostRealtimeSubscriptionRetryTimer = null;
   }
 
   /** Periodische Kalibrierung gegen die Serverzeit (Health), falls keine Status-Events kommen. */
@@ -1849,11 +1939,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.statusSub = null;
     this.currentQuestionSub?.unsubscribe();
     this.currentQuestionSub = null;
+    this.voteProgressSub?.unsubscribe();
+    this.voteProgressSub = null;
     this.qaSub?.unsubscribe();
     this.qaSub = null;
     this.qaSubscriptionKey = null;
     this.clearQaWordCloudThemeAnalysisTimer();
     this.clearHostQuestionDetailsRetry();
+    this.clearHostRealtimeSubscriptionRetry();
     this.stopHostPolling();
     this.clearFoyerArrivalState();
     this.stopCountdown();
@@ -3077,7 +3170,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return;
     }
     if (next !== null && this.quizStartQuestionPending()) {
-      const currentQuestion = this.statusUpdate()?.currentQuestion;
+      const currentQuestion = this.effectiveCurrentQuestionState();
       if (typeof currentQuestion !== 'number' || currentQuestion === next.order) {
         this.quizStartQuestionPending.set(false);
         this.clearHostQuestionDetailsRetry();
@@ -3098,6 +3191,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.currentQuestionForHost.set(next);
   }
 
+  private syncHostVoteProgress(next: HostVoteProgressDTO | null): void {
+    const current = this.hostVoteProgress();
+    if (this.isSameHostVoteProgress(current, next)) {
+      return;
+    }
+    this.hostVoteProgress.set(next);
+  }
+
   private shouldRetainCurrentHostQuestion(current: HostCurrentQuestionDTO | null): boolean {
     if (!current) return false;
     const status = this.effectiveStatus();
@@ -3109,9 +3210,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     ) {
       return false;
     }
-    const statusUpdate = this.statusUpdate();
-    if (!statusUpdate) return true;
-    const currentQuestion = statusUpdate.currentQuestion;
+    const currentQuestion = this.effectiveCurrentQuestionState();
+    if (currentQuestion === undefined) return true;
     return typeof currentQuestion === 'number'
       ? currentQuestion === current.order
       : currentQuestion !== null;
@@ -3273,6 +3373,28 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       (left.numericMin ?? null) === (right.numericMin ?? null) &&
       (left.numericMax ?? null) === (right.numericMax ?? null) &&
       (left.numericTwoRounds ?? false) === (right.numericTwoRounds ?? false)
+    );
+  }
+
+  private isSameHostVoteProgress(
+    left: HostVoteProgressDTO | null,
+    right: HostVoteProgressDTO | null,
+  ): boolean {
+    if (left === right) {
+      return true;
+    }
+    if (!left || !right) {
+      return false;
+    }
+    return (
+      left.questionId === right.questionId &&
+      left.questionOrder === right.questionOrder &&
+      left.round === right.round &&
+      left.totalVotes === right.totalVotes &&
+      (left.correctVoterCount ?? null) === (right.correctVoterCount ?? null) &&
+      (left.incorrectVoterCount ?? null) === (right.incorrectVoterCount ?? null) &&
+      JSON.stringify(left.peerInstructionSuggestion ?? null) ===
+        JSON.stringify(right.peerInstructionSuggestion ?? null)
     );
   }
 
@@ -3452,8 +3574,15 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   effectiveCurrentQuestion(): number | null {
-    const su = this.statusUpdate();
-    return su?.currentQuestion ?? null;
+    return this.effectiveCurrentQuestionState() ?? null;
+  }
+
+  private effectiveCurrentQuestionState(): number | null | undefined {
+    const statusUpdate = this.statusUpdate();
+    if (statusUpdate && statusUpdate.currentQuestion !== undefined) {
+      return statusUpdate.currentQuestion;
+    }
+    return this.session()?.currentQuestion;
   }
 
   /** True, wenn die aktuelle Frage die letzte ist – dann zeigt der Steuerungs-Button „Session beenden“. */
@@ -5615,7 +5744,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (!this.code || this.code.length !== 6) return;
     const runId = ++this.currentQuestionRefreshRunId;
     const expectedStatus = this.effectiveStatus();
-    const expectedQuestion = this.statusUpdate()?.currentQuestion ?? null;
+    const expectedQuestion = this.effectiveCurrentQuestionState();
     try {
       const q = await trpc.session.getCurrentQuestionForHost.query({
         code: this.code.toUpperCase(),
@@ -5623,7 +5752,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       if (
         runId !== this.currentQuestionRefreshRunId ||
         this.effectiveStatus() !== expectedStatus ||
-        (this.statusUpdate()?.currentQuestion ?? null) !== expectedQuestion
+        this.effectiveCurrentQuestionState() !== expectedQuestion
       ) {
         return;
       }
@@ -5632,11 +5761,43 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       if (
         runId !== this.currentQuestionRefreshRunId ||
         this.effectiveStatus() !== expectedStatus ||
-        (this.statusUpdate()?.currentQuestion ?? null) !== expectedQuestion
+        this.effectiveCurrentQuestionState() !== expectedQuestion
       ) {
         return;
       }
       this.syncCurrentQuestionForHost(null);
+    }
+  }
+
+  private async refreshHostVoteProgress(): Promise<void> {
+    if (!this.code || this.code.length !== 6) return;
+    const runId = ++this.hostVoteProgressRefreshRunId;
+    const expectedStatus = this.effectiveStatus();
+    const expectedQuestion = this.effectiveCurrentQuestionState();
+    const expectedRound = this.displayedCurrentQuestionForHost()?.currentRound ?? null;
+    try {
+      const progress = await trpc.session.getHostVoteProgress.query({
+        code: this.code.toUpperCase(),
+      });
+      if (
+        runId !== this.hostVoteProgressRefreshRunId ||
+        this.effectiveStatus() !== expectedStatus ||
+        this.effectiveCurrentQuestionState() !== expectedQuestion ||
+        (this.displayedCurrentQuestionForHost()?.currentRound ?? null) !== expectedRound
+      ) {
+        return;
+      }
+      this.syncHostVoteProgress(progress);
+    } catch {
+      if (
+        runId !== this.hostVoteProgressRefreshRunId ||
+        this.effectiveStatus() !== expectedStatus ||
+        this.effectiveCurrentQuestionState() !== expectedQuestion ||
+        (this.displayedCurrentQuestionForHost()?.currentRound ?? null) !== expectedRound
+      ) {
+        return;
+      }
+      this.syncHostVoteProgress(null);
     }
   }
 

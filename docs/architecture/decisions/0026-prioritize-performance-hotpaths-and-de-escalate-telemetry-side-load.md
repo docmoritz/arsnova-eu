@@ -6,7 +6,7 @@
 **Datum:** 2026-05-09  
 **Entscheider:** Projektteam
 
-**Letzter Repo-Abgleich:** 2026-05-31
+**Letzter Repo-Abgleich:** 2026-06-17
 
 ## Kontext
 
@@ -249,6 +249,13 @@ Stand 2026-05-31:
 - `health.footerBundle` bleibt der schlanke Footer-Pfad; `health.stats` und der Tagesrekord-Chart sind Dialog-/Detaildaten.
 - Die konkrete Lasttest-Basis liegt aktuell vor allem in `scripts/load/k6-session-hotpaths-500vu.js` und den begleitenden Node-Smoke-/WS-Skripten; ein vollstaendiges Artillery-Setup ist weiterhin offen.
 - Tempo nach ADR-0029 darf nicht als neuer Session-Channel-Fan-out umgesetzt werden, sondern muss im vorhandenen Blitzlicht-Hotpath mit delta-/cachefreundlicher Semantik bleiben.
+
+Stand 2026-06-17:
+
+- Host-Live-Fortschritt waehrend `ACTIVE` laeuft nicht mehr ueber vote-getriebene Full-Question-Events, sondern ueber `HostVoteProgressDTO`.
+- `HostCurrentQuestionDTO` bleibt der stabile Host-Snapshot fuer Frage, Konfiguration und Ergebnisdaten; neue Votes invalidieren diesen Kanal nicht pro Abgabe.
+- Vote-getriebene Progress-Signale werden kurz gebuendelt, damit Vote-Spitzen den Host nicht mit Re-Renders und WebSocket-Fan-out fluten.
+- Ein gezielter Last-Smoke `npm run load:smoke:host-vote-progress` prueft fuer 200 parallele `NUMERIC_ESTIMATE`-Votes, dass der Progress-Endstand ankommt und keine vote-tragenden Current-Question-Events erzeugt werden.
 
 ---
 
