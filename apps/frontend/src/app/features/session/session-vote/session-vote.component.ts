@@ -1914,6 +1914,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   numericResultRoundComparisonLabel(): string | null {
+    const question = this.currentQuestion();
+    const twoRounds =
+      question && 'numericTwoRounds' in question
+        ? Boolean((question as { numericTwoRounds?: boolean | null }).numericTwoRounds)
+        : false;
+    const currentRound =
+      question && 'currentRound' in question
+        ? ((question as { currentRound?: number | null }).currentRound ?? 1)
+        : 1;
+    if (!twoRounds || currentRound < 2) return null;
+
     const referenceValue = this.numericResultReferenceValue();
     const round1Value = this.storedNumericVoteValueForRound(1);
     const round2Value = this.numericParsedValue() ?? this.storedNumericVoteValueForRound(2);

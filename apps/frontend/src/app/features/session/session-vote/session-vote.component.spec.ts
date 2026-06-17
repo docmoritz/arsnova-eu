@@ -2106,6 +2106,70 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('zeigt bei einrundigen NUMERIC_ESTIMATE-Ergebnissen keinen Rundenvergleich', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'RESULTS',
+      quizName: 'Q',
+      title: null,
+      participantCount: 20,
+      teamMode: false,
+      enableRewardEffects: false,
+      enableMotivationMessages: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'single-round-estimate',
+      text: 'In welchem Jahr begann die Französische Revolution?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [],
+      activeAt: MOCK_SERVER_TIME,
+      currentRound: 1,
+      numericInputType: 'INTEGER',
+      numericDecimalPlaces: null,
+      numericMin: 1500,
+      numericMax: 2000,
+      numericTwoRounds: false,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1700,
+      numericIntervalRight: 1900,
+      totalVotes: 20,
+      participantCount: 20,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.voteSent.set(true);
+    component.numericInputValue.set('1789');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Deine Antwort: 1789');
+    expect(host.textContent).toContain('Referenzwert: 1789');
+    expect(component.numericResultRoundComparisonLabel()).toBeNull();
+    expect(host.textContent).not.toContain('Gleich nah am Referenzwert wie in Runde 1');
+    expect(host.textContent).not.toContain('Runde 1');
+    fixture.destroy();
+  });
+
   it('zeigt bei numerischen SHORT_TEXT-Ergebnissen Teilpunkte fuer fehlende Pflicht-Einheiten', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
