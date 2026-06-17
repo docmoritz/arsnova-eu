@@ -521,7 +521,11 @@ Der Smoke erstellt eine echte Session, subscribed parallel auf:
 - `session.onCurrentQuestionForHostChanged`
 - `session.onHostVoteProgressChanged`
 
-Danach treten standardmaessig `200` Teilnehmende bei und geben nahezu parallel eine `NUMERIC_ESTIMATE`-Stimme ab.
+Danach treten standardmaessig `200` Teilnehmende bei und geben nahezu parallel eine `NUMERIC_ESTIMATE`-Stimme ab. Fuer groessere lokale Pruefungen kann die Zahl ueber `PARTICIPANTS` erhoeht werden, z. B.:
+
+```bash
+PARTICIPANTS=600 npm run load:smoke:host-vote-progress
+```
 
 Beobachteter Lauf am 2026-06-17:
 
@@ -544,6 +548,23 @@ Wertung:
 - Der Host erhielt den Endstand ueber den kleinen Progress-Kanal.
 - Die kurze serverseitige Buendelung reduziert Fan-out-Spitzen, ohne den fachlich sichtbaren Fortschritt zu verlieren.
 - Der Test ersetzt keinen grossen Produktionslasttest, deckt aber genau den geaenderten Eventmechanismus ab.
+
+Ein anschliessender 600er-Lauf zeigte zunaechst einen Restbefund: Der periodische Resync von `onCurrentQuestionForHostChanged` konnte waehrend eines langen Join-/Vote-Ablaufs einmal ein Full-Question-Payload mit geaendertem `totalVotes` liefern, obwohl kein Vote-Signal fuer diesen Kanal gesendet wurde. Danach wurde der Subscription-Vergleich waehrend `ACTIVE` um live veraenderliche Fortschrittsfelder normalisiert.
+
+Nach der Nachschaerfung lief `PARTICIPANTS=600 npm run load:smoke:host-vote-progress` erfolgreich:
+
+| Kennzahl                              |       Wert |
+| ------------------------------------- | ---------: |
+| Teilnehmende / Votes                  |        600 |
+| fehlgeschlagene Vote-Requests         |          0 |
+| Subscription-Fehler                   |          0 |
+| Vote-Spike-Dauer                      |     777 ms |
+| Vote-Submit `p50`                     |     775 ms |
+| Vote-Submit `p95`                     |     777 ms |
+| `onCurrentQuestionForHostChanged`     |  1 Message |
+| vote-tragende Current-Question-Events |          0 |
+| `onHostVoteProgressChanged`           | 2 Messages |
+| Progress-Snapshot `totalVotes`        |        600 |
 
 ## Produktionsbefund am 2026-05-09
 

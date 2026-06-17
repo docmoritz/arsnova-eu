@@ -135,6 +135,12 @@ Der Smoke erstellt eine numerische Schätzfrage, subscribed auf `onCurrentQuesti
 - `onHostVoteProgressChanged` bleibt durch serverseitige Bündelung klein.
 - Der finale `totalVotes`-Snapshot stimmt mit der Zahl der Votes überein.
 
+Für den erweiterten lokalen 600er-Check:
+
+```bash
+PARTICIPANTS=600 npm run load:smoke:host-vote-progress
+```
+
 ---
 
 ## Wo Tests liegen

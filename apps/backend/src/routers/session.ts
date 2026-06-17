@@ -65,6 +65,7 @@ import {
   type LeaderboardEntryDTO,
   type NicknameTheme,
   type PeerInstructionSuggestionDTO,
+  type HostCurrentQuestionDTO,
   type HostVoteProgressDTO,
   type TeamLeaderboardEntryDTO,
   type TeamAssignment,
@@ -2961,9 +2962,42 @@ async function buildHostCurrentQuestionDto(
   return base;
 }
 
-async function fetchHostCurrentQuestion(
+type HostCurrentQuestionEnvelope = {
+  status: string | null;
+  payload: HostCurrentQuestionDTO | null;
+};
+
+export function buildHostCurrentQuestionSubscriptionKey(
+  envelope: HostCurrentQuestionEnvelope,
+): string {
+  if (!envelope.payload || envelope.status !== 'ACTIVE') {
+    return JSON.stringify(envelope.payload);
+  }
+
+  const {
+    totalVotes: _totalVotes,
+    correctVoterCount: _correctVoterCount,
+    incorrectVoterCount: _incorrectVoterCount,
+    peerInstructionSuggestion: _peerInstructionSuggestion,
+    ratingAvg: _ratingAvg,
+    ratingCount: _ratingCount,
+    ratingDistribution: _ratingDistribution,
+    freeTextResponses: _freeTextResponses,
+    incorrectFreeTextResponses: _incorrectFreeTextResponses,
+    voteDistribution: _voteDistribution,
+    roundComparison: _roundComparison,
+    numericHistogram: _numericHistogram,
+    numericStats: _numericStats,
+    numericRoundComparison: _numericRoundComparison,
+    ...stablePayload
+  } = envelope.payload;
+
+  return JSON.stringify(stablePayload);
+}
+
+async function fetchHostCurrentQuestionEnvelope(
   code: string,
-): Promise<z.infer<typeof HostCurrentQuestionDTOSchema> | null> {
+): Promise<HostCurrentQuestionEnvelope> {
   const normalizedCode = code.toUpperCase();
   const session = await prisma.session.findUnique({
     where: { code: normalizedCode },
@@ -3025,7 +3059,17 @@ async function fetchHostCurrentQuestion(
       },
     },
   });
-  return buildHostCurrentQuestionDto(session);
+  return {
+    status: session?.status ?? null,
+    payload: await buildHostCurrentQuestionDto(session),
+  };
+}
+
+async function fetchHostCurrentQuestion(
+  code: string,
+): Promise<z.infer<typeof HostCurrentQuestionDTOSchema> | null> {
+  const envelope = await fetchHostCurrentQuestionEnvelope(code);
+  return envelope.payload;
 }
 
 async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO | null> {
@@ -4612,8 +4656,9 @@ export const sessionRouter = router({
       const code = input.code.toUpperCase();
       let lastJson = '';
       while (true) {
-        const payload = await fetchHostCurrentQuestion(code);
-        const json = JSON.stringify(payload);
+        const envelope = await fetchHostCurrentQuestionEnvelope(code);
+        const payload = envelope.payload;
+        const json = buildHostCurrentQuestionSubscriptionKey(envelope);
         if (json !== lastJson) {
           lastJson = json;
           yield payload;

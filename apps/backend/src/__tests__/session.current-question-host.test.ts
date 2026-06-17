@@ -30,7 +30,11 @@ vi.mock('../lib/hostAuth', async () => {
   });
 });
 
-import { resetVoteAggregationCachesForTests, sessionRouter } from '../routers/session';
+import {
+  buildHostCurrentQuestionSubscriptionKey,
+  resetVoteAggregationCachesForTests,
+  sessionRouter,
+} from '../routers/session';
 
 const caller = sessionRouter.createCaller({ req: {} as never });
 const CODE = 'ABC123';
@@ -378,6 +382,98 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
         reason: 'CORRECTNESS_WINDOW',
       },
     });
+  });
+
+  it('ignoriert reine ACTIVE-Fortschrittswerte im Host-Current-Question-Subscription-Key', () => {
+    const basePayload = {
+      questionId: 'cccccccc-3333-4333-8333-333333333333',
+      order: 0,
+      totalQuestions: 1,
+      text: 'In welchem Jahr begann die Franzoesische Revolution?',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      showQuestionTypeIndicators: true,
+      timer: null,
+      answers: [],
+      currentRound: 1,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL' as const,
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1700,
+      numericIntervalRight: 1900,
+      numericInputType: 'INTEGER' as const,
+      numericDecimalPlaces: 0,
+      numericMin: 1500,
+      numericMax: 2000,
+      numericTwoRounds: false,
+    };
+
+    expect(
+      buildHostCurrentQuestionSubscriptionKey({
+        status: 'ACTIVE',
+        payload: { ...basePayload, totalVotes: 0 },
+      }),
+    ).toBe(
+      buildHostCurrentQuestionSubscriptionKey({
+        status: 'ACTIVE',
+        payload: { ...basePayload, totalVotes: 600 },
+      }),
+    );
+  });
+
+  it('behaelt Ergebnisdaten im Host-Current-Question-Subscription-Key', () => {
+    const basePayload = {
+      questionId: 'cccccccc-3333-4333-8333-333333333333',
+      order: 0,
+      totalQuestions: 1,
+      text: 'In welchem Jahr begann die Franzoesische Revolution?',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      showQuestionTypeIndicators: true,
+      timer: null,
+      answers: [],
+      currentRound: 1,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL' as const,
+      numericReferenceValue: 1789,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 1700,
+      numericIntervalRight: 1900,
+      numericInputType: 'INTEGER' as const,
+      numericDecimalPlaces: 0,
+      numericMin: 1500,
+      numericMax: 2000,
+      numericTwoRounds: false,
+    };
+
+    expect(
+      buildHostCurrentQuestionSubscriptionKey({
+        status: 'RESULTS',
+        payload: { ...basePayload, totalVotes: 0 },
+      }),
+    ).not.toBe(
+      buildHostCurrentQuestionSubscriptionKey({
+        status: 'RESULTS',
+        payload: {
+          ...basePayload,
+          totalVotes: 600,
+          numericStats: {
+            n: 600,
+            mean: 1789,
+            median: 1789,
+            stdDev: 0,
+            min: 1789,
+            max: 1789,
+            q1: 1789,
+            q3: 1789,
+            iqr: 0,
+            inBandCount: 600,
+            inBandPercent: 100,
+            meanAbsoluteError: 0,
+            meanRelativeError: 0,
+          },
+        },
+      }),
+    );
   });
 
   it('ignoriert unpassende absolute Referenzwerte fuer Host-Statistiken', async () => {
