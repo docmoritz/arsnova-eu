@@ -1131,12 +1131,14 @@
                 (input)="numericInputValue.set($any($event.target).value)"
                 [disabled]="voteSent() || timerExpired()"
                 [attr.inputmode]="numericIsInteger() ? 'numeric' : 'decimal'"
+                [attr.aria-invalid]="numericInputInvalid() ? 'true' : null"
+                [attr.aria-describedby]="numericInputInvalid() ? 'vote-numeric-input-error' : null"
                 autocomplete="off"
                 i18n-placeholder="@@sessionVote.numericPlaceholder"
                 placeholder="Zahl eingeben…"
               />
               @if (numericInputInvalid()) {
-                <p class="vote-numeric__range-hint" role="alert">
+                <p id="vote-numeric-input-error" class="vote-numeric__range-hint" role="alert">
                   {{ numericValidationError() }}
                 </p>
               }

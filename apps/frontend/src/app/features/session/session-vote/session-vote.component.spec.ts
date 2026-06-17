@@ -1885,12 +1885,21 @@ describe('SessionVoteComponent', () => {
     const input = await findNumericEstimateInput(fixture);
     expect(input?.type).toBe('text');
     expect(input?.getAttribute('inputmode')).toBe('numeric');
+    expect(input?.getAttribute('aria-invalid')).toBeNull();
+    expect(input?.getAttribute('aria-describedby')).toBeNull();
 
     component.numericInputValue.set('3.14');
     fixture.detectChanges();
 
     expect(component.numericValidationError()).toContain('ganze Zahl');
     expect(component.voteSubmitDisabled()).toBe(true);
+    expect(input?.getAttribute('aria-invalid')).toBe('true');
+    expect(input?.getAttribute('aria-describedby')).toBe('vote-numeric-input-error');
+
+    const error = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '#vote-numeric-input-error',
+    );
+    expect(error?.textContent).toContain('ganze Zahl');
 
     await component.submitVote();
 
