@@ -14080,6 +14080,50 @@
           <context context-type="linenumber">289</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionVote.numericEstimateMotivEvaluated" datatype="html">
+        <source>Antwort ausgewertet.</source>
+        <target>Réponse évaluée.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">310</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionVote.numericEstimateMotivOutOfBand" datatype="html">
+        <source>Außerhalb des Toleranzbands.</source>
+        <target>En dehors de la bande de tolérance.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">314</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionVote.numericEstimateMotivExact" datatype="html">
+        <source>Volltreffer: genau am Referenzwert.</source>
+        <target>Exactement sur la valeur de référence.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">319</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionVote.numericEstimateMotivInBand" datatype="html">
+        <source>Im akzeptierten Bereich.</source>
+        <target>Dans la zone acceptée.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">325</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">334</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionVote.numericEstimateMotivVeryClose" datatype="html">
+        <source>Sehr nah am Referenzwert.</source>
+        <target>Très proche de la valeur de référence.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
+          <context context-type="linenumber">331</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="sessionVote.teamArrivalPrefixPlayful" datatype="html">
         <source>Perfekt!</source>
         <target>Parfait !</target>

@@ -291,6 +291,49 @@ function getContextMotivation(
   return pickRandom(playful ? MESSAGES_NEUTRAL_PLAYFUL : MESSAGES_NEUTRAL_SERIOUS);
 }
 
+export function getNumericEstimateMotivation(input: {
+  value: number | null;
+  referenceValue: number | null;
+  toleranceBand: { left: number; right: number } | null;
+}): string {
+  const { value, referenceValue, toleranceBand } = input;
+  if (
+    value === null ||
+    referenceValue === null ||
+    toleranceBand === null ||
+    !Number.isFinite(value) ||
+    !Number.isFinite(referenceValue) ||
+    !Number.isFinite(toleranceBand.left) ||
+    !Number.isFinite(toleranceBand.right) ||
+    toleranceBand.left >= toleranceBand.right
+  ) {
+    return $localize`:@@sessionVote.numericEstimateMotivEvaluated:Antwort ausgewertet.`;
+  }
+
+  if (value < toleranceBand.left || value > toleranceBand.right) {
+    return $localize`:@@sessionVote.numericEstimateMotivOutOfBand:Außerhalb des Toleranzbands.`;
+  }
+
+  const distance = Math.abs(value - referenceValue);
+  if (distance === 0) {
+    return $localize`:@@sessionVote.numericEstimateMotivExact:Volltreffer: genau am Referenzwert.`;
+  }
+
+  const sideLimit = value < referenceValue ? toleranceBand.left : toleranceBand.right;
+  const maxDistanceOnSide = Math.abs(referenceValue - sideLimit);
+  if (maxDistanceOnSide <= 0) {
+    return $localize`:@@sessionVote.numericEstimateMotivInBand:Im akzeptierten Bereich.`;
+  }
+
+  const normalizedDistance = Math.min(1, Math.max(0, distance / maxDistanceOnSide));
+  const nearnessRatio = 1 - normalizedDistance ** 2;
+  if (nearnessRatio >= 0.9) {
+    return $localize`:@@sessionVote.numericEstimateMotivVeryClose:Sehr nah am Referenzwert.`;
+  }
+
+  return $localize`:@@sessionVote.numericEstimateMotivInBand:Im akzeptierten Bereich.`;
+}
+
 @Component({
   selector: 'app-session-vote',
   standalone: true,
@@ -1711,15 +1754,28 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return value === null ? null : this.formatNumericResultValue(value);
   }
 
-  private numericResultToleranceBand(): { left: number; right: number } | null {
-    return this.numericToleranceBandForQuestion(this.currentQuestion());
+  private numericResultToleranceBand(
+    question: CurrentQuestion | null = this.currentQuestion(),
+  ): { left: number; right: number } | null {
+    return this.numericToleranceBandForQuestion(question);
   }
 
-  private numericResultReferenceValue(): number | null {
-    const question = this.currentQuestion();
+  private numericResultReferenceValue(
+    question: CurrentQuestion | null = this.currentQuestion(),
+  ): number | null {
     return question && 'numericReferenceValue' in question
       ? ((question as { numericReferenceValue?: number | null }).numericReferenceValue ?? null)
       : null;
+  }
+
+  private numericEstimateMotivationMessage(
+    question: CurrentQuestion | null = this.currentQuestion(),
+  ): string {
+    return getNumericEstimateMotivation({
+      value: this.numericParsedValue(),
+      referenceValue: this.numericResultReferenceValue(question),
+      toleranceBand: this.numericResultToleranceBand(question),
+    });
   }
 
   private numericResultUsesIntegerFormat(
@@ -3255,15 +3311,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           if (settings.enableMotivationMessages) {
             const playful = this.isPlayfulPreset();
             this.motivationMessage.set(
-              pickRandom(
-                answeredCorrectly
-                  ? playful
-                    ? MESSAGES_CORRECT_PLAYFUL
-                    : MESSAGES_CORRECT_SERIOUS
-                  : playful
-                    ? MESSAGES_WRONG_PLAYFUL
-                    : MESSAGES_WRONG_SERIOUS,
-              ),
+              'type' in q && q.type === 'NUMERIC_ESTIMATE'
+                ? this.numericEstimateMotivationMessage(q)
+                : pickRandom(
+                    answeredCorrectly
+                      ? playful
+                        ? MESSAGES_CORRECT_PLAYFUL
+                        : MESSAGES_CORRECT_SERIOUS
+                      : playful
+                        ? MESSAGES_WRONG_PLAYFUL
+                        : MESSAGES_WRONG_SERIOUS,
+                  ),
             );
           }
         }
@@ -3613,7 +3671,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       if (settings.enableMotivationMessages) {
         const totalParticipants = settings.participantCount ?? 1;
         this.motivationMessage.set(
-          getContextMotivation(sc, totalParticipants, this.isPlayfulPreset()),
+          questionType === 'NUMERIC_ESTIMATE'
+            ? this.numericEstimateMotivationMessage()
+            : getContextMotivation(sc, totalParticipants, this.isPlayfulPreset()),
         );
       }
     } catch {

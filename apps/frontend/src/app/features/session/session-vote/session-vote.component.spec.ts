@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   anchorCandidatesForPhase,
   focusTargetIdForAnchor,
+  getNumericEstimateMotivation,
   SessionVoteComponent,
 } from './session-vote.component';
 import { NICKNAME_LISTS } from '../../join/nickname-themes';
@@ -176,6 +177,23 @@ describe('SessionVoteComponent', () => {
     expect(vpc.voteQuestionLabel(true, 2)).toBe('Frage 2');
     expect(vpc.voteRound2Banner(true)).toBe('Nur Runde 2 zählt. Antworte erneut.');
     expect(vpc.voteRound2Banner(false)).toBe('Nur Runde 2 zählt. Antworte erneut.');
+  });
+
+  it('formuliert NUMERIC_ESTIMATE-Motivation nach Nähe statt binär richtig/falsch', () => {
+    const toleranceBand = { left: 1700, right: 1900 };
+
+    expect(getNumericEstimateMotivation({ value: 1789, referenceValue: 1789, toleranceBand })).toBe(
+      'Volltreffer: genau am Referenzwert.',
+    );
+    expect(getNumericEstimateMotivation({ value: 1790, referenceValue: 1789, toleranceBand })).toBe(
+      'Sehr nah am Referenzwert.',
+    );
+    expect(getNumericEstimateMotivation({ value: 1850, referenceValue: 1789, toleranceBand })).toBe(
+      'Im akzeptierten Bereich.',
+    );
+    expect(getNumericEstimateMotivation({ value: 1901, referenceValue: 1789, toleranceBand })).toBe(
+      'Außerhalb des Toleranzbands.',
+    );
   });
 
   beforeEach(() => {
@@ -2073,10 +2091,7 @@ describe('SessionVoteComponent', () => {
     expect(host.textContent).toContain('Punkte');
     expect(host.textContent).toContain('Gesamt');
     expect(component.showRewardEffect()).toBe(true);
-    expect(component.motivationMessage()).toBeTruthy();
-    expect(component.motivationMessage()).not.toMatch(
-      /Knapp daneben|Nächstes Mal|Weiter dranbleiben|Das wird schon|Nicht aufgeben/,
-    );
+    expect(component.motivationMessage()).toBe('Volltreffer: genau am Referenzwert.');
     fixture.destroy();
   });
 
