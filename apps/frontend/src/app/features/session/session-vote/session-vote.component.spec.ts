@@ -1,6 +1,6 @@
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { QaQuestionDTO } from '@arsnova/shared-types';
@@ -110,6 +110,24 @@ vi.mock('../../../core/trpc.client', () => ({
 }));
 
 const MOCK_SERVER_TIME = '2026-03-24T12:00:00.000Z';
+
+async function findNumericEstimateInput(
+  fixture: ComponentFixture<SessionVoteComponent>,
+): Promise<HTMLInputElement> {
+  let input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+    '#vote-numeric-input',
+  );
+  for (let attempt = 0; attempt < 10 && !input; attempt += 1) {
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
+    input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#vote-numeric-input',
+    );
+  }
+  expect(input).toBeTruthy();
+  return input!;
+}
 
 describe('SessionVoteComponent', () => {
   it('liefert phasenabhängige Einsprung-Anker mit korrekten Fallbacks', () => {
@@ -1864,9 +1882,7 @@ describe('SessionVoteComponent', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     const component = fixture.componentInstance;
-    const input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
-      '#vote-numeric-input',
-    );
+    const input = await findNumericEstimateInput(fixture);
     expect(input?.type).toBe('text');
     expect(input?.getAttribute('inputmode')).toBe('numeric');
 
@@ -1927,18 +1943,7 @@ describe('SessionVoteComponent', () => {
     await new Promise((r) => setTimeout(r, 50));
 
     const component = fixture.componentInstance;
-    let input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
-      '#vote-numeric-input',
-    );
-    for (let attempt = 0; attempt < 10 && !input; attempt += 1) {
-      await fixture.whenStable();
-      await new Promise((r) => setTimeout(r, 50));
-      fixture.detectChanges();
-      input = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
-        '#vote-numeric-input',
-      );
-    }
-    expect(input).toBeTruthy();
+    const input = await findNumericEstimateInput(fixture);
     expect(input?.type).toBe('text');
     expect(input?.getAttribute('inputmode')).toBe('decimal');
     input!.value = '3,14';
