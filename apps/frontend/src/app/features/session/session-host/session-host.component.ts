@@ -3665,6 +3665,17 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return `1.0-${places}`;
   }
 
+  private numericHostStatsDigits(question: HostCurrentQuestionDTO | null): string {
+    return this.numericHostUsesIntegerFormat(question) ? '1.0-0' : '1.0-2';
+  }
+
+  private formatNumericHostStatValue(
+    value: number,
+    question: HostCurrentQuestionDTO | null,
+  ): string {
+    return this.formatNumericHostValue(value, question, this.numericHostStatsDigits(question));
+  }
+
   private formatNumericHostValue(
     value: number,
     question: HostCurrentQuestionDTO | null,
@@ -3693,25 +3704,24 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const parts: string[] = [];
     parts.push(`n=${stats.n}`);
     if (stats.mean !== null) {
-      parts.push(`Ø ${this.formatNumericHostValue(stats.mean, question, '1.0-2')}`);
+      parts.push(`Ø ${this.formatNumericHostStatValue(stats.mean, question)}`);
     }
     if (stats.median !== null) {
       parts.push(
-        $localize`:@@sessionHost.numericMedian:Median ${this.formatNumericHostValue(stats.median, question, '1.0-2')}:median:`,
+        $localize`:@@sessionHost.numericMedian:Median ${this.formatNumericHostStatValue(stats.median, question)}:median:`,
       );
     }
     if (stats.stdDev !== null) {
-      parts.push(`σ ${this.formatNumericHostValue(stats.stdDev, question, '1.0-2')}`);
+      parts.push(`σ ${this.formatNumericHostStatValue(stats.stdDev, question)}`);
     }
     if (stats.iqr !== null) {
-      parts.push(`IQR ${this.formatNumericHostValue(stats.iqr, question, '1.0-2')}`);
+      parts.push(`IQR ${this.formatNumericHostStatValue(stats.iqr, question)}`);
     }
     if (stats.min !== null && stats.max !== null) {
       parts.push(
-        `${this.formatNumericHostValue(stats.min, question, '1.0-2')}–${this.formatNumericHostValue(
+        `${this.formatNumericHostStatValue(stats.min, question)}–${this.formatNumericHostStatValue(
           stats.max,
           question,
-          '1.0-2',
         )}`,
       );
     }
@@ -3719,7 +3729,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       parts.push(`${formatNumber(stats.inBandPercent, this.localeId, '1.0-1')} % i. Band`);
     }
     if (stats.meanAbsoluteError !== null) {
-      parts.push(`MAE ${this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2')}`);
+      parts.push(`MAE ${this.formatNumericHostStatValue(stats.meanAbsoluteError, question)}`);
     }
     return parts.join(' · ');
   }
@@ -3740,7 +3750,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'mean',
         label: $localize`:@@sessionHost.numericStatMeanLabel:Mittelwert`,
-        value: this.formatNumericHostValue(stats.mean, question, '1.0-2'),
+        value: this.formatNumericHostStatValue(stats.mean, question),
         caption: $localize`:@@sessionHost.numericStatMeanCaption:Durchschnitt aller Schätzungen`,
       });
     }
@@ -3748,7 +3758,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'median',
         label: $localize`:@@sessionHost.numericStatMedianLabel:Median`,
-        value: this.formatNumericHostValue(stats.median, question, '1.0-2'),
+        value: this.formatNumericHostStatValue(stats.median, question),
         caption: $localize`:@@sessionHost.numericStatMedianCaption:Mitte der sortierten Werte`,
       });
     }
@@ -3756,7 +3766,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'stdDev',
         label: $localize`:@@sessionHost.numericStatStdDevLabel:Streuung`,
-        value: this.formatNumericHostValue(stats.stdDev, question, '1.0-2'),
+        value: this.formatNumericHostStatValue(stats.stdDev, question),
         caption: $localize`:@@sessionHost.numericStatStdDevCaption:Standardabweichung`,
       });
     }
@@ -3764,15 +3774,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'middle50',
         label: $localize`:@@sessionHost.numericStatMiddle50Label:Mittlere 50 %`,
-        value: `${this.formatNumericHostValue(stats.q1, question, '1.0-2')}–${this.formatNumericHostValue(
+        value: `${this.formatNumericHostStatValue(stats.q1, question)}–${this.formatNumericHostStatValue(
           stats.q3,
           question,
-          '1.0-2',
         )}`,
-        caption: $localize`:@@sessionHost.numericStatMiddle50Caption:Breite ${this.formatNumericHostValue(
+        caption: $localize`:@@sessionHost.numericStatMiddle50Caption:Breite ${this.formatNumericHostStatValue(
           stats.iqr,
           question,
-          '1.0-2',
         )}:iqr:`,
       });
     }
@@ -3780,10 +3788,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'range',
         label: $localize`:@@sessionHost.numericStatRangeLabel:Spanne`,
-        value: `${this.formatNumericHostValue(stats.min, question, '1.0-2')}–${this.formatNumericHostValue(
+        value: `${this.formatNumericHostStatValue(stats.min, question)}–${this.formatNumericHostStatValue(
           stats.max,
           question,
-          '1.0-2',
         )}`,
         caption: $localize`:@@sessionHost.numericStatRangeCaption:kleinste bis größte Schätzung`,
       });
@@ -3808,7 +3815,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       items.push({
         id: 'meanAbsoluteError',
         label: $localize`:@@sessionHost.numericStatMeanAbsoluteErrorLabel:Mittlerer Abstand`,
-        value: this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2'),
+        value: this.formatNumericHostStatValue(stats.meanAbsoluteError, question),
         caption: $localize`:@@sessionHost.numericStatMeanAbsoluteErrorCaption:zur Referenz`,
       });
     }
@@ -3830,10 +3837,10 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     question: HostCurrentQuestionDTO | null,
   ): string {
     if (stats.median !== null) {
-      return this.formatNumericHostValue(stats.median, question, '1.0-2');
+      return this.formatNumericHostStatValue(stats.median, question);
     }
     if (stats.mean !== null) {
-      return this.formatNumericHostValue(stats.mean, question, '1.0-2');
+      return this.formatNumericHostStatValue(stats.mean, question);
     }
     return formatNumber(stats.n, this.localeId, '1.0-0');
   }
@@ -3867,7 +3874,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     if (stats.meanAbsoluteError === null) {
       return null;
     }
-    return this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2');
+    return this.formatNumericHostStatValue(stats.meanAbsoluteError, question);
   }
 
   numericStatsErrorCaption(): string {
@@ -3897,7 +3904,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return null;
     }
     const sign = delta > 0 ? '+' : '';
-    return `${sign}${this.formatNumericHostValue(delta, question, '1.0-2')}`;
+    return `${sign}${this.formatNumericHostStatValue(delta, question)}`;
   }
 
   numericRoundDeltaCaption(roundComparison: NumericRoundComparisonDTO): string {
@@ -3906,25 +3913,26 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       : $localize`:@@sessionHost.numericMeanDeltaCaption:Mittelwert-Veränderung`;
   }
 
-  numericRoundDeltaLabel(roundComparison: NumericRoundComparisonDTO): string {
+  numericRoundDeltaLabel(
+    roundComparison: NumericRoundComparisonDTO,
+    question: HostCurrentQuestionDTO | null = null,
+  ): string {
     const parts: string[] = [];
     if (roundComparison.meanDelta !== null && roundComparison.meanDelta !== undefined) {
       const sign = roundComparison.meanDelta > 0 ? '+' : '';
       parts.push(
-        $localize`:@@sessionHost.numericMeanDeltaReadable:Mittelwert ${sign}${formatNumber(
+        $localize`:@@sessionHost.numericMeanDeltaReadable:Mittelwert ${sign}${this.formatNumericHostStatValue(
           roundComparison.meanDelta,
-          this.localeId,
-          '1.0-2',
+          question,
         )}:delta:`,
       );
     }
     if (roundComparison.medianDelta !== null && roundComparison.medianDelta !== undefined) {
       const sign = roundComparison.medianDelta > 0 ? '+' : '';
       parts.push(
-        $localize`:@@sessionHost.numericMedianDelta:Median ${sign}${formatNumber(
+        $localize`:@@sessionHost.numericMedianDelta:Median ${sign}${this.formatNumericHostStatValue(
           roundComparison.medianDelta,
-          this.localeId,
-          '1.0-2',
+          question,
         )}:medianDelta:`,
       );
     }

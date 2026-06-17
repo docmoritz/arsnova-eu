@@ -4613,7 +4613,86 @@ describe('SessionHostComponent', () => {
     expect(component.numericStatsPrimaryValue(stats, question)).toBe('1789');
     expect(component.numericStatsInBandValue(stats)).toBe('13/20');
     expect(component.numericStatsInBandCaption(stats)).toBe('65 % im akzeptierten Bereich');
-    expect(component.numericStatsLabel(stats, question)).toContain('Ø 1789.15');
+    const compactLabel = component.numericStatsLabel(stats, question);
+    expect(compactLabel).toContain('Ø 1789');
+    expect(compactLabel).toContain('σ 1');
+    expect(compactLabel).toContain('MAE 1');
+    expect(compactLabel).not.toContain('1789.15');
+    expect(compactLabel).not.toContain('0.55');
+    expect(component.numericStatsErrorValue(stats, question)).toBe('1');
+    const statItems = new Map(
+      component.numericStatsItems(stats, question).map((item) => [item.id, item.value]),
+    );
+    expect(statItems.get('mean')).toBe('1789');
+    expect(statItems.get('median')).toBe('1789');
+    expect(statItems.get('stdDev')).toBe('1');
+    expect(statItems.get('middle50')).toBe('1789–1789');
+    expect(statItems.get('range')).toBe('1787–1792');
+    expect(statItems.get('meanAbsoluteError')).toBe('1');
+    const roundComparison = {
+      round1Stats: stats,
+      round2Stats: stats,
+      round1Histogram: [],
+      round2Histogram: [],
+      meanDelta: -4.9333,
+      medianDelta: -1.3,
+      inBandPercentDelta: 33.3333,
+      deltaHistogram: [],
+      pairedAnalysis: null,
+    };
+    expect(component.numericRoundDeltaValue(roundComparison, question)).toBe('-1');
+    expect(component.numericRoundDeltaLabel(roundComparison, question)).toContain('Mittelwert -5');
+    expect(component.numericRoundDeltaLabel(roundComparison, question)).toContain('Median -1');
+    fixture.destroy();
+  });
+
+  it('belaesst Dezimalfragen in der Numeric-Estimate-Hoststatistik mit Dezimalstellen', () => {
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    const question = {
+      questionId: '66666666-6666-4666-8666-666666666666',
+      order: 0,
+      totalQuestions: 1,
+      text: 'Schätze den Messwert der Kalibrierprobe.',
+      type: 'NUMERIC_ESTIMATE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: null,
+      answers: [],
+      totalVotes: 3,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL' as const,
+      numericReferenceValue: 100,
+      numericTolerancePercent: null,
+      numericIntervalLeft: 95,
+      numericIntervalRight: 105,
+      numericInputType: 'DECIMAL' as const,
+      numericDecimalPlaces: 1,
+      numericMin: 0,
+      numericMax: 200,
+      numericTwoRounds: false,
+    };
+    const stats = {
+      n: 3,
+      mean: 101.9333,
+      median: 101.1,
+      stdDev: 2.09,
+      q1: 99.9,
+      q3: 104.8,
+      iqr: 4.9,
+      min: 99.9,
+      max: 104.8,
+      inBandCount: 3,
+      inBandPercent: 100,
+      meanAbsoluteError: 2,
+      meanRelativeError: 2,
+    };
+
+    const statItems = new Map(
+      component.numericStatsItems(stats, question).map((item) => [item.id, item.value]),
+    );
+    expect(statItems.get('mean')).toMatch(/^101[,.]93$/);
+    expect(statItems.get('median')).toMatch(/^101[,.]1$/);
+    expect(component.numericStatsLabel(stats, question)).toMatch(/Ø 101[,.]93/);
     fixture.destroy();
   });
 

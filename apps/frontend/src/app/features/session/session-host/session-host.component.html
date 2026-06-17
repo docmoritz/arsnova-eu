@@ -1624,9 +1624,9 @@
                                           Paare)
                                         </p>
                                       }
-                                      @if (numericRoundDeltaLabel(rc)) {
+                                      @if (numericRoundDeltaLabel(rc, q)) {
                                         <p class="session-host__numeric-paired">
-                                          {{ numericRoundDeltaLabel(rc) }}
+                                          {{ numericRoundDeltaLabel(rc, q) }}
                                         </p>
                                       }
                                       @if (rc.deltaHistogram && rc.deltaHistogram.length > 0) {
