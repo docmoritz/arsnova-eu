@@ -21,6 +21,7 @@ export const SCORED_QUESTION_TYPES = [
   'MULTIPLE_CHOICE',
   'SINGLE_CHOICE',
   'SHORT_TEXT',
+  'NUMERIC_ESTIMATE',
 ] as const satisfies readonly QuestionType[];
 
 /**
@@ -69,6 +70,8 @@ interface CalculateVoteScoreInput {
   numericAcceptEquivalentUnits?: boolean;
   responseTimeMs?: number | null;
   timerDurationMs?: number | null;
+  /** Überschreibt die Korrektheitsprüfung (z.B. für NUMERIC_ESTIMATE, wo keine answerIds existieren). */
+  isCorrectOverride?: boolean;
 }
 
 export function isExactCorrectSelection(
@@ -131,8 +134,14 @@ export function calculateVoteScore(input: CalculateVoteScoreInput): number {
       return 0;
     }
     basePoints = shortTextEvaluation.points;
-  } else if (!isExactCorrectSelection(input.selectedAnswerIds, input.correctAnswerIds)) {
-    return 0;
+  } else {
+    const isCorrect =
+      input.isCorrectOverride !== undefined
+        ? input.isCorrectOverride
+        : isExactCorrectSelection(input.selectedAnswerIds, input.correctAnswerIds);
+    if (!isCorrect) {
+      return 0;
+    }
   }
 
   const multiplier = DIFFICULTY_MULTIPLIER[input.difficulty];

@@ -7,6 +7,7 @@ const { prismaMock, hostAuthMocks } = vi.hoisted(() => ({
     },
     vote: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
   },
   hostAuthMocks: {
@@ -41,6 +42,7 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
     hostAuthMocks.extractHostTokenFromConnectionParamsMock.mockReturnValue(null);
     hostAuthMocks.isHostSessionTokenValidMock.mockResolvedValue(true);
     prismaMock.vote.findMany.mockResolvedValue([]);
+    prismaMock.vote.count.mockResolvedValue(0);
   });
 
   it('liefert aktuelle Frage mit Antwortoptionen und isCorrect', async () => {
@@ -240,6 +242,134 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
     });
     expect(result!.voteDistribution).toBeUndefined();
     expect(result!.correctVoterCount).toBeUndefined();
+  });
+
+  it('zaehlt aktive NUMERIC_ESTIMATE-Stimmen ohne Werte fuer Histogramme zu laden', async () => {
+    const questionId = 'cccccccc-3333-4333-8333-333333333333';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      answerDisplayOrder: null,
+      quiz: {
+        defaultTimer: null,
+        preset: 'SERIOUS',
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            text: 'Schaetze den Messwert.',
+            type: 'NUMERIC_ESTIMATE',
+            difficulty: 'MEDIUM',
+            timer: null,
+            numericToleranceMode: 'ABSOLUTE_INTERVAL',
+            numericReferenceValue: 100,
+            numericTolerancePercent: null,
+            numericIntervalLeft: 95,
+            numericIntervalRight: 105,
+            numericInputType: 'DECIMAL',
+            numericDecimalPlaces: 1,
+            numericMin: 0,
+            numericMax: 200,
+            numericTwoRounds: true,
+            answers: [],
+          },
+        ],
+      },
+    });
+    prismaMock.vote.count.mockResolvedValueOnce(4).mockResolvedValueOnce(2);
+
+    const result = await caller.getCurrentQuestionForHost({ code: CODE });
+
+    expect(result).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      totalVotes: 4,
+      peerInstructionSuggestion: {
+        suggested: true,
+        reason: 'CORRECTNESS_WINDOW',
+      },
+    });
+    expect(result?.numericStats).toBeUndefined();
+    expect(result?.numericHistogram).toBeUndefined();
+    expect(prismaMock.vote.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.vote.count).toHaveBeenNthCalledWith(1, {
+      where: {
+        sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        questionId,
+        round: 1,
+      },
+    });
+    expect(prismaMock.vote.count).toHaveBeenNthCalledWith(2, {
+      where: {
+        sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        questionId,
+        round: 1,
+        numericValue: { gte: 95, lte: 105 },
+      },
+    });
+  });
+
+  it('ignoriert unpassende absolute Referenzwerte fuer Host-Statistiken', async () => {
+    const questionId = 'cccccccc-3333-4333-8333-333333333333';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      status: 'RESULTS',
+      currentQuestion: 0,
+      currentRound: 1,
+      answerDisplayOrder: null,
+      quiz: {
+        defaultTimer: null,
+        timerScaleByDifficulty: true,
+        showQuestionTypeIndicators: true,
+        preset: 'SERIOUS',
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            text: 'In welchem Jahr war die Revolution?',
+            type: 'NUMERIC_ESTIMATE',
+            difficulty: 'MEDIUM',
+            timer: null,
+            numericToleranceMode: 'ABSOLUTE_INTERVAL',
+            numericReferenceValue: -1,
+            numericTolerancePercent: null,
+            numericIntervalLeft: 1700,
+            numericIntervalRight: 1800,
+            numericInputType: 'INTEGER',
+            numericDecimalPlaces: null,
+            numericMin: null,
+            numericMax: null,
+            numericTwoRounds: false,
+            answers: [],
+          },
+        ],
+      },
+    });
+    prismaMock.vote.findMany.mockResolvedValue([{ numericValue: 1789 }]);
+
+    const result = await caller.getCurrentQuestionForHost({ code: CODE });
+
+    expect(result).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      totalVotes: 1,
+      numericReferenceValue: null,
+      numericStats: {
+        n: 1,
+        mean: 1789,
+        median: 1789,
+        inBandCount: 1,
+        inBandPercent: 100,
+        meanAbsoluteError: null,
+        meanRelativeError: null,
+      },
+    });
+    expect(result?.numericHistogram).toHaveLength(10);
+    const nonEmptyBins = result?.numericHistogram?.filter((bin) => bin.count > 0) ?? [];
+    expect(nonEmptyBins).toHaveLength(1);
+    expect(nonEmptyBins[0]).toMatchObject({ count: 1 });
+    expect(nonEmptyBins[0]!.from).toBeLessThanOrEqual(1789);
+    expect(nonEmptyBins[0]!.to).toBeGreaterThanOrEqual(1789);
   });
 
   it('liefert keine Peer-Instruction-Empfehlung wenn Anteil vollstaendig korrekter Stimmen unter 35 %', async () => {

@@ -77,6 +77,8 @@ import type {
   HostCurrentQuestionDTO,
   LeaderboardEntryDTO,
   NicknameTheme,
+  NumericRoundComparisonDTO,
+  NumericStatsDTO,
   QaQuestionDTO,
   QaQuestionSortMode,
   QuickFeedbackResult,
@@ -241,7 +243,12 @@ function isValidTrack(v: unknown): v is HostMusicTrack {
 }
 
 function isScoredQuestionType(type: HostCurrentQuestionDTO['type'] | null | undefined): boolean {
-  return type === 'SINGLE_CHOICE' || type === 'MULTIPLE_CHOICE' || type === 'SHORT_TEXT';
+  return (
+    type === 'SINGLE_CHOICE' ||
+    type === 'MULTIPLE_CHOICE' ||
+    type === 'SHORT_TEXT' ||
+    type === 'NUMERIC_ESTIMATE'
+  );
 }
 
 function sameStringArray(
@@ -3210,7 +3217,23 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     return (
       JSON.stringify(left.peerInstructionSuggestion ?? null) ===
         JSON.stringify(right.peerInstructionSuggestion ?? null) &&
-      JSON.stringify(left.roundComparison ?? null) === JSON.stringify(right.roundComparison ?? null)
+      JSON.stringify(left.roundComparison ?? null) ===
+        JSON.stringify(right.roundComparison ?? null) &&
+      JSON.stringify(left.numericHistogram ?? null) ===
+        JSON.stringify(right.numericHistogram ?? null) &&
+      JSON.stringify(left.numericStats ?? null) === JSON.stringify(right.numericStats ?? null) &&
+      JSON.stringify(left.numericRoundComparison ?? null) ===
+        JSON.stringify(right.numericRoundComparison ?? null) &&
+      (left.numericToleranceMode ?? null) === (right.numericToleranceMode ?? null) &&
+      (left.numericReferenceValue ?? null) === (right.numericReferenceValue ?? null) &&
+      (left.numericTolerancePercent ?? null) === (right.numericTolerancePercent ?? null) &&
+      (left.numericIntervalLeft ?? null) === (right.numericIntervalLeft ?? null) &&
+      (left.numericIntervalRight ?? null) === (right.numericIntervalRight ?? null) &&
+      (left.numericInputType ?? null) === (right.numericInputType ?? null) &&
+      (left.numericDecimalPlaces ?? null) === (right.numericDecimalPlaces ?? null) &&
+      (left.numericMin ?? null) === (right.numericMin ?? null) &&
+      (left.numericMax ?? null) === (right.numericMax ?? null) &&
+      (left.numericTwoRounds ?? false) === (right.numericTwoRounds ?? false)
     );
   }
 
@@ -3422,6 +3445,429 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   hostQuestionTypeShowsDifficulty(type: HostCurrentQuestionDTO['type']): boolean {
     return type !== 'SURVEY' && type !== 'RATING';
+  }
+
+  numericHistogramBarHeight(bin: { count: number }, all: Array<{ count: number }>): number {
+    if (bin.count <= 0) return 0;
+    const maxCount = Math.max(1, ...all.map((b) => b.count));
+    return Math.round(18 + (bin.count / maxCount) * 42);
+  }
+
+  numericHistogramBinPositionPercent(
+    bin: { from: number; to: number },
+    histogram: Array<{ from: number; to: number }>,
+  ): number {
+    const range = this.numericHistogramRange(histogram);
+    if (!range) return 0;
+    return this.numericValuePositionPercent((bin.from + bin.to) / 2, range);
+  }
+
+  numericHistogramRangeEdgeLabel(
+    question: HostCurrentQuestionDTO | null,
+    histogram: Array<{ from: number; to: number }>,
+    edge: 'min' | 'max',
+  ): string {
+    const range = this.numericHistogramRange(histogram);
+    if (!range) return '';
+    return this.formatNumericHostValue(edge === 'min' ? range.min : range.max, question);
+  }
+
+  numericHistogramBandStyle(
+    question: HostCurrentQuestionDTO,
+    histogram: Array<{ from: number; to: number }>,
+  ): { left: number; width: number } | null {
+    const band = this.numericToleranceBand(question);
+    const range = this.numericHistogramRange(histogram);
+    if (!band || !range) return null;
+    const visibleLeft = Math.max(band.left, range.min);
+    const visibleRight = Math.min(band.right, range.max);
+    if (visibleLeft > range.max || visibleRight < range.min || visibleLeft > visibleRight) {
+      return null;
+    }
+    const left = this.numericValuePositionPercent(visibleLeft, range);
+    const right = this.numericValuePositionPercent(visibleRight, range);
+    return { left, width: Math.max(1, right - left) };
+  }
+
+  numericReferenceLinePercent(
+    question: HostCurrentQuestionDTO,
+    histogram: Array<{ from: number; to: number }>,
+  ): number | null {
+    if (
+      question.type !== 'NUMERIC_ESTIMATE' ||
+      question.numericReferenceValue === null ||
+      question.numericReferenceValue === undefined
+    ) {
+      return null;
+    }
+    const range = this.numericHistogramRange(histogram);
+    if (!range) return null;
+    if (question.numericReferenceValue < range.min || question.numericReferenceValue > range.max) {
+      return null;
+    }
+    return this.numericValuePositionPercent(question.numericReferenceValue, range);
+  }
+
+  numericReferenceLineStyle(
+    question: HostCurrentQuestionDTO,
+    histogram: Array<{ from: number; to: number }>,
+  ): { left: number } | null {
+    const left = this.numericReferenceLinePercent(question, histogram);
+    return left === null ? null : { left };
+  }
+
+  numericReferenceLabel(question: HostCurrentQuestionDTO): string | null {
+    if (
+      question.type !== 'NUMERIC_ESTIMATE' ||
+      question.numericReferenceValue === null ||
+      question.numericReferenceValue === undefined
+    ) {
+      return null;
+    }
+    return $localize`:@@sessionHost.numericReferenceAxisLabel:Referenz ${this.formatNumericHostValue(
+      question.numericReferenceValue,
+      question,
+    )}:reference:`;
+  }
+
+  numericToleranceBandEdgeStyle(
+    question: HostCurrentQuestionDTO,
+    histogram: Array<{ from: number; to: number }>,
+    edge: 'left' | 'right',
+  ): { left: number } | null {
+    const band = this.numericToleranceBand(question);
+    const range = this.numericHistogramRange(histogram);
+    if (!band || !range) return null;
+    const value = edge === 'left' ? band.left : band.right;
+    if (value < range.min || value > range.max) return null;
+    return { left: this.numericValuePositionPercent(value, range) };
+  }
+
+  numericToleranceBandEdgeLabel(question: HostCurrentQuestionDTO, edge: 'left' | 'right'): string {
+    const band = this.numericToleranceBand(question);
+    if (!band) return '';
+    if (this.numericHostUsesIntegerFormat(question)) {
+      const acceptedLeft = Math.ceil(band.left);
+      const acceptedRight = Math.floor(band.right);
+      if (acceptedLeft <= acceptedRight) {
+        return this.formatNumericHostValue(
+          edge === 'left' ? acceptedLeft : acceptedRight,
+          question,
+        );
+      }
+    }
+    return this.formatNumericHostValue(edge === 'left' ? band.left : band.right, question);
+  }
+
+  numericToleranceBandLabel(question: HostCurrentQuestionDTO): string | null {
+    const band = this.numericToleranceBand(question);
+    if (!band) return null;
+    if (this.numericHostUsesIntegerFormat(question)) {
+      const acceptedLeft = Math.ceil(band.left);
+      const acceptedRight = Math.floor(band.right);
+      if (acceptedLeft > acceptedRight) {
+        return null;
+      }
+      if (acceptedLeft === acceptedRight) {
+        return $localize`:@@sessionHost.numericAcceptedSingleLabel:Akzeptierter Wert ${this.formatNumericHostValue(
+          acceptedLeft,
+          question,
+        )}:value:`;
+      }
+      return $localize`:@@sessionHost.numericAcceptedRangeLabel:Akzeptierte Werte ${this.formatNumericHostValue(
+        acceptedLeft,
+        question,
+      )}:left: bis ${this.formatNumericHostValue(acceptedRight, question)}:right:`;
+    }
+    return $localize`:@@sessionHost.numericToleranceBandLabel:Toleranzband ${this.formatNumericHostValue(
+      band.left,
+      question,
+    )}:left: bis ${this.formatNumericHostValue(band.right, question)}:right:`;
+  }
+
+  private numericToleranceBand(
+    question: HostCurrentQuestionDTO,
+  ): { left: number; right: number } | null {
+    if (question.type !== 'NUMERIC_ESTIMATE') return null;
+    if (question.numericToleranceMode === 'RELATIVE_PERCENT') {
+      const referenceValue = question.numericReferenceValue;
+      const percent = question.numericTolerancePercent;
+      if (
+        referenceValue === null ||
+        referenceValue === undefined ||
+        referenceValue === 0 ||
+        percent === null ||
+        percent === undefined
+      ) {
+        return null;
+      }
+      const delta = Math.abs(referenceValue) * (percent / 100);
+      return {
+        left: Math.min(referenceValue - delta, referenceValue + delta),
+        right: Math.max(referenceValue - delta, referenceValue + delta),
+      };
+    }
+    if (question.numericToleranceMode === 'ABSOLUTE_INTERVAL') {
+      const left = question.numericIntervalLeft;
+      const right = question.numericIntervalRight;
+      if (left === null || left === undefined || right === null || right === undefined) return null;
+      if (left >= right) return null;
+      return { left, right };
+    }
+    return null;
+  }
+
+  private numericHistogramRange(histogram: Array<{ from: number; to: number }>): {
+    min: number;
+    max: number;
+  } | null {
+    if (histogram.length === 0) return null;
+    const min = Math.min(...histogram.map((bin) => Math.min(bin.from, bin.to)));
+    const max = Math.max(...histogram.map((bin) => Math.max(bin.from, bin.to)));
+    if (min === max) return { min: min - 0.5, max: max + 0.5 };
+    return { min, max };
+  }
+
+  private numericValuePositionPercent(value: number, range: { min: number; max: number }): number {
+    return Math.min(100, Math.max(0, ((value - range.min) / (range.max - range.min)) * 100));
+  }
+
+  private numericHostUsesIntegerFormat(question: HostCurrentQuestionDTO | null): boolean {
+    return (
+      question?.type === 'NUMERIC_ESTIMATE' &&
+      (question.numericInputType === 'INTEGER' || question.numericDecimalPlaces === 0)
+    );
+  }
+
+  private numericHostUsesYearFormat(question: HostCurrentQuestionDTO | null): boolean {
+    if (!this.numericHostUsesIntegerFormat(question) || question?.type !== 'NUMERIC_ESTIMATE') {
+      return false;
+    }
+    const textLooksLikeYear =
+      /\b(jahr|jahreszahl|year|année|annee|año|ano|anno)\b/i.test(question.text) ||
+      /\bwann\b/i.test(question.text);
+    if (textLooksLikeYear) {
+      return true;
+    }
+    const min = question.numericMin;
+    const max = question.numericMax;
+    return (
+      typeof min === 'number' &&
+      typeof max === 'number' &&
+      min >= 1000 &&
+      max <= 2200 &&
+      max - min <= 1000
+    );
+  }
+
+  private numericHostDigits(question: HostCurrentQuestionDTO | null): string {
+    if (this.numericHostUsesIntegerFormat(question)) return '1.0-0';
+    const places =
+      question?.type === 'NUMERIC_ESTIMATE' &&
+      typeof question.numericDecimalPlaces === 'number' &&
+      Number.isFinite(question.numericDecimalPlaces)
+        ? Math.max(0, Math.min(4, question.numericDecimalPlaces))
+        : 2;
+    return `1.0-${places}`;
+  }
+
+  private formatNumericHostValue(
+    value: number,
+    question: HostCurrentQuestionDTO | null,
+    digits = this.numericHostDigits(question),
+  ): string {
+    if (this.numericHostUsesYearFormat(question)) {
+      return this.formatNumberWithoutGrouping(value, digits);
+    }
+    return formatNumber(value, this.localeId, digits);
+  }
+
+  private formatNumberWithoutGrouping(value: number, digits: string): string {
+    const match = /^(\d+)\.(\d+)-(\d+)$/.exec(digits);
+    const minimumIntegerDigits = match ? Number(match[1]) : 1;
+    const minimumFractionDigits = match ? Number(match[2]) : 0;
+    const maximumFractionDigits = match ? Number(match[3]) : 2;
+    return new Intl.NumberFormat(this.localeId, {
+      minimumIntegerDigits,
+      minimumFractionDigits,
+      maximumFractionDigits,
+      useGrouping: false,
+    }).format(value);
+  }
+
+  numericStatsLabel(stats: NumericStatsDTO, question: HostCurrentQuestionDTO | null): string {
+    const parts: string[] = [];
+    parts.push(`n=${stats.n}`);
+    if (stats.mean !== null) {
+      parts.push(`Ø ${this.formatNumericHostValue(stats.mean, question, '1.0-2')}`);
+    }
+    if (stats.median !== null) {
+      parts.push(
+        $localize`:@@sessionHost.numericMedian:Median ${this.formatNumericHostValue(stats.median, question, '1.0-2')}:median:`,
+      );
+    }
+    if (stats.stdDev !== null) {
+      parts.push(`σ ${this.formatNumericHostValue(stats.stdDev, question, '1.0-2')}`);
+    }
+    if (stats.iqr !== null) {
+      parts.push(`IQR ${this.formatNumericHostValue(stats.iqr, question, '1.0-2')}`);
+    }
+    if (stats.min !== null && stats.max !== null) {
+      parts.push(
+        `${this.formatNumericHostValue(stats.min, question, '1.0-2')}–${this.formatNumericHostValue(
+          stats.max,
+          question,
+          '1.0-2',
+        )}`,
+      );
+    }
+    if (stats.inBandPercent !== null) {
+      parts.push(`${formatNumber(stats.inBandPercent, this.localeId, '1.0-1')} % i. Band`);
+    }
+    if (stats.meanAbsoluteError !== null) {
+      parts.push(`MAE ${this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2')}`);
+    }
+    return parts.join(' · ');
+  }
+
+  numericStatsPrimaryCaption(stats: NumericStatsDTO): string {
+    if (stats.median !== null) {
+      return $localize`:@@sessionHost.numericPrimaryMedian:Median`;
+    }
+    if (stats.mean !== null) {
+      return $localize`:@@sessionHost.numericPrimaryMean:Mittelwert`;
+    }
+    return $localize`:@@sessionHost.numericPrimaryResponses:Schätzungen`;
+  }
+
+  numericStatsPrimaryValue(
+    stats: NumericStatsDTO,
+    question: HostCurrentQuestionDTO | null,
+  ): string {
+    if (stats.median !== null) {
+      return this.formatNumericHostValue(stats.median, question, '1.0-2');
+    }
+    if (stats.mean !== null) {
+      return this.formatNumericHostValue(stats.mean, question, '1.0-2');
+    }
+    return formatNumber(stats.n, this.localeId, '1.0-0');
+  }
+
+  numericStatsInBandValue(stats: NumericStatsDTO): string | null {
+    if (stats.inBandPercent === null || stats.n <= 0) {
+      return null;
+    }
+    return `${formatNumber(stats.inBandCount, this.localeId, '1.0-0')}/${formatNumber(
+      stats.n,
+      this.localeId,
+      '1.0-0',
+    )}`;
+  }
+
+  numericStatsInBandCaption(stats: NumericStatsDTO): string | null {
+    if (stats.inBandPercent === null || stats.n <= 0) {
+      return null;
+    }
+    return $localize`:@@sessionHost.numericInBandCaption:${formatNumber(
+      stats.inBandPercent,
+      this.localeId,
+      '1.0-1',
+    )}:percent: % im akzeptierten Bereich`;
+  }
+
+  numericStatsErrorValue(
+    stats: NumericStatsDTO,
+    question: HostCurrentQuestionDTO | null,
+  ): string | null {
+    if (stats.meanAbsoluteError === null) {
+      return null;
+    }
+    return this.formatNumericHostValue(stats.meanAbsoluteError, question, '1.0-2');
+  }
+
+  numericStatsErrorCaption(): string {
+    return $localize`:@@sessionHost.numericMeanAbsoluteErrorCaption:Ø Abstand zur Referenz`;
+  }
+
+  numericPairedInsightValue(
+    paired: NonNullable<NumericRoundComparisonDTO['pairedAnalysis']>,
+  ): string {
+    return `${formatNumber(paired.closerCount, this.localeId, '1.0-0')}/${formatNumber(
+      paired.pairedCount,
+      this.localeId,
+      '1.0-0',
+    )}`;
+  }
+
+  numericPairedInsightCaption(): string {
+    return $localize`:@@sessionHost.numericPairedInsightCaption:näher am Referenzwert`;
+  }
+
+  numericRoundDeltaValue(
+    roundComparison: NumericRoundComparisonDTO,
+    question: HostCurrentQuestionDTO | null,
+  ): string | null {
+    const delta = roundComparison.medianDelta ?? roundComparison.meanDelta;
+    if (delta === null || delta === undefined) {
+      return null;
+    }
+    const sign = delta > 0 ? '+' : '';
+    return `Δ ${sign}${this.formatNumericHostValue(delta, question, '1.0-2')}`;
+  }
+
+  numericRoundDeltaCaption(roundComparison: NumericRoundComparisonDTO): string {
+    return roundComparison.medianDelta !== null && roundComparison.medianDelta !== undefined
+      ? $localize`:@@sessionHost.numericMedianDeltaCaption:Median-Veränderung`
+      : $localize`:@@sessionHost.numericMeanDeltaCaption:Mittelwert-Veränderung`;
+  }
+
+  numericRoundDeltaLabel(roundComparison: NumericRoundComparisonDTO): string {
+    const parts: string[] = [];
+    if (roundComparison.meanDelta !== null && roundComparison.meanDelta !== undefined) {
+      parts.push(`ΔØ ${formatNumber(roundComparison.meanDelta, this.localeId, '1.0-2')}`);
+    }
+    if (roundComparison.medianDelta !== null && roundComparison.medianDelta !== undefined) {
+      parts.push(
+        $localize`:@@sessionHost.numericMedianDelta:Δ Median ${formatNumber(
+          roundComparison.medianDelta,
+          this.localeId,
+          '1.0-2',
+        )}:medianDelta:`,
+      );
+    }
+    if (
+      roundComparison.inBandPercentDelta !== null &&
+      roundComparison.inBandPercentDelta !== undefined
+    ) {
+      parts.push(
+        `Δ Band ${formatNumber(roundComparison.inBandPercentDelta, this.localeId, '1.0-1')} pp`,
+      );
+    }
+    return parts.join(' · ');
+  }
+
+  private numericExportDetails(
+    stats: NumericStatsDTO,
+    roundComparison: NumericRoundComparisonDTO | undefined,
+  ): string {
+    const details = [this.numericStatsLabel(stats, null)];
+    if (roundComparison) {
+      const delta = this.numericRoundDeltaLabel(roundComparison);
+      if (delta) details.push(delta);
+      if (roundComparison.pairedAnalysis) {
+        details.push(
+          `Paare ${roundComparison.pairedAnalysis.pairedCount}: ${roundComparison.pairedAnalysis.closerCount} näher, ${roundComparison.pairedAnalysis.fartherCount} weiter, ${roundComparison.pairedAnalysis.unchangedCount} gleich`,
+        );
+      }
+      if (roundComparison.deltaHistogram && roundComparison.deltaHistogram.length > 0) {
+        details.push(
+          `Δx ${roundComparison.deltaHistogram
+            .map((bin) => `${bin.from}–${bin.to}: ${bin.count}`)
+            .join(' | ')}`,
+        );
+      }
+    }
+    return details.join(' ; ');
   }
 
   hostDifficultyLabel(value: HostCurrentQuestionDTO['difficulty']): string {
@@ -4755,6 +5201,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
             .join(' | ');
           if (q.ratingAverage !== null && q.ratingAverage !== undefined)
             details += ` (Ø ${q.ratingAverage})`;
+        } else if (q.numericStats) {
+          details = this.numericExportDetails(q.numericStats, q.numericRoundComparison);
         }
 
         rows.push(

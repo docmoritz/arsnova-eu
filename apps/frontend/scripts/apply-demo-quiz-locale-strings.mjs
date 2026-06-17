@@ -8,9 +8,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const demoDir = path.join(__dirname, '../src/assets/demo');
-const md = String.raw;
 
-const EXPORT_VERSION = 25;
+function md(strings, ...values) {
+  return String.raw({ raw: strings.raw }, ...values).trim();
+}
+
+const EXPORT_VERSION = 26;
 const EXPORTED_AT = '2026-05-24T10:00:00.000Z';
 
 const EMOTION_IMAGE_URL =
@@ -142,23 +145,27 @@ function buildPayload(locale) {
         },
         {
           text: locale.questions[7].text,
-          type: 'RATING',
+          type: 'NUMERIC_ESTIMATE',
           timer: null,
-          difficulty: 'EASY',
-          order: 8,
+          difficulty: 'MEDIUM',
+          order: 7,
           answers: [],
-          ratingMin: 1,
-          ratingMax: 5,
-          ratingLabelMin: locale.questions[7].ratingLabelMin,
-          ratingLabelMax: locale.questions[7].ratingLabelMax,
+          numericToleranceMode: 'ABSOLUTE_INTERVAL',
+          numericReferenceValue: 1789,
+          numericIntervalLeft: 1788.5,
+          numericIntervalRight: 1789.5,
+          numericInputType: 'INTEGER',
+          numericMin: 1700,
+          numericMax: 1900,
+          numericTwoRounds: true,
         },
         {
-          text: locale.questions[8].text,
+          text: locale.questions[9].text,
           type: 'SHORT_TEXT',
           timer: null,
           difficulty: 'HARD',
-          order: 7,
-          answers: locale.questions[8].answers,
+          order: 8,
+          answers: locale.questions[9].answers,
           shortTextMaxLength: 24,
           shortTextCaseSensitive: false,
           shortTextEvaluationKind: 'numeric_unit',
@@ -170,6 +177,18 @@ function buildPayload(locale) {
           numericAcceptEquivalentUnits: true,
           shortTextTrimWhitespace: true,
           shortTextNormalizeWhitespace: true,
+        },
+        {
+          text: locale.questions[8].text,
+          type: 'RATING',
+          timer: null,
+          difficulty: 'EASY',
+          order: 9,
+          answers: [],
+          ratingMin: 1,
+          ratingMax: 5,
+          ratingLabelMin: locale.questions[8].ratingLabelMin,
+          ratingLabelMax: locale.questions[8].ratingLabelMax,
         },
       ],
     },
@@ -190,6 +209,7 @@ Nutze sie als kurze, **Kahoot-artige Team-Demo für den Live-Unterricht**, um zu
 - mit einem kurzen emotionalen oder sozialen Check-in startest
 - Bilder statt reiner Textfragen einsetzt
 - Formeln und wissenschaftliche Notation in MINT-Fächern einbindest
+- numerische Schätzfragen mit Referenzwert, Toleranzband und zwei Runden ausprobierst
 - kurze Freitextantworten aus dem Raum sammelst, die später als Wortwolke sichtbar werden
 - Multiple-Choice- und Rating-Fragen sinnvoll einsetzt
 - mit Timer, Teams, Rangliste und Bonus-Codes mehr Energie aufbaust
@@ -245,26 +265,33 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### Welche dieser Einsätze eignen sich gut für einen kurzen Live-Check?
+        text: md`
+### Welche dieser Einsätze eignen sich gut für einen kurzen Live-Check?
 
 > **Unterrichtsidee:** Nutze das, um Multiple Choice mit mehreren richtigen Antworten zu zeigen.
 
-*Mehrere Antworten möglich.*`,
+_Mehrere Antworten möglich._
+        `,
         answers: [
           { text: 'Vorwissen zu Beginn einer Stunde aktivieren', isCorrect: true },
           { text: 'Missverständnisse mitten in der Stunde sichtbar machen', isCorrect: true },
           { text: 'Vor einer Prüfung das Sicherheitsgefühl anonym abfragen', isCorrect: true },
-          { text: 'Nur benotete Abschlusstests am Ende einer Einheit durchführen', isCorrect: false },
+          {
+            text: 'Nur benotete Abschlusstests am Ende einer Einheit durchführen',
+            isCorrect: false,
+          },
         ],
       },
       {
-        text: md`### Wie viele sichtbare Teile hat der klassische Zauberwürfel?
+        text: md`
+### Wie viele sichtbare Teile hat der klassische Zauberwürfel?
 
 > **Unterrichtsidee:** Nutze das für einen spielshowartigen Moment mit Tempo, Spannung und sichtbarem Teamwettbewerb.
 
 Gemeint ist der klassische Rubik’s Cube von Ernő Rubik.
 
-Optionaler Impuls: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst](https://www.youtube.com/watch?v=EoINieyz6gE).`,
+Optionaler Impuls: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst](https://www.youtube.com/watch?v=EoINieyz6gE).
+        `,
         answers: [
           { text: '28', isCorrect: false },
           { text: '26', isCorrect: true },
@@ -288,11 +315,13 @@ ${CODE_FENCE}`,
         ],
       },
       {
-        text: md`### Wie heißt die Methode, bei der Lernende erst individuell abstimmen, dann kurz diskutieren und anschließend erneut abstimmen?
+        text: md`
+### Wie heißt die Methode, bei der Lernende erst individuell abstimmen, dann kurz diskutieren und anschließend erneut abstimmen?
 
 > **Unterrichtsidee:** Nutze das als anspruchsvolle Fachbegriffsfrage, um explizite Varianten, kleine Buchstabendreher und transparente Kurzantwort-Bewertung mit Teilpunkten zu demonstrieren.
 
-Gesucht ist der etablierte didaktische Begriff für diesen Ablauf.`,
+Gesucht ist der etablierte didaktische Begriff für diesen Ablauf.
+        `,
         answers: [
           { text: 'Peer Instruction', isCorrect: true },
           { text: 'Peer-Instruction', isCorrect: true },
@@ -301,20 +330,33 @@ Gesucht ist der etablierte didaktische Begriff für diesen Ablauf.`,
         ],
       },
       {
-        text: md`### Wie wahrscheinlich ist es, dass du so ein Live-Quiz bald selbst einsetzt?
+        text: md`
+### In welchem Jahr begann die Französische Revolution?
 
-> **Unterrichtsidee:** Nutze das als schnelles Meinungsbild, Exit-Ticket oder Confidence-Check.`,
+> **Unterrichtsidee:** Nutze das als Schätzfrage mit zwei Runden: erst spontan schätzen, dann kurz diskutieren und die zweite Runde mit Referenzwert, Toleranzband und Score vergleichen.
+
+Gesucht ist das Jahr, das historisch üblicherweise als Beginn der Französischen Revolution gilt.
+        `,
+      },
+      {
+        text: md`
+### Wie wahrscheinlich ist es, dass du so ein Live-Quiz bald selbst einsetzt?
+
+> **Unterrichtsidee:** Nutze das als schnelles Meinungsbild, Exit-Ticket oder Confidence-Check.
+        `,
         ratingLabelMin: 'Eher noch nicht',
         ratingLabelMax: 'Ich probiere es aus',
       },
       {
-        text: md`### Schallgeschwindigkeit unter Druck: Wie lange braucht Schall für 58 cm?
+        text: md`
+### Schallgeschwindigkeit unter Druck: Wie lange braucht Schall für 58 cm?
 
 > **Unterrichtsidee:** Diese numerische Kurzantwort ist bewusst anspruchsvoll: Teilnehmende müssen Einheiten sicher umrechnen und ein Ergebnis im passenden Größenbereich angeben.
 
 Nimm für trockene Luft bei 20 °C die Schallgeschwindigkeit $$v = 343\,\mathrm{m/s}$$ an.
 
-Gesucht ist die Laufzeit für $$s = 0{,}58\,\mathrm{m}$$ als Kurzantwort mit Einheit (z. B. in ms oder s).`,
+Gesucht ist die Laufzeit für $$s = 0{,}58\,\mathrm{m}$$ als Kurzantwort mit Einheit (z. B. in ms oder s).
+        `,
         answers: [{ text: '1,69 ms', isCorrect: true }],
       },
     ],
@@ -332,6 +374,7 @@ Use it as a short, **Kahoot-style team demo for live teaching** to show how you 
 - open with a quick emotional or social check-in
 - use images instead of text-only prompts
 - bring in formulas and scientific notation in STEM
+- try numeric estimate questions with a reference value, tolerance band, and two rounds
 - collect short free-text answers from the room that later reappear as a word cloud
 - use multiple-choice and quick rating prompts well
 - add energy with timers, teams, a leaderboard, and bonus codes
@@ -387,11 +430,13 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### Which of these are strong use cases for a quick live check?
+        text: md`
+### Which of these are strong use cases for a quick live check?
 
 > **Teaching move:** Use this to demonstrate multiple choice with more than one correct answer.
 
-*Select all that apply.*`,
+_Select all that apply._
+        `,
         answers: [
           { text: 'Activate prior knowledge at the start of class', isCorrect: true },
           { text: 'Surface misconceptions halfway through a lesson', isCorrect: true },
@@ -400,13 +445,15 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### How many visible pieces does the classic Rubik’s Cube have?
+        text: md`
+### How many visible pieces does the classic Rubik’s Cube have?
 
 > **Teaching move:** Use this for a game-show beat with pace, suspense, and visible team competition.
 
 The question refers to the classic Rubik’s Cube designed by Ernő Rubik.
 
-Optional prompt: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (in German)](https://www.youtube.com/watch?v=EoINieyz6gE).`,
+Optional prompt: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (in German)](https://www.youtube.com/watch?v=EoINieyz6gE).
+        `,
         answers: [
           { text: '28', isCorrect: false },
           { text: '26', isCorrect: true },
@@ -430,11 +477,13 @@ ${CODE_FENCE}`,
         ],
       },
       {
-        text: md`### What is the teaching method called in which learners vote individually, discuss briefly, and then vote again?
+        text: md`
+### What is the teaching method called in which learners vote individually, discuss briefly, and then vote again?
 
 > **Teaching move:** Use this as a challenging term-recall prompt to demonstrate explicit variants, adjacent letter swaps, and transparent short-answer feedback with partial credit.
 
-We are looking for the established instructional term for this sequence.`,
+We are looking for the established instructional term for this sequence.
+        `,
         answers: [
           { text: 'Peer Instruction', isCorrect: true },
           { text: 'Peer-Instruction', isCorrect: true },
@@ -443,20 +492,33 @@ We are looking for the established instructional term for this sequence.`,
         ],
       },
       {
-        text: md`### How likely are you to try a live quiz like this in one of your own classes?
+        text: md`
+### In which year did the French Revolution begin?
 
-> **Teaching move:** Use this as a quick pulse check, exit ticket, or confidence rating.`,
+> **Teaching move:** Use this as a two-round estimate question: first collect spontaneous guesses, then discuss briefly and compare the second round against the reference value, tolerance band, and score.
+
+We are looking for the year commonly used as the beginning of the French Revolution.
+        `,
+      },
+      {
+        text: md`
+### How likely are you to try a live quiz like this in one of your own classes?
+
+> **Teaching move:** Use this as a quick pulse check, exit ticket, or confidence rating.
+        `,
         ratingLabelMin: 'Not yet',
         ratingLabelMax: 'Ready to try it',
       },
       {
-        text: md`### Pressure-ready numeracy: how long does sound need for 58 cm?
+        text: md`
+### Pressure-ready numeracy: how long does sound need for 58 cm?
 
 > **Teaching move:** This numeric short answer is intentionally demanding: learners must convert units correctly and report a physically plausible time scale.
 
 Assume the speed of sound in dry air at 20 °C is $$v = 343\,\mathrm{m/s}$$.
 
-Find the travel time for $$s = 0.58\,\mathrm{m}$$ and answer with unit (for example in ms or s).`,
+Find the travel time for $$s = 0.58\,\mathrm{m}$$ and answer with unit (for example in ms or s).
+        `,
         answers: [{ text: '1.69 ms', isCorrect: true }],
       },
     ],
@@ -474,6 +536,7 @@ Utilise-la comme une courte **démo en équipe, façon Kahoot, pour les cours en
 - démarrer avec un rapide tour d’humeur ou un check-in social
 - utiliser des images plutôt que des consignes purement textuelles
 - intégrer des formules et de la notation scientifique en STEM
+- tester des questions d’estimation numérique avec valeur de référence, bande de tolérance et deux tours
 - recueillir de courtes réponses en texte libre qui réapparaîtront ensuite sous forme de nuage de mots
 - utiliser à bon escient les choix multiples et les échelles d’évaluation
 - ajouter de l’énergie avec des chronos, des équipes, un classement et des codes bonus
@@ -529,26 +592,33 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### Lesquels de ces usages conviennent bien à un rapide check en direct ?
+        text: md`
+### Lesquels de ces usages conviennent bien à un rapide check en direct ?
 
 > **Usage pédagogique :** Utilise cela pour montrer un choix multiple avec plusieurs bonnes réponses.
 
-*Plusieurs réponses possibles.*`,
+_Plusieurs réponses possibles._
+        `,
         answers: [
           { text: 'Activer les connaissances préalables au début du cours', isCorrect: true },
           { text: 'Faire émerger des idées fausses au milieu d’une séance', isCorrect: true },
           { text: 'Sonder anonymement le niveau de confiance avant une révision', isCorrect: true },
-          { text: 'L’utiliser uniquement pour des évaluations notées en fin de séquence', isCorrect: false },
+          {
+            text: 'L’utiliser uniquement pour des évaluations notées en fin de séquence',
+            isCorrect: false,
+          },
         ],
       },
       {
-        text: md`### Combien de pièces visibles possède le Rubik’s Cube classique ?
+        text: md`
+### Combien de pièces visibles possède le Rubik’s Cube classique ?
 
 > **Usage pédagogique :** Utilise cela pour créer un moment façon jeu télévisé, avec rythme, suspense et compétition visible entre équipes.
 
 Il s’agit du Rubik’s Cube classique conçu par Ernő Rubik.
 
-Impulsion facultative : [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (en allemand)](https://www.youtube.com/watch?v=EoINieyz6gE).`,
+Impulsion facultative : [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (en allemand)](https://www.youtube.com/watch?v=EoINieyz6gE).
+        `,
         answers: [
           { text: '28', isCorrect: false },
           { text: '26', isCorrect: true },
@@ -572,11 +642,13 @@ ${CODE_FENCE}`,
         ],
       },
       {
-        text: md`### Comment appelle-t-on la méthode pédagogique où les apprenant·es votent d’abord individuellement, discutent brièvement, puis votent à nouveau ?
+        text: md`
+### Comment appelle-t-on la méthode pédagogique où les apprenant·es votent d’abord individuellement, discutent brièvement, puis votent à nouveau ?
 
 > **Usage pédagogique :** Utilise cela comme question de rappel d’un terme spécialisé pour montrer les variantes explicites, les petites inversions de lettres et un retour transparent en réponse courte avec points partiels.
 
-On cherche le terme didactique établi pour cette séquence.`,
+On cherche le terme didactique établi pour cette séquence.
+        `,
         answers: [
           { text: 'Peer Instruction', isCorrect: true },
           { text: 'instruction par les pairs', isCorrect: true },
@@ -585,20 +657,33 @@ On cherche le terme didactique établi pour cette séquence.`,
         ],
       },
       {
-        text: md`### Quelle est la probabilité que tu essaies bientôt un quiz en direct comme celui-ci dans l’un de tes cours ?
+        text: md`
+### En quelle année la Révolution française a-t-elle commencé ?
 
-> **Usage pédagogique :** Utilise cela comme prise de température, ticket de sortie ou auto-évaluation rapide.`,
+> **Usage pédagogique :** Utilise cela comme question d’estimation en deux tours : d’abord une estimation spontanée, puis une brève discussion et une comparaison du second tour avec la valeur de référence, la bande de tolérance et le score.
+
+On cherche l’année généralement retenue comme début de la Révolution française.
+        `,
+      },
+      {
+        text: md`
+### Quelle est la probabilité que tu essaies bientôt un quiz en direct comme celui-ci dans l’un de tes cours ?
+
+> **Usage pédagogique :** Utilise cela comme prise de température, ticket de sortie ou auto-évaluation rapide.
+        `,
         ratingLabelMin: 'Pas pour l’instant',
         ratingLabelMax: 'Je vais l’essayer',
       },
       {
-        text: md`### Calcul exigeant : combien de temps le son met-il pour parcourir 58 cm ?
+        text: md`
+### Calcul exigeant : combien de temps le son met-il pour parcourir 58 cm ?
 
 > **Usage pédagogique :** Cette réponse courte numérique est volontairement difficile : il faut convertir les unités correctement et donner un ordre de grandeur cohérent.
 
 Suppose la vitesse du son dans l’air sec à 20 °C : $$v = 343\,\mathrm{m/s}$$.
 
-Détermine le temps de parcours pour $$s = 0{,}58\,\mathrm{m}$$ et réponds avec unité (par exemple en ms ou en s).`,
+Détermine le temps de parcours pour $$s = 0{,}58\,\mathrm{m}$$ et réponds avec unité (par exemple en ms ou en s).
+        `,
         answers: [{ text: '1,69 ms', isCorrect: true }],
       },
     ],
@@ -616,6 +701,7 @@ Esta demo está pensada para el **uso real en el aula**. No pretende ser el quiz
 - arrancar con un check-in emocional o social
 - usar imágenes en lugar de preguntas solo de texto
 - incorporar fórmulas y notación científica en STEM
+- probar preguntas de estimación numérica con valor de referencia, banda de tolerancia y dos rondas
 - recoger respuestas breves en texto libre que después reaparecen como nube de palabras
 - usar bien preguntas de respuesta múltiple y escalas de valoración
 - añadir energía con temporizadores, equipos, clasificación y códigos de bonificación
@@ -671,26 +757,33 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### ¿Cuáles de estos usos encajan bien con una comprobación rápida en directo?
+        text: md`
+### ¿Cuáles de estos usos encajan bien con una comprobación rápida en directo?
 
 > **Uso didáctico:** Úsalo para mostrar una pregunta de respuesta múltiple con varias opciones correctas.
 
-*Puede haber varias respuestas correctas.*`,
+_Puede haber varias respuestas correctas._
+        `,
         answers: [
           { text: 'Activar conocimientos previos al inicio de la clase', isCorrect: true },
           { text: 'Detectar malentendidos a mitad de la sesión', isCorrect: true },
-          { text: 'Medir de forma anónima la confianza antes de repasar para un examen', isCorrect: true },
+          {
+            text: 'Medir de forma anónima la confianza antes de repasar para un examen',
+            isCorrect: true,
+          },
           { text: 'Usarlo solo para pruebas calificadas al final de una unidad', isCorrect: false },
         ],
       },
       {
-        text: md`### ¿Cuántas piezas visibles tiene el cubo de Rubik clásico?
+        text: md`
+### ¿Cuántas piezas visibles tiene el cubo de Rubik clásico?
 
 > **Uso didáctico:** Úsalo para crear un momento tipo concurso, con ritmo, suspense y competencia visible entre equipos.
 
 La pregunta se refiere al cubo de Rubik clásico diseñado por Ernő Rubik.
 
-Sugerencia opcional: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (en alemán)](https://www.youtube.com/watch?v=EoINieyz6gE).`,
+Sugerencia opcional: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (en alemán)](https://www.youtube.com/watch?v=EoINieyz6gE).
+        `,
         answers: [
           { text: '28', isCorrect: false },
           { text: '26', isCorrect: true },
@@ -714,11 +807,13 @@ ${CODE_FENCE}`,
         ],
       },
       {
-        text: md`### ¿Cómo se llama el método didáctico en el que el alumnado vota primero de forma individual, luego debate brevemente y después vuelve a votar?
+        text: md`
+### ¿Cómo se llama el método didáctico en el que el alumnado vota primero de forma individual, luego debate brevemente y después vuelve a votar?
 
 > **Uso didáctico:** Úsalo como una pregunta exigente de recuerdo de conceptos para mostrar variantes explícitas, letras vecinas intercambiadas y retroalimentación transparente en respuestas cortas con puntos parciales.
 
-Buscamos el término pedagógico establecido para esta secuencia.`,
+Buscamos el término pedagógico establecido para esta secuencia.
+        `,
         answers: [
           { text: 'Peer Instruction', isCorrect: true },
           { text: 'instrucción entre pares', isCorrect: true },
@@ -727,20 +822,33 @@ Buscamos el término pedagógico establecido para esta secuencia.`,
         ],
       },
       {
-        text: md`### ¿Qué probabilidad hay de que pruebes pronto un quiz en vivo como este en una de tus clases?
+        text: md`
+### ¿En qué año comenzó la Revolución francesa?
 
-> **Uso didáctico:** Úsalo como pulso rápido, exit ticket o valoración breve de confianza.`,
+> **Uso didáctico:** Úsalo como pregunta de estimación en dos rondas: primero recoge estimaciones espontáneas, luego debatid brevemente y comparad la segunda ronda con el valor de referencia, la banda de tolerancia y la puntuación.
+
+Buscamos el año que se suele tomar como inicio de la Revolución francesa.
+        `,
+      },
+      {
+        text: md`
+### ¿Qué probabilidad hay de que pruebes pronto un quiz en vivo como este en una de tus clases?
+
+> **Uso didáctico:** Úsalo como pulso rápido, exit ticket o valoración breve de confianza.
+        `,
         ratingLabelMin: 'Todavía no',
         ratingLabelMax: 'Lo voy a probar',
       },
       {
-        text: md`### Cálculo exigente: ¿cuánto tarda el sonido en recorrer 58 cm?
+        text: md`
+### Cálculo exigente: ¿cuánto tarda el sonido en recorrer 58 cm?
 
 > **Uso didáctico:** Esta respuesta corta numérica es intencionalmente difícil: hay que convertir unidades con precisión y reportar una escala temporal físicamente plausible.
 
 Supón para aire seco a 20 °C una velocidad del sonido de $$v = 343\,\mathrm{m/s}$$.
 
-Calcula el tiempo para $$s = 0{,}58\,\mathrm{m}$$ y responde con unidad (por ejemplo en ms o en s).`,
+Calcula el tiempo para $$s = 0{,}58\,\mathrm{m}$$ y responde con unidad (por ejemplo en ms o en s).
+        `,
         answers: [{ text: '1,69 ms', isCorrect: true }],
       },
     ],
@@ -758,6 +866,7 @@ Usala come una **demo breve a squadre, in stile Kahoot, per lezioni dal vivo** p
 - iniziare con un check-in emotivo o sociale
 - usare immagini invece di sole domande testuali
 - inserire formule e notazione scientifica nelle materie STEM
+- provare domande di stima numerica con valore di riferimento, fascia di tolleranza e due turni
 - raccogliere risposte brevi in testo libero che poi riappaiono come nuvola di parole
 - usare bene domande a scelta multipla e scale di valutazione rapide
 - aggiungere energia con timer, squadre, classifica e codici bonus
@@ -813,26 +922,33 @@ $$\pi = \int_{-\infty}^{\infty} \frac{\mathrm{d}x}{1 + x^2} = 2 \cdot \int_{-1}^
         ],
       },
       {
-        text: md`### Quali di questi usi si prestano bene a un rapido check dal vivo?
+        text: md`
+### Quali di questi usi si prestano bene a un rapido check dal vivo?
 
 > **Uso didattico:** Usalo per mostrare una domanda a scelta multipla con più risposte corrette.
 
-*Sono possibili più risposte corrette.*`,
+_Sono possibili più risposte corrette._
+        `,
         answers: [
           { text: 'Attivare le conoscenze pregresse all’inizio della lezione', isCorrect: true },
           { text: 'Far emergere i fraintendimenti a metà attività', isCorrect: true },
-          { text: 'Rilevare in modo anonimo il livello di sicurezza prima del ripasso', isCorrect: true },
+          {
+            text: 'Rilevare in modo anonimo il livello di sicurezza prima del ripasso',
+            isCorrect: true,
+          },
           { text: 'Usarlo solo per verifiche valutate alla fine di un’unità', isCorrect: false },
         ],
       },
       {
-        text: md`### Quanti pezzi visibili ha il classico Cubo di Rubik?
+        text: md`
+### Quanti pezzi visibili ha il classico Cubo di Rubik?
 
 > **Uso didattico:** Usalo per creare un momento in stile quiz televisivo, con ritmo, suspense e competizione visibile tra squadre.
 
 La domanda si riferisce al classico Cubo di Rubik progettato da Ernő Rubik.
 
-Spunto facoltativo: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (in tedesco)](https://www.youtube.com/watch?v=EoINieyz6gE).`,
+Spunto facoltativo: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (in tedesco)](https://www.youtube.com/watch?v=EoINieyz6gE).
+        `,
         answers: [
           { text: '28', isCorrect: false },
           { text: '26', isCorrect: true },
@@ -856,11 +972,13 @@ ${CODE_FENCE}`,
         ],
       },
       {
-        text: md`### Come si chiama il metodo didattico in cui chi apprende vota prima individualmente, poi discute brevemente e infine vota di nuovo?
+        text: md`
+### Come si chiama il metodo didattico in cui chi apprende vota prima individualmente, poi discute brevemente e infine vota di nuovo?
 
 > **Uso didattico:** Usalo come domanda impegnativa di richiamo terminologico per mostrare varianti esplicite, piccole inversioni di lettere adiacenti e feedback trasparente nelle risposte brevi con punti parziali.
 
-Cerchiamo il termine didattico consolidato per questa sequenza.`,
+Cerchiamo il termine didattico consolidato per questa sequenza.
+        `,
         answers: [
           { text: 'Peer Instruction', isCorrect: true },
           { text: 'istruzione tra pari', isCorrect: true },
@@ -869,20 +987,33 @@ Cerchiamo il termine didattico consolidato per questa sequenza.`,
         ],
       },
       {
-        text: md`### Quanto è probabile che tu provi presto un quiz live come questo in una tua lezione?
+        text: md`
+### In quale anno iniziò la Rivoluzione francese?
 
-> **Uso didattico:** Usalo come rapido polso della situazione, exit ticket o autovalutazione di fiducia.`,
+> **Uso didattico:** Usalo come domanda di stima in due turni: prima raccogli stime spontanee, poi discutete brevemente e confrontate il secondo turno con valore di riferimento, fascia di tolleranza e punteggio.
+
+Cerchiamo l’anno comunemente indicato come inizio della Rivoluzione francese.
+        `,
+      },
+      {
+        text: md`
+### Quanto è probabile che tu provi presto un quiz live come questo in una tua lezione?
+
+> **Uso didattico:** Usalo come rapido polso della situazione, exit ticket o autovalutazione di fiducia.
+        `,
         ratingLabelMin: 'Non ancora',
         ratingLabelMax: 'Lo provo',
       },
       {
-        text: md`### Calcolo avanzato: quanto tempo impiega il suono a percorrere 58 cm?
+        text: md`
+### Calcolo avanzato: quanto tempo impiega il suono a percorrere 58 cm?
 
 > **Uso didattico:** Questa risposta breve numerica è volutamente impegnativa: richiede conversioni corrette delle unità e un ordine di grandezza fisicamente coerente.
 
 Assumi per aria secca a 20 °C una velocità del suono pari a $$v = 343\,\mathrm{m/s}$$.
 
-Determina il tempo di percorrenza per $$s = 0{,}58\,\mathrm{m}$$ e rispondi con unità (ad esempio in ms o in s).`,
+Determina il tempo di percorrenza per $$s = 0{,}58\,\mathrm{m}$$ e rispondi con unità (ad esempio in ms o in s).
+        `,
         answers: [{ text: '1,69 ms', isCorrect: true }],
       },
     ],

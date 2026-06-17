@@ -452,4 +452,189 @@ describe('session team mode (Story 7.1)', () => {
     });
     expect(result.questions[0]?.freetextAggregates).toBeUndefined();
   });
+
+  it('exportiert aggregierte NUMERIC_ESTIMATE-Statistiken und Rundenvergleich', async () => {
+    const questionId = '55555555-5555-4555-8555-555555555555';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: SESSION_ID,
+      code: 'ABC123',
+      status: 'FINISHED',
+      type: 'QUIZ',
+      endedAt: new Date('2026-04-23T08:00:00.000Z'),
+      quiz: {
+        name: 'Schätzfragen-Quiz',
+        teamMode: false,
+        teamCount: null,
+        teamNames: [],
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            text: 'Wie viele Personen sind im Raum?',
+            type: 'NUMERIC_ESTIMATE',
+            numericToleranceMode: 'RELATIVE_PERCENT',
+            numericReferenceValue: 100,
+            numericTolerancePercent: 10,
+            numericIntervalLeft: null,
+            numericIntervalRight: null,
+            answers: [],
+          },
+        ],
+      },
+      votes: [
+        {
+          participantId: 'p1',
+          questionId,
+          round: 1,
+          numericValue: 90,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p2',
+          questionId,
+          round: 1,
+          numericValue: 130,
+          selectedAnswers: [],
+          score: 0,
+        },
+        {
+          participantId: 'p1',
+          questionId,
+          round: 2,
+          numericValue: 105,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p2',
+          questionId,
+          round: 2,
+          numericValue: 115,
+          selectedAnswers: [],
+          score: 0,
+        },
+      ],
+      bonusTokens: [],
+      participants: [{ id: 'p1' }, { id: 'p2' }],
+    });
+
+    const result = await hostCaller.getExportData({ code: 'ABC123' });
+
+    expect(result.questions[0]).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      numericStats: expect.objectContaining({
+        n: 2,
+        mean: 110,
+        inBandPercent: 50,
+      }),
+      numericRoundComparison: expect.objectContaining({
+        meanDelta: 0,
+        medianDelta: 0,
+        inBandPercentDelta: 0,
+        pairedAnalysis: {
+          pairedCount: 2,
+          closerCount: 2,
+          fartherCount: 0,
+          unchangedCount: 0,
+        },
+      }),
+    });
+    expect(result.questions[0]?.numericRoundComparison?.deltaHistogram?.length).toBeGreaterThan(0);
+  });
+
+  it('nutzt den Referenzwert fuer Paaranalyse auch bei absolutem Schaetzfragen-Intervall', async () => {
+    const questionId = '66666666-6666-4666-8666-666666666666';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: SESSION_ID,
+      code: 'DEF456',
+      status: 'FINISHED',
+      type: 'QUIZ',
+      endedAt: new Date('2026-04-23T08:30:00.000Z'),
+      quiz: {
+        name: 'Schätzfragen-Quiz',
+        teamMode: false,
+        teamCount: null,
+        teamNames: [],
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            text: 'Schätze den Messwert der Kalibrierprobe.',
+            type: 'NUMERIC_ESTIMATE',
+            numericToleranceMode: 'ABSOLUTE_INTERVAL',
+            numericReferenceValue: 100,
+            numericTolerancePercent: null,
+            numericIntervalLeft: 95,
+            numericIntervalRight: 105,
+            answers: [],
+          },
+        ],
+      },
+      votes: [
+        {
+          participantId: 'p1',
+          questionId,
+          round: 1,
+          numericValue: 98.2,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p2',
+          questionId,
+          round: 1,
+          numericValue: 120,
+          selectedAnswers: [],
+          score: 0,
+        },
+        {
+          participantId: 'p3',
+          questionId,
+          round: 1,
+          numericValue: 102.4,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p1',
+          questionId,
+          round: 2,
+          numericValue: 101.1,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p2',
+          questionId,
+          round: 2,
+          numericValue: 104.8,
+          selectedAnswers: [],
+          score: 1000,
+        },
+        {
+          participantId: 'p3',
+          questionId,
+          round: 2,
+          numericValue: 99.9,
+          selectedAnswers: [],
+          score: 1000,
+        },
+      ],
+      bonusTokens: [],
+      participants: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }],
+    });
+
+    const result = await hostCaller.getExportData({ code: 'DEF456' });
+
+    expect(result.questions[0]?.numericRoundComparison).toMatchObject({
+      inBandPercentDelta: 33.3333,
+      pairedAnalysis: {
+        pairedCount: 3,
+        closerCount: 3,
+        fartherCount: 0,
+        unchangedCount: 0,
+      },
+    });
+  });
 });

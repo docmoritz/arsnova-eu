@@ -12,9 +12,10 @@ import {
   SHORT_TEXT_DEFAULT_EVALUATION_MODE,
   SHORT_TEXT_DEFAULT_TOLERANCE_LEVEL,
   createLegacyQuizHistoryAccessProof,
+  isNumericToleranceMode,
+  resolveNumericEstimateToleranceMode,
   resolveShortTextMaxLength,
   type NumericInputKind,
-  type NumericToleranceMode,
   type NumericUnitFamily,
   type QuizUploadInput,
   type ShortTextEvaluationKind,
@@ -74,6 +75,15 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
     numericUnitFamily: string | null;
     numericRequireUnit: boolean;
     numericAcceptEquivalentUnits: boolean;
+    numericReferenceValue: number | null;
+    numericTolerancePercent: number | null;
+    numericIntervalLeft: number | null;
+    numericIntervalRight: number | null;
+    numericInputType: string | null;
+    numericDecimalPlaces: number | null;
+    numericMin: number | null;
+    numericMax: number | null;
+    numericTwoRounds: boolean;
     answers: Array<{
       text: string;
       isCorrect: boolean;
@@ -134,9 +144,9 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
             numericInputKind:
               (question.numericInputKind as NumericInputKind | undefined) ??
               NUMERIC_DEFAULT_INPUT_KIND,
-            numericToleranceMode:
-              (question.numericToleranceMode as NumericToleranceMode | undefined) ??
-              NUMERIC_DEFAULT_TOLERANCE_MODE,
+            numericToleranceMode: isNumericToleranceMode(question.numericToleranceMode)
+              ? question.numericToleranceMode
+              : NUMERIC_DEFAULT_TOLERANCE_MODE,
             numericAbsoluteTolerance: question.numericAbsoluteTolerance ?? undefined,
             numericRelativeTolerancePercent: question.numericRelativeTolerancePercent ?? undefined,
             numericUnitFamily:
@@ -144,6 +154,22 @@ function buildQuizUploadPayloadFromStoredQuiz(quiz: {
               NUMERIC_DEFAULT_UNIT_FAMILY,
             numericRequireUnit: question.numericRequireUnit ?? false,
             numericAcceptEquivalentUnits: question.numericAcceptEquivalentUnits ?? true,
+          }
+        : {}),
+      ...(question.type === 'NUMERIC_ESTIMATE'
+        ? {
+            numericToleranceMode: resolveNumericEstimateToleranceMode(
+              question.numericToleranceMode,
+            ),
+            numericReferenceValue: question.numericReferenceValue ?? undefined,
+            numericTolerancePercent: question.numericTolerancePercent ?? undefined,
+            numericIntervalLeft: question.numericIntervalLeft ?? undefined,
+            numericIntervalRight: question.numericIntervalRight ?? undefined,
+            numericInputType: question.numericInputType === 'INTEGER' ? 'INTEGER' : 'DECIMAL',
+            numericDecimalPlaces: question.numericDecimalPlaces ?? undefined,
+            numericMin: question.numericMin ?? undefined,
+            numericMax: question.numericMax ?? undefined,
+            numericTwoRounds: question.numericTwoRounds ?? false,
           }
         : {}),
       answers: question.answers.map((answer) => ({
@@ -227,8 +253,12 @@ export const quizRouter = router({
                 q.type === 'SHORT_TEXT' ? (q.numericInputKind ?? NUMERIC_DEFAULT_INPUT_KIND) : null,
               numericToleranceMode:
                 q.type === 'SHORT_TEXT'
-                  ? (q.numericToleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE)
-                  : null,
+                  ? isNumericToleranceMode(q.numericToleranceMode)
+                    ? q.numericToleranceMode
+                    : NUMERIC_DEFAULT_TOLERANCE_MODE
+                  : q.type === 'NUMERIC_ESTIMATE'
+                    ? resolveNumericEstimateToleranceMode(q.numericToleranceMode)
+                    : null,
               numericAbsoluteTolerance:
                 q.type === 'SHORT_TEXT' ? (q.numericAbsoluteTolerance ?? null) : null,
               numericRelativeTolerancePercent:
@@ -240,6 +270,21 @@ export const quizRouter = router({
               numericRequireUnit: q.type === 'SHORT_TEXT' ? (q.numericRequireUnit ?? false) : false,
               numericAcceptEquivalentUnits:
                 q.type === 'SHORT_TEXT' ? (q.numericAcceptEquivalentUnits ?? true) : true,
+              numericReferenceValue:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericReferenceValue ?? null) : null,
+              numericTolerancePercent:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericTolerancePercent ?? null) : null,
+              numericIntervalLeft:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericIntervalLeft ?? null) : null,
+              numericIntervalRight:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericIntervalRight ?? null) : null,
+              numericInputType: q.type === 'NUMERIC_ESTIMATE' ? (q.numericInputType ?? null) : null,
+              numericDecimalPlaces:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericDecimalPlaces ?? null) : null,
+              numericMin: q.type === 'NUMERIC_ESTIMATE' ? (q.numericMin ?? null) : null,
+              numericMax: q.type === 'NUMERIC_ESTIMATE' ? (q.numericMax ?? null) : null,
+              numericTwoRounds:
+                q.type === 'NUMERIC_ESTIMATE' ? (q.numericTwoRounds ?? false) : false,
               answers: {
                 create: q.answers.map((a) => ({
                   text: a.text,
@@ -312,6 +357,15 @@ export const quizRouter = router({
                 numericUnitFamily: true,
                 numericRequireUnit: true,
                 numericAcceptEquivalentUnits: true,
+                numericReferenceValue: true,
+                numericTolerancePercent: true,
+                numericIntervalLeft: true,
+                numericIntervalRight: true,
+                numericInputType: true,
+                numericDecimalPlaces: true,
+                numericMin: true,
+                numericMax: true,
+                numericTwoRounds: true,
                 answers: {
                   select: {
                     text: true,

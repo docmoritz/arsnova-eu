@@ -70,6 +70,52 @@ describe('session.getPersonalScorecard', () => {
     );
   });
 
+  it('wertet positive NUMERIC_ESTIMATE-Punkte in der persoenlichen Scorecard als korrekt', async () => {
+    const participantId = '11111111-1111-4111-8111-111111111111';
+    const otherParticipantId = '22222222-2222-4222-8222-222222222222';
+    const questionId = '33333333-3333-4333-8333-333333333333';
+
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: 'sess-1',
+      status: 'RESULTS',
+      quiz: {
+        questions: [
+          {
+            id: questionId,
+            type: 'NUMERIC_ESTIMATE',
+            answers: [],
+          },
+        ],
+      },
+      participants: [{ id: participantId }, { id: otherParticipantId }],
+    });
+    prismaMock.vote.findUnique.mockResolvedValue({
+      score: 1000,
+      streakCount: 1,
+      streakBonus: 1,
+      selectedAnswers: [],
+    });
+    prismaMock.vote.findMany.mockResolvedValue([
+      { participantId, questionId, round: 1, score: 1000, responseTimeMs: 1200 },
+      { participantId: otherParticipantId, questionId, round: 1, score: 0, responseTimeMs: 1400 },
+    ]);
+
+    const result = await caller.getPersonalScorecard({
+      code: 'ABC123',
+      participantId,
+      questionIndex: 0,
+      round: 1,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        wasCorrect: true,
+        correctAnswerIds: undefined,
+        questionScore: 1000,
+      }),
+    );
+  });
+
   it('nutzt fuer die Rangliste Runde 2 als Ersatz und ignoriert dort Antwortzeiten', async () => {
     const participantId = '11111111-1111-4111-8111-111111111111';
     const otherParticipantId = '22222222-2222-4222-8222-222222222222';

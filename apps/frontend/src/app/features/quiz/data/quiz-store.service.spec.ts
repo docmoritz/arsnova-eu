@@ -155,6 +155,51 @@ describe('QuizStoreService', () => {
     expect(question?.answers).toEqual([]);
   });
 
+  it('bewahrt numericToleranceMode fuer NUMERIC_ESTIMATE in Store, Export und Upload', () => {
+    const service = TestBed.inject(QuizStoreService);
+    const created = service.createQuiz({ name: 'Schätzfragen Quiz' });
+
+    service.addQuestion(created.id, {
+      text: 'Wie viele Studierende sind im Raum?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: 'MEDIUM',
+      answers: [],
+      numericToleranceMode: 'RELATIVE_PERCENT',
+      numericReferenceValue: 100,
+      numericTolerancePercent: 10,
+      numericInputType: 'DECIMAL',
+      numericDecimalPlaces: 2,
+      numericMin: 0,
+      numericMax: 500,
+      numericTwoRounds: true,
+    });
+
+    const question = service.getQuizById(created.id)?.questions[0];
+    expect(question?.numericToleranceMode).toBe('RELATIVE_PERCENT');
+
+    const exportedQuestion = service.exportQuiz(created.id).quiz.questions[0];
+    expect(exportedQuestion).toEqual(
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 100,
+        numericTolerancePercent: 10,
+        numericTwoRounds: true,
+      }),
+    );
+
+    const uploadQuestion = service.getUploadPayload(created.id).questions[0];
+    expect(uploadQuestion).toEqual(
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 100,
+        numericTolerancePercent: 10,
+        numericTwoRounds: true,
+      }),
+    );
+  });
+
   it('fügt eine SHORT_TEXT-Frage mit Musterlösungen hinzu', () => {
     const service = TestBed.inject(QuizStoreService);
     const created = service.createQuiz({ name: 'Kurzantwort Quiz' });

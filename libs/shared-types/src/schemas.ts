@@ -11,8 +11,19 @@ export const QuestionTypeEnum = z.enum([
   'SHORT_TEXT',
   'SURVEY',
   'RATING',
+  'NUMERIC_ESTIMATE',
 ]);
 export type QuestionType = z.infer<typeof QuestionTypeEnum>;
+
+/** Toleranzmodus für numerische Schätzfragen (Story 1.2d). */
+export const NumericEstimateToleranceModeEnum = z.enum(['ABSOLUTE_INTERVAL', 'RELATIVE_PERCENT']);
+export type NumericEstimateToleranceMode = z.infer<typeof NumericEstimateToleranceModeEnum>;
+export const NUMERIC_ESTIMATE_DEFAULT_TOLERANCE_MODE: NumericEstimateToleranceMode =
+  'ABSOLUTE_INTERVAL';
+
+/** Eingabetyp für numerische Schätzfragen (Story 1.2d). */
+export const NumericInputTypeEnum = z.enum(['INTEGER', 'DECIMAL']);
+export type NumericInputType = z.infer<typeof NumericInputTypeEnum>;
 
 export const SessionStatusEnum = z.enum([
   'LOBBY',
@@ -106,6 +117,11 @@ export type NumericInputKind = z.infer<typeof NumericInputKindEnum>;
 
 export const NumericToleranceModeEnum = z.enum(['exact', 'absolute', 'relative']);
 export type NumericToleranceMode = z.infer<typeof NumericToleranceModeEnum>;
+export const QuestionNumericToleranceModeSchema = z.union([
+  NumericToleranceModeEnum,
+  NumericEstimateToleranceModeEnum,
+]);
+export type QuestionNumericToleranceMode = z.infer<typeof QuestionNumericToleranceModeSchema>;
 
 export const NumericUnitFamilyEnum = z.enum(['none', 'length', 'mass', 'time', 'volume']);
 export type NumericUnitFamily = z.infer<typeof NumericUnitFamilyEnum>;
@@ -330,6 +346,22 @@ export function resolveNumericQuestionEvaluationSettings(
     requireUnit: options?.numericRequireUnit ?? undefined,
     acceptEquivalentUnits: options?.numericAcceptEquivalentUnits ?? undefined,
   });
+}
+
+export function isNumericToleranceMode(value: unknown): value is NumericToleranceMode {
+  return NumericToleranceModeEnum.safeParse(value).success;
+}
+
+export function isNumericEstimateToleranceMode(
+  value: unknown,
+): value is NumericEstimateToleranceMode {
+  return NumericEstimateToleranceModeEnum.safeParse(value).success;
+}
+
+export function resolveNumericEstimateToleranceMode(
+  mode?: QuestionNumericToleranceMode | string | null,
+): NumericEstimateToleranceMode {
+  return isNumericEstimateToleranceMode(mode) ? mode : NUMERIC_ESTIMATE_DEFAULT_TOLERANCE_MODE;
 }
 
 export function resolveShortTextMaxLength(maxLength: number | null | undefined): number {
@@ -1252,12 +1284,22 @@ export const AddQuestionInputSchema = z
     shortTextTrimWhitespace: z.boolean().optional(),
     shortTextNormalizeWhitespace: z.boolean().optional(),
     numericInputKind: NumericInputKindEnum.optional(),
-    numericToleranceMode: NumericToleranceModeEnum.optional(),
+    numericToleranceMode: QuestionNumericToleranceModeSchema.optional(),
     numericAbsoluteTolerance: z.number().min(0).optional(),
     numericRelativeTolerancePercent: z.number().min(0).optional(),
     numericUnitFamily: NumericUnitFamilyEnum.optional(),
     numericRequireUnit: z.boolean().optional(),
     numericAcceptEquivalentUnits: z.boolean().optional(),
+    // Story 1.2d: Numerische Schätzfrage
+    numericReferenceValue: z.number().optional(),
+    numericTolerancePercent: z.number().min(0).max(100).optional(),
+    numericIntervalLeft: z.number().optional(),
+    numericIntervalRight: z.number().optional(),
+    numericInputType: NumericInputTypeEnum.optional(),
+    numericDecimalPlaces: z.number().int().min(0).max(10).optional(),
+    numericMin: z.number().optional(),
+    numericMax: z.number().optional(),
+    numericTwoRounds: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     const hasShortTextConfig =
@@ -1269,24 +1311,149 @@ export const AddQuestionInputSchema = z
       value.shortTextAllowPartialCredit !== undefined ||
       value.shortTextTrimWhitespace !== undefined ||
       value.shortTextNormalizeWhitespace !== undefined;
-    const hasNumericConfig =
+    const hasShortTextNumericConfig =
       value.numericInputKind !== undefined ||
-      value.numericToleranceMode !== undefined ||
       value.numericAbsoluteTolerance !== undefined ||
       value.numericRelativeTolerancePercent !== undefined ||
       value.numericUnitFamily !== undefined ||
       value.numericRequireUnit !== undefined ||
       value.numericAcceptEquivalentUnits !== undefined;
+    const hasNumericEstimateConfig =
+      value.numericReferenceValue !== undefined ||
+      value.numericTolerancePercent !== undefined ||
+      value.numericIntervalLeft !== undefined ||
+      value.numericIntervalRight !== undefined ||
+      value.numericInputType !== undefined ||
+      value.numericDecimalPlaces !== undefined ||
+      value.numericMin !== undefined ||
+      value.numericMax !== undefined ||
+      value.numericTwoRounds !== undefined;
+    const hasNumericToleranceMode = value.numericToleranceMode !== undefined;
 
-    if (value.type !== 'SHORT_TEXT') {
-      if (hasShortTextConfig || hasNumericConfig) {
+    if (value.type === 'NUMERIC_ESTIMATE') {
+      if (hasShortTextConfig || hasShortTextNumericConfig) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['shortTextMaxLength'],
           message: 'Kurzantwort-Konfiguration ist nur für SHORT_TEXT erlaubt.',
         });
       }
+
+      if (hasNumericToleranceMode && !isNumericEstimateToleranceMode(value.numericToleranceMode)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['numericToleranceMode'],
+          message: 'Schätzfragen benötigen einen passenden Toleranzmodus.',
+        });
+      }
+
+      if (value.answers.length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['answers'],
+          message: 'Numerische Schätzfragen verwenden keine Antwortoptionen.',
+        });
+      }
+
+      const estimateToleranceMode = resolveNumericEstimateToleranceMode(value.numericToleranceMode);
+      if (estimateToleranceMode === 'RELATIVE_PERCENT') {
+        if (value.numericReferenceValue === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericReferenceValue'],
+            message: 'Relative Schätzfragen benötigen einen Referenzwert.',
+          });
+        } else if (value.numericReferenceValue === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericReferenceValue'],
+            message: 'Relative Schätzfragen benötigen einen Referenzwert ungleich 0.',
+          });
+        }
+
+        if (value.numericTolerancePercent === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericTolerancePercent'],
+            message: 'Relative Schätzfragen benötigen eine Prozenttoleranz.',
+          });
+        }
+      } else {
+        if (value.numericIntervalLeft === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericIntervalLeft'],
+            message: 'Absolute Schätzfragen benötigen eine linke Intervallgrenze.',
+          });
+        }
+
+        if (value.numericIntervalRight === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericIntervalRight'],
+            message: 'Absolute Schätzfragen benötigen eine rechte Intervallgrenze.',
+          });
+        }
+
+        if (
+          value.numericIntervalLeft !== undefined &&
+          value.numericIntervalRight !== undefined &&
+          value.numericIntervalLeft >= value.numericIntervalRight
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['numericIntervalRight'],
+            message: 'Die rechte Intervallgrenze muss größer als die linke sein.',
+          });
+        }
+      }
+
+      if (
+        value.numericMin !== undefined &&
+        value.numericMax !== undefined &&
+        value.numericMin > value.numericMax
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['numericMax'],
+          message: 'Der Maximalwert muss größer oder gleich dem Minimalwert sein.',
+        });
+      }
+
       return;
+    }
+
+    if (value.type !== 'SHORT_TEXT') {
+      if (
+        hasShortTextConfig ||
+        hasShortTextNumericConfig ||
+        hasNumericToleranceMode ||
+        hasNumericEstimateConfig
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['shortTextMaxLength'],
+          message:
+            'Kurzantwort- und Schätzfragen-Konfiguration ist für diesen Fragetyp nicht erlaubt.',
+        });
+      }
+      return;
+    }
+
+    if (hasNumericEstimateConfig) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['numericReferenceValue'],
+        message: 'Schätzfragen-Konfiguration ist nur für NUMERIC_ESTIMATE erlaubt.',
+      });
+    }
+
+    if (hasNumericToleranceMode && !isNumericToleranceMode(value.numericToleranceMode)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['numericToleranceMode'],
+        message: 'SHORT_TEXT-Numerik benötigt einen passenden Toleranzmodus.',
+      });
     }
 
     if (value.answers.length < 1) {
@@ -1301,7 +1468,9 @@ export const AddQuestionInputSchema = z
     if (usesNumericShortTextEvaluation(evaluationKind)) {
       const numericSettings = resolveNumericQuestionEvaluationSettings({
         numericInputKind: value.numericInputKind,
-        numericToleranceMode: value.numericToleranceMode,
+        numericToleranceMode: isNumericToleranceMode(value.numericToleranceMode)
+          ? value.numericToleranceMode
+          : undefined,
         numericAbsoluteTolerance: value.numericAbsoluteTolerance,
         numericRelativeTolerancePercent: value.numericRelativeTolerancePercent,
         numericUnitFamily: value.numericUnitFamily,
@@ -1535,12 +1704,21 @@ type QuizHistoryAccessMaterial = {
     shortTextTrimWhitespace: boolean;
     shortTextNormalizeWhitespace: boolean;
     numericInputKind: NumericInputKind;
-    numericToleranceMode: NumericToleranceMode;
+    numericToleranceMode: QuestionNumericToleranceMode;
     numericAbsoluteTolerance: number | null;
     numericRelativeTolerancePercent: number | null;
     numericUnitFamily: NumericUnitFamily;
     numericRequireUnit: boolean;
     numericAcceptEquivalentUnits: boolean;
+    numericReferenceValue: number | null;
+    numericTolerancePercent: number | null;
+    numericIntervalLeft: number | null;
+    numericIntervalRight: number | null;
+    numericInputType: NumericInputType | null;
+    numericDecimalPlaces: number | null;
+    numericMin: number | null;
+    numericMax: number | null;
+    numericTwoRounds: boolean;
     answers: Array<{
       text: string;
       isCorrect: boolean;
@@ -1621,9 +1799,12 @@ function buildQuizHistoryAccessMaterial(input: QuizUploadInput): QuizHistoryAcce
             ? (question.numericInputKind ?? NUMERIC_DEFAULT_INPUT_KIND)
             : NUMERIC_DEFAULT_INPUT_KIND,
         numericToleranceMode:
-          question.type === 'SHORT_TEXT'
-            ? (question.numericToleranceMode ?? NUMERIC_DEFAULT_TOLERANCE_MODE)
-            : NUMERIC_DEFAULT_TOLERANCE_MODE,
+          question.type === 'NUMERIC_ESTIMATE'
+            ? resolveNumericEstimateToleranceMode(question.numericToleranceMode)
+            : question.type === 'SHORT_TEXT' &&
+                isNumericToleranceMode(question.numericToleranceMode)
+              ? question.numericToleranceMode
+              : NUMERIC_DEFAULT_TOLERANCE_MODE,
         numericAbsoluteTolerance:
           question.type === 'SHORT_TEXT' ? (question.numericAbsoluteTolerance ?? null) : null,
         numericRelativeTolerancePercent:
@@ -1638,6 +1819,22 @@ function buildQuizHistoryAccessMaterial(input: QuizUploadInput): QuizHistoryAcce
           question.type === 'SHORT_TEXT' ? (question.numericRequireUnit ?? false) : false,
         numericAcceptEquivalentUnits:
           question.type === 'SHORT_TEXT' ? (question.numericAcceptEquivalentUnits ?? true) : true,
+        numericReferenceValue:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericReferenceValue ?? null) : null,
+        numericTolerancePercent:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericTolerancePercent ?? null) : null,
+        numericIntervalLeft:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericIntervalLeft ?? null) : null,
+        numericIntervalRight:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericIntervalRight ?? null) : null,
+        numericInputType:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericInputType ?? 'DECIMAL') : null,
+        numericDecimalPlaces:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericDecimalPlaces ?? null) : null,
+        numericMin: question.type === 'NUMERIC_ESTIMATE' ? (question.numericMin ?? null) : null,
+        numericMax: question.type === 'NUMERIC_ESTIMATE' ? (question.numericMax ?? null) : null,
+        numericTwoRounds:
+          question.type === 'NUMERIC_ESTIMATE' ? (question.numericTwoRounds ?? false) : false,
         answers: [...question.answers]
           .map((answer) => ({ text: answer.text, isCorrect: answer.isCorrect }))
           .sort(
@@ -1859,6 +2056,60 @@ export const PeerInstructionSuggestionDTOSchema = z.object({
 });
 export type PeerInstructionSuggestionDTO = z.infer<typeof PeerInstructionSuggestionDTOSchema>;
 
+// ---------------------------------------------------------------------------
+// Numerische Schätzfrage – Statistik-DTOs (Story 1.2d)
+// ---------------------------------------------------------------------------
+
+/** Ein Bin im Histogramm für numerische Schätzfragen. */
+export const NumericHistogramBinSchema = z.object({
+  from: z.number(),
+  to: z.number(),
+  count: z.number().int(),
+  inBand: z.boolean(),
+});
+export type NumericHistogramBin = z.infer<typeof NumericHistogramBinSchema>;
+
+/** Statistische Kennzahlen einer Abstimmungsrunde für NUMERIC_ESTIMATE. */
+export const NumericStatsDTOSchema = z.object({
+  n: z.number().int(),
+  mean: z.number().nullable(),
+  median: z.number().nullable(),
+  stdDev: z.number().nullable(),
+  q1: z.number().nullable(),
+  q3: z.number().nullable(),
+  iqr: z.number().nullable(),
+  min: z.number().nullable(),
+  max: z.number().nullable(),
+  inBandCount: z.number().int(),
+  inBandPercent: z.number().nullable(),
+  meanAbsoluteError: z.number().nullable(),
+  meanRelativeError: z.number().nullable(),
+});
+export type NumericStatsDTO = z.infer<typeof NumericStatsDTOSchema>;
+
+/** Paarweiser Vergleich Runde 1 → Runde 2 (gleiche Person) für NUMERIC_ESTIMATE. */
+export const NumericPairedAnalysisDTOSchema = z.object({
+  pairedCount: z.number().int(),
+  closerCount: z.number().int(),
+  fartherCount: z.number().int(),
+  unchangedCount: z.number().int(),
+});
+export type NumericPairedAnalysisDTO = z.infer<typeof NumericPairedAnalysisDTOSchema>;
+
+/** Zwei-Runden-Vergleich für NUMERIC_ESTIMATE (analog RoundComparisonDTO für SC/MC). */
+export const NumericRoundComparisonDTOSchema = z.object({
+  round1Stats: NumericStatsDTOSchema,
+  round2Stats: NumericStatsDTOSchema,
+  round1Histogram: z.array(NumericHistogramBinSchema),
+  round2Histogram: z.array(NumericHistogramBinSchema),
+  meanDelta: z.number().nullable().optional(),
+  medianDelta: z.number().nullable().optional(),
+  inBandPercentDelta: z.number().nullable().optional(),
+  deltaHistogram: z.array(NumericHistogramBinSchema).optional(),
+  pairedAnalysis: NumericPairedAnalysisDTOSchema.optional(),
+});
+export type NumericRoundComparisonDTO = z.infer<typeof NumericRoundComparisonDTOSchema>;
+
 /** DTO: Aktuelle Frage für Host-Ansicht (Story 2.3, 3.5) – Text + Antwortoptionen inkl. isCorrect + Timer. */
 export const HostCurrentQuestionDTOSchema = z.object({
   questionId: z.string().uuid(),
@@ -1896,7 +2147,7 @@ export const HostCurrentQuestionDTOSchema = z.object({
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
   numericInputKind: NumericInputKindEnum.optional(),
-  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericToleranceMode: QuestionNumericToleranceModeSchema.optional(),
   numericAbsoluteTolerance: z.number().nullable().optional(),
   numericRelativeTolerancePercent: z.number().nullable().optional(),
   numericUnitFamily: NumericUnitFamilyEnum.optional(),
@@ -1924,6 +2175,20 @@ export const HostCurrentQuestionDTOSchema = z.object({
   peerInstructionSuggestion: PeerInstructionSuggestionDTOSchema.optional(),
   currentRound: z.number().int().min(1).max(2).optional(),
   roundComparison: RoundComparisonDTOSchema.optional(),
+  // Story 1.2d: Numerische Schätzfrage – Konfiguration (für Host sichtbar)
+  numericReferenceValue: z.number().nullable().optional(),
+  numericTolerancePercent: z.number().nullable().optional(),
+  numericIntervalLeft: z.number().nullable().optional(),
+  numericIntervalRight: z.number().nullable().optional(),
+  numericInputType: NumericInputTypeEnum.optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  numericMin: z.number().nullable().optional(),
+  numericMax: z.number().nullable().optional(),
+  numericTwoRounds: z.boolean().optional(),
+  // Story 1.2d: Statistik & Histogramm (nach Ergebnisfreigabe)
+  numericHistogram: z.array(NumericHistogramBinSchema).optional(),
+  numericStats: NumericStatsDTOSchema.optional(),
+  numericRoundComparison: NumericRoundComparisonDTOSchema.optional(),
 });
 export type HostCurrentQuestionDTO = z.infer<typeof HostCurrentQuestionDTOSchema>;
 
@@ -1943,11 +2208,12 @@ export type JoinSessionInput = z.infer<typeof JoinSessionInputSchema>;
 /** Input: Abstimmung abgeben */
 export const SubmitVoteInputSchema = z.object({
   sessionId: z.uuid(),
-  participantId: z.uuid(), // Vom Join-Response (Story 0.5: Rate-Limit pro Participant)
+  participantId: z.uuid(),
   questionId: z.uuid(),
   answerIds: z.array(z.uuid()).optional(), // MC: mehrere, SC: eine, FREETEXT/RATING: keine
   freeText: z.string().max(SHORT_TEXT_MAX_LENGTH_LIMIT).optional(),
   ratingValue: z.number().int().min(0).max(10).optional(), // Nur bei RATING
+  numericValue: z.number().optional(), // Story 1.2d: Numerische Schätzfrage
   responseTimeMs: z.number().int().min(0).optional(), // Antwortzeit in ms
   round: z.number().int().min(1).max(2).optional().default(1), // Story 2.7: Peer Instruction Runde
 });
@@ -1997,7 +2263,7 @@ export const QuestionRevealedDTOSchema = z.object({
   difficulty: DifficultyEnum,
   showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
-  /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage“). */
+  /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage”). */
   totalQuestions: z.number().int().min(1).optional(),
   answers: z.array(AnswerOptionRevealedDTOSchema),
   freeTextResponses: z.array(z.string()).optional(), // Nur bei FREETEXT-Fragen
@@ -2017,19 +2283,28 @@ export const QuestionRevealedDTOSchema = z.object({
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
   numericInputKind: NumericInputKindEnum.optional(),
-  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericRequireUnit: z.boolean().optional(),
+  numericAcceptEquivalentUnits: z.boolean().optional(),
   numericAbsoluteTolerance: z.number().nullable().optional(),
   numericRelativeTolerancePercent: z.number().nullable().optional(),
   numericUnitFamily: NumericUnitFamilyEnum.optional(),
-  numericRequireUnit: z.boolean().optional(),
-  numericAcceptEquivalentUnits: z.boolean().optional(),
   correctVoterCount: z.number().int().optional(),
   incorrectVoterCount: z.number().int().optional(),
   totalVotes: z.number(),
+  // Story 1.2d: Numerische Schätzfrage – aufgelöste Konfiguration + Statistik
+  numericToleranceMode: QuestionNumericToleranceModeSchema.optional(),
+  numericReferenceValue: z.number().nullable().optional(),
+  numericTolerancePercent: z.number().nullable().optional(),
+  numericIntervalLeft: z.number().nullable().optional(),
+  numericIntervalRight: z.number().nullable().optional(),
+  numericInputType: NumericInputTypeEnum.optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  numericStats: NumericStatsDTOSchema.optional(),
+  numericHistogram: z.array(NumericHistogramBinSchema).optional(),
 });
 export type QuestionRevealedDTO = z.infer<typeof QuestionRevealedDTOSchema>;
 
-/** DTO: Frage für Studenten (ohne Lösung). activeAt = Server-Zeitpunkt bei ACTIVE-Wechsel (Countdown-Sync, Story 3.5). Optional participantCount/totalVotes für Anzeige „Alle haben abgestimmt“ und Countdown-Ausblendung. */
+/** DTO: Frage für Studenten (ohne Lösung). activeAt = Server-Zeitpunkt bei ACTIVE-Wechsel (Countdown-Sync, Story 3.5). Optional participantCount/totalVotes für Anzeige „Alle haben abgestimmt” und Countdown-Ausblendung. */
 export const QuestionStudentDTOSchema = z.object({
   id: z.uuid(),
   text: z.string(),
@@ -2038,7 +2313,7 @@ export const QuestionStudentDTOSchema = z.object({
   difficulty: DifficultyEnum,
   showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
-  /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage“). */
+  /** Gesamtanzahl Fragen (für Client-Hinweis „Letzte Frage”). */
   totalQuestions: z.number().int().min(1).optional(),
   answers: z.array(AnswerOptionStudentDTOSchema),
   activeAt: z.string().optional(),
@@ -2070,6 +2345,12 @@ export const QuestionStudentDTOSchema = z.object({
   participantCount: z.number().int().min(0).optional(),
   totalVotes: z.number().int().min(0).optional(),
   currentRound: z.number().int().min(1).max(2).optional(),
+  // Story 1.2d: Numerische Schätzfrage – nur Eingabe-Konfiguration (KEINE Toleranz/Lösung!)
+  numericInputType: NumericInputTypeEnum.optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  numericMin: z.number().nullable().optional(),
+  numericMax: z.number().nullable().optional(),
+  numericTwoRounds: z.boolean().optional(),
 });
 export type QuestionStudentDTO = z.infer<typeof QuestionStudentDTOSchema>;
 
@@ -2113,6 +2394,11 @@ export const QuestionPreviewDTOSchema = z.object({
   numericRequireUnit: z.boolean().optional(),
   numericAcceptEquivalentUnits: z.boolean().optional(),
   participantReady: z.boolean().optional(),
+  // Story 1.2d: Numerische Schätzfrage – nur Eingabe-Konfiguration (KEINE Toleranz/Lösung!)
+  numericInputType: NumericInputTypeEnum.optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  numericMin: z.number().nullable().optional(),
+  numericMax: z.number().nullable().optional(),
 });
 export type QuestionPreviewDTO = z.infer<typeof QuestionPreviewDTOSchema>;
 
@@ -2508,12 +2794,21 @@ const ExportedQuestionSchema = z.object({
   shortTextTrimWhitespace: z.boolean().optional(),
   shortTextNormalizeWhitespace: z.boolean().optional(),
   numericInputKind: NumericInputKindEnum.optional(),
-  numericToleranceMode: NumericToleranceModeEnum.optional(),
+  numericToleranceMode: QuestionNumericToleranceModeSchema.optional(),
   numericAbsoluteTolerance: z.number().nullable().optional(),
   numericRelativeTolerancePercent: z.number().nullable().optional(),
   numericUnitFamily: NumericUnitFamilyEnum.optional(),
   numericRequireUnit: z.boolean().optional(),
   numericAcceptEquivalentUnits: z.boolean().optional(),
+  numericReferenceValue: z.number().nullable().optional(),
+  numericTolerancePercent: z.number().nullable().optional(),
+  numericIntervalLeft: z.number().nullable().optional(),
+  numericIntervalRight: z.number().nullable().optional(),
+  numericInputType: NumericInputTypeEnum.optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  numericMin: z.number().nullable().optional(),
+  numericMax: z.number().nullable().optional(),
+  numericTwoRounds: z.boolean().optional(),
   /** false = in lokaler Bibliothek behalten, aber nicht in Live/Vorschau */
   enabled: z.boolean().optional().default(true),
 });
@@ -2750,6 +3045,9 @@ export const QuestionExportEntrySchema = z.object({
   ratingDistribution: z.record(z.string(), z.number()).optional(), // RATING: "1" -> 5, "2" -> 12
   ratingAverage: z.number().optional(),
   ratingStandardDeviation: z.number().optional(),
+  numericStats: NumericStatsDTOSchema.optional(),
+  numericHistogram: z.array(NumericHistogramBinSchema).optional(),
+  numericRoundComparison: NumericRoundComparisonDTOSchema.optional(),
   averageScore: z.number().optional(), // Durchschnittspunkte (wenn gescored)
 });
 export type QuestionExportEntry = z.infer<typeof QuestionExportEntrySchema>;
@@ -3569,3 +3867,69 @@ export type AdminMotdIdInput = z.infer<typeof AdminMotdIdInputSchema>;
 
 export const AdminMotdTemplateListOutputSchema = z.array(AdminMotdTemplateListItemDTOSchema);
 export const AdminMotdListOutputSchema = z.array(AdminMotdListItemDTOSchema);
+
+// ---------------------------------------------------------------------------
+// Numerische Schätzfrage – Shared Utility (Story 1.2d)
+// ---------------------------------------------------------------------------
+
+/**
+ * Berechnet das effektive Toleranzintervall [left, right] für eine NUMERIC_ESTIMATE-Frage.
+ * Gibt null zurück, wenn die Konfiguration ungültig ist (V=0 im RELATIVE-Modus, L >= R).
+ */
+export function resolveNumericTolerance(
+  mode: NumericEstimateToleranceMode,
+  opts: {
+    referenceValue?: number | null;
+    tolerancePercent?: number | null;
+    intervalLeft?: number | null;
+    intervalRight?: number | null;
+  },
+): { left: number; right: number } | null {
+  if (mode === 'RELATIVE_PERCENT') {
+    const v = opts.referenceValue;
+    const p = opts.tolerancePercent;
+    if (v === null || v === undefined || p === null || p === undefined) return null;
+    if (v === 0) return null; // Sonderfall: relativer Modus bei V=0 nicht definiert
+    const delta = Math.abs(v) * (p / 100);
+    const left = Math.min(v - delta, v + delta);
+    const right = Math.max(v - delta, v + delta);
+    return { left, right };
+  }
+  // ABSOLUTE_INTERVAL
+  const l = opts.intervalLeft;
+  const r = opts.intervalRight;
+  if (l === null || l === undefined || r === null || r === undefined) return null;
+  if (l >= r) return null;
+  return { left: l, right: r };
+}
+
+/**
+ * Normalisiert eine numerische Eingabe (Komma → Punkt, Leerzeichen entfernen).
+ * Gibt null zurück wenn nicht parsebar oder zu viele Dezimalstellen.
+ */
+export function parseNumericInput(
+  raw: string,
+  opts: { inputType: NumericInputType; maxDecimalPlaces?: number | null },
+): number | null {
+  const normalized = raw.trim().replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(normalized)) return null;
+  const n = Number(normalized);
+  if (!isFinite(n)) return null;
+  if (opts.inputType === 'INTEGER') {
+    if (!Number.isInteger(n)) return null;
+  } else if (opts.maxDecimalPlaces !== null && opts.maxDecimalPlaces !== undefined) {
+    const decimalPart = normalized.includes('.') ? (normalized.split('.')[1] ?? '') : '';
+    if (decimalPart.length > opts.maxDecimalPlaces) return null;
+  }
+  return n;
+}
+
+/**
+ * Prüft, ob ein numerischer Wert innerhalb des Toleranzintervalls liegt (inklusive Grenzen).
+ */
+export function isNumericValueInBand(
+  value: number,
+  band: { left: number; right: number },
+): boolean {
+  return value >= band.left && value <= band.right;
+}

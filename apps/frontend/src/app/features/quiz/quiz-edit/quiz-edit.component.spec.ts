@@ -423,6 +423,70 @@ describe('QuizEditComponent', () => {
     );
   });
 
+  it('speichert NUMERIC_ESTIMATE mit Toleranzmodus und Konfiguration', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('NUMERIC_ESTIMATE');
+    component.onTypeChanged();
+    component.form.controls.text.setValue('Wie viele Menschen leben in der Stadt?');
+    component.form.controls.numericToleranceMode.setValue('RELATIVE_PERCENT');
+    component.form.controls.numericReferenceValue.setValue(100_000);
+    component.form.controls.numericTolerancePercent.setValue(5);
+    component.form.controls.numericInputType.setValue('INTEGER');
+    component.form.controls.numericDecimalPlaces.setValue(null);
+    component.form.controls.numericMin.setValue(0);
+    component.form.controls.numericTwoRounds.setValue(true);
+
+    component.addQuestion();
+
+    expect(mockStore.addQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        answers: [],
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 100_000,
+        numericTolerancePercent: 5,
+        numericInputType: 'INTEGER',
+        numericMin: 0,
+        numericTwoRounds: true,
+      }),
+    );
+  });
+
+  it('speichert absolute NUMERIC_ESTIMATE ohne versteckte relative Referenzwerte', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('NUMERIC_ESTIMATE');
+    component.onTypeChanged();
+    component.form.controls.text.setValue('In welchem Jahr war die Revolution?');
+    component.form.controls.numericToleranceMode.setValue('ABSOLUTE_INTERVAL');
+    component.form.controls.numericReferenceValue.setValue(-1);
+    component.form.controls.numericTolerancePercent.setValue(10);
+    component.form.controls.numericIntervalLeft.setValue(1700);
+    component.form.controls.numericIntervalRight.setValue(1800);
+    component.form.controls.numericInputType.setValue('INTEGER');
+    component.form.controls.numericDecimalPlaces.setValue(null);
+
+    component.addQuestion();
+
+    expect(mockStore.addQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        answers: [],
+        numericToleranceMode: 'ABSOLUTE_INTERVAL',
+        numericReferenceValue: null,
+        numericTolerancePercent: null,
+        numericIntervalLeft: 1700,
+        numericIntervalRight: 1800,
+        numericInputType: 'INTEGER',
+      }),
+    );
+  });
+
   it('speichert eine FREETEXT-Frage ohne Antwortoptionen', () => {
     const fixture = TestBed.createComponent(QuizEditComponent);
     const component = fixture.componentInstance;

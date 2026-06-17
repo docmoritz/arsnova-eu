@@ -96,6 +96,14 @@ import {
   resolveShortTextMaxLength,
   usesNumericShortTextEvaluation,
   usesShortTextUnitEvaluation,
+  resolveNumericTolerance,
+  isNumericValueInBand,
+  isNumericToleranceMode,
+  resolveNumericEstimateToleranceMode,
+  type NumericStatsDTO,
+  type NumericHistogramBin,
+  type NumericRoundComparisonDTO,
+  type NumericPairedAnalysisDTO,
 } from '@arsnova/shared-types';
 import {
   isExactCorrectSelection,
@@ -225,6 +233,7 @@ type VoteSummary = {
   incorrectFreeTextResponses: string[];
   correctVoteCount: number;
   incorrectVoteCount: number;
+  numericValues: number[]; // Story 1.2d: Numerische Schätzwerte (NUMERIC_ESTIMATE)
 };
 
 const sessionInfoCache = new Map<
@@ -730,8 +739,9 @@ type ShortTextAnswerOption = { id: string; text: string; isCorrect: boolean };
 function resolveShortTextQuestionConfig(config?: ShortTextQuestionConfig) {
   const numericSettings = resolveNumericQuestionEvaluationSettings({
     numericInputKind: (config?.numericInputKind as NumericInputKind | null | undefined) ?? null,
-    numericToleranceMode:
-      (config?.numericToleranceMode as NumericToleranceMode | null | undefined) ?? null,
+    numericToleranceMode: isNumericToleranceMode(config?.numericToleranceMode)
+      ? config.numericToleranceMode
+      : null,
     numericAbsoluteTolerance: config?.numericAbsoluteTolerance ?? null,
     numericRelativeTolerancePercent: config?.numericRelativeTolerancePercent ?? null,
     numericUnitFamily: (config?.numericUnitFamily as NumericUnitFamily | null | undefined) ?? null,
@@ -918,6 +928,7 @@ async function getVoteSummaryCached(
           incorrectFreeTextResponses: [],
           correctVoteCount: 0,
           incorrectVoteCount: 0,
+          numericValues: [],
         };
       }
 
@@ -954,6 +965,25 @@ async function getVoteSummaryCached(
           incorrectFreeTextResponses,
           correctVoteCount,
           incorrectVoteCount,
+          numericValues: [],
+        };
+      }
+
+      if (questionType === 'NUMERIC_ESTIMATE') {
+        const votes = await prisma.vote.findMany({
+          where: { sessionId, questionId, round },
+          select: { numericValue: true },
+        });
+        return {
+          totalVotes: votes.length,
+          answerVoteCounts: {},
+          freeTextResponses: [],
+          incorrectFreeTextResponses: [],
+          correctVoteCount: 0,
+          incorrectVoteCount: 0,
+          numericValues: votes
+            .map((vote) => vote.numericValue)
+            .filter((value): value is number => value !== null && value !== undefined),
         };
       }
 
@@ -975,6 +1005,7 @@ async function getVoteSummaryCached(
         incorrectFreeTextResponses: [],
         correctVoteCount: 0,
         incorrectVoteCount: 0,
+        numericValues: [],
       };
     },
   );
@@ -989,6 +1020,7 @@ export function recordVoteCachesForCode(
     freeText: string | null;
     questionType: QuestionType;
     isCorrect?: boolean;
+    numericValue?: number | null;
   },
 ): void {
   const normalizedCode = code.toUpperCase();
@@ -1007,6 +1039,7 @@ export function recordVoteCachesForCode(
       incorrectFreeTextResponses: [...cachedSummary.incorrectFreeTextResponses],
       correctVoteCount: cachedSummary.correctVoteCount,
       incorrectVoteCount: cachedSummary.incorrectVoteCount,
+      numericValues: [...cachedSummary.numericValues],
     };
     for (const answerId of payload.answerIds) {
       nextSummary.answerVoteCounts[answerId] = (nextSummary.answerVoteCounts[answerId] ?? 0) + 1;
@@ -1024,6 +1057,9 @@ export function recordVoteCachesForCode(
           nextSummary.incorrectFreeTextResponses.push(trimmedFreeText);
         }
       }
+    }
+    if (payload.numericValue !== null && payload.numericValue !== undefined) {
+      nextSummary.numericValues.push(payload.numericValue);
     }
     setCachedValue(voteSummaryCache, key, nextSummary, VOTE_SUMMARY_CACHE_TTL_MS);
   }
@@ -1119,12 +1155,19 @@ interface QuestionWithAnswersForExport {
   numericUnitFamily: string | null;
   numericRequireUnit: boolean;
   numericAcceptEquivalentUnits: boolean;
+  numericReferenceValue: number | null;
+  numericTolerancePercent: number | null;
+  numericIntervalLeft: number | null;
+  numericIntervalRight: number | null;
   answers: Array<{ id: string; text: string; isCorrect: boolean }>;
 }
 interface VoteForExport {
+  participantId: string;
+  round: number;
   selectedAnswers: Array<{ answerOptionId: string }>;
   freeText?: string | null;
   ratingValue?: number | null;
+  numericValue?: number | null;
   score?: number | null;
 }
 interface BonusTokenForExport {
@@ -1324,10 +1367,35 @@ const quizHistoryAccessQuizSelect = Prisma.validator<Prisma.QuizSelect>()({
       timer: true,
       difficulty: true,
       order: true,
+      shortTextEvaluationKind: true,
+      shortTextMaxLength: true,
+      shortTextCaseSensitive: true,
+      shortTextEvaluationMode: true,
+      shortTextToleranceLevel: true,
+      shortTextAllowPartialCredit: true,
+      shortTextTrimWhitespace: true,
+      shortTextNormalizeWhitespace: true,
+      numericInputKind: true,
       ratingMin: true,
       ratingMax: true,
       ratingLabelMin: true,
       ratingLabelMax: true,
+      numericToleranceMode: true,
+      numericAbsoluteTolerance: true,
+      numericRelativeTolerancePercent: true,
+      numericUnitFamily: true,
+      numericRequireUnit: true,
+      numericAcceptEquivalentUnits: true,
+      numericReferenceValue: true,
+      numericTolerancePercent: true,
+      numericIntervalLeft: true,
+      numericIntervalRight: true,
+      numericInputType: true,
+      numericDecimalPlaces: true,
+      numericMin: true,
+      numericMax: true,
+      numericTwoRounds: true,
+      skipReadingPhase: true,
       answers: {
         select: {
           text: true,
@@ -1373,21 +1441,62 @@ function buildQuizHistoryAccessPayload(
     bonusTokenCount: quiz.bonusTokenCount ?? undefined,
     readingPhaseEnabled: quiz.readingPhaseEnabled,
     preset: quiz.preset === 'SERIOUS' ? 'SERIOUS' : 'PLAYFUL',
-    questions: quiz.questions.map((question) => ({
-      text: question.text,
-      type: question.type,
-      timer: question.timer,
-      difficulty: question.difficulty,
-      order: question.order,
-      ratingMin: question.ratingMin ?? undefined,
-      ratingMax: question.ratingMax ?? undefined,
-      ratingLabelMin: question.ratingLabelMin ?? undefined,
-      ratingLabelMax: question.ratingLabelMax ?? undefined,
-      answers: question.answers.map((answer) => ({
-        text: answer.text,
-        isCorrect: answer.isCorrect,
-      })),
-    })),
+    questions: quiz.questions.map((question) => {
+      const shortTextConfig = resolveShortTextQuestionConfig(question);
+      return {
+        text: question.text,
+        type: question.type,
+        timer: question.timer,
+        difficulty: question.difficulty,
+        order: question.order,
+        skipReadingPhase: question.skipReadingPhase,
+        ratingMin: question.ratingMin ?? undefined,
+        ratingMax: question.ratingMax ?? undefined,
+        ratingLabelMin: question.ratingLabelMin ?? undefined,
+        ratingLabelMax: question.ratingLabelMax ?? undefined,
+        ...(question.type === 'SHORT_TEXT'
+          ? {
+              shortTextEvaluationKind: shortTextConfig.shortTextEvaluationKind,
+              shortTextMaxLength: resolveShortTextMaxLength(shortTextConfig.shortTextMaxLength),
+              shortTextCaseSensitive: shortTextConfig.shortTextCaseSensitive,
+              shortTextEvaluationMode: shortTextConfig.shortTextEvaluationMode,
+              shortTextToleranceLevel: shortTextConfig.shortTextToleranceLevel,
+              shortTextAllowPartialCredit: shortTextConfig.shortTextAllowPartialCredit,
+              shortTextTrimWhitespace: shortTextConfig.shortTextTrimWhitespace,
+              shortTextNormalizeWhitespace: shortTextConfig.shortTextNormalizeWhitespace,
+              numericInputKind: shortTextConfig.numericInputKind,
+              numericToleranceMode: shortTextConfig.numericToleranceMode,
+              numericAbsoluteTolerance: shortTextConfig.numericAbsoluteTolerance ?? undefined,
+              numericRelativeTolerancePercent:
+                shortTextConfig.numericRelativeTolerancePercent ?? undefined,
+              numericUnitFamily: shortTextConfig.numericUnitFamily,
+              numericRequireUnit: shortTextConfig.numericRequireUnit,
+              numericAcceptEquivalentUnits: shortTextConfig.numericAcceptEquivalentUnits,
+            }
+          : {}),
+        ...(question.type === 'NUMERIC_ESTIMATE'
+          ? {
+              numericToleranceMode: resolveNumericEstimateToleranceMode(
+                question.numericToleranceMode,
+              ),
+              numericReferenceValue: question.numericReferenceValue ?? undefined,
+              numericTolerancePercent: question.numericTolerancePercent ?? undefined,
+              numericIntervalLeft: question.numericIntervalLeft ?? undefined,
+              numericIntervalRight: question.numericIntervalRight ?? undefined,
+              numericInputType:
+                (question.numericInputType as 'INTEGER' | 'DECIMAL' | null) ?? undefined,
+              numericDecimalPlaces: question.numericDecimalPlaces ?? undefined,
+              numericMin: question.numericMin ?? undefined,
+              numericMax: question.numericMax ?? undefined,
+              numericTwoRounds: question.numericTwoRounds ?? undefined,
+            }
+          : {}),
+        answers: question.answers.map((answer) => ({
+          text: answer.text,
+          isCorrect: answer.isCorrect,
+        })),
+      };
+    }),
   };
 }
 
@@ -1917,7 +2026,11 @@ function buildPeerInstructionSuggestion(
     return undefined;
   }
 
-  if (questionType !== 'SINGLE_CHOICE' && questionType !== 'MULTIPLE_CHOICE') {
+  if (
+    questionType !== 'SINGLE_CHOICE' &&
+    questionType !== 'MULTIPLE_CHOICE' &&
+    questionType !== 'NUMERIC_ESTIMATE'
+  ) {
     return undefined;
   }
 
@@ -1937,6 +2050,14 @@ function buildPeerInstructionSuggestion(
     suggested: true,
     reason: 'CORRECTNESS_WINDOW',
   };
+}
+
+function questionSupportsSecondRound(
+  question: { type: string; numericTwoRounds?: boolean | null } | null | undefined,
+): boolean {
+  if (!question) return false;
+  if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTIPLE_CHOICE') return true;
+  return question.type === 'NUMERIC_ESTIMATE' && question.numericTwoRounds === true;
 }
 
 async function buildRoundComparison(
@@ -2193,10 +2314,345 @@ type HostCurrentQuestionSession = {
       numericUnitFamily: string | null;
       numericRequireUnit: boolean;
       numericAcceptEquivalentUnits: boolean;
+      skipReadingPhase: boolean;
+      numericReferenceValue: number | null;
+      numericTolerancePercent: number | null;
+      numericIntervalLeft: number | null;
+      numericIntervalRight: number | null;
+      numericInputType: string | null;
+      numericDecimalPlaces: number | null;
+      numericMin: number | null;
+      numericMax: number | null;
+      numericTwoRounds: boolean;
       answers: Array<{ id: string; text: string; isCorrect: boolean }>;
     }>;
   } | null;
 };
+
+// ---------------------------------------------------------------------------
+// Numerische Schätzfrage – Statistik-Hilfsfunktionen (Story 1.2d)
+// ---------------------------------------------------------------------------
+
+function round4(n: number): number {
+  return Math.round(n * 10000) / 10000;
+}
+
+function buildNumericStats(
+  values: number[],
+  band: { left: number; right: number } | null,
+  referenceValue: number | null,
+): NumericStatsDTO {
+  const n = values.length;
+  const empty: NumericStatsDTO = {
+    n: 0,
+    mean: null,
+    median: null,
+    stdDev: null,
+    q1: null,
+    q3: null,
+    iqr: null,
+    min: null,
+    max: null,
+    inBandCount: 0,
+    inBandPercent: null,
+    meanAbsoluteError: null,
+    meanRelativeError: null,
+  };
+  if (n === 0) return empty;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const mean = values.reduce((s, v) => s + v, 0) / n;
+  const median =
+    n % 2 === 0 ? (sorted[n / 2 - 1]! + sorted[n / 2]!) / 2 : sorted[Math.floor(n / 2)]!;
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+  const stdDev = Math.sqrt(variance);
+  const q1 = sorted[Math.floor(n / 4)]!;
+  const q3 = sorted[Math.min(Math.floor((3 * n) / 4), n - 1)]!;
+  const iqr = q3 - q1;
+  const min = sorted[0]!;
+  const max = sorted[n - 1]!;
+
+  const inBandCount = band ? values.filter((v) => isNumericValueInBand(v, band)).length : 0;
+  const inBandPercent = band ? round4((inBandCount / n) * 100) : null;
+
+  const meanAbsoluteError =
+    referenceValue !== null
+      ? round4(values.reduce((s, v) => s + Math.abs(v - referenceValue), 0) / n)
+      : null;
+  const meanRelativeError =
+    referenceValue !== null && referenceValue !== 0
+      ? round4(
+          (values.reduce((s, v) => s + Math.abs(v - referenceValue) / Math.abs(referenceValue), 0) /
+            n) *
+            100,
+        )
+      : null;
+
+  return {
+    n,
+    mean: round4(mean),
+    median: round4(median),
+    stdDev: round4(stdDev),
+    q1,
+    q3,
+    iqr: round4(iqr),
+    min,
+    max,
+    inBandCount,
+    inBandPercent,
+    meanAbsoluteError,
+    meanRelativeError,
+  };
+}
+
+function resolveNumericReferenceValueForStats(
+  toleranceMode: 'ABSOLUTE_INTERVAL' | 'RELATIVE_PERCENT',
+  referenceValue: number | null | undefined,
+  band: { left: number; right: number } | null,
+): number | null {
+  if (referenceValue === null || referenceValue === undefined || !Number.isFinite(referenceValue)) {
+    return null;
+  }
+  if (toleranceMode === 'RELATIVE_PERCENT') {
+    return referenceValue;
+  }
+  return band !== null && isNumericValueInBand(referenceValue, band) ? referenceValue : null;
+}
+
+function buildNumericHistogram(
+  values: number[],
+  band: { left: number; right: number } | null,
+  targetBins = 10,
+): NumericHistogramBin[] {
+  if (values.length === 0) return [];
+  const valueMin = Math.min(...values);
+  const valueMax = Math.max(...values);
+  let min = band ? Math.min(valueMin, band.left) : valueMin;
+  let max = band ? Math.max(valueMax, band.right) : valueMax;
+  if (min === max) {
+    const padding = Math.max(Math.abs(min) * 0.05, 0.5);
+    min -= padding;
+    max += padding;
+  } else {
+    const padding = Math.max((max - min) * 0.08, 0.5);
+    min -= padding;
+    max += padding;
+  }
+  const niceRange = resolveNiceNumericRange(min, max, targetBins);
+  min = niceRange.min;
+  max = niceRange.max;
+  const binWidth = (max - min) / targetBins;
+  const bins: NumericHistogramBin[] = [];
+  for (let i = 0; i < targetBins; i++) {
+    const from = min + i * binWidth;
+    const to = i === targetBins - 1 ? max : min + (i + 1) * binWidth;
+    const count = values.filter((v) =>
+      i === targetBins - 1 ? v >= from && v <= to : v >= from && v < to,
+    ).length;
+    const midpoint = (from + to) / 2;
+    bins.push({
+      from: round4(from),
+      to: round4(to),
+      count,
+      inBand: band ? isNumericValueInBand(midpoint, band) : false,
+    });
+  }
+  return bins;
+}
+
+function resolveNiceNumericRange(
+  min: number,
+  max: number,
+  targetBins: number,
+): { min: number; max: number } {
+  const span = max - min;
+  if (!Number.isFinite(span) || span <= 0) return { min, max };
+  const rawStep = span / Math.max(1, targetBins);
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+  const normalized = rawStep / magnitude;
+  const niceFactor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  const niceStep = niceFactor * magnitude;
+  return {
+    min: Math.floor(min / niceStep) * niceStep,
+    max: Math.ceil(max / niceStep) * niceStep,
+  };
+}
+
+async function buildNumericRoundComparison(
+  sessionId: string,
+  questionId: string,
+  band: { left: number; right: number } | null,
+  referenceValue: number | null,
+): Promise<NumericRoundComparisonDTO> {
+  const [r1Votes, r2Votes] = await Promise.all([
+    prisma.vote.findMany({
+      where: { sessionId, questionId, round: 1 },
+      select: { participantId: true, numericValue: true },
+    }),
+    prisma.vote.findMany({
+      where: { sessionId, questionId, round: 2 },
+      select: { participantId: true, numericValue: true },
+    }),
+  ]);
+
+  const r1Values = r1Votes
+    .map((v) => v.numericValue)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const r2Values = r2Votes
+    .map((v) => v.numericValue)
+    .filter((v): v is number => v !== null && v !== undefined);
+
+  const round1Stats = buildNumericStats(r1Values, band, referenceValue);
+  const round2Stats = buildNumericStats(r2Values, band, referenceValue);
+  const round1Histogram = buildNumericHistogram(r1Values, band);
+  const round2Histogram = buildNumericHistogram(r2Values, band);
+  const meanDelta =
+    round1Stats.mean !== null && round2Stats.mean !== null
+      ? round4(round2Stats.mean - round1Stats.mean)
+      : null;
+  const medianDelta =
+    round1Stats.median !== null && round2Stats.median !== null
+      ? round4(round2Stats.median - round1Stats.median)
+      : null;
+  const inBandPercentDelta =
+    round1Stats.inBandPercent !== null && round2Stats.inBandPercent !== null
+      ? round4(round2Stats.inBandPercent - round1Stats.inBandPercent)
+      : null;
+
+  let pairedAnalysis: NumericPairedAnalysisDTO | undefined;
+  let deltaHistogram: NumericHistogramBin[] | undefined;
+  if (r1Votes.length > 0 && r2Votes.length > 0) {
+    const r1Map = new Map(
+      r1Votes
+        .filter((v) => v.numericValue !== null)
+        .map((v) => [v.participantId, v.numericValue as number]),
+    );
+    const r2Map = new Map(
+      r2Votes
+        .filter((v) => v.numericValue !== null)
+        .map((v) => [v.participantId, v.numericValue as number]),
+    );
+
+    let closerCount = 0;
+    let fartherCount = 0;
+    let unchangedCount = 0;
+    let pairedCount = 0;
+    const deltaValues: number[] = [];
+
+    if (referenceValue !== null) {
+      for (const [pid, v1] of r1Map) {
+        const v2 = r2Map.get(pid);
+        if (v2 === undefined) continue;
+        pairedCount++;
+        deltaValues.push(v2 - v1);
+        const d1 = Math.abs(v1 - referenceValue);
+        const d2 = Math.abs(v2 - referenceValue);
+        if (Math.abs(d1 - d2) < 1e-9) {
+          unchangedCount++;
+        } else if (d2 < d1) {
+          closerCount++;
+        } else {
+          fartherCount++;
+        }
+      }
+      pairedAnalysis = { pairedCount, closerCount, fartherCount, unchangedCount };
+    } else {
+      // Without reference value, only raw value deltas are meaningful.
+      for (const [pid, v1] of r1Map) {
+        const v2 = r2Map.get(pid);
+        if (v2 === undefined) continue;
+        pairedCount++;
+        deltaValues.push(v2 - v1);
+      }
+    }
+
+    deltaHistogram = deltaValues.length > 0 ? buildNumericHistogram(deltaValues, null) : undefined;
+  }
+
+  return {
+    round1Stats,
+    round2Stats,
+    round1Histogram,
+    round2Histogram,
+    meanDelta,
+    medianDelta,
+    inBandPercentDelta,
+    deltaHistogram,
+    pairedAnalysis,
+  };
+}
+
+function buildNumericRoundComparisonFromVotes(
+  votes: Array<{ participantId: string; round: number; numericValue?: number | null }>,
+  band: { left: number; right: number } | null,
+  referenceValue: number | null,
+): NumericRoundComparisonDTO {
+  const round1Votes = votes.filter((vote) => vote.round === 1);
+  const round2Votes = votes.filter((vote) => vote.round === 2);
+  const round1Values = round1Votes
+    .map((vote) => vote.numericValue)
+    .filter((value): value is number => value !== null && value !== undefined);
+  const round2Values = round2Votes
+    .map((vote) => vote.numericValue)
+    .filter((value): value is number => value !== null && value !== undefined);
+  const round1Stats = buildNumericStats(round1Values, band, referenceValue);
+  const round2Stats = buildNumericStats(round2Values, band, referenceValue);
+
+  const r1Map = new Map(
+    round1Votes
+      .filter((vote) => vote.numericValue !== null && vote.numericValue !== undefined)
+      .map((vote) => [vote.participantId, vote.numericValue as number]),
+  );
+  const r2Map = new Map(
+    round2Votes
+      .filter((vote) => vote.numericValue !== null && vote.numericValue !== undefined)
+      .map((vote) => [vote.participantId, vote.numericValue as number]),
+  );
+  const deltaValues: number[] = [];
+  let closerCount = 0;
+  let fartherCount = 0;
+  let unchangedCount = 0;
+  let pairedCount = 0;
+
+  for (const [participantId, value1] of r1Map) {
+    const value2 = r2Map.get(participantId);
+    if (value2 === undefined) continue;
+    pairedCount++;
+    deltaValues.push(value2 - value1);
+    if (referenceValue === null) continue;
+    const distance1 = Math.abs(value1 - referenceValue);
+    const distance2 = Math.abs(value2 - referenceValue);
+    if (Math.abs(distance1 - distance2) < 1e-9) {
+      unchangedCount++;
+    } else if (distance2 < distance1) {
+      closerCount++;
+    } else {
+      fartherCount++;
+    }
+  }
+
+  return {
+    round1Stats,
+    round2Stats,
+    round1Histogram: buildNumericHistogram(round1Values, band),
+    round2Histogram: buildNumericHistogram(round2Values, band),
+    meanDelta:
+      round1Stats.mean !== null && round2Stats.mean !== null
+        ? round4(round2Stats.mean - round1Stats.mean)
+        : null,
+    medianDelta:
+      round1Stats.median !== null && round2Stats.median !== null
+        ? round4(round2Stats.median - round1Stats.median)
+        : null,
+    inBandPercentDelta:
+      round1Stats.inBandPercent !== null && round2Stats.inBandPercent !== null
+        ? round4(round2Stats.inBandPercent - round1Stats.inBandPercent)
+        : null,
+    deltaHistogram: deltaValues.length > 0 ? buildNumericHistogram(deltaValues, null) : undefined,
+    pairedAnalysis:
+      pairedCount > 0 ? { pairedCount, closerCount, fartherCount, unchangedCount } : undefined,
+  };
+}
 
 async function buildHostCurrentQuestionDto(
   session: HostCurrentQuestionSession | null,
@@ -2213,6 +2669,24 @@ async function buildHostCurrentQuestionDto(
     question.id,
     session.answerDisplayOrder,
   );
+
+  let numericToleranceMode: 'ABSOLUTE_INTERVAL' | 'RELATIVE_PERCENT' | null = null;
+  let numericBand: { left: number; right: number } | null = null;
+  let numericReferenceValue: number | null = null;
+  if (question.type === 'NUMERIC_ESTIMATE') {
+    numericToleranceMode = resolveNumericEstimateToleranceMode(question.numericToleranceMode);
+    numericBand = resolveNumericTolerance(numericToleranceMode, {
+      referenceValue: question.numericReferenceValue,
+      tolerancePercent: question.numericTolerancePercent,
+      intervalLeft: question.numericIntervalLeft,
+      intervalRight: question.numericIntervalRight,
+    });
+    numericReferenceValue = resolveNumericReferenceValueForStats(
+      numericToleranceMode,
+      question.numericReferenceValue,
+      numericBand,
+    );
+  }
 
   const base = {
     questionId: question.id,
@@ -2238,6 +2712,22 @@ async function buildHostCurrentQuestionDto(
     ratingLabelMax: question.ratingLabelMax ?? null,
     ...getShortTextDtoFields(question.type, question),
     currentRound: session.currentRound,
+    ...(question.type === 'NUMERIC_ESTIMATE'
+      ? {
+          // Story 1.2d: Numerische Konfiguration für Host (immer sichtbar)
+          numericToleranceMode: numericToleranceMode!,
+          numericReferenceValue,
+          numericTolerancePercent: question.numericTolerancePercent ?? null,
+          numericIntervalLeft: question.numericIntervalLeft ?? null,
+          numericIntervalRight: question.numericIntervalRight ?? null,
+          numericInputType:
+            (question.numericInputType as 'INTEGER' | 'DECIMAL' | null) ?? undefined,
+          numericDecimalPlaces: question.numericDecimalPlaces ?? null,
+          numericMin: question.numericMin ?? null,
+          numericMax: question.numericMax ?? null,
+          numericTwoRounds: question.numericTwoRounds,
+        }
+      : {}),
   };
 
   if (session.status === 'DISCUSSION') {
@@ -2247,6 +2737,69 @@ async function buildHostCurrentQuestionDto(
   if (session.status === 'RESULTS' || session.status === 'ACTIVE') {
     const currentRound = session.currentRound;
     const voteWhere = { sessionId: session.id, questionId: question.id, round: currentRound };
+
+    if (question.type === 'NUMERIC_ESTIMATE') {
+      const band = numericBand;
+      const referenceValue = numericReferenceValue;
+
+      // Kein Herdeneffekt während ACTIVE: nur totalVotes
+      if (session.status === 'ACTIVE') {
+        let totalVotes: number;
+        let correctVoterCount: number | undefined;
+        if (question.numericTwoRounds && band !== null) {
+          [totalVotes, correctVoterCount] = await Promise.all([
+            prisma.vote.count({ where: voteWhere }),
+            prisma.vote.count({
+              where: {
+                ...voteWhere,
+                numericValue: { gte: band.left, lte: band.right },
+              },
+            }),
+          ]);
+        } else {
+          totalVotes = await prisma.vote.count({ where: voteWhere });
+        }
+        const peerInstructionSuggestion = question.numericTwoRounds
+          ? buildPeerInstructionSuggestion(
+              question.type as QuestionType,
+              currentRound,
+              correctVoterCount,
+              totalVotes,
+            )
+          : undefined;
+        return { ...base, totalVotes, peerInstructionSuggestion };
+      }
+
+      // RESULTS: Histogramm + Statistik
+      const numVotes = await prisma.vote.findMany({
+        where: voteWhere,
+        select: { numericValue: true },
+      });
+      const numValues = numVotes
+        .map((v) => v.numericValue)
+        .filter((v): v is number => v !== null && v !== undefined);
+      const totalVotes = numVotes.length;
+      const numericStats = buildNumericStats(numValues, band, referenceValue);
+      const numericHistogram = buildNumericHistogram(numValues, band);
+
+      let numericRoundComparison: NumericRoundComparisonDTO | undefined;
+      if (session.status === 'RESULTS' && currentRound === 2) {
+        numericRoundComparison = await buildNumericRoundComparison(
+          session.id,
+          question.id,
+          band,
+          referenceValue,
+        );
+      }
+
+      return {
+        ...base,
+        totalVotes,
+        numericStats,
+        numericHistogram,
+        numericRoundComparison,
+      };
+    }
 
     if (question.type === 'RATING') {
       const ratingVotes = await prisma.vote.findMany({
@@ -2441,6 +2994,16 @@ async function fetchHostCurrentQuestion(
               numericUnitFamily: true,
               numericRequireUnit: true,
               numericAcceptEquivalentUnits: true,
+              numericReferenceValue: true,
+              numericTolerancePercent: true,
+              numericIntervalLeft: true,
+              numericIntervalRight: true,
+              numericInputType: true,
+              numericDecimalPlaces: true,
+              numericMin: true,
+              numericMax: true,
+              numericTwoRounds: true,
+              skipReadingPhase: true,
               answers: { select: { id: true, text: true, isCorrect: true } },
             },
           },
@@ -3739,7 +4302,20 @@ export const sessionRouter = router({
       const code = input.code.toUpperCase();
       const session = await prisma.session.findUnique({
         where: { code },
-        select: { id: true, status: true, currentQuestion: true, currentRound: true },
+        select: {
+          id: true,
+          status: true,
+          currentQuestion: true,
+          currentRound: true,
+          quiz: {
+            select: {
+              questions: {
+                orderBy: { order: 'asc' },
+                select: { type: true, numericTwoRounds: true },
+              },
+            },
+          },
+        },
       });
       if (!session) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
@@ -3771,7 +4347,20 @@ export const sessionRouter = router({
       const code = input.code.toUpperCase();
       const session = await prisma.session.findUnique({
         where: { code },
-        select: { id: true, status: true, currentQuestion: true, currentRound: true },
+        select: {
+          id: true,
+          status: true,
+          currentQuestion: true,
+          currentRound: true,
+          quiz: {
+            select: {
+              questions: {
+                orderBy: { order: 'asc' },
+                select: { type: true, numericTwoRounds: true },
+              },
+            },
+          },
+        },
       });
       if (!session) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
@@ -3784,6 +4373,16 @@ export const sessionRouter = router({
       }
       if (session.currentRound !== 1) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Diskussionsphase nur nach Runde 1.' });
+      }
+      const question =
+        session.currentQuestion !== null && session.currentQuestion !== undefined
+          ? (session.quiz?.questions[session.currentQuestion] ?? null)
+          : null;
+      if (!questionSupportsSecondRound(question)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Diese Frage ist nicht für eine zweite Runde konfiguriert.',
+        });
       }
       await prisma.session.update({
         where: { id: session.id },
@@ -3806,7 +4405,19 @@ export const sessionRouter = router({
       const code = input.code.toUpperCase();
       const session = await prisma.session.findUnique({
         where: { code },
-        select: { id: true, status: true, currentQuestion: true },
+        select: {
+          id: true,
+          status: true,
+          currentQuestion: true,
+          quiz: {
+            select: {
+              questions: {
+                orderBy: { order: 'asc' },
+                select: { type: true, numericTwoRounds: true },
+              },
+            },
+          },
+        },
       });
       if (!session) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Session nicht gefunden.' });
@@ -3815,6 +4426,16 @@ export const sessionRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Zweite Runde nur aus Status DISCUSSION.',
+        });
+      }
+      const question =
+        session.currentQuestion !== null && session.currentQuestion !== undefined
+          ? (session.quiz?.questions[session.currentQuestion] ?? null)
+          : null;
+      if (!questionSupportsSecondRound(question)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Diese Frage ist nicht für eine zweite Runde konfiguriert.',
         });
       }
       const now = new Date();
@@ -3933,6 +4554,10 @@ export const sessionRouter = router({
           ratingLabelMin: question.ratingLabelMin ?? null,
           ratingLabelMax: question.ratingLabelMax ?? null,
           ...getShortTextDtoFields(question.type, question),
+          numericInputType: question.numericInputType ?? undefined,
+          numericDecimalPlaces: question.numericDecimalPlaces ?? null,
+          numericMin: question.numericMin ?? null,
+          numericMax: question.numericMax ?? null,
           ...(participantReady !== undefined ? { participantReady } : {}),
         });
       }
@@ -3951,6 +4576,10 @@ export const sessionRouter = router({
           ratingLabelMin: question.ratingLabelMin ?? null,
           ratingLabelMax: question.ratingLabelMax ?? null,
           ...getShortTextDtoFields(question.type, question),
+          numericInputType: question.numericInputType ?? undefined,
+          numericDecimalPlaces: question.numericDecimalPlaces ?? null,
+          numericMin: question.numericMin ?? null,
+          numericMax: question.numericMax ?? null,
         });
       }
 
@@ -3994,6 +4623,11 @@ export const sessionRouter = router({
               ratingLabelMin: question.ratingLabelMin ?? null,
               ratingLabelMax: question.ratingLabelMax ?? null,
               ...getShortTextDtoFields(question.type, question),
+              numericInputType: question.numericInputType ?? undefined,
+              numericDecimalPlaces: question.numericDecimalPlaces ?? null,
+              numericMin: question.numericMin ?? null,
+              numericMax: question.numericMax ?? null,
+              numericTwoRounds: question.numericTwoRounds ?? false,
               participantCount: session._count.participants,
               totalVotes,
               currentRound: session.currentRound,
@@ -4021,6 +4655,36 @@ export const sessionRouter = router({
                   }
                 : undefined,
             );
+            const estimateToleranceMode =
+              question.type === 'NUMERIC_ESTIMATE'
+                ? resolveNumericEstimateToleranceMode(question.numericToleranceMode)
+                : null;
+            const numericBand =
+              estimateToleranceMode !== null
+                ? resolveNumericTolerance(estimateToleranceMode, {
+                    referenceValue: question.numericReferenceValue,
+                    tolerancePercent: question.numericTolerancePercent,
+                    intervalLeft: question.numericIntervalLeft,
+                    intervalRight: question.numericIntervalRight,
+                  })
+                : null;
+            const numericRefVal =
+              estimateToleranceMode !== null
+                ? resolveNumericReferenceValueForStats(
+                    estimateToleranceMode,
+                    question.numericReferenceValue,
+                    numericBand,
+                  )
+                : null;
+            const numericStats =
+              question.type === 'NUMERIC_ESTIMATE'
+                ? buildNumericStats(voteSummary.numericValues, numericBand, numericRefVal)
+                : undefined;
+            const numericHistogram =
+              question.type === 'NUMERIC_ESTIMATE'
+                ? buildNumericHistogram(voteSummary.numericValues, numericBand)
+                : undefined;
+
             return QuestionRevealedDTOSchema.parse({
               id: question.id,
               text: question.text,
@@ -4051,6 +4715,19 @@ export const sessionRouter = router({
               incorrectVoterCount:
                 question.type === 'SHORT_TEXT' ? voteSummary.incorrectVoteCount : undefined,
               totalVotes: voteSummary.totalVotes,
+              ...(question.type === 'NUMERIC_ESTIMATE'
+                ? {
+                    numericToleranceMode: estimateToleranceMode ?? undefined,
+                    numericReferenceValue: numericRefVal,
+                    numericTolerancePercent: question.numericTolerancePercent ?? null,
+                    numericIntervalLeft: question.numericIntervalLeft ?? null,
+                    numericIntervalRight: question.numericIntervalRight ?? null,
+                    numericInputType: question.numericInputType ?? undefined,
+                    numericDecimalPlaces: question.numericDecimalPlaces ?? null,
+                  }
+                : {}),
+              numericStats,
+              numericHistogram,
             });
           },
         )) as z.infer<typeof QuestionRevealedDTOSchema>;
@@ -4491,7 +5168,7 @@ export const sessionRouter = router({
         s.totalResponseTimeMs += getCompetitionResponseTimeMs(v);
 
         if (questionCountsTowardsTotalQuestions(v.question.type as QuestionType)) {
-          if (v.question.type === 'SHORT_TEXT') {
+          if (v.question.type === 'SHORT_TEXT' || v.question.type === 'NUMERIC_ESTIMATE') {
             if (v.score > 0) {
               s.correctCount++;
             }
@@ -4936,7 +5613,7 @@ export const sessionRouter = router({
 
       let wasCorrect: boolean | null = null;
       if (isScored && myVote) {
-        if (questionType === 'SHORT_TEXT') {
+        if (questionType === 'SHORT_TEXT' || questionType === 'NUMERIC_ESTIMATE') {
           wasCorrect = myVote.score > 0;
         } else {
           const selectedSet = new Set(myVote.selectedAnswers.map((a) => a.answerOptionId));
@@ -5050,7 +5727,11 @@ export const sessionRouter = router({
         questionOrder: input.questionIndex + 1,
         totalQuestions,
         wasCorrect,
-        correctAnswerIds: wasCorrect === false ? correctIds : undefined,
+        correctAnswerIds:
+          wasCorrect === false &&
+          (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE')
+            ? correctIds
+            : undefined,
         questionScore,
         baseScore,
         streakCount,
@@ -5211,6 +5892,9 @@ export const sessionRouter = router({
           let ratingDistribution: Record<string, number> | undefined;
           let ratingAverage: number | undefined;
           let ratingStandardDeviation: number | undefined;
+          let numericStats: NumericStatsDTO | undefined;
+          let numericHistogram: NumericHistogramBin[] | undefined;
+          let numericRoundComparison: NumericRoundComparisonDTO | undefined;
           let averageScore: number | undefined;
 
           switch (q.type) {
@@ -5342,6 +6026,39 @@ export const sessionRouter = router({
               }
               break;
             }
+            case 'NUMERIC_ESTIMATE': {
+              const toleranceMode = resolveNumericEstimateToleranceMode(q.numericToleranceMode);
+              const band = resolveNumericTolerance(toleranceMode, {
+                referenceValue: q.numericReferenceValue,
+                tolerancePercent: q.numericTolerancePercent,
+                intervalLeft: q.numericIntervalLeft,
+                intervalRight: q.numericIntervalRight,
+              });
+              const referenceValue = resolveNumericReferenceValueForStats(
+                toleranceMode,
+                q.numericReferenceValue,
+                band,
+              );
+              const round2Values = votes
+                .filter((vote) => vote.round === 2)
+                .map((vote) => vote.numericValue)
+                .filter((value): value is number => value !== null && value !== undefined);
+              const round1Values = votes
+                .filter((vote) => vote.round === 1)
+                .map((vote) => vote.numericValue)
+                .filter((value): value is number => value !== null && value !== undefined);
+              const effectiveValues = round2Values.length > 0 ? round2Values : round1Values;
+              numericStats = buildNumericStats(effectiveValues, band, referenceValue);
+              numericHistogram = buildNumericHistogram(effectiveValues, band);
+              if (round2Values.length > 0 || round1Values.length > 0) {
+                numericRoundComparison = buildNumericRoundComparisonFromVotes(
+                  votes,
+                  band,
+                  referenceValue,
+                );
+              }
+              break;
+            }
             case 'SURVEY':
               // Keine spezielle Verteilung im Export-Schema; participantCount reicht
               break;
@@ -5372,6 +6089,9 @@ export const sessionRouter = router({
             ratingDistribution,
             ratingAverage,
             ratingStandardDeviation,
+            numericStats,
+            numericHistogram,
+            numericRoundComparison,
             averageScore,
           };
         },

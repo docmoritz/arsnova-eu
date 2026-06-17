@@ -1253,6 +1253,572 @@
                               </p>
                             </div>
                           }
+                        } @else if (q.type === 'NUMERIC_ESTIMATE') {
+                          <!-- Story 1.2d: Numerische Schätzfrage – Histogramm + Statistik -->
+                          <div class="session-host__numeric">
+                            @if (effectiveStatus() === 'ACTIVE') {
+                              <p
+                                class="session-host__numeric-waiting"
+                                i18n="@@sessionHost.numericWaiting"
+                              >
+                                Warte auf Schätzungen…
+                              </p>
+                              @if ((q.totalVotes ?? 0) > 0) {
+                                <p
+                                  class="session-host__numeric-vote-count"
+                                  i18n="@@sessionHost.numericVoteCount"
+                                >
+                                  {{ q.totalVotes }} Antworten eingegangen
+                                </p>
+                              }
+                            } @else if (effectiveStatus() === 'RESULTS') {
+                              @if (q.numericRoundComparison) {
+                                <!-- Zwei-Runden-Vergleich -->
+                                @let rc = q.numericRoundComparison;
+                                <div class="session-host__numeric-round-comparison">
+                                  <div
+                                    class="session-host__numeric-insights"
+                                    i18n-aria-label="@@sessionHost.numericInsightsAria"
+                                    aria-label="Statistik-Kurzfassung"
+                                  >
+                                    <div class="session-host__numeric-insight">
+                                      <span class="session-host__numeric-insight-kicker">
+                                        <span i18n="@@sessionHost.numericRound2InsightLabel"
+                                          >Runde 2</span
+                                        >
+                                        · {{ numericStatsPrimaryCaption(rc.round2Stats) }}
+                                      </span>
+                                      <strong class="session-host__numeric-insight-value">{{
+                                        numericStatsPrimaryValue(rc.round2Stats, q)
+                                      }}</strong>
+                                      @if (numericStatsInBandCaption(rc.round2Stats); as caption) {
+                                        <span class="session-host__numeric-insight-caption">{{
+                                          caption
+                                        }}</span>
+                                      }
+                                    </div>
+                                    @if (numericStatsInBandValue(rc.round2Stats); as inBandValue) {
+                                      <div class="session-host__numeric-insight">
+                                        <span
+                                          class="session-host__numeric-insight-kicker"
+                                          i18n="@@sessionHost.numericInBandInsightKicker"
+                                          >Akzeptiert</span
+                                        >
+                                        <strong class="session-host__numeric-insight-value">{{
+                                          inBandValue
+                                        }}</strong>
+                                        @if (
+                                          numericStatsInBandCaption(rc.round2Stats);
+                                          as inBandCaption
+                                        ) {
+                                          <span class="session-host__numeric-insight-caption">{{
+                                            inBandCaption
+                                          }}</span>
+                                        }
+                                      </div>
+                                    }
+                                    @if (rc.pairedAnalysis) {
+                                      <div class="session-host__numeric-insight">
+                                        <span
+                                          class="session-host__numeric-insight-kicker"
+                                          i18n="@@sessionHost.numericPairedInsightKicker"
+                                          >Rundenvergleich</span
+                                        >
+                                        <strong class="session-host__numeric-insight-value">{{
+                                          numericPairedInsightValue(rc.pairedAnalysis)
+                                        }}</strong>
+                                        <span class="session-host__numeric-insight-caption">{{
+                                          numericPairedInsightCaption()
+                                        }}</span>
+                                      </div>
+                                    }
+                                    @if (numericRoundDeltaValue(rc, q); as deltaValue) {
+                                      <div class="session-host__numeric-insight">
+                                        <span
+                                          class="session-host__numeric-insight-kicker"
+                                          i18n="@@sessionHost.numericDeltaInsightKicker"
+                                          >Verschiebung</span
+                                        >
+                                        <strong class="session-host__numeric-insight-value">{{
+                                          deltaValue
+                                        }}</strong>
+                                        <span class="session-host__numeric-insight-caption">{{
+                                          numericRoundDeltaCaption(rc)
+                                        }}</span>
+                                      </div>
+                                    }
+                                  </div>
+                                  <div class="session-host__numeric-round-header">
+                                    <span
+                                      class="session-host__numeric-round-label session-host__numeric-round-label--r1"
+                                      i18n="@@sessionHost.numericRoundLabel1"
+                                      >Runde 1</span
+                                    >
+                                    <span
+                                      class="session-host__numeric-round-label session-host__numeric-round-label--r2"
+                                      i18n="@@sessionHost.numericRoundLabel2"
+                                      >Runde 2</span
+                                    >
+                                  </div>
+                                  <div class="session-host__numeric-histograms">
+                                    <div class="session-host__numeric-histogram">
+                                      @if (
+                                        numericHistogramBandStyle(q, rc.round1Histogram);
+                                        as band
+                                      ) {
+                                        <div
+                                          class="session-host__numeric-band"
+                                          [style.left.%]="band.left"
+                                          [style.width.%]="band.width"
+                                          aria-hidden="true"
+                                        ></div>
+                                      }
+                                      @if (
+                                        numericReferenceLineStyle(q, rc.round1Histogram);
+                                        as ref
+                                      ) {
+                                        <div
+                                          class="session-host__numeric-reference-line"
+                                          [style.left.%]="ref.left"
+                                        >
+                                          @if (numericReferenceLabel(q); as refLabel) {
+                                            <span class="session-host__numeric-reference-label">{{
+                                              refLabel
+                                            }}</span>
+                                          }
+                                        </div>
+                                      }
+                                      @for (bin of rc.round1Histogram; track bin.from) {
+                                        <div
+                                          class="session-host__numeric-bin"
+                                          [class.session-host__numeric-bin--in-band]="bin.inBand"
+                                          [class.session-host__numeric-bin--empty]="bin.count === 0"
+                                          [style.left.%]="
+                                            numericHistogramBinPositionPercent(
+                                              bin,
+                                              rc.round1Histogram
+                                            )
+                                          "
+                                          [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
+                                        >
+                                          <div
+                                            class="session-host__numeric-bin-bar"
+                                            [style.height.%]="
+                                              numericHistogramBarHeight(bin, rc.round1Histogram)
+                                            "
+                                          ></div>
+                                          <span
+                                            class="session-host__numeric-bin-count"
+                                            [class.session-host__numeric-bin-count--empty]="
+                                              bin.count === 0
+                                            "
+                                            [attr.aria-hidden]="bin.count === 0 ? 'true' : null"
+                                            >{{ bin.count }}</span
+                                          >
+                                        </div>
+                                      }
+                                      <div
+                                        class="session-host__numeric-axis-labels"
+                                        aria-hidden="true"
+                                      >
+                                        <span>{{
+                                          numericHistogramRangeEdgeLabel(
+                                            q,
+                                            rc.round1Histogram,
+                                            'min'
+                                          )
+                                        }}</span>
+                                        <span>{{
+                                          numericHistogramRangeEdgeLabel(
+                                            q,
+                                            rc.round1Histogram,
+                                            'max'
+                                          )
+                                        }}</span>
+                                      </div>
+                                    </div>
+                                    <div
+                                      class="session-host__numeric-histogram session-host__numeric-histogram--r2"
+                                    >
+                                      @if (
+                                        numericHistogramBandStyle(q, rc.round2Histogram);
+                                        as band
+                                      ) {
+                                        <div
+                                          class="session-host__numeric-band"
+                                          [style.left.%]="band.left"
+                                          [style.width.%]="band.width"
+                                          aria-hidden="true"
+                                        ></div>
+                                      }
+                                      @if (
+                                        numericReferenceLineStyle(q, rc.round2Histogram);
+                                        as ref
+                                      ) {
+                                        <div
+                                          class="session-host__numeric-reference-line"
+                                          [style.left.%]="ref.left"
+                                        >
+                                          @if (numericReferenceLabel(q); as refLabel) {
+                                            <span class="session-host__numeric-reference-label">{{
+                                              refLabel
+                                            }}</span>
+                                          }
+                                        </div>
+                                      }
+                                      @for (bin of rc.round2Histogram; track bin.from) {
+                                        <div
+                                          class="session-host__numeric-bin"
+                                          [class.session-host__numeric-bin--in-band]="bin.inBand"
+                                          [class.session-host__numeric-bin--empty]="bin.count === 0"
+                                          [style.left.%]="
+                                            numericHistogramBinPositionPercent(
+                                              bin,
+                                              rc.round2Histogram
+                                            )
+                                          "
+                                          [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
+                                        >
+                                          <div
+                                            class="session-host__numeric-bin-bar"
+                                            [style.height.%]="
+                                              numericHistogramBarHeight(bin, rc.round2Histogram)
+                                            "
+                                          ></div>
+                                          <span
+                                            class="session-host__numeric-bin-count"
+                                            [class.session-host__numeric-bin-count--empty]="
+                                              bin.count === 0
+                                            "
+                                            [attr.aria-hidden]="bin.count === 0 ? 'true' : null"
+                                            >{{ bin.count }}</span
+                                          >
+                                        </div>
+                                      }
+                                      <div
+                                        class="session-host__numeric-axis-labels"
+                                        aria-hidden="true"
+                                      >
+                                        <span>{{
+                                          numericHistogramRangeEdgeLabel(
+                                            q,
+                                            rc.round2Histogram,
+                                            'min'
+                                          )
+                                        }}</span>
+                                        <span>{{
+                                          numericHistogramRangeEdgeLabel(
+                                            q,
+                                            rc.round2Histogram,
+                                            'max'
+                                          )
+                                        }}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  @if (numericReferenceLabel(q) || numericToleranceBandLabel(q)) {
+                                    <div class="session-host__numeric-scale-meta">
+                                      @if (numericReferenceLabel(q); as refLabel) {
+                                        <span>
+                                          <mat-icon aria-hidden="true">adjust</mat-icon>
+                                          {{ refLabel }}
+                                        </span>
+                                      }
+                                      @if (numericToleranceBandLabel(q); as bandLabel) {
+                                        <span>
+                                          <mat-icon aria-hidden="true">linear_scale</mat-icon>
+                                          {{ bandLabel }}
+                                        </span>
+                                      }
+                                    </div>
+                                  }
+                                  <details class="session-host__numeric-details">
+                                    <summary class="session-host__numeric-details-summary">
+                                      <mat-icon aria-hidden="true">monitoring</mat-icon>
+                                      <span i18n="@@sessionHost.numericDetailsSummary"
+                                        >Statistische Details anzeigen</span
+                                      >
+                                      <mat-icon
+                                        class="session-host__numeric-details-chevron"
+                                        aria-hidden="true"
+                                        >expand_more</mat-icon
+                                      >
+                                    </summary>
+                                    <div class="session-host__numeric-details-body">
+                                      <div class="session-host__numeric-detail-grid">
+                                        <section class="session-host__numeric-detail-card">
+                                          <h3
+                                            class="session-host__numeric-detail-title"
+                                            i18n="@@sessionHost.numericRoundDetail1"
+                                          >
+                                            Runde 1
+                                          </h3>
+                                          <p class="session-host__numeric-stats">
+                                            {{ numericStatsLabel(rc.round1Stats, q) }}
+                                          </p>
+                                        </section>
+                                        <section class="session-host__numeric-detail-card">
+                                          <h3
+                                            class="session-host__numeric-detail-title session-host__numeric-detail-title--r2"
+                                            i18n="@@sessionHost.numericRoundDetail2"
+                                          >
+                                            Runde 2
+                                          </h3>
+                                          <p
+                                            class="session-host__numeric-stats session-host__numeric-stats--r2"
+                                          >
+                                            {{ numericStatsLabel(rc.round2Stats, q) }}
+                                          </p>
+                                        </section>
+                                      </div>
+                                      @if (rc.pairedAnalysis) {
+                                        <p
+                                          class="session-host__numeric-paired"
+                                          i18n="@@sessionHost.numericPairedImproved"
+                                        >
+                                          Paarweise Δ: {{ rc.pairedAnalysis.closerCount }} näher,
+                                          {{ rc.pairedAnalysis.fartherCount }} weiter weg,
+                                          {{ rc.pairedAnalysis.unchangedCount }} gleich ({{
+                                            rc.pairedAnalysis.pairedCount
+                                          }}
+                                          Paare)
+                                        </p>
+                                      }
+                                      @if (numericRoundDeltaLabel(rc)) {
+                                        <p class="session-host__numeric-paired">
+                                          {{ numericRoundDeltaLabel(rc) }}
+                                        </p>
+                                      }
+                                      @if (rc.deltaHistogram && rc.deltaHistogram.length > 0) {
+                                        <div class="session-host__numeric-delta">
+                                          <span i18n="@@sessionHost.numericDeltaHistogramLabel"
+                                            >Δx-Verteilung</span
+                                          >
+                                          <div class="session-host__numeric-histogram">
+                                            @for (bin of rc.deltaHistogram; track bin.from) {
+                                              <div
+                                                class="session-host__numeric-bin"
+                                                [class.session-host__numeric-bin--empty]="
+                                                  bin.count === 0
+                                                "
+                                                [style.left.%]="
+                                                  numericHistogramBinPositionPercent(
+                                                    bin,
+                                                    rc.deltaHistogram
+                                                  )
+                                                "
+                                                [title]="
+                                                  bin.from + ' – ' + bin.to + ': ' + bin.count
+                                                "
+                                              >
+                                                <div
+                                                  class="session-host__numeric-bin-bar"
+                                                  [style.height.%]="
+                                                    numericHistogramBarHeight(
+                                                      bin,
+                                                      rc.deltaHistogram
+                                                    )
+                                                  "
+                                                ></div>
+                                                <span
+                                                  class="session-host__numeric-bin-count"
+                                                  [class.session-host__numeric-bin-count--empty]="
+                                                    bin.count === 0
+                                                  "
+                                                  [attr.aria-hidden]="
+                                                    bin.count === 0 ? 'true' : null
+                                                  "
+                                                  >{{ bin.count }}</span
+                                                >
+                                              </div>
+                                            }
+                                            <div
+                                              class="session-host__numeric-axis-labels"
+                                              aria-hidden="true"
+                                            >
+                                              <span>{{
+                                                numericHistogramRangeEdgeLabel(
+                                                  null,
+                                                  rc.deltaHistogram,
+                                                  'min'
+                                                )
+                                              }}</span>
+                                              <span>{{
+                                                numericHistogramRangeEdgeLabel(
+                                                  null,
+                                                  rc.deltaHistogram,
+                                                  'max'
+                                                )
+                                              }}</span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      }
+                                    </div>
+                                  </details>
+                                </div>
+                              } @else if (q.numericHistogram && q.numericStats) {
+                                <!-- Einfaches Histogramm (eine Runde) -->
+                                @let stats = q.numericStats;
+                                <div
+                                  class="session-host__numeric-insights"
+                                  i18n-aria-label="@@sessionHost.numericInsightsAria"
+                                  aria-label="Statistik-Kurzfassung"
+                                >
+                                  <div class="session-host__numeric-insight">
+                                    <span class="session-host__numeric-insight-kicker">{{
+                                      numericStatsPrimaryCaption(stats)
+                                    }}</span>
+                                    <strong class="session-host__numeric-insight-value">{{
+                                      numericStatsPrimaryValue(stats, q)
+                                    }}</strong>
+                                    @if (numericStatsInBandCaption(stats); as caption) {
+                                      <span class="session-host__numeric-insight-caption">{{
+                                        caption
+                                      }}</span>
+                                    }
+                                  </div>
+                                  @if (numericStatsInBandValue(stats); as inBandValue) {
+                                    <div class="session-host__numeric-insight">
+                                      <span
+                                        class="session-host__numeric-insight-kicker"
+                                        i18n="@@sessionHost.numericInBandInsightKicker"
+                                        >Akzeptiert</span
+                                      >
+                                      <strong class="session-host__numeric-insight-value">{{
+                                        inBandValue
+                                      }}</strong>
+                                      @if (numericStatsInBandCaption(stats); as inBandCaption) {
+                                        <span class="session-host__numeric-insight-caption">{{
+                                          inBandCaption
+                                        }}</span>
+                                      }
+                                    </div>
+                                  }
+                                  @if (numericStatsErrorValue(stats, q); as errorValue) {
+                                    <div class="session-host__numeric-insight">
+                                      <span class="session-host__numeric-insight-kicker">{{
+                                        numericStatsErrorCaption()
+                                      }}</span>
+                                      <strong class="session-host__numeric-insight-value">{{
+                                        errorValue
+                                      }}</strong>
+                                      <span
+                                        class="session-host__numeric-insight-caption"
+                                        i18n="@@sessionHost.numericErrorInsightCaption"
+                                        >kleiner ist näher</span
+                                      >
+                                    </div>
+                                  }
+                                </div>
+                                <div class="session-host__numeric-histogram">
+                                  @if (numericHistogramBandStyle(q, q.numericHistogram); as band) {
+                                    <div
+                                      class="session-host__numeric-band"
+                                      [style.left.%]="band.left"
+                                      [style.width.%]="band.width"
+                                      aria-hidden="true"
+                                    ></div>
+                                  }
+                                  @if (numericReferenceLineStyle(q, q.numericHistogram); as ref) {
+                                    <div
+                                      class="session-host__numeric-reference-line"
+                                      [style.left.%]="ref.left"
+                                    >
+                                      @if (numericReferenceLabel(q); as refLabel) {
+                                        <span class="session-host__numeric-reference-label">{{
+                                          refLabel
+                                        }}</span>
+                                      }
+                                    </div>
+                                  }
+                                  @for (bin of q.numericHistogram; track bin.from) {
+                                    <div
+                                      class="session-host__numeric-bin"
+                                      [class.session-host__numeric-bin--in-band]="bin.inBand"
+                                      [class.session-host__numeric-bin--empty]="bin.count === 0"
+                                      [style.left.%]="
+                                        numericHistogramBinPositionPercent(bin, q.numericHistogram!)
+                                      "
+                                      [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
+                                    >
+                                      <div
+                                        class="session-host__numeric-bin-bar"
+                                        [style.height.%]="
+                                          numericHistogramBarHeight(bin, q.numericHistogram!)
+                                        "
+                                      ></div>
+                                      <span
+                                        class="session-host__numeric-bin-count"
+                                        [class.session-host__numeric-bin-count--empty]="
+                                          bin.count === 0
+                                        "
+                                        [attr.aria-hidden]="bin.count === 0 ? 'true' : null"
+                                        >{{ bin.count }}</span
+                                      >
+                                    </div>
+                                  }
+                                  <div class="session-host__numeric-axis-labels" aria-hidden="true">
+                                    <span>{{
+                                      numericHistogramRangeEdgeLabel(q, q.numericHistogram, 'min')
+                                    }}</span>
+                                    <span>{{
+                                      numericHistogramRangeEdgeLabel(q, q.numericHistogram, 'max')
+                                    }}</span>
+                                  </div>
+                                </div>
+                                @if (numericReferenceLabel(q) || numericToleranceBandLabel(q)) {
+                                  <div class="session-host__numeric-scale-meta">
+                                    @if (numericReferenceLabel(q); as refLabel) {
+                                      <span>
+                                        <mat-icon aria-hidden="true">adjust</mat-icon>
+                                        {{ refLabel }}
+                                      </span>
+                                    }
+                                    @if (numericToleranceBandLabel(q); as bandLabel) {
+                                      <span>
+                                        <mat-icon aria-hidden="true">linear_scale</mat-icon>
+                                        {{ bandLabel }}
+                                      </span>
+                                    }
+                                  </div>
+                                }
+                                <details class="session-host__numeric-details">
+                                  <summary class="session-host__numeric-details-summary">
+                                    <mat-icon aria-hidden="true">monitoring</mat-icon>
+                                    <span i18n="@@sessionHost.numericDetailsSummary"
+                                      >Statistische Details anzeigen</span
+                                    >
+                                    <mat-icon
+                                      class="session-host__numeric-details-chevron"
+                                      aria-hidden="true"
+                                      >expand_more</mat-icon
+                                    >
+                                  </summary>
+                                  <div class="session-host__numeric-details-body">
+                                    <section class="session-host__numeric-detail-card">
+                                      <h3
+                                        class="session-host__numeric-detail-title"
+                                        i18n="@@sessionHost.numericDetailCurrentRound"
+                                      >
+                                        Ergebnisrunde
+                                      </h3>
+                                      <p class="session-host__numeric-stats">
+                                        {{ numericStatsLabel(stats, q) }}
+                                      </p>
+                                    </section>
+                                  </div>
+                                </details>
+                              } @else {
+                                <p
+                                  class="session-host__numeric-waiting"
+                                  i18n="@@sessionHost.numericNoData"
+                                >
+                                  Keine Schätzungen eingegangen.
+                                </p>
+                              }
+                            }
+                          </div>
                         } @else if (q.roundComparison && effectiveStatus() === 'RESULTS') {
                           <!-- Peer Instruction: Vorher/Nachher-Vergleich (Story 2.7) -->
                           <div
