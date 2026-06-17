@@ -1904,7 +1904,13 @@ describe('SessionVoteComponent', () => {
     expect(input?.type).toBe('text');
     expect(input?.getAttribute('inputmode')).toBe('numeric');
     expect(input?.getAttribute('aria-invalid')).toBeNull();
-    expect(input?.getAttribute('aria-describedby')).toBeNull();
+    expect(input?.getAttribute('aria-describedby')).toBe(
+      'vote-numeric-format-hint vote-numeric-range-hint',
+    );
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Ganzzahl');
+    expect(host.textContent).toContain('Gib eine ganze Zahl ohne Nachkommastellen ein');
+    expect(host.textContent).toContain('Erlaubte Eingabe: 0 bis 100');
 
     component.numericInputValue.set('3.14');
     fixture.detectChanges();
@@ -1912,7 +1918,9 @@ describe('SessionVoteComponent', () => {
     expect(component.numericValidationError()).toContain('ganze Zahl');
     expect(component.voteSubmitDisabled()).toBe(true);
     expect(input?.getAttribute('aria-invalid')).toBe('true');
-    expect(input?.getAttribute('aria-describedby')).toBe('vote-numeric-input-error');
+    expect(input?.getAttribute('aria-describedby')).toBe(
+      'vote-numeric-format-hint vote-numeric-range-hint vote-numeric-input-error',
+    );
 
     const error = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
       '#vote-numeric-input-error',
@@ -1973,6 +1981,9 @@ describe('SessionVoteComponent', () => {
     const input = await findNumericEstimateInput(fixture);
     expect(input?.type).toBe('text');
     expect(input?.getAttribute('inputmode')).toBe('decimal');
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.textContent).toContain('Dezimalzahl');
+    expect(host.textContent).toContain('Komma oder Punkt möglich, maximal 2 Nachkommastellen');
     input!.value = '3,14';
     input!.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();

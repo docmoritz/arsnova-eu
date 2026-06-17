@@ -1676,6 +1676,55 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     return this.numericQuestionInputType() === 'INTEGER';
   }
 
+  numericInputModeLabel(): string {
+    return this.numericIsInteger()
+      ? $localize`:@@sessionVote.numericInputModeInteger:Ganzzahl`
+      : $localize`:@@sessionVote.numericInputModeDecimal:Dezimalzahl`;
+  }
+
+  numericInputFormatHint(): string {
+    if (this.numericIsInteger()) {
+      return $localize`:@@sessionVote.numericFormatInteger:Gib eine ganze Zahl ohne Nachkommastellen ein.`;
+    }
+    const maxDecimalPlaces = this.numericQuestionMaxDecimalPlaces();
+    if (maxDecimalPlaces !== null) {
+      return $localize`:@@sessionVote.numericFormatDecimalPlaces:Komma oder Punkt möglich, maximal ${maxDecimalPlaces}:maxDecimalPlaces: Nachkommastellen.`;
+    }
+    return $localize`:@@sessionVote.numericFormatDecimal:Komma oder Punkt möglich.`;
+  }
+
+  numericInputRangeHint(): string | null {
+    const min = this.numericInputMin();
+    const max = this.numericInputMax();
+    if (min !== null && max !== null) {
+      return $localize`:@@sessionVote.numericInputRangeBoth:Erlaubte Eingabe: ${this.formatNumericResultValue(
+        min,
+      )}:min: bis ${this.formatNumericResultValue(max)}:max:`;
+    }
+    if (min !== null) {
+      return $localize`:@@sessionVote.numericInputRangeMin:Erlaubte Eingabe: mindestens ${this.formatNumericResultValue(
+        min,
+      )}:min:`;
+    }
+    if (max !== null) {
+      return $localize`:@@sessionVote.numericInputRangeMax:Erlaubte Eingabe: höchstens ${this.formatNumericResultValue(
+        max,
+      )}:max:`;
+    }
+    return null;
+  }
+
+  numericInputDescriptionIds(): string {
+    const ids = ['vote-numeric-format-hint'];
+    if (this.numericInputRangeHint()) {
+      ids.push('vote-numeric-range-hint');
+    }
+    if (this.numericInputInvalid()) {
+      ids.push('vote-numeric-input-error');
+    }
+    return ids.join(' ');
+  }
+
   numericDecimalPlaces(): number {
     const q = this.currentQuestion();
     const places =
