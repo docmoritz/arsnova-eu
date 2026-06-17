@@ -4900,6 +4900,15 @@ describe('SessionHostComponent', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelectorAll('.session-lobby__team-card').length,
     ).toBe(2);
+    component.foyerTeamPulseSequences.set({ 'team-a': 1 });
+    fixture.detectChanges();
+    expect(
+      (
+        (fixture.nativeElement as HTMLElement).querySelector(
+          '[data-team-id="team-a"]',
+        ) as HTMLElement | null
+      )?.className ?? '',
+    ).toContain('session-lobby__team-card--arrival-b');
 
     getCurrentQuestionForHostQueryMock.mockImplementationOnce(
       () =>
@@ -4916,7 +4925,12 @@ describe('SessionHostComponent', () => {
     expect(component.effectiveStatus()).toBe('ACTIVE');
     expect(component.quizStartQuestionPending()).toBe(true);
     expect(component.showLobbyStage()).toBe(true);
+    expect(component.foyerTeamPulseSequences()).toEqual({});
     expect(hostWhilePending.querySelectorAll('.session-lobby__team-card').length).toBe(2);
+    expect(
+      (hostWhilePending.querySelector('[data-team-id="team-a"]') as HTMLElement | null)
+        ?.className ?? '',
+    ).not.toMatch(/session-lobby__team-card--arrival-[ab]/);
     expect(hostWhilePending.textContent ?? '').not.toContain('Frage wird aktualisiert');
 
     resolveRefresh?.(loadedQuestion);

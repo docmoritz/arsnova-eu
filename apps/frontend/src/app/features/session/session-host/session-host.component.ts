@@ -720,6 +720,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       !!session &&
       this.showPrimaryLiveView() &&
       this.effectiveStatus() === 'LOBBY' &&
+      !this.quizStartQuestionPending() &&
       this.isPlayfulPreset() &&
       session.enableRewardEffects !== false
     );
@@ -1673,6 +1674,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
           if (update.status === 'LOBBY' || update.status === 'FINISHED') {
             this.quizStartQuestionPending.set(false);
           }
+          this.clearFoyerArrivalStateWhenLeavingLobby(update.status);
           this.statusUpdate.set(update);
           this.syncCountdownFromStatusUpdate(update);
         },
@@ -2430,6 +2432,12 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const su = this.statusUpdate();
     const s = this.session();
     return su?.status ?? s?.status ?? null;
+  }
+
+  private clearFoyerArrivalStateWhenLeavingLobby(nextStatus: SessionInfoDTO['status']): void {
+    if (this.effectiveStatus() === 'LOBBY' && nextStatus !== 'LOBBY') {
+      this.clearFoyerArrivalState();
+    }
   }
 
   /** i18n: Singular label for participant count. */
@@ -4961,6 +4969,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const startingQuizFromLobby =
       this.effectiveStatus() === 'LOBBY' && this.channels().quiz && !this.isQaSession();
     if (startingQuizFromLobby) {
+      this.clearFoyerArrivalState();
       this.quizStartQuestionPending.set(true);
     }
     try {
@@ -4971,6 +4980,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       if (startingQuizFromLobby && typeof result.currentQuestion !== 'number') {
         this.quizStartQuestionPending.set(false);
       }
+      this.clearFoyerArrivalStateWhenLeavingLobby(result.status);
       this.statusUpdate.set(result);
       this.syncCountdownFromStatusUpdate(result);
       this.dismissHostSteeringCallout();
@@ -4997,6 +5007,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.controlPending.set(true);
     try {
       const result = await trpc.session.startQa.mutate({ code: this.code.toUpperCase() });
+      this.clearFoyerArrivalStateWhenLeavingLobby(result.status);
       this.statusUpdate.set(result);
       this.syncCurrentQuestionForHost(null);
       this.dismissHostSteeringCallout();
