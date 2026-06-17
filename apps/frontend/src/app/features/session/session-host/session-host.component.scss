@@ -2031,13 +2031,6 @@
   }
 }
 
-.session-lobby__team-card--playful {
-  @media (prefers-reduced-motion: no-preference) {
-    will-change: transform;
-    animation: lobby-team-card-float 2.4s ease-in-out infinite;
-  }
-}
-
 .session-lobby__team-card-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
