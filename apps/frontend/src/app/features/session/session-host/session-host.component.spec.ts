@@ -5181,8 +5181,77 @@ describe('SessionHostComponent', () => {
 
     resolveRefresh?.(null);
     await pendingNextQuestion;
+    fixture.detectChanges();
+
     expect(component.countdownSeconds()).toBeGreaterThan(0);
+    expect(component.quizStartQuestionPending()).toBe(true);
+    expect(component.showLobbyStage()).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).textContent ?? '').not.toContain(
+      'Frage wird aktualisiert',
+    );
     fixture.destroy();
+  });
+
+  it('laedt Host-Details erneut nach, wenn der erste Start-Refresh leer bleibt', async () => {
+    const loadedQuestion = {
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 1,
+      totalQuestions: 3,
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE' as const,
+      difficulty: 'MEDIUM' as const,
+      currentRound: 1,
+      timer: 30,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'A', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: 'B', isCorrect: true },
+      ],
+      totalVotes: 0,
+      correctVoterCount: 0,
+    };
+
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'LOBBY' });
+    nextQuestionMutateMock.mockResolvedValue({
+      status: 'ACTIVE',
+      currentQuestion: 1,
+      currentRound: 1,
+      activeAt: '2026-03-24T12:00:00.000Z',
+      timer: 30,
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    const refreshCallsBeforeStart = getCurrentQuestionForHostQueryMock.mock.calls.length;
+    getCurrentQuestionForHostQueryMock
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(loadedQuestion);
+
+    vi.useFakeTimers();
+    try {
+      await component.nextQuestion();
+      fixture.detectChanges();
+
+      const hostWhilePending = fixture.nativeElement as HTMLElement;
+      expect(component.quizStartQuestionPending()).toBe(true);
+      expect(component.showLobbyStage()).toBe(true);
+      expect(hostWhilePending.textContent ?? '').not.toContain('Frage wird aktualisiert');
+
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const hostAfterRetry = fixture.nativeElement as HTMLElement;
+      expect(getCurrentQuestionForHostQueryMock).toHaveBeenCalledTimes(refreshCallsBeforeStart + 2);
+      expect(component.quizStartQuestionPending()).toBe(false);
+      expect(component.showLobbyStage()).toBe(false);
+      expect(hostAfterRetry.textContent ?? '').toContain('Welche Antwort ist richtig?');
+    } finally {
+      fixture.destroy();
+      vi.useRealTimers();
+    }
   });
 
   it('haelt die laufende Frage sichtbar, bis Runde 2 geladen ist', async () => {

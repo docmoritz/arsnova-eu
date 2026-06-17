@@ -158,6 +158,8 @@ const FOYER_TEAM_DELAY_STEP_MS = 720;
 const FOYER_TEAM_PRESENTATION_BUFFER_MS = 440;
 const FOYER_NON_TEAM_DELAY_STEP_MS = 920;
 const QA_WORD_CLOUD_NORMALIZED_WEIGHT_CAP = 28;
+const HOST_QUESTION_DETAILS_RETRY_MS = 250;
+const HOST_QUESTION_DETAILS_RETRY_LIMIT = 8;
 const FOYER_NON_TEAM_PRESENTATION_BUFFER_MS = 240;
 const FOYER_KINDERGARTEN_DELAY_STEP_MS = 5400;
 const TEAM_FOYER_SUPPRESSION_PARTICIPANT_THRESHOLD = 100;
@@ -434,6 +436,8 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private knownParticipantIds = new Set<string>();
   private foyerArrivalSequence = 0;
   private foyerGlobalLaneCursor = 0;
+  private hostQuestionDetailsRetryTimer: ReturnType<typeof setTimeout> | null = null;
+  private hostQuestionDetailsRetryCount = 0;
   private readonly foyerTeamLaneCursor = new Map<string, number>();
   private readonly foyerArrivalTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly foyerTeamPulseTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -1673,6 +1677,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
           } satisfies SessionStatusUpdate;
           if (update.status === 'LOBBY' || update.status === 'FINISHED') {
             this.quizStartQuestionPending.set(false);
+            this.clearHostQuestionDetailsRetry();
           }
           this.clearFoyerArrivalStateWhenLeavingLobby(update.status);
           this.statusUpdate.set(update);
@@ -1848,6 +1853,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.qaSub = null;
     this.qaSubscriptionKey = null;
     this.clearQaWordCloudThemeAnalysisTimer();
+    this.clearHostQuestionDetailsRetry();
     this.stopHostPolling();
     this.clearFoyerArrivalState();
     this.stopCountdown();
@@ -3074,6 +3080,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       const currentQuestion = this.statusUpdate()?.currentQuestion;
       if (typeof currentQuestion !== 'number' || currentQuestion === next.order) {
         this.quizStartQuestionPending.set(false);
+        this.clearHostQuestionDetailsRetry();
       }
     }
     if (this.isSameHostCurrentQuestion(current, next)) {
@@ -4979,6 +4986,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       const result = await trpc.session.nextQuestion.mutate({ code: this.code.toUpperCase() });
       if (startingQuizFromLobby && typeof result.currentQuestion !== 'number') {
         this.quizStartQuestionPending.set(false);
+        this.clearHostQuestionDetailsRetry();
       }
       this.clearFoyerArrivalStateWhenLeavingLobby(result.status);
       this.statusUpdate.set(result);
@@ -4986,7 +4994,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.dismissHostSteeringCallout();
       this.controlPending.set(false);
       await this.refreshCurrentQuestionForHost();
-      this.quizStartQuestionPending.set(false);
+      if (!this.finishQuizStartQuestionPendingIfReady()) {
+        this.scheduleHostQuestionDetailsRetry();
+      }
       if (!this.isCurrentStatusUpdate(result)) return;
       if (result.status === 'ACTIVE') {
         const refreshedTimer = this.displayedCurrentQuestionForHost()?.timer;
@@ -4996,6 +5006,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
     } catch {
       this.quizStartQuestionPending.set(false);
+      this.clearHostQuestionDetailsRetry();
       this.openHostSteeringCalloutForSteeringFailure(() => void this.nextQuestion());
     } finally {
       this.controlPending.set(false);
@@ -5627,6 +5638,52 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
       this.syncCurrentQuestionForHost(null);
     }
+  }
+
+  private finishQuizStartQuestionPendingIfReady(): boolean {
+    if (!this.quizStartQuestionPending()) {
+      return true;
+    }
+    if (this.isHostQuestionDetailsPending()) {
+      return false;
+    }
+    this.quizStartQuestionPending.set(false);
+    this.clearHostQuestionDetailsRetry();
+    return true;
+  }
+
+  private scheduleHostQuestionDetailsRetry(): void {
+    if (
+      !this.quizStartQuestionPending() ||
+      !this.isHostQuestionDetailsPending() ||
+      this.hostQuestionDetailsRetryTimer
+    ) {
+      return;
+    }
+
+    if (this.hostQuestionDetailsRetryCount >= HOST_QUESTION_DETAILS_RETRY_LIMIT) {
+      this.quizStartQuestionPending.set(false);
+      this.clearHostQuestionDetailsRetry();
+      return;
+    }
+
+    this.hostQuestionDetailsRetryCount += 1;
+    this.hostQuestionDetailsRetryTimer = setTimeout(() => {
+      this.hostQuestionDetailsRetryTimer = null;
+      void this.refreshCurrentQuestionForHost().then(() => {
+        if (!this.finishQuizStartQuestionPendingIfReady()) {
+          this.scheduleHostQuestionDetailsRetry();
+        }
+      });
+    }, HOST_QUESTION_DETAILS_RETRY_MS);
+  }
+
+  private clearHostQuestionDetailsRetry(): void {
+    if (this.hostQuestionDetailsRetryTimer) {
+      clearTimeout(this.hostQuestionDetailsRetryTimer);
+      this.hostQuestionDetailsRetryTimer = null;
+    }
+    this.hostQuestionDetailsRetryCount = 0;
   }
 
   private async refreshLiveFreetext(): Promise<void> {
