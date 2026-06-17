@@ -20,7 +20,7 @@ INSERT INTO "Motd" (
   '2026-06-17 00:00:00'::timestamp(3),
   '2026-11-30 23:59:59.999'::timestamp(3),
   true,
-  1,
+  2,
   NULL,
   NOW(),
   NOW()
@@ -40,11 +40,9 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'de',
-  $mdde$# Neu: Numerische Schätzfrage
+  $mdde$![Host-Ansicht einer numerischen Schätzfrage zur Französischen Revolution](/assets/images/numeric-estimate-1789-host.png)
 
-![Host-Ansicht einer numerischen Schätzfrage zur Französischen Revolution](/assets/images/numeric-estimate-1789-host.png)
-
-Mit der neuen **numerischen Schätzfrage** kannst du in arsnova.eu echte Zahlen schätzen lassen: als einfache Schätzfrage oder in zwei Runden mit kurzer Diskussion dazwischen.
+Schätzen, diskutieren, vergleichen: Mit diesem Frageformat kannst du in arsnova.eu echte Zahlen einschätzen lassen, entweder in einer einfachen Runde oder in zwei Runden mit kurzer Diskussion dazwischen.
 
 **Wofür sie gedacht ist**
 
@@ -70,11 +68,9 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'en',
-  $mden$# New: numeric estimate questions
+  $mden$![Host view of a numeric estimate question about the French Revolution](/assets/images/numeric-estimate-1789-host.png)
 
-![Host view of a numeric estimate question about the French Revolution](/assets/images/numeric-estimate-1789-host.png)
-
-The new **numeric estimate question** lets you ask for real number estimates in arsnova.eu: as a simple estimate or in two rounds with a short discussion in between.
+Estimate, discuss, compare: This question format lets you collect real number estimates in arsnova.eu, either in a single round or in two rounds with a short discussion in between.
 
 **What it is for**
 
@@ -100,11 +96,9 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'fr',
-  $mdfr$# Nouveau : question d'estimation numérique
+  $mdfr$![Vue hôte d'une question d'estimation numérique sur la Révolution française](/assets/images/numeric-estimate-1789-host.png)
 
-![Vue hôte d'une question d'estimation numérique sur la Révolution française](/assets/images/numeric-estimate-1789-host.png)
-
-La nouvelle **question d'estimation numérique** permet de demander de vraies estimations chiffrées dans arsnova.eu : comme question simple ou en deux tours avec une courte discussion entre les deux.
+Estimer, discuter, comparer : ce format de question permet de recueillir de vraies estimations chiffrées dans arsnova.eu, en un seul tour ou en deux tours avec une courte discussion entre les deux.
 
 **À quoi elle sert**
 
@@ -130,11 +124,9 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'es',
-  $mdes$# Nuevo: pregunta de estimación numérica
+  $mdes$![Vista del anfitrión de una pregunta de estimación numérica sobre la Revolución francesa](/assets/images/numeric-estimate-1789-host.png)
 
-![Vista del anfitrión de una pregunta de estimación numérica sobre la Revolución francesa](/assets/images/numeric-estimate-1789-host.png)
-
-La nueva **pregunta de estimación numérica** permite pedir estimaciones con números reales en arsnova.eu: como pregunta sencilla o en dos rondas con una breve discusión intermedia.
+Estimar, debatir, comparar: este formato de pregunta permite recoger estimaciones con números reales en arsnova.eu, en una sola ronda o en dos rondas con una breve discusión intermedia.
 
 **Para qué sirve**
 
@@ -160,11 +152,9 @@ VALUES (
   gen_random_uuid()::text,
   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
   'it',
-  $mdit$# Nuova: domanda di stima numerica
+  $mdit$![Vista host di una domanda di stima numerica sulla Rivoluzione francese](/assets/images/numeric-estimate-1789-host.png)
 
-![Vista host di una domanda di stima numerica sulla Rivoluzione francese](/assets/images/numeric-estimate-1789-host.png)
-
-La nuova **domanda di stima numerica** permette di raccogliere stime con numeri reali in arsnova.eu: come domanda semplice oppure in due turni con una breve discussione intermedia.
+Stimare, discutere, confrontare: questo formato di domanda permette di raccogliere stime con numeri reali in arsnova.eu, in un solo turno oppure in due turni con una breve discussione intermedia.
 
 **A cosa serve**
 
