@@ -1037,8 +1037,8 @@ describe('QuizStoreService', () => {
               numericToleranceMode: 'ABSOLUTE_INTERVAL',
               numericReferenceValue: 1789,
               numericInputType: 'INTEGER',
-              numericMin: 1700,
-              numericMax: 1900,
+              numericMin: 1500,
+              numericMax: 2000,
               numericTwoRounds: true,
             },
           ],
@@ -1063,19 +1063,19 @@ describe('QuizStoreService', () => {
       expect.objectContaining({
         numericToleranceMode: 'ABSOLUTE_INTERVAL',
         numericReferenceValue: 1789,
-        numericIntervalLeft: 1788.5,
-        numericIntervalRight: 1789.5,
+        numericIntervalLeft: 1700,
+        numericIntervalRight: 1900,
         numericInputType: 'INTEGER',
-        numericMin: 1700,
-        numericMax: 1900,
+        numericMin: 1500,
+        numericMax: 2000,
         numericTwoRounds: true,
       }),
     );
     expect(service.getUploadPayload(DEMO_QUIZ_ID).questions).toContainEqual(
       expect.objectContaining({
         type: 'NUMERIC_ESTIMATE',
-        numericIntervalLeft: 1788.5,
-        numericIntervalRight: 1789.5,
+        numericIntervalLeft: 1700,
+        numericIntervalRight: 1900,
       }),
     );
   });
