@@ -1405,7 +1405,8 @@
                                           [style.left.%]="
                                             numericHistogramBinPositionPercent(
                                               bin,
-                                              rc.round1Histogram
+                                              rc.round1Histogram,
+                                              rc.round1Stats
                                             )
                                           "
                                           [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
@@ -1486,7 +1487,8 @@
                                           [style.left.%]="
                                             numericHistogramBinPositionPercent(
                                               bin,
-                                              rc.round2Histogram
+                                              rc.round2Histogram,
+                                              rc.round2Stats
                                             )
                                           "
                                           [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
@@ -1793,7 +1795,11 @@
                                       [class.session-host__numeric-bin--in-band]="bin.inBand"
                                       [class.session-host__numeric-bin--empty]="bin.count === 0"
                                       [style.left.%]="
-                                        numericHistogramBinPositionPercent(bin, q.numericHistogram!)
+                                        numericHistogramBinPositionPercent(
+                                          bin,
+                                          q.numericHistogram!,
+                                          stats
+                                        )
                                       "
                                       [title]="bin.from + ' – ' + bin.to + ': ' + bin.count"
                                     >

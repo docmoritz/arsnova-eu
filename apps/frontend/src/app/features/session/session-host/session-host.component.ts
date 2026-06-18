@@ -3626,10 +3626,27 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   numericHistogramBinPositionPercent(
     bin: { from: number; to: number },
     histogram: Array<{ from: number; to: number }>,
+    stats?: NumericStatsDTO | null,
   ): number {
     const range = this.numericHistogramRange(histogram);
     if (!range) return 0;
-    return this.numericValuePositionPercent((bin.from + bin.to) / 2, range);
+    const markerValue = this.numericHistogramBinMarkerValue(bin, stats);
+    return this.numericValuePositionPercent(markerValue ?? (bin.from + bin.to) / 2, range);
+  }
+
+  private numericHistogramBinMarkerValue(
+    bin: { from: number; to: number; count?: number },
+    stats?: NumericStatsDTO | null,
+  ): number | null {
+    if (!stats || !bin.count || stats.n <= 0) return null;
+    if (stats.min === null || stats.max === null) return null;
+    if (!Number.isFinite(stats.min) || !Number.isFinite(stats.max)) return null;
+    if (Math.abs(stats.max - stats.min) > 1e-9) return null;
+
+    const value = stats.min;
+    const left = Math.min(bin.from, bin.to);
+    const right = Math.max(bin.from, bin.to);
+    return value >= left - 1e-9 && value <= right + 1e-9 ? value : null;
   }
 
   numericHistogramRangeEdgeLabel(
