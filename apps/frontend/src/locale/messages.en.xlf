@@ -4415,6 +4415,38 @@
           <context context-type="linenumber">222</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="join.chooseNicknameButton" datatype="html">
+        <source>Name wählen</source>
+        <target>Choose name</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/join/join.component.ts</context>
+          <context context-type="linenumber">252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="join.chooseTeamButton" datatype="html">
+        <source>Team wählen</source>
+        <target>Choose team</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/join/join.component.ts</context>
+          <context context-type="linenumber">254</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="join.chooseNicknameHint" datatype="html">
+        <source>Wähle ein Pseudonym aus der Liste.</source>
+        <target>Choose a pseudonym from the list.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/join/join.component.ts</context>
+          <context context-type="linenumber">257</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="join.chooseTeamHint" datatype="html">
+        <source>Wähle noch ein Team aus.</source>
+        <target>Choose a team.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/join/join.component.ts</context>
+          <context context-type="linenumber">259</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="275527120808559041" datatype="html">
         <source>(vergeben)</source>
         <target>(taken)</target>

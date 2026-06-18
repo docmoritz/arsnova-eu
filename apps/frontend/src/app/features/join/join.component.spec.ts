@@ -124,7 +124,7 @@ describe('JoinComponent', () => {
     expect(comp.loading()).toBe(false);
   });
 
-  it('fixiert "Jetzt beitreten" im unteren Aktionsbereich des Join-Clients', async () => {
+  it('fixiert den Beitrittsbutton im unteren Aktionsbereich des Join-Clients', async () => {
     const { fixture } = createWithCode('ABC123');
     fixture.detectChanges();
     await fixture.whenStable();
@@ -137,7 +137,7 @@ describe('JoinComponent', () => {
 
     expect(host.querySelector('.join-page')?.className).toContain('join-page--with-bottom-action');
     expect(bottomAction).not.toBeNull();
-    expect(bottomAction?.textContent).toContain('Jetzt beitreten');
+    expect(bottomAction?.textContent).toContain('Name wählen');
     expect(submitButtons).toHaveLength(1);
   });
 
@@ -514,6 +514,47 @@ describe('JoinComponent', () => {
       rejoinToken: undefined,
     });
     expect(navSpy).toHaveBeenCalledWith(['session', 'ABC123', 'vote']);
+  });
+
+  it('zeigt im manuellen Teammodus nach Pseudonymauswahl die fehlende Teamwahl im Submitbereich', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      allowCustomNicknames: false,
+      teamMode: true,
+      teamAssignment: 'MANUAL',
+    });
+    vi.mocked(trpc.session.getTeams.query).mockResolvedValue({
+      teamCount: 2,
+      teams: [
+        { id: 'team-a', name: 'Team A', color: '#1E88E5', memberCount: 0 },
+        { id: 'team-b', name: 'Team B', color: '#43A047', memberCount: 0 },
+      ],
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    comp.selectedNickname.set('Kant');
+    fixture.detectChanges();
+
+    const bottomAction = fixture.nativeElement.querySelector(
+      '.join-page__bottom-action',
+    ) as HTMLElement | null;
+    const submit = bottomAction?.querySelector('.join-card__submit') as HTMLButtonElement | null;
+
+    expect(comp.canSubmit()).toBe(false);
+    expect(submit?.disabled).toBe(true);
+    expect(bottomAction?.textContent).toContain('Team wählen');
+    expect(bottomAction?.textContent).toContain('Wähle noch ein Team aus.');
+
+    comp.selectedTeamId.set('team-a');
+    fixture.detectChanges();
+
+    expect(comp.canSubmit()).toBe(true);
+    expect(submit?.disabled).toBe(false);
+    expect(bottomAction?.textContent).toContain('Jetzt beitreten');
   });
 
   it('zeigt Teamvorschau auch bei automatischer Zuweisung', async () => {

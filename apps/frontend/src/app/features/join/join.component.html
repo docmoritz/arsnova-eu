@@ -267,8 +267,11 @@
         [disabled]="!canSubmit() || joining()"
         (click)="submitJoin()"
       >
-        {{ joining() ? joiningLabel() : joinNowLabel() }}
+        {{ joinSubmitLabel() }}
       </button>
+      @if (joinSubmitHint(); as hint) {
+        <p class="join-page__bottom-action-hint" role="status" aria-live="polite">{{ hint }}</p>
+      }
     </div>
   }
 </div>

@@ -200,16 +200,35 @@ export class JoinComponent implements OnInit, OnDestroy {
     () => this.teams().find((team) => team.id === this.selectedTeamId()) ?? null,
   );
 
-  readonly canSubmit = computed(() => {
-    const sel = toParticipantNickname(this.selectedNickname());
-    const custom = toParticipantNickname(this.customNickname());
+  readonly hasJoinNickname = computed(() => {
+    if (this.session()?.anonymousMode === true) return true;
     const allowCustom = this.session()?.allowCustomNicknames ?? true;
-    const hasName =
-      this.session()?.anonymousMode === true ||
-      sel.length > 0 ||
-      (allowCustom && custom.length > 0);
-    const hasTeam = !this.showTeamSelect() || this.selectedTeamId().trim().length > 0;
-    return hasName && hasTeam;
+    return (
+      toParticipantNickname(this.selectedNickname()).length > 0 ||
+      (allowCustom && toParticipantNickname(this.customNickname()).length > 0)
+    );
+  });
+
+  readonly hasJoinTeam = computed(
+    () => !this.showTeamSelect() || this.selectedTeamId().trim().length > 0,
+  );
+
+  readonly canSubmit = computed(() => {
+    return this.hasJoinNickname() && this.hasJoinTeam();
+  });
+
+  readonly joinSubmitLabel = computed(() => {
+    if (this.joining()) return this.joiningLabel();
+    if (!this.hasJoinNickname()) return this.chooseNicknameLabel();
+    if (!this.hasJoinTeam()) return this.chooseTeamLabel();
+    return this.joinNowLabel();
+  });
+
+  readonly joinSubmitHint = computed(() => {
+    if (this.joining() || this.canSubmit()) return null;
+    if (!this.hasJoinNickname()) return this.chooseNicknameHint();
+    if (!this.hasJoinTeam()) return this.chooseTeamHint();
+    return null;
   });
 
   readonly effectiveNickname = computed(() => {
@@ -229,6 +248,15 @@ export class JoinComponent implements OnInit, OnDestroy {
   joiningLabel = () => $localize`Wird beigetreten…`;
   /** i18n: join now button. */
   joinNowLabel = () => $localize`Jetzt beitreten`;
+  /** i18n: choose nickname before joining. */
+  chooseNicknameLabel = () => $localize`:@@join.chooseNicknameButton:Name wählen`;
+  /** i18n: choose team before joining. */
+  chooseTeamLabel = () => $localize`:@@join.chooseTeamButton:Team wählen`;
+  /** i18n: choose nickname requirement hint. */
+  chooseNicknameHint = () =>
+    $localize`:@@join.chooseNicknameHint:Wähle ein Pseudonym aus der Liste.`;
+  /** i18n: choose team requirement hint. */
+  chooseTeamHint = () => $localize`:@@join.chooseTeamHint:Wähle noch ein Team aus.`;
   /** i18n: suffix for taken nickname. */
   takenSuffix = () => $localize`(vergeben)`;
   /** i18n: hint when generated reserve nicknames become available. */

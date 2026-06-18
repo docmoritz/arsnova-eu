@@ -382,6 +382,13 @@
   width: 100%;
 }
 
+.join-page__bottom-action-hint {
+  margin: 0.45rem 0 0;
+  text-align: center;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .join-card__text--error,
   .join-card__error {
