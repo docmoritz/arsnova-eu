@@ -44,9 +44,11 @@ describe('getDemoQuizSeedFingerprint', () => {
             answers?: Array<{ text?: string; isCorrect?: boolean }>;
             numericToleranceMode?: string;
             numericReferenceValue?: number;
+            numericTolerancePercent?: number;
             numericIntervalLeft?: number;
             numericIntervalRight?: number;
             numericInputType?: string;
+            numericDecimalPlaces?: number;
             numericMin?: number;
             numericMax?: number;
             numericTwoRounds?: boolean;
@@ -55,11 +57,11 @@ describe('getDemoQuizSeedFingerprint', () => {
       };
 
       const estimateQuestion = payload.quiz?.questions?.find(
-        (question) => question.type === 'NUMERIC_ESTIMATE',
+        (question) => question.type === 'NUMERIC_ESTIMATE' && question.text?.includes(headline),
       );
 
       expect(payload.exportVersion).toBe(26);
-      expect(payload.quiz?.questions).toHaveLength(10);
+      expect(payload.quiz?.questions).toHaveLength(9);
       expect(estimateQuestion?.text).toContain(headline);
       expect(estimateQuestion).toMatchObject({
         order: 7,
@@ -72,6 +74,56 @@ describe('getDemoQuizSeedFingerprint', () => {
         numericMin: 1500,
         numericMax: 2000,
         numericTwoRounds: true,
+      });
+    }
+  });
+
+  it('enthält die Pi-Frage als numerische Schätzfrage in allen Locales', () => {
+    const expectedHeadlineByLocale = {
+      de: 'Runde $\\pi$ auf zwei Dezimalstellen.',
+      en: 'Round $\\pi$ to two decimal places.',
+      es: 'Redondea $\\pi$ a dos decimales.',
+      fr: 'Arrondis $\\pi$ à deux décimales.',
+      it: 'Arrotonda $\\pi$ a due cifre decimali.',
+    } as const;
+
+    for (const [locale, headline] of Object.entries(expectedHeadlineByLocale)) {
+      const payload = getDemoQuizPayload(locale as keyof typeof expectedHeadlineByLocale) as {
+        quiz?: {
+          questions?: Array<{
+            text?: string;
+            type?: string;
+            order?: number;
+            skipReadingPhase?: boolean;
+            answers?: Array<{ text?: string; isCorrect?: boolean }>;
+            numericToleranceMode?: string;
+            numericReferenceValue?: number;
+            numericTolerancePercent?: number;
+            numericInputType?: string;
+            numericDecimalPlaces?: number;
+            numericMin?: number;
+            numericMax?: number;
+            numericTwoRounds?: boolean;
+          }>;
+        };
+      };
+
+      const piQuestion = payload.quiz?.questions?.find(
+        (question) => question.type === 'NUMERIC_ESTIMATE' && question.text?.includes(headline),
+      );
+
+      expect(piQuestion).toMatchObject({
+        order: 1,
+        skipReadingPhase: true,
+        answers: [],
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 3.14,
+        numericTolerancePercent: 10,
+        numericInputType: 'DECIMAL',
+        numericDecimalPlaces: 2,
+        numericMin: 1,
+        numericMax: 10,
+        numericTwoRounds: false,
       });
     }
   });
@@ -140,41 +192,28 @@ describe('getDemoQuizSeedFingerprint', () => {
     );
   });
 
-  it('enthält eine sehr anspruchsvolle numerische SHORT_TEXT-Frage mit Einheit und Toleranz', () => {
-    const payload = getDemoQuizPayload('de') as {
-      quiz?: {
-        questions?: Array<{
-          text?: string;
-          type?: string;
-          difficulty?: string;
-          answers?: Array<{ text?: string; isCorrect?: boolean }>;
-          shortTextEvaluationKind?: string;
-          numericInputKind?: string;
-          numericToleranceMode?: string;
-          numericRelativeTolerancePercent?: number;
-          numericUnitFamily?: string;
-          numericRequireUnit?: boolean;
-          numericAcceptEquivalentUnits?: boolean;
-        }>;
+  it('enthält keine Schallgeschwindigkeits-Frage mehr', () => {
+    for (const locale of ['de', 'en', 'es', 'fr', 'it'] as const) {
+      const payload = getDemoQuizPayload(locale) as {
+        quiz?: {
+          questions?: Array<{
+            text?: string;
+            type?: string;
+            shortTextEvaluationKind?: string;
+          }>;
+        };
       };
-    };
 
-    const numericShortTextQuestion = payload.quiz?.questions?.find(
-      (question) =>
-        question.type === 'SHORT_TEXT' && question.shortTextEvaluationKind === 'numeric_unit',
-    );
-
-    expect(numericShortTextQuestion?.text).toContain('Schallgeschwindigkeit');
-    expect(numericShortTextQuestion?.text).toContain('58 cm');
-    expect(numericShortTextQuestion?.difficulty).toBe('HARD');
-    expect(numericShortTextQuestion?.numericInputKind).toBe('decimal');
-    expect(numericShortTextQuestion?.numericToleranceMode).toBe('relative');
-    expect(numericShortTextQuestion?.numericRelativeTolerancePercent).toBe(2);
-    expect(numericShortTextQuestion?.numericUnitFamily).toBe('time');
-    expect(numericShortTextQuestion?.numericRequireUnit).toBe(true);
-    expect(numericShortTextQuestion?.numericAcceptEquivalentUnits).toBe(true);
-    expect(numericShortTextQuestion?.answers).toEqual([
-      expect.objectContaining({ text: '1,69 ms', isCorrect: true }),
-    ]);
+      expect(payload.quiz?.questions).toHaveLength(9);
+      expect(payload.quiz?.questions?.some((question) => question.text?.includes('58 cm'))).toBe(
+        false,
+      );
+      expect(
+        payload.quiz?.questions?.some(
+          (question) =>
+            question.type === 'SHORT_TEXT' && question.shortTextEvaluationKind === 'numeric_unit',
+        ),
+      ).toBe(false);
+    }
   });
 });

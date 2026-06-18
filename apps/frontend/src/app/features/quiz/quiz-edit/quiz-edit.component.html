@@ -133,16 +133,16 @@
         </mat-card-content>
       </mat-expansion-panel>
       <mat-card-actions class="quiz-edit__meta-actions">
-        <a
+        <button
           mat-button
-          routerLink="preview"
-          [queryParams]="{ returnTo: 'edit' }"
+          type="button"
+          (click)="openPreview()"
           i18n-aria-label
           aria-label="Vorschau öffnen"
         >
           <mat-icon>visibility</mat-icon>
           <span i18n>Vorschau</span>
-        </a>
+        </button>
       </mat-card-actions>
     </mat-card>
 
@@ -1673,17 +1673,17 @@
             >Speichern</span
           >
         </button>
-        <a
+        <button
           mat-button
-          routerLink="preview"
-          [queryParams]="{ returnTo: 'edit' }"
           class="quiz-edit__bottom-action"
+          type="button"
+          (click)="openPreview()"
           i18n-aria-label
           aria-label="Vorschau öffnen"
         >
           <mat-icon>visibility</mat-icon>
           <span class="quiz-edit__bottom-action-label" i18n>Vorschau</span>
-        </a>
+        </button>
       </div>
     </div>
   </section>

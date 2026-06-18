@@ -49,13 +49,21 @@
         ]
       },
       {
-        "text": "### Arrondis $\\pi$ à deux décimales.\n\n> **Usage pédagogique :** Utilise cela comme courte relance STEM combinant formules, médias et réponse ouverte.\n\n![Le nombre pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler :\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß :\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
-        "type": "FREETEXT",
+        "text": "### Arrondis $\\pi$ à deux décimales.\n\n> **Usage pédagogique :** Utilise cela comme courte question d’estimation STEM avec valeur de référence, tolérance de 10 % et plage de plausibilité.\n\n![Le nombre pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler :\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß :\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
+        "type": "NUMERIC_ESTIMATE",
         "timer": null,
         "difficulty": "MEDIUM",
         "order": 1,
         "skipReadingPhase": true,
-        "answers": []
+        "answers": [],
+        "numericToleranceMode": "RELATIVE_PERCENT",
+        "numericReferenceValue": 3.14,
+        "numericTolerancePercent": 10,
+        "numericInputType": "DECIMAL",
+        "numericDecimalPlaces": 2,
+        "numericMin": 1,
+        "numericMax": 10,
+        "numericTwoRounds": false
       },
       {
         "text": "### Image IA ou photo réelle ?\n\n> **Usage pédagogique :** Utilise cela comme échauffement visuel, relance d’attention ou amorce de discussion à faible seuil.\n\n![Scène de toit](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -199,35 +207,11 @@
         "numericTwoRounds": true
       },
       {
-        "text": "### Calcul exigeant : combien de temps le son met-il pour parcourir 58 cm ?\n\n> **Usage pédagogique :** Cette réponse courte numérique est volontairement difficile : il faut convertir les unités correctement et donner un ordre de grandeur cohérent.\n\nSuppose la vitesse du son dans l’air sec à 20 °C : $$v = 343\\,\\mathrm{m/s}$$.\n\nDétermine le temps de parcours pour $$s = 0{,}58\\,\\mathrm{m}$$ et réponds avec unité (par exemple en ms ou en s).",
-        "type": "SHORT_TEXT",
-        "timer": null,
-        "difficulty": "HARD",
-        "order": 8,
-        "answers": [
-          {
-            "text": "1,69 ms",
-            "isCorrect": true
-          }
-        ],
-        "shortTextMaxLength": 24,
-        "shortTextCaseSensitive": false,
-        "shortTextEvaluationKind": "numeric_unit",
-        "numericInputKind": "decimal",
-        "numericToleranceMode": "relative",
-        "numericRelativeTolerancePercent": 2,
-        "numericUnitFamily": "time",
-        "numericRequireUnit": true,
-        "numericAcceptEquivalentUnits": true,
-        "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
-      },
-      {
         "text": "### Quelle est la probabilité que tu essaies bientôt un quiz en direct comme celui-ci dans l’un de tes cours ?\n\n> **Usage pédagogique :** Utilise cela comme prise de température, ticket de sortie ou auto-évaluation rapide.",
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",
-        "order": 9,
+        "order": 8,
         "answers": [],
         "ratingMin": 1,
         "ratingMax": 5,

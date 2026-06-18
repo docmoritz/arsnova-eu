@@ -21,6 +21,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatOption } from '@angular/material/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatSelect } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   createQuizHistoryAccessProof,
   PresetStorageEntrySchema,
@@ -130,6 +131,7 @@ export class QuizPreviewComponent implements OnDestroy {
   private readonly quizStore = inject(QuizStoreService);
   private readonly injector = inject(Injector);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly snackBar = inject(MatSnackBar);
   private animationTimer: ReturnType<typeof setTimeout> | null = null;
   private touchStartX: number | null = null;
 
@@ -807,8 +809,26 @@ export class QuizPreviewComponent implements OnDestroy {
 
   private commitInlineEdits(): void {
     if (!this.inlineEditMode()) return;
-    this.persistInlineEditsNow();
+    const shouldShowSaveConfirmation = this.inlineEditHasChanges();
+    if (shouldShowSaveConfirmation) {
+      this.persistInlineEditsNow();
+    }
     this.resetInlineEditState();
+    if (shouldShowSaveConfirmation) {
+      this.showSaveConfirmation();
+    }
+  }
+
+  private showSaveConfirmation(): void {
+    this.snackBar.open(
+      $localize`:@@quizPreview.saveConfirmation:Gespeichert. Deine Änderungen sind jetzt in der Vorschau und im Live-Quiz übernommen.`,
+      '',
+      {
+        duration: 6000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+      },
+    );
   }
 
   private resetInlineEditState(): void {

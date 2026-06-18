@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LocaleSwitchGuardService } from '../../../core/locale-switch-guard.service';
 import { QuizEditComponent } from './quiz-edit.component';
 import { QuizStoreService, type QuizDocument } from '../data/quiz-store.service';
 
@@ -46,6 +48,9 @@ describe('QuizEditComponent', () => {
       afterClosed: () => of(true),
     })),
   };
+  const snackBarMock = {
+    open: vi.fn(),
+  };
 
   const mockStore = {
     getQuizById: vi.fn((id: string) => (id === QUIZ_ID ? quiz : null)),
@@ -58,12 +63,36 @@ describe('QuizEditComponent', () => {
   };
 
   beforeEach(() => {
+    quiz.name = 'Test-Quiz';
+    quiz.description = 'Beschreibung';
+    quiz.motifImageUrl = null;
+    quiz.settings = {
+      showLeaderboard: true,
+      allowCustomNicknames: true,
+      defaultTimer: null,
+      enableSoundEffects: true,
+      enableRewardEffects: true,
+      enableMotivationMessages: true,
+      enableEmojiReactions: true,
+      showQuestionTypeIndicators: true,
+      anonymousMode: false,
+      teamMode: false,
+      teamCount: null,
+      teamAssignment: 'AUTO',
+      teamNames: [],
+      backgroundMusic: null,
+      nicknameTheme: 'HIGH_SCHOOL',
+      bonusTokenCount: null,
+      readingPhaseEnabled: false,
+      preset: 'PLAYFUL',
+    };
     quiz.questions = [];
     vi.clearAllMocks();
     matDialogMock.open.mockReset();
     matDialogMock.open.mockImplementation(() => ({
       afterClosed: () => of(true),
     }));
+    snackBarMock.open.mockReset();
     TestBed.configureTestingModule({
       imports: [QuizEditComponent],
       providers: [
@@ -80,11 +109,13 @@ describe('QuizEditComponent', () => {
         },
         { provide: QuizStoreService, useValue: mockStore },
         { provide: MatDialog, useValue: matDialogMock },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     });
     // QuizEdit importiert indirekt Material-Dialog-Provider (über MarkdownKatexEditorComponent).
     // Wir overriden explizit, damit Tests keine echten Overlay-Provider benötigen.
     TestBed.overrideProvider(MatDialog, { useValue: matDialogMock });
+    TestBed.overrideProvider(MatSnackBar, { useValue: snackBarMock });
   });
 
   afterEach(() => {
@@ -118,9 +149,11 @@ describe('QuizEditComponent', () => {
         },
         { provide: QuizStoreService, useValue: mockStore },
         { provide: MatDialog, useValue: matDialogMock },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     });
     TestBed.overrideProvider(MatDialog, { useValue: matDialogMock });
+    TestBed.overrideProvider(MatSnackBar, { useValue: snackBarMock });
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(QuizEditComponent);
@@ -163,6 +196,107 @@ describe('QuizEditComponent', () => {
     );
   });
 
+  it('erkennt manuelle Einstellungsänderungen auch ohne Angular-dirty-Status', () => {
+    mockStore.updateQuizSettings.mockReturnValue({
+      ...quiz.settings,
+      anonymousMode: true,
+    });
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.settingsForm.controls.anonymousMode.setValue(true);
+
+    expect(component.settingsForm.dirty).toBe(false);
+    expect(component.hasPendingChanges()).toBe(true);
+
+    component.saveAll();
+
+    expect(mockStore.updateQuizSettings).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        anonymousMode: true,
+      }),
+    );
+  });
+
+  it('speichert per Handler gesetzte Zeitlimit-Änderungen ohne Angular-dirty-Status', () => {
+    mockStore.updateQuizSettings.mockReturnValue({
+      ...quiz.settings,
+      defaultTimer: 60,
+    });
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.onDefaultTimerEnabledChange(true);
+
+    expect(component.settingsForm.dirty).toBe(false);
+    expect(component.hasPendingChanges()).toBe(true);
+
+    component.saveAll();
+
+    expect(mockStore.updateQuizSettings).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        defaultTimer: 60,
+      }),
+    );
+  });
+
+  it('meldet zentrale Änderungen ohne Angular-dirty-Status an den Locale-Guard', () => {
+    const router = TestBed.inject(Router);
+    Object.defineProperty(router, 'url', {
+      value: `/quiz/${QUIZ_ID}`,
+      configurable: true,
+    });
+    const localeGuard = TestBed.inject(LocaleSwitchGuardService);
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.settingsForm.controls.anonymousMode.setValue(true);
+
+    expect(component.settingsForm.dirty).toBe(false);
+    expect(component.hasPendingChanges()).toBe(true);
+    expect(localeGuard.hasUnsavedChanges()).toBe(true);
+
+    fixture.destroy();
+
+    expect(localeGuard.hasUnsavedChanges()).toBe(false);
+  });
+
+  it('erkennt Metadatenänderungen auch ohne Angular-dirty-Status', () => {
+    mockStore.updateQuizMetadata.mockImplementation((_id, metadata) => {
+      Object.assign(quiz, metadata);
+      return quiz;
+    });
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.metadataForm.controls.name.setValue('Neuer Titel');
+    fixture.detectChanges();
+
+    const saveButton = fixture.nativeElement.querySelector(
+      '.quiz-edit__bottom-actions-save',
+    ) as HTMLButtonElement | null;
+
+    expect(component.metadataForm.dirty).toBe(false);
+    expect(component.hasPendingChanges()).toBe(true);
+    expect(saveButton?.disabled).toBe(false);
+
+    component.saveAll();
+
+    expect(mockStore.updateQuizMetadata).toHaveBeenCalledWith(QUIZ_ID, {
+      name: 'Neuer Titel',
+      description: 'Beschreibung',
+      motifImageUrl: null,
+    });
+    expect(snackBarMock.open.mock.calls[0]?.[0]).toContain('Vorschau');
+    expect(snackBarMock.open.mock.calls[0]?.[0]).toContain('Live-Quiz');
+  });
+
   it('fügt bei gültigen Daten eine Frage hinzu', () => {
     const fixture = TestBed.createComponent(QuizEditComponent);
     const component = fixture.componentInstance;
@@ -172,7 +306,7 @@ describe('QuizEditComponent', () => {
     component.answersArray.at(1).controls.text.setValue('Antwort B');
     component.setSingleCorrect(1);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Was ist korrekt?',
@@ -405,7 +539,7 @@ describe('QuizEditComponent', () => {
     component.form.controls.numericAcceptEquivalentUnits.setValue(true);
     component.answersArray.at(0).controls.text.setValue('2 m');
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -438,7 +572,7 @@ describe('QuizEditComponent', () => {
     component.form.controls.numericMin.setValue(0);
     component.form.controls.numericTwoRounds.setValue(true);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -453,6 +587,36 @@ describe('QuizEditComponent', () => {
         numericTwoRounds: true,
       }),
     );
+  });
+
+  it('deaktiviert Speichern und Verwerfen nach gespeicherter NUMERIC_ESTIMATE-Frage', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('NUMERIC_ESTIMATE');
+    component.onTypeChanged();
+    component.form.controls.text.setValue('Wie viele Menschen leben in der Stadt?');
+    component.form.controls.numericToleranceMode.setValue('RELATIVE_PERCENT');
+    component.form.controls.numericReferenceValue.setValue(100_000);
+    component.form.controls.numericTolerancePercent.setValue(5);
+
+    expect(component.hasPendingChanges()).toBe(true);
+
+    component.saveAll();
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const saveButton = host.querySelector(
+      '.quiz-edit__bottom-actions-save',
+    ) as HTMLButtonElement | null;
+    const discardButton = host.querySelector(
+      'button[aria-label="Verwerfen"]',
+    ) as HTMLButtonElement | null;
+
+    expect(component.hasPendingChanges()).toBe(false);
+    expect(component.form.controls.type.value).toBe('SINGLE_CHOICE');
+    expect(saveButton?.disabled).toBe(true);
+    expect(discardButton?.disabled).toBe(true);
   });
 
   it('bewahrt absolute NUMERIC_ESTIMATE-Referenzwerte beim Speichern', () => {
@@ -470,7 +634,7 @@ describe('QuizEditComponent', () => {
     component.form.controls.numericInputType.setValue('INTEGER');
     component.form.controls.numericDecimalPlaces.setValue(null);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -534,7 +698,7 @@ describe('QuizEditComponent', () => {
     component.onTypeChanged();
     component.form.controls.text.setValue('Was nimmst du heute mit?');
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Was nimmst du heute mit?',
@@ -560,7 +724,7 @@ describe('QuizEditComponent', () => {
     component.addAnswer();
     component.answersArray.at(1).controls.text.setValue('PARIS');
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Welche Stadt ist die Hauptstadt von Frankreich?',
@@ -597,7 +761,7 @@ describe('QuizEditComponent', () => {
     component.form.controls.shortTextNormalizeWhitespace.setValue(false);
     component.answersArray.at(0).controls.text.setValue('Paris');
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -623,7 +787,7 @@ describe('QuizEditComponent', () => {
     component.answersArray.at(1).controls.text.setValue('Nein');
     component.setSingleCorrect(0);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -645,7 +809,7 @@ describe('QuizEditComponent', () => {
     component.answersArray.at(1).controls.text.setValue('Passend');
     component.answersArray.at(0).controls.isCorrect.setValue(true);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Wie war das Tempo?',
@@ -722,7 +886,7 @@ describe('QuizEditComponent', () => {
     component.answersArray.at(1).controls.text.setValue('Neu B');
     component.setSingleCorrect(1);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.updateQuestion).toHaveBeenCalledWith(QUIZ_ID, QUESTION_ID, {
       text: 'Neue Frage',
@@ -736,6 +900,119 @@ describe('QuizEditComponent', () => {
       ],
     });
     expect(component.editingQuestionId()).toBeNull();
+  });
+
+  it('speichert Typwechsel von FREETEXT zu NUMERIC_ESTIMATE im Bearbeitungsmodus', () => {
+    quiz.questions = [
+      {
+        id: QUESTION_ID,
+        text: 'Was ist die Kreiszahl Pi?',
+        type: 'FREETEXT',
+        difficulty: 'MEDIUM',
+        order: 0,
+        enabled: true,
+        timer: null,
+        answers: [],
+        skipReadingPhase: false,
+        ratingMin: null,
+        ratingMax: null,
+        ratingLabelMin: null,
+        ratingLabelMax: null,
+      },
+    ];
+
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.editQuestion(QUESTION_ID);
+    component.form.controls.type.setValue('NUMERIC_ESTIMATE');
+    component.onTypeChanged();
+    component.form.controls.numericToleranceMode.setValue('ABSOLUTE_INTERVAL');
+    component.form.controls.numericReferenceValue.setValue(3.14);
+    component.form.controls.numericIntervalLeft.setValue(3.1);
+    component.form.controls.numericIntervalRight.setValue(3.2);
+
+    component.saveAll();
+
+    expect(mockStore.updateQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      QUESTION_ID,
+      expect.objectContaining({
+        text: 'Was ist die Kreiszahl Pi?',
+        type: 'NUMERIC_ESTIMATE',
+        answers: [],
+        numericToleranceMode: 'ABSOLUTE_INTERVAL',
+        numericReferenceValue: 3.14,
+        numericIntervalLeft: 3.1,
+        numericIntervalRight: 3.2,
+      }),
+    );
+    expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('speichert aktive Typwechsel vor dem Öffnen der Vorschau', () => {
+    quiz.questions = [
+      {
+        id: QUESTION_ID,
+        text: 'Was ist die Kreiszahl Pi?',
+        type: 'FREETEXT',
+        difficulty: 'MEDIUM',
+        order: 0,
+        enabled: true,
+        timer: null,
+        answers: [],
+        skipReadingPhase: false,
+        ratingMin: null,
+        ratingMax: null,
+        ratingLabelMin: null,
+        ratingLabelMax: null,
+      },
+    ];
+
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    component.editQuestion(QUESTION_ID);
+    component.form.controls.type.setValue('NUMERIC_ESTIMATE');
+    component.onTypeChanged();
+    component.form.controls.numericToleranceMode.setValue('ABSOLUTE_INTERVAL');
+    component.form.controls.numericReferenceValue.setValue(3.14);
+    component.form.controls.numericIntervalLeft.setValue(3.1);
+    component.form.controls.numericIntervalRight.setValue(3.2);
+
+    component.openPreview();
+
+    expect(mockStore.updateQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      QUESTION_ID,
+      expect.objectContaining({
+        text: 'Was ist die Kreiszahl Pi?',
+        type: 'NUMERIC_ESTIMATE',
+        answers: [],
+        numericToleranceMode: 'ABSOLUTE_INTERVAL',
+        numericReferenceValue: 3.14,
+        numericIntervalLeft: 3.1,
+        numericIntervalRight: 3.2,
+      }),
+    );
+    expect(navigateSpy).toHaveBeenCalledWith(
+      ['preview'],
+      expect.objectContaining({
+        queryParams: { returnTo: 'edit' },
+      }),
+    );
+    expect(snackBarMock.open).toHaveBeenCalledWith(
+      expect.stringContaining('Vorschau'),
+      '',
+      expect.objectContaining({
+        duration: 6000,
+        verticalPosition: 'top',
+      }),
+    );
+    expect(snackBarMock.open.mock.calls[0]?.[0]).toContain('Live-Quiz');
+    expect(component.hasPendingChanges()).toBe(false);
   });
 
   it('blendet das Panel „Neue Frage“ aus und aktiviert den Bearbeitungsmodus', () => {
@@ -991,7 +1268,7 @@ describe('QuizEditComponent', () => {
     component.answersArray.at(0).controls.isCorrect.setValue(true);
     component.answersArray.at(1).controls.isCorrect.setValue(true);
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).toHaveBeenCalledWith(QUIZ_ID, {
       text: 'Ungültige SC Frage',
@@ -1069,7 +1346,7 @@ describe('QuizEditComponent', () => {
       preset: 'SERIOUS',
     });
 
-    component.saveSettings();
+    component.saveAll();
 
     expect(mockStore.updateQuizSettings).toHaveBeenCalledWith(
       QUIZ_ID,
@@ -1100,7 +1377,7 @@ describe('QuizEditComponent', () => {
       teamNamesText: 'Rot\nRot',
     });
 
-    component.saveSettings();
+    component.saveAll();
 
     expect(component.teamNamesTextControl.hasError('duplicateTeamNames')).toBe(true);
     expect(mockStore.updateQuizSettings).not.toHaveBeenCalled();
@@ -1111,14 +1388,11 @@ describe('QuizEditComponent', () => {
     const component = fixture.componentInstance;
 
     mockStore.updateQuizSettings.mockReturnValue({
-      ...quiz,
-      settings: {
-        ...quiz.settings,
-        teamMode: true,
-        teamCount: 2,
-        teamAssignment: 'AUTO',
-        teamNames: ['🍎 Team', '🚀 Crew'],
-      },
+      ...quiz.settings,
+      teamMode: true,
+      teamCount: 2,
+      teamAssignment: 'AUTO',
+      teamNames: ['🍎 Team', '🚀 Crew'],
     });
 
     component.settingsForm.patchValue({
@@ -1128,7 +1402,7 @@ describe('QuizEditComponent', () => {
       teamNamesText: ':apple: Team\n:rocket: Crew',
     });
 
-    component.saveSettings();
+    component.saveAll();
 
     expect(component.teamNamePreview()).toEqual(['🍎 Team', '🚀 Crew']);
     expect(mockStore.updateQuizSettings).toHaveBeenCalledWith(
@@ -1167,7 +1441,7 @@ describe('QuizEditComponent', () => {
       motifImageUrl: '',
     });
 
-    component.saveMetadata();
+    component.saveAll();
 
     expect(mockStore.updateQuizMetadata).toHaveBeenCalledWith(QUIZ_ID, {
       name: 'Aktualisierter Name',
@@ -1187,7 +1461,7 @@ describe('QuizEditComponent', () => {
     const focusSpy = vi.spyOn(nameInput, 'focus');
 
     component.metadataForm.controls.name.setValue('');
-    component.saveMetadata();
+    component.saveAll();
 
     expect(mockStore.updateQuizMetadata).not.toHaveBeenCalled();
     expect(focusSpy).toHaveBeenCalled();
@@ -1205,7 +1479,7 @@ describe('QuizEditComponent', () => {
     ) as HTMLElement;
     const focusSpy = vi.spyOn(timerSelect, 'focus');
 
-    component.saveSettings();
+    component.saveAll();
 
     expect(mockStore.updateQuizSettings).not.toHaveBeenCalled();
     expect(focusSpy).toHaveBeenCalled();
@@ -1342,9 +1616,9 @@ describe('QuizEditComponent', () => {
 
     const bottomAction = fixture.nativeElement.querySelector('.quiz-edit__bottom-actions');
     const backLink = bottomAction?.querySelector('a[routerLink=".."]') as HTMLAnchorElement | null;
-    const previewLink = bottomAction?.querySelector(
-      'a[routerLink="preview"]',
-    ) as HTMLAnchorElement | null;
+    const previewButton = bottomAction?.querySelector(
+      'button[aria-label="Vorschau öffnen"]',
+    ) as HTMLButtonElement | null;
     const saveButton = bottomAction?.querySelector(
       '.quiz-edit__bottom-actions-save',
     ) as HTMLButtonElement | null;
@@ -1358,17 +1632,19 @@ describe('QuizEditComponent', () => {
       '.quiz-edit__settings-card button[type="submit"]',
     );
     const backLinks = fixture.nativeElement.querySelectorAll('a[routerLink=".."]');
-    const previewLinks = fixture.nativeElement.querySelectorAll('a[routerLink="preview"]');
+    const previewButtons = fixture.nativeElement.querySelectorAll(
+      'button[aria-label="Vorschau öffnen"]',
+    );
 
     expect(bottomAction).not.toBeNull();
     expect(backLink?.textContent).toContain('Zurück');
-    expect(previewLink?.textContent).toContain('Vorschau');
+    expect(previewButton?.textContent).toContain('Vorschau');
     expect(cancelButton?.textContent).toContain('Verwerfen');
     expect(saveButton?.textContent).toContain('Speichern');
     expect(cancelButton?.getAttribute('aria-label')).toBe('Verwerfen');
     expect(saveButton?.getAttribute('aria-label')).toBe('Speichern');
     expect(backLinks).toHaveLength(1);
-    expect(previewLinks).toHaveLength(2);
+    expect(previewButtons).toHaveLength(2);
     expect(metadataSubmit).toBeNull();
     expect(settingsSubmit).toBeNull();
   });
@@ -1438,7 +1714,7 @@ describe('QuizEditComponent', () => {
     ) as HTMLButtonElement;
     const focusSpy = vi.spyOn(selectorButton, 'focus');
 
-    component.addQuestion();
+    component.saveAll();
 
     expect(mockStore.addQuestion).not.toHaveBeenCalled();
     expect(component.submitError()).toBe('Wähle genau eine richtige Antwort aus.');

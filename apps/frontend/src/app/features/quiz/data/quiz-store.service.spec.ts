@@ -1156,6 +1156,42 @@ describe('QuizStoreService', () => {
     expect(service.getQuizById(DEMO_QUIZ_ID)?.name).toBe(getDemoQuizExpectedTitle('de'));
   });
 
+  it('Demo-Quiz: lokale Nutzeränderungen werden beim erneuten Seed-Check nicht überschrieben', () => {
+    const service = TestBed.inject(QuizStoreService);
+    const demo = service.getQuizById(DEMO_QUIZ_ID);
+    const question =
+      demo?.questions.find((entry) => entry.text.includes('\\pi')) ?? demo?.questions[1];
+
+    expect(question).toBeDefined();
+
+    service.updateQuestion(DEMO_QUIZ_ID, question!.id, {
+      text: 'Was ist die Kreiszahl Pi?',
+      type: 'NUMERIC_ESTIMATE',
+      difficulty: question!.difficulty,
+      timer: question!.timer,
+      answers: [],
+      skipReadingPhase: question!.skipReadingPhase ?? false,
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 3.14,
+      numericIntervalLeft: 3.1,
+      numericIntervalRight: 3.2,
+      numericInputType: 'DECIMAL',
+      numericDecimalPlaces: 2,
+      numericTwoRounds: false,
+    });
+
+    expect(service.ensureDemoQuiz()).toBe(false);
+    expect(
+      service.getQuizById(DEMO_QUIZ_ID)?.questions.find((entry) => entry.id === question!.id),
+    ).toEqual(
+      expect.objectContaining({
+        text: 'Was ist die Kreiszahl Pi?',
+        type: 'NUMERIC_ESTIMATE',
+        numericReferenceValue: 3.14,
+      }),
+    );
+  });
+
   it('Demo-Quiz: gespeicherter Fingerprint mit defekter Schätzfrage → Neu-Import', () => {
     const roomId = '00000000-0000-4000-8000-000000000066';
     localStorage.setItem('quiz-sync-room-id', roomId);
@@ -1200,12 +1236,27 @@ describe('QuizStoreService', () => {
 
     const service = TestBed.inject(QuizStoreService);
     const demo = service.getQuizById(DEMO_QUIZ_ID);
-    const estimateQuestion = demo?.questions.find(
-      (question) => question.type === 'NUMERIC_ESTIMATE',
+    const piQuestion = demo?.questions.find((question) => question.text.includes('\\pi'));
+    const revolutionQuestion = demo?.questions.find(
+      (question) =>
+        question.type === 'NUMERIC_ESTIMATE' && question.text.includes('Französische Revolution'),
     );
 
-    expect(demo?.questions).toHaveLength(10);
-    expect(estimateQuestion).toEqual(
+    expect(demo?.questions).toHaveLength(9);
+    expect(piQuestion).toEqual(
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 3.14,
+        numericTolerancePercent: 10,
+        numericInputType: 'DECIMAL',
+        numericDecimalPlaces: 2,
+        numericMin: 1,
+        numericMax: 10,
+        numericTwoRounds: false,
+      }),
+    );
+    expect(revolutionQuestion).toEqual(
       expect.objectContaining({
         numericToleranceMode: 'ABSOLUTE_INTERVAL',
         numericReferenceValue: 1789,
@@ -1220,6 +1271,15 @@ describe('QuizStoreService', () => {
     expect(service.getUploadPayload(DEMO_QUIZ_ID).questions).toContainEqual(
       expect.objectContaining({
         type: 'NUMERIC_ESTIMATE',
+        numericToleranceMode: 'RELATIVE_PERCENT',
+        numericReferenceValue: 3.14,
+        numericTolerancePercent: 10,
+      }),
+    );
+    expect(service.getUploadPayload(DEMO_QUIZ_ID).questions).toContainEqual(
+      expect.objectContaining({
+        type: 'NUMERIC_ESTIMATE',
+        numericReferenceValue: 1789,
         numericIntervalLeft: 1700,
         numericIntervalRight: 1900,
       }),
@@ -1273,17 +1333,16 @@ describe('QuizStoreService', () => {
     const service = TestBed.inject(QuizStoreService);
     const demo = service.getQuizById(DEMO_QUIZ_ID);
 
-    expect(demo?.questions).toHaveLength(10);
+    expect(demo?.questions).toHaveLength(9);
     expect(demo?.questions.map((question) => question.type)).toEqual([
       'SURVEY',
-      'FREETEXT',
+      'NUMERIC_ESTIMATE',
       'SINGLE_CHOICE',
       'MULTIPLE_CHOICE',
       'SINGLE_CHOICE',
       'SINGLE_CHOICE',
       'SHORT_TEXT',
       'NUMERIC_ESTIMATE',
-      'SHORT_TEXT',
       'RATING',
     ]);
   });

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { QuizPreviewComponent } from './quiz-preview.component';
@@ -87,34 +88,49 @@ describe('QuizPreviewComponent', () => {
     ],
   };
 
+  const toUploadPayload = (document: QuizDocument) => ({
+    historyScopeId: document.id,
+    name: document.name,
+    preset: document.settings.preset,
+    questions: [...document.questions]
+      .filter((question) => question.enabled !== false)
+      .sort((left, right) => left.order - right.order)
+      .map((question, index) => ({
+        text: question.text,
+        type: question.type,
+        difficulty: question.difficulty,
+        order: index,
+        timer: question.timer ?? null,
+        answers: question.answers.map((answer) => ({
+          text: answer.text,
+          isCorrect: answer.isCorrect,
+        })),
+        skipReadingPhase: question.skipReadingPhase ?? false,
+        ratingMin: question.ratingMin ?? undefined,
+        ratingMax: question.ratingMax ?? undefined,
+        ratingLabelMin: question.ratingLabelMin ?? undefined,
+        ratingLabelMax: question.ratingLabelMax ?? undefined,
+        numericToleranceMode: question.numericToleranceMode ?? undefined,
+        numericReferenceValue: question.numericReferenceValue ?? undefined,
+        numericTolerancePercent: question.numericTolerancePercent ?? undefined,
+        numericIntervalLeft: question.numericIntervalLeft ?? undefined,
+        numericIntervalRight: question.numericIntervalRight ?? undefined,
+        numericInputType: question.numericInputType ?? undefined,
+        numericDecimalPlaces: question.numericDecimalPlaces ?? undefined,
+        numericMin: question.numericMin ?? undefined,
+        numericMax: question.numericMax ?? undefined,
+        numericTwoRounds: question.numericTwoRounds ?? undefined,
+      })),
+  });
+
   const mockStore = {
     getQuizById: vi.fn((id: string) => (id === QUIZ_ID ? quiz : null)),
-    getUploadPayload: vi.fn(() => ({
-      historyScopeId: quiz.id,
-      name: quiz.name,
-      preset: quiz.settings.preset,
-      questions: [...quiz.questions]
-        .filter((question) => question.enabled !== false)
-        .sort((left, right) => left.order - right.order)
-        .map((question, index) => ({
-          text: question.text,
-          type: question.type,
-          difficulty: question.difficulty,
-          order: index,
-          timer: question.timer ?? null,
-          answers: question.answers.map((answer) => ({
-            text: answer.text,
-            isCorrect: answer.isCorrect,
-          })),
-          skipReadingPhase: question.skipReadingPhase ?? false,
-          ratingMin: question.ratingMin ?? undefined,
-          ratingMax: question.ratingMax ?? undefined,
-          ratingLabelMin: question.ratingLabelMin ?? undefined,
-          ratingLabelMax: question.ratingLabelMax ?? undefined,
-        })),
-    })),
+    getUploadPayload: vi.fn(() => toUploadPayload(quiz)),
     updateQuestion: vi.fn(),
     updateQuizSettings: vi.fn(),
+  };
+  const snackBarMock = {
+    open: vi.fn(),
   };
 
   beforeEach(() => {
@@ -128,6 +144,7 @@ describe('QuizPreviewComponent', () => {
           useValue: mockRoute,
         },
         { provide: QuizStoreService, useValue: mockStore },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     });
     mockRoute.snapshot.queryParamMap = convertToParamMap({});
@@ -527,6 +544,28 @@ describe('QuizPreviewComponent', () => {
 
     expect(component.inlineEditHasChanges()).toBe(true);
     expect(saveButton?.disabled).toBe(false);
+  });
+
+  it('zeigt nach gespeicherten Preview-Aenderungen eine Bestaetigung', () => {
+    const fixture = TestBed.createComponent(QuizPreviewComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.enterInlineEditMode();
+    component.onQuestionDraftChanged('Neue Frage');
+    component.finishInlineEditMode();
+
+    expect(mockStore.updateQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      quiz.questions[0]!.id,
+      expect.objectContaining({ text: 'Neue Frage' }),
+    );
+    expect(snackBarMock.open).toHaveBeenCalledWith(expect.stringContaining('Vorschau'), '', {
+      duration: 6000,
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+    });
+    expect(snackBarMock.open.mock.calls[0]?.[0]).toContain('Live-Quiz');
   });
 
   it('zeigt im Preview-Editor ohne Änderungen einen Schließen-Button in der Actionbar', () => {

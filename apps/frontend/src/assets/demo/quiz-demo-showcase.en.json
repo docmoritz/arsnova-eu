@@ -49,13 +49,21 @@
         ]
       },
       {
-        "text": "### Round $\\pi$ to two decimal places.\n\n> **Teaching move:** Use this as a short STEM prompt that combines formulas, media, and open text input.\n\n![The number pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler:\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß:\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
-        "type": "FREETEXT",
+        "text": "### Round $\\pi$ to two decimal places.\n\n> **Teaching move:** Use this as a short STEM estimate question with a reference value, 10% tolerance, and a plausibility range.\n\n![The number pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler:\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß:\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
+        "type": "NUMERIC_ESTIMATE",
         "timer": null,
         "difficulty": "MEDIUM",
         "order": 1,
         "skipReadingPhase": true,
-        "answers": []
+        "answers": [],
+        "numericToleranceMode": "RELATIVE_PERCENT",
+        "numericReferenceValue": 3.14,
+        "numericTolerancePercent": 10,
+        "numericInputType": "DECIMAL",
+        "numericDecimalPlaces": 2,
+        "numericMin": 1,
+        "numericMax": 10,
+        "numericTwoRounds": false
       },
       {
         "text": "### AI image or real photo?\n\n> **Teaching move:** Use this as a visual warm-up, an attention reset, or a low-stakes discussion starter.\n\n![Rooftop scene](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -199,35 +207,11 @@
         "numericTwoRounds": true
       },
       {
-        "text": "### Pressure-ready numeracy: how long does sound need for 58 cm?\n\n> **Teaching move:** This numeric short answer is intentionally demanding: learners must convert units correctly and report a physically plausible time scale.\n\nAssume the speed of sound in dry air at 20 °C is $$v = 343\\,\\mathrm{m/s}$$.\n\nFind the travel time for $$s = 0.58\\,\\mathrm{m}$$ and answer with unit (for example in ms or s).",
-        "type": "SHORT_TEXT",
-        "timer": null,
-        "difficulty": "HARD",
-        "order": 8,
-        "answers": [
-          {
-            "text": "1.69 ms",
-            "isCorrect": true
-          }
-        ],
-        "shortTextMaxLength": 24,
-        "shortTextCaseSensitive": false,
-        "shortTextEvaluationKind": "numeric_unit",
-        "numericInputKind": "decimal",
-        "numericToleranceMode": "relative",
-        "numericRelativeTolerancePercent": 2,
-        "numericUnitFamily": "time",
-        "numericRequireUnit": true,
-        "numericAcceptEquivalentUnits": true,
-        "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
-      },
-      {
         "text": "### How likely are you to try a live quiz like this in one of your own classes?\n\n> **Teaching move:** Use this as a quick pulse check, exit ticket, or confidence rating.",
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",
-        "order": 9,
+        "order": 8,
         "answers": [],
         "ratingMin": 1,
         "ratingMax": 5,

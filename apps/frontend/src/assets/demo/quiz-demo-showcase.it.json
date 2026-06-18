@@ -49,13 +49,21 @@
         ]
       },
       {
-        "text": "### Arrotonda $\\pi$ a due cifre decimali.\n\n> **Uso didattico:** Usalo come prompt STEM rapido che unisce formule, media e risposta aperta.\n\n![Il numero pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler:\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß:\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
-        "type": "FREETEXT",
+        "text": "### Arrotonda $\\pi$ a due cifre decimali.\n\n> **Uso didattico:** Usalo come breve domanda di stima STEM con valore di riferimento, tolleranza del 10% e intervallo di plausibilità.\n\n![Il numero pi](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\nLeonhard Euler:\n\n$$e^{i \\pi} + 1 = 0$$\n\nKarl Weierstraß:\n\n$$\\pi = \\int_{-\\infty}^{\\infty} \\frac{\\mathrm{d}x}{1 + x^2} = 2 \\cdot \\int_{-1}^{1} \\frac{\\mathrm{d}x}{1 + x^2}$$",
+        "type": "NUMERIC_ESTIMATE",
         "timer": null,
         "difficulty": "MEDIUM",
         "order": 1,
         "skipReadingPhase": true,
-        "answers": []
+        "answers": [],
+        "numericToleranceMode": "RELATIVE_PERCENT",
+        "numericReferenceValue": 3.14,
+        "numericTolerancePercent": 10,
+        "numericInputType": "DECIMAL",
+        "numericDecimalPlaces": 2,
+        "numericMin": 1,
+        "numericMax": 10,
+        "numericTwoRounds": false
       },
       {
         "text": "### Immagine generata dall’IA o foto reale?\n\n> **Uso didattico:** Usalo come avvio visivo, reset dell’attenzione o spunto di discussione a bassa soglia.\n\n![Scena sul tetto](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -199,35 +207,11 @@
         "numericTwoRounds": true
       },
       {
-        "text": "### Calcolo avanzato: quanto tempo impiega il suono a percorrere 58 cm?\n\n> **Uso didattico:** Questa risposta breve numerica è volutamente impegnativa: richiede conversioni corrette delle unità e un ordine di grandezza fisicamente coerente.\n\nAssumi per aria secca a 20 °C una velocità del suono pari a $$v = 343\\,\\mathrm{m/s}$$.\n\nDetermina il tempo di percorrenza per $$s = 0{,}58\\,\\mathrm{m}$$ e rispondi con unità (ad esempio in ms o in s).",
-        "type": "SHORT_TEXT",
-        "timer": null,
-        "difficulty": "HARD",
-        "order": 8,
-        "answers": [
-          {
-            "text": "1,69 ms",
-            "isCorrect": true
-          }
-        ],
-        "shortTextMaxLength": 24,
-        "shortTextCaseSensitive": false,
-        "shortTextEvaluationKind": "numeric_unit",
-        "numericInputKind": "decimal",
-        "numericToleranceMode": "relative",
-        "numericRelativeTolerancePercent": 2,
-        "numericUnitFamily": "time",
-        "numericRequireUnit": true,
-        "numericAcceptEquivalentUnits": true,
-        "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
-      },
-      {
         "text": "### Quanto è probabile che tu provi presto un quiz live come questo in una tua lezione?\n\n> **Uso didattico:** Usalo come rapido polso della situazione, exit ticket o autovalutazione di fiducia.",
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",
-        "order": 9,
+        "order": 8,
         "answers": [],
         "ratingMin": 1,
         "ratingMax": 5,

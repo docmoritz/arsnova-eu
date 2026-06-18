@@ -712,6 +712,7 @@ export const DEMO_QUIZ_ID = 'de500000-0000-4000-a000-000000000001';
  * Quiz-Datensatz von der URL-Sprache oder dem aktuellen Demo-Inhalt abweicht.
  */
 const DEMO_QUIZ_SEED_FINGERPRINT_KEY = 'arsnova-demo-quiz-seed-fp-v1';
+const DEMO_QUIZ_USER_MODIFIED_KEY_PREFIX = 'arsnova-demo-quiz-user-modified-v1';
 
 function demoQuizMatchesSeedPayload(document: QuizDocument, payload: unknown): boolean {
   const payloadQuestions =
@@ -720,75 +721,84 @@ function demoQuizMatchesSeedPayload(document: QuizDocument, payload: unknown): b
       : undefined;
   if (!Array.isArray(payloadQuestions)) return false;
 
+  const numericEstimateMatches = (
+    actual: QuizDocument['questions'][number],
+    expected: Record<string, unknown>,
+  ): boolean => {
+    const expectedMode = resolveNumericEstimateToleranceMode(
+      readStringOrNull(expected['numericToleranceMode']),
+    );
+    if (actual.numericToleranceMode !== expectedMode) return false;
+
+    const expectedReference = readNumberOrNull(expected['numericReferenceValue']);
+    if (expectedReference === null || expectedReference === undefined) return false;
+    if (actual.numericReferenceValue !== expectedReference) return false;
+
+    if (expectedMode === 'ABSOLUTE_INTERVAL') {
+      const expectedLeft = readNumberOrNull(expected['numericIntervalLeft']);
+      const expectedRight = readNumberOrNull(expected['numericIntervalRight']);
+      if (expectedLeft === null || expectedLeft === undefined) return false;
+      if (expectedRight === null || expectedRight === undefined) return false;
+      if (actual.numericIntervalLeft !== expectedLeft) return false;
+      if (actual.numericIntervalRight !== expectedRight) return false;
+    } else {
+      const expectedPercent = readNumberOrNull(expected['numericTolerancePercent']);
+      if (expectedPercent === null || expectedPercent === undefined) return false;
+      if (actual.numericTolerancePercent !== expectedPercent) return false;
+    }
+
+    const expectedInputType = readStringOrNull(expected['numericInputType']);
+    if (expectedInputType !== null && expectedInputType !== undefined) {
+      if (actual.numericInputType !== expectedInputType) return false;
+    }
+
+    const expectedDecimalPlaces = readNumberOrNull(expected['numericDecimalPlaces']);
+    if (
+      expectedDecimalPlaces !== null &&
+      expectedDecimalPlaces !== undefined &&
+      actual.numericDecimalPlaces !== expectedDecimalPlaces
+    ) {
+      return false;
+    }
+
+    const expectedMin = readNumberOrNull(expected['numericMin']);
+    if (expectedMin !== null && expectedMin !== undefined && actual.numericMin !== expectedMin) {
+      return false;
+    }
+
+    const expectedMax = readNumberOrNull(expected['numericMax']);
+    if (expectedMax !== null && expectedMax !== undefined && actual.numericMax !== expectedMax) {
+      return false;
+    }
+
+    const expectedTwoRounds = readBoolean(expected['numericTwoRounds']);
+    if (expectedTwoRounds !== undefined && actual.numericTwoRounds !== expectedTwoRounds) {
+      return false;
+    }
+
+    return true;
+  };
+
   if (document.questions.length !== payloadQuestions.length) return false;
   for (let index = 0; index < payloadQuestions.length; index += 1) {
     const expectedQuestion = payloadQuestions[index];
     const actualQuestion = document.questions[index];
+    if (!expectedQuestion || typeof expectedQuestion !== 'object' || !actualQuestion) {
+      return false;
+    }
+
+    const expectedQuestionRecord = expectedQuestion as Record<string, unknown>;
+    const expectedType = expectedQuestionRecord['type'];
+    if (actualQuestion.type !== expectedType || actualQuestion.order !== index) {
+      return false;
+    }
+
     if (
-      !expectedQuestion ||
-      typeof expectedQuestion !== 'object' ||
-      !actualQuestion ||
-      actualQuestion.type !== (expectedQuestion as { type?: unknown }).type ||
-      actualQuestion.order !== index
+      expectedType === 'NUMERIC_ESTIMATE' &&
+      !numericEstimateMatches(actualQuestion, expectedQuestionRecord)
     ) {
       return false;
     }
-  }
-
-  const expected = payloadQuestions.find(
-    (question): question is Record<string, unknown> =>
-      !!question &&
-      typeof question === 'object' &&
-      (question as { type?: unknown }).type === 'NUMERIC_ESTIMATE',
-  );
-
-  if (!expected) {
-    return !document.questions.some((question) => question.type === 'NUMERIC_ESTIMATE');
-  }
-
-  const actual = document.questions.find((question) => question.type === 'NUMERIC_ESTIMATE');
-  if (!actual) return false;
-
-  const expectedMode = resolveNumericEstimateToleranceMode(
-    readStringOrNull(expected['numericToleranceMode']),
-  );
-  if (actual.numericToleranceMode !== expectedMode) return false;
-
-  const expectedReference = readNumberOrNull(expected['numericReferenceValue']);
-  if (expectedReference === null || expectedReference === undefined) return false;
-  if (actual.numericReferenceValue !== expectedReference) return false;
-
-  if (expectedMode === 'ABSOLUTE_INTERVAL') {
-    const expectedLeft = readNumberOrNull(expected['numericIntervalLeft']);
-    const expectedRight = readNumberOrNull(expected['numericIntervalRight']);
-    if (expectedLeft === null || expectedLeft === undefined) return false;
-    if (expectedRight === null || expectedRight === undefined) return false;
-    if (actual.numericIntervalLeft !== expectedLeft) return false;
-    if (actual.numericIntervalRight !== expectedRight) return false;
-  } else {
-    const expectedPercent = readNumberOrNull(expected['numericTolerancePercent']);
-    if (expectedPercent === null || expectedPercent === undefined) return false;
-    if (actual.numericTolerancePercent !== expectedPercent) return false;
-  }
-
-  const expectedInputType = readStringOrNull(expected['numericInputType']);
-  if (expectedInputType !== null && expectedInputType !== undefined) {
-    if (actual.numericInputType !== expectedInputType) return false;
-  }
-
-  const expectedMin = readNumberOrNull(expected['numericMin']);
-  if (expectedMin !== null && expectedMin !== undefined && actual.numericMin !== expectedMin) {
-    return false;
-  }
-
-  const expectedMax = readNumberOrNull(expected['numericMax']);
-  if (expectedMax !== null && expectedMax !== undefined && actual.numericMax !== expectedMax) {
-    return false;
-  }
-
-  const expectedTwoRounds = readBoolean(expected['numericTwoRounds']);
-  if (expectedTwoRounds !== undefined && actual.numericTwoRounds !== expectedTwoRounds) {
-    return false;
   }
 
   return true;
@@ -952,6 +962,7 @@ export class QuizStoreService implements OnDestroy {
     if (!document) {
       throw new Error('Quiz nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const updatedAt = new Date().toISOString();
     const updated: QuizDocument = {
@@ -975,6 +986,7 @@ export class QuizStoreService implements OnDestroy {
     if (!document) {
       throw new Error('Quiz nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const nextSettings = parseQuizSettings({
       ...document.settings,
@@ -1489,6 +1501,7 @@ export class QuizStoreService implements OnDestroy {
     if (!document) {
       throw new Error('Quiz nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const question: QuizQuestion = {
       id: generateUuid(),
@@ -1555,6 +1568,7 @@ export class QuizStoreService implements OnDestroy {
     if (questionIndex < 0) {
       throw new Error('Frage nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const existingQuestion = document.questions[questionIndex]!;
     const updatedQuestion: QuizQuestion = {
@@ -1609,6 +1623,7 @@ export class QuizStoreService implements OnDestroy {
       throw new Error('Quiz nicht gefunden.');
     }
     if (previousIndex === currentIndex) return;
+    this.markDemoQuizUserModified(quizId);
 
     const updatedAt = new Date().toISOString();
     this.quizDocuments.update((current) =>
@@ -1638,6 +1653,7 @@ export class QuizStoreService implements OnDestroy {
     if (!hasQuestion) {
       throw new Error('Frage nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const updatedAt = new Date().toISOString();
     this.quizDocuments.update((current) =>
@@ -1662,6 +1678,7 @@ export class QuizStoreService implements OnDestroy {
     if (questionIndex < 0) {
       throw new Error('Frage nicht gefunden.');
     }
+    this.markDemoQuizUserModified(quizId);
 
     const updatedAt = new Date().toISOString();
     this.quizDocuments.update((current) =>
@@ -1698,6 +1715,7 @@ export class QuizStoreService implements OnDestroy {
         this.quizDocuments.update((current) => current.filter((q) => q.id !== DEMO_QUIZ_ID));
         this.importQuiz(payload, DEMO_QUIZ_ID);
         this.writeDemoQuizSeedFingerprint(expectedFp);
+        this.clearDemoQuizUserModified();
         return true;
       } catch (e) {
         console.error('[DemoQuiz] Reseed failed:', e);
@@ -1709,11 +1727,16 @@ export class QuizStoreService implements OnDestroy {
       try {
         this.importQuiz(payload, DEMO_QUIZ_ID);
         this.writeDemoQuizSeedFingerprint(expectedFp);
+        this.clearDemoQuizUserModified();
         return true;
       } catch (e) {
         console.error('[DemoQuiz] Seeding failed:', e);
         return false;
       }
+    }
+
+    if (this.isDemoQuizUserModified()) {
+      return false;
     }
 
     const titleLocale = detectCanonicalDemoLocaleForTitle(existing.name);
@@ -1772,6 +1795,40 @@ export class QuizStoreService implements OnDestroy {
       localStorage.setItem(DEMO_QUIZ_SEED_FINGERPRINT_KEY, fingerprint);
       localStorage.removeItem('arsnova-demo-quiz-locale-v1');
       localStorage.removeItem('arsnova-demo-quiz-locale-v2');
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private demoQuizUserModifiedStorageKey(): string {
+    const roomId = this.syncRoomId();
+    return roomId
+      ? `${DEMO_QUIZ_USER_MODIFIED_KEY_PREFIX}:${roomId}`
+      : DEMO_QUIZ_USER_MODIFIED_KEY_PREFIX;
+  }
+
+  private isDemoQuizUserModified(): boolean {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    try {
+      return localStorage.getItem(this.demoQuizUserModifiedStorageKey()) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private markDemoQuizUserModified(quizId: string): void {
+    if (quizId !== DEMO_QUIZ_ID || !isPlatformBrowser(this.platformId)) return;
+    try {
+      localStorage.setItem(this.demoQuizUserModifiedStorageKey(), '1');
+    } catch {
+      /* ignore */
+    }
+  }
+
+  private clearDemoQuizUserModified(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      localStorage.removeItem(this.demoQuizUserModifiedStorageKey());
     } catch {
       /* ignore */
     }

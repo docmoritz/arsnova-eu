@@ -41,6 +41,7 @@ import { MatInput } from '@angular/material/input';
 import { MatOption } from '@angular/material/core';
 import { MatSelect } from '@angular/material/select';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   DEFAULT_BONUS_TOKEN_COUNT,
   DEFAULT_TEAM_COUNT,
@@ -270,6 +271,12 @@ type QuizMetadataFormGroup = FormGroup<{
   motifImageUrl: FormControl<string>;
 }>;
 
+type QuizMetadataComparable = {
+  name: string;
+  description: string | null;
+  motifImageUrl: string | null;
+};
+
 /**
  * Quiz bearbeiten (Epic 1). Child: preview → /quiz/:id/preview.
  * Story 1.2a–1.2c, 1.3, 1.4, 1.7, 1.10, 1.11, 1.12, 1.6a.
@@ -318,6 +325,7 @@ export class QuizEditComponent implements OnDestroy {
   private readonly quizStore = inject(QuizStoreService);
   private readonly localeGuard = inject(LocaleSwitchGuardService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly localeId = inject(LOCALE_ID);
 
   readonly id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -635,9 +643,7 @@ export class QuizEditComponent implements OnDestroy {
       });
     }
     this.scheduleLivePreview();
-    this.localeGuard.register(
-      () => this.metadataForm.dirty || this.settingsForm.dirty || this.hasUnsavedQuestionChanges(),
-    );
+    this.localeGuard.register(() => this.hasPendingChanges());
   }
 
   ngOnDestroy(): void {
@@ -713,7 +719,11 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   hasPendingChanges(): boolean {
-    return this.metadataForm.dirty || this.settingsForm.dirty || this.hasUnsavedQuestionChanges();
+    return (
+      this.hasUnsavedMetadataChanges() ||
+      this.hasUnsavedSettingsChanges() ||
+      this.hasUnsavedQuestionChanges()
+    );
   }
 
   onMetadataDescriptionChange(value: string): void {
@@ -1847,36 +1857,30 @@ export class QuizEditComponent implements OnDestroy {
     return null;
   }
 
-  addQuestion(): void {
-    if (!this.validateQuestionForm()) {
-      return;
-    }
-
-    this.commitQuestion();
-  }
-
-  saveAll(): void {
+  saveAll(): boolean {
     this.metadataSaved.set(false);
     this.settingsSaved.set(false);
 
-    const shouldSaveMetadata = this.metadataForm.dirty;
-    const shouldSaveSettings = this.settingsForm.dirty;
+    const shouldSaveMetadata = this.hasUnsavedMetadataChanges();
+    const shouldSaveSettings = this.hasUnsavedSettingsChanges();
     const shouldSaveQuestion = this.hasUnsavedQuestionChanges();
+    const shouldShowSaveConfirmation =
+      shouldSaveMetadata || shouldSaveSettings || shouldSaveQuestion;
 
     if (!shouldSaveMetadata && !shouldSaveSettings && !shouldSaveQuestion) {
-      return;
+      return true;
     }
 
     if (shouldSaveMetadata && !this.validateMetadataForm()) {
-      return;
+      return false;
     }
 
     if (shouldSaveSettings && !this.validateSettingsForm()) {
-      return;
+      return false;
     }
 
     if (this.hasActiveQuestionFormChanges() && !this.validateQuestionForm()) {
-      return;
+      return false;
     }
 
     if (this.isEditing()) {
@@ -1888,63 +1892,42 @@ export class QuizEditComponent implements OnDestroy {
       if (invalidQuestionId) {
         this.editQuestion(invalidQuestionId);
         this.validateQuestionForm();
-        return;
+        return false;
       }
     }
 
+    let saved = true;
+
     if (shouldSaveMetadata) {
-      this.commitMetadata();
+      saved = this.commitMetadata() && saved;
     }
 
     if (shouldSaveSettings) {
-      this.commitSettings();
+      saved = this.commitSettings() && saved;
     }
 
     if (shouldSaveQuestion) {
-      this.commitAllQuestionChanges();
+      saved = this.commitAllQuestionChanges() && saved;
     }
+
+    const savedAll = saved && !this.hasPendingChanges();
+    if (savedAll && shouldShowSaveConfirmation) {
+      this.showSaveConfirmation();
+    }
+    return savedAll;
   }
 
-  saveSettings(): void {
-    this.settingsSaved.set(false);
-    if (!this.validateSettingsForm()) {
+  openPreview(): void {
+    if (!this.saveAll()) {
       return;
     }
-
-    this.commitSettings();
+    void this.router.navigate(['preview'], {
+      relativeTo: this.route,
+      queryParams: { returnTo: 'edit' },
+    });
   }
 
-  saveMetadata(): void {
-    this.metadataSaved.set(false);
-    if (!this.validateMetadataForm()) {
-      return;
-    }
-
-    this.commitMetadata();
-  }
-
-  private commitQuestion(): void {
-    const questionInput = this.buildQuestionInputFromForm();
-
-    try {
-      const editingQuestionId = this.editingQuestionId();
-      if (editingQuestionId) {
-        this.quizStore.updateQuestion(this.id, editingQuestionId, questionInput);
-        this.editingQuestionId.set(null);
-      } else {
-        this.quizStore.addQuestion(this.id, questionInput);
-        this.showQuestionAddedFeedback();
-      }
-      this.resetQuestionForm();
-      this.submitted.set(false);
-      this.scheduleLivePreview();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : $localize`Speichern fehlgeschlagen.`;
-      this.submitError.set(message);
-    }
-  }
-
-  private commitAllQuestionChanges(): void {
+  private commitAllQuestionChanges(): boolean {
     try {
       for (const [questionId, questionInput] of this.sortedStoredQuestionDraftEntries()) {
         this.quizStore.updateQuestion(this.id, questionId, questionInput);
@@ -1957,45 +1940,45 @@ export class QuizEditComponent implements OnDestroy {
 
       this.questionDrafts.set({});
       this.editingQuestionId.set(null);
-      this.resetQuestionForm();
+      this.resetQuestionForm('SINGLE_CHOICE');
       this.submitted.set(false);
       this.submitError.set(null);
       this.scheduleLivePreview();
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : $localize`Speichern fehlgeschlagen.`;
       this.submitError.set(message);
+      return false;
     }
   }
 
-  private commitSettings(): void {
+  private commitSettings(): boolean {
     try {
       const updated = this.quizStore.updateQuizSettings(this.id, this.readSettingsFromForm());
       this.patchSettingsForm(updated);
       this.settingsSaved.set(true);
+      return true;
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : $localize`Einstellungen konnten nicht gespeichert werden.`;
       this.settingsSubmitError.set(message);
+      return false;
     }
   }
 
-  private commitMetadata(): void {
+  private commitMetadata(): boolean {
     try {
-      const updated = this.quizStore.updateQuizMetadata(this.id, {
-        name: this.metadataForm.controls.name.value,
-        description: this.metadataForm.controls.description.value,
-        motifImageUrl: this.metadataForm.controls.motifImageUrl.value.trim()
-          ? this.metadataForm.controls.motifImageUrl.value.trim()
-          : null,
-      });
+      const updated = this.quizStore.updateQuizMetadata(this.id, this.readMetadataFromForm());
       this.patchMetadataForm(updated.name, updated.description, updated.motifImageUrl);
       this.metadataSaved.set(true);
+      return true;
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Titel konnte nicht gespeichert werden.';
       this.metadataSubmitError.set(message);
+      return false;
     }
   }
 
@@ -2083,6 +2066,18 @@ export class QuizEditComponent implements OnDestroy {
         error instanceof Error ? error.message : $localize`Frage konnte nicht aktualisiert werden.`;
       this.submitError.set(message);
     }
+  }
+
+  private showSaveConfirmation(): void {
+    this.snackBar.open(
+      $localize`:@@quizEdit.saveConfirmation:Gespeichert. Deine Änderungen sind jetzt in der Vorschau und im Live-Quiz übernommen.`,
+      '',
+      {
+        duration: 6000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+      },
+    );
   }
 
   deleteQuestion(questionId: string): void {
@@ -2216,6 +2211,71 @@ export class QuizEditComponent implements OnDestroy {
         : null,
       readingPhaseEnabled: this.settingsForm.controls.readingPhaseEnabled.value,
       preset: this.settingsForm.controls.preset.value,
+    };
+  }
+
+  private hasUnsavedMetadataChanges(): boolean {
+    const quiz = this.quiz();
+    if (!quiz) {
+      return this.metadataForm.dirty;
+    }
+
+    return (
+      JSON.stringify(this.readMetadataFromForm()) !==
+      JSON.stringify({
+        name: quiz.name.trim(),
+        description: normalizeNullableText(quiz.description),
+        motifImageUrl: normalizeNullableText(quiz.motifImageUrl),
+      } satisfies QuizMetadataComparable)
+    );
+  }
+
+  private hasUnsavedSettingsChanges(): boolean {
+    const quiz = this.quiz();
+    if (!quiz) {
+      return this.settingsForm.dirty;
+    }
+
+    return (
+      JSON.stringify(this.toComparableSettings(this.readSettingsFromForm())) !==
+      JSON.stringify(this.toComparableSettings(quiz.settings))
+    );
+  }
+
+  private readMetadataFromForm(): QuizMetadataComparable {
+    return {
+      name: this.metadataForm.controls.name.value.trim(),
+      description: normalizeNullableText(this.metadataForm.controls.description.value),
+      motifImageUrl: normalizeNullableText(this.metadataForm.controls.motifImageUrl.value),
+    };
+  }
+
+  private toComparableSettings(settings: QuizSettings): QuizSettings {
+    return {
+      showLeaderboard: settings.showLeaderboard,
+      allowCustomNicknames: settings.allowCustomNicknames,
+      defaultTimer: settings.defaultTimer ?? null,
+      timerScaleByDifficulty: settings.timerScaleByDifficulty ?? true,
+      enableSoundEffects: settings.enableSoundEffects,
+      enableRewardEffects: settings.enableRewardEffects,
+      enableMotivationMessages: settings.enableMotivationMessages,
+      enableEmojiReactions: settings.enableEmojiReactions,
+      showQuestionTypeIndicators: settings.showQuestionTypeIndicators,
+      anonymousMode: settings.anonymousMode,
+      teamMode: settings.teamMode,
+      teamCount: settings.teamMode ? (settings.teamCount ?? DEFAULT_TEAM_COUNT) : null,
+      teamAssignment: settings.teamAssignment,
+      teamNames: normalizeTeamNamesForCompare(settings.teamNames),
+      backgroundMusic: null,
+      nicknameTheme: settings.nicknameTheme ?? 'HIGH_SCHOOL',
+      bonusTokenCount:
+        settings.bonusTokenCount !== null &&
+        settings.bonusTokenCount !== undefined &&
+        settings.bonusTokenCount > 0
+          ? settings.bonusTokenCount
+          : null,
+      readingPhaseEnabled: settings.readingPhaseEnabled ?? true,
+      preset: settings.preset ?? 'PLAYFUL',
     };
   }
 
@@ -3035,6 +3095,15 @@ function parseTeamNamesText(value: string): string[] {
     .split('\n')
     .map((entry) => replaceEmojiShortcodes(entry.trim()))
     .filter((entry) => entry.length > 0);
+}
+
+function normalizeNullableText(value: string | null | undefined): string | null {
+  const trimmed = (value ?? '').trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeTeamNamesForCompare(value: readonly string[] | null | undefined): string[] {
+  return parseTeamNamesText((value ?? []).join('\n'));
 }
 
 function buildEffectiveTeamNames(value: string, teamCount: number | null | undefined): string[] {

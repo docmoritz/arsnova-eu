@@ -16,6 +16,7 @@
 - `mem:core`
 - `mem:frontend/routing-components`
 - `mem:frontend/i18n-ui`
+- `mem:frontend/quiz-editor-save-flow`
 - `mem:modules/shared-types`
 - `mem:security/dto-stripping`
 - `mem:testing/core`
