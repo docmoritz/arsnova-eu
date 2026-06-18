@@ -191,11 +191,11 @@ describe('Quiz example imports (all formats)', () => {
       timer: 60,
       numericToleranceMode: 'ABSOLUTE_INTERVAL',
       numericReferenceValue: 420,
-      numericIntervalLeft: 419.5,
-      numericIntervalRight: 420.5,
+      numericIntervalLeft: 0,
+      numericIntervalRight: 1000,
       numericInputType: 'INTEGER',
-      numericMin: 0,
-      numericMax: 1000,
+      numericMin: null,
+      numericMax: null,
       numericTwoRounds: false,
     });
   });

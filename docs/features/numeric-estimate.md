@@ -212,10 +212,10 @@ Teilnehmende mit nur einer Abgabe bleiben in den jeweiligen Rundenstatistiken en
 
 `RangedQuestion` aus arsnova.click wird bestmöglich auf `NUMERIC_ESTIMATE` gemappt:
 
-- `rangeMin` / `rangeMax` -> Plausibilitätsband `numericMin` / `numericMax`
 - `correctValue` -> `numericReferenceValue`
 - Dezimalstellen aus Grenzen und Referenzwert -> `numericInputType` / `numericDecimalPlaces`
-- fehlende Click-Toleranz -> exaktes absolutes Intervall um den Referenzwert
+- `rangeMin` / `rangeMax` -> absolutes Toleranzband `numericIntervalLeft` / `numericIntervalRight`
+- kein separates Plausibilitätsband, weil arsnova.click dafür keine eigenen Grenzen exportiert
 - vertauschte Grenzen werden korrigiert und als Warnung gemeldet
 
 ## Verifikation

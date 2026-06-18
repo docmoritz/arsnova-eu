@@ -18,16 +18,16 @@ wie `arsnova.eu` es derzeit importiert.
 
 ## Aktuelles Mapping nach arsnova.eu
 
-| arsnova.click                   | arsnova.eu         | Status     | Bemerkung                                                                                               |
-| ------------------------------- | ------------------ | ---------- | ------------------------------------------------------------------------------------------------------- |
-| `SingleChoiceQuestion`          | `SINGLE_CHOICE`    | importiert | direktes Mapping                                                                                        |
-| `YesNoSingleChoiceQuestion`     | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                                           |
-| `TrueFalseSingleChoiceQuestion` | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                                           |
-| `MultipleChoiceQuestion`        | `MULTIPLE_CHOICE`  | importiert | direktes Mapping                                                                                        |
-| `SurveyQuestion`                | `SURVEY`           | importiert | alle Antworten werden als nicht-korrekt normalisiert                                                    |
-| `ABCDSurveyQuestion`            | `SURVEY`           | importiert | Spezialtyp geht verloren                                                                                |
-| `FreeTextQuestion`              | `SHORT_TEXT`       | importiert | Musterloesungen, Gross-/Kleinschreibung und Trim werden best effort uebernommen                         |
-| `RangedQuestion`                | `NUMERIC_ESTIMATE` | importiert | `rangeMin/rangeMax` als erlaubter Eingabebereich, `correctValue` als Referenzwert mit exakter Bewertung |
+| arsnova.click                   | arsnova.eu         | Status     | Bemerkung                                                                       |
+| ------------------------------- | ------------------ | ---------- | ------------------------------------------------------------------------------- |
+| `SingleChoiceQuestion`          | `SINGLE_CHOICE`    | importiert | direktes Mapping                                                                |
+| `YesNoSingleChoiceQuestion`     | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                   |
+| `TrueFalseSingleChoiceQuestion` | `SINGLE_CHOICE`    | importiert | Spezialisierung geht verloren                                                   |
+| `MultipleChoiceQuestion`        | `MULTIPLE_CHOICE`  | importiert | direktes Mapping                                                                |
+| `SurveyQuestion`                | `SURVEY`           | importiert | alle Antworten werden als nicht-korrekt normalisiert                            |
+| `ABCDSurveyQuestion`            | `SURVEY`           | importiert | Spezialtyp geht verloren                                                        |
+| `FreeTextQuestion`              | `SHORT_TEXT`       | importiert | Musterloesungen, Gross-/Kleinschreibung und Trim werden best effort uebernommen |
+| `RangedQuestion`                | `NUMERIC_ESTIMATE` | importiert | `rangeMin/rangeMax` als absolutes Toleranzband, `correctValue` als Referenzwert |
 
 ## Aktuell uebernommene Session-Felder
 
@@ -63,7 +63,7 @@ wie `arsnova.eu` es derzeit importiert.
 - `questionList[].requiredForToken`
 - `FreeTextAnswerOption.configUseKeywords` (bewusst nicht als arsnova.eu-Schluesselwortbewertung uebernommen)
 - `FreeTextAnswerOption.configUsePunctuation`
-- `RangedQuestion`-spezifische Toleranzvorgaben, da der Click-Snapshot nur Bereich und Referenzwert exportiert
+- `RangedQuestion`-spezifische Plausibilitätsgrenzen, da `rangeMin/rangeMax` als Toleranzband importiert werden
 
 ## Offene Folgearbeiten fuer spaetere Angleichung
 

@@ -662,11 +662,11 @@ describe('QuizStoreService', () => {
       answers: [],
       numericToleranceMode: 'ABSOLUTE_INTERVAL',
       numericReferenceValue: 420,
-      numericIntervalLeft: 419.5,
-      numericIntervalRight: 420.5,
+      numericIntervalLeft: 0,
+      numericIntervalRight: 1000,
       numericInputType: 'INTEGER',
-      numericMin: 0,
-      numericMax: 1000,
+      numericMin: null,
+      numericMax: null,
       numericTwoRounds: false,
     });
     expect(imported.warnings.some((warning) => warning.kind === 'mapped_question')).toBe(true);
@@ -747,7 +747,7 @@ describe('QuizStoreService', () => {
     ).toBe(true);
   });
 
-  it('importiert arsnova.click-Schaetzfragen mit Dezimalwerten und korrigierten Grenzen', () => {
+  it('importiert arsnova.click-Schaetzfragen mit Dezimalwerten und Toleranzband-Grenzen', () => {
     const service = TestBed.inject(QuizStoreService);
 
     const imported = service.importQuiz({
@@ -767,12 +767,12 @@ describe('QuizStoreService', () => {
       type: 'NUMERIC_ESTIMATE',
       numericToleranceMode: 'ABSOLUTE_INTERVAL',
       numericReferenceValue: 3.14,
-      numericIntervalLeft: 3.135,
-      numericIntervalRight: 3.145,
+      numericIntervalLeft: 2.5,
+      numericIntervalRight: 4.5,
       numericInputType: 'DECIMAL',
       numericDecimalPlaces: 2,
-      numericMin: 2.5,
-      numericMax: 4.5,
+      numericMin: null,
+      numericMax: null,
       numericTwoRounds: false,
     });
     expect(
@@ -780,6 +780,43 @@ describe('QuizStoreService', () => {
         (warning) =>
           warning.questionNumber === 1 &&
           warning.message === 'Vertauschte Bereichsgrenzen der Schätzfrage wurden korrigiert.',
+      ),
+    ).toBe(true);
+  });
+
+  it('uebernimmt arsnova.click-RangedQuestion-Grenzen als akzeptierten Bereich', () => {
+    const service = TestBed.inject(QuizStoreService);
+
+    const imported = service.importQuiz({
+      name: 'Click Range als Band',
+      questionList: [
+        {
+          TYPE: 'RangedQuestion',
+          questionText: 'Wie viele Minuten dauert die Aktivität?',
+          rangeMin: 20,
+          rangeMax: 40,
+          correctValue: 30,
+        },
+      ],
+    });
+
+    expect(imported.quiz.questions[0]).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      numericToleranceMode: 'ABSOLUTE_INTERVAL',
+      numericReferenceValue: 30,
+      numericIntervalLeft: 20,
+      numericIntervalRight: 40,
+      numericInputType: 'INTEGER',
+      numericMin: null,
+      numericMax: null,
+      numericTwoRounds: false,
+    });
+    expect(
+      imported.warnings.some(
+        (warning) =>
+          warning.questionNumber === 1 &&
+          warning.detail ===
+            'rangeMin/rangeMax wurden als absolutes Toleranzband übernommen; correctValue wurde als Referenzwert übernommen.',
       ),
     ).toBe(true);
   });
@@ -848,8 +885,8 @@ describe('QuizStoreService', () => {
       text: 'Gueltige Schaetzfrage',
       type: 'NUMERIC_ESTIMATE',
       numericReferenceValue: 7,
-      numericMin: 0,
-      numericMax: 10,
+      numericIntervalLeft: 0,
+      numericIntervalRight: 10,
     });
     expect(imported.warnings).toEqual(
       expect.arrayContaining([

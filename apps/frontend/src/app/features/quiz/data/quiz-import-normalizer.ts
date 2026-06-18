@@ -583,8 +583,8 @@ function mapRangedQuestion(params: {
     throw new Error('Schätzfragen benötigen unterschiedliche Bereichsgrenzen.');
   }
 
-  let numericMin = Math.min(rangeMin, rangeMax);
-  let numericMax = Math.max(rangeMin, rangeMax);
+  const numericIntervalLeft = Math.min(rangeMin, rangeMax);
+  const numericIntervalRight = Math.max(rangeMin, rangeMax);
   if (rangeMin > rangeMax) {
     warnings.push({
       kind: 'simplified_question',
@@ -595,19 +595,16 @@ function mapRangedQuestion(params: {
     });
   }
 
-  if (correctValue < numericMin || correctValue > numericMax) {
-    numericMin = Math.min(numericMin, correctValue);
-    numericMax = Math.max(numericMax, correctValue);
+  if (correctValue < numericIntervalLeft || correctValue > numericIntervalRight) {
     warnings.push({
       kind: 'simplified_question',
       questionNumber,
       questionText,
       message:
-        'Der Referenzwert lag außerhalb des Click-Bereichs; der Eingabebereich wurde erweitert.',
+        'Der Referenzwert liegt außerhalb des Click-Toleranzbands; bitte prüfe die importierte Schätzfrage.',
     });
   }
 
-  const exactTolerance = buildExactNumericTolerance(correctValue, decimalPlaces);
   const numericInputType = decimalPlaces === 0 ? 'INTEGER' : 'DECIMAL';
   warnings.push({
     kind: 'mapped_question',
@@ -615,7 +612,7 @@ function mapRangedQuestion(params: {
     questionText,
     message: 'Wurde als numerische Schätzfrage importiert.',
     detail:
-      'rangeMin/rangeMax wurden als erlaubter Eingabebereich übernommen; correctValue wurde als Referenzwert mit exakter Bewertung übernommen.',
+      'rangeMin/rangeMax wurden als absolutes Toleranzband übernommen; correctValue wurde als Referenzwert übernommen.',
   });
 
   return {
@@ -628,12 +625,10 @@ function mapRangedQuestion(params: {
       answers: [],
       numericToleranceMode: 'ABSOLUTE_INTERVAL',
       numericReferenceValue: correctValue,
-      numericIntervalLeft: exactTolerance.left,
-      numericIntervalRight: exactTolerance.right,
+      numericIntervalLeft,
+      numericIntervalRight,
       numericInputType,
       ...(numericInputType === 'DECIMAL' ? { numericDecimalPlaces: decimalPlaces } : {}),
-      numericMin,
-      numericMax,
       numericTwoRounds: false,
       enabled: true,
     },
@@ -804,18 +799,6 @@ function countDecimalPlaces(value: number): number {
   }
   const exponent = Number(exponentRaw);
   return Number.isFinite(exponent) ? Math.max(0, mantissaDecimalPlaces - exponent) : 0;
-}
-
-function buildExactNumericTolerance(
-  referenceValue: number,
-  decimalPlaces: number,
-): { left: number; right: number } {
-  const step = 10 ** -decimalPlaces;
-  const delta = step / 2;
-  return {
-    left: roundToDecimalPlaces(referenceValue - delta, decimalPlaces + 1),
-    right: roundToDecimalPlaces(referenceValue + delta, decimalPlaces + 1),
-  };
 }
 
 function roundToDecimalPlaces(value: number, decimalPlaces: number): number {
