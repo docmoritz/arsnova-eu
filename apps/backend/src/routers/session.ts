@@ -683,6 +683,7 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
           currentQuestion: true,
           currentRound: true,
           statusChangedAt: true,
+          activeQuestionStartedAt: true,
           quiz: {
             select: {
               defaultTimer: true,
@@ -717,7 +718,7 @@ async function fetchStatusSnapshot(code: string): Promise<StatusSnapshotPayload>
         channels,
         preferredChannel: resolvePreferredLiveChannel(code, channels),
         ...(isActive && {
-          activeAt: session.statusChangedAt.toISOString(),
+          activeAt: (session.activeQuestionStartedAt ?? session.statusChangedAt).toISOString(),
           timer: currentTimer,
         }),
       };
@@ -4339,6 +4340,7 @@ export const sessionRouter = router({
             status: 'FINISHED',
             currentQuestion: null,
             currentRound: 1,
+            activeQuestionStartedAt: null,
             statusChangedAt: now,
             endedAt: now,
           },
@@ -4388,6 +4390,7 @@ export const sessionRouter = router({
           currentRound: 1,
           quizStarted: true,
           statusChangedAt: now,
+          activeQuestionStartedAt: newStatus === 'ACTIVE' ? now : null,
           ...(answerDisplayOrderPayload && { answerDisplayOrder: answerDisplayOrderPayload }),
         },
       });
@@ -4445,7 +4448,7 @@ export const sessionRouter = router({
       const now = new Date();
       await prisma.session.update({
         where: { id: session.id },
-        data: { status: 'ACTIVE', statusChangedAt: now },
+        data: { status: 'ACTIVE', statusChangedAt: now, activeQuestionStartedAt: now },
       });
       const questionId =
         session.currentQuestion === null || session.currentQuestion === undefined
@@ -4626,7 +4629,12 @@ export const sessionRouter = router({
       const now = new Date();
       await prisma.session.update({
         where: { id: session.id },
-        data: { status: 'ACTIVE', currentRound: 2, statusChangedAt: now },
+        data: {
+          status: 'ACTIVE',
+          currentRound: 2,
+          statusChangedAt: now,
+          activeQuestionStartedAt: now,
+        },
       });
       invalidateSessionStatusCachesForCode(code);
       void recordSessionTransitionActivity();
@@ -4830,7 +4838,7 @@ export const sessionRouter = router({
                 question.type === 'SHORT_TEXT'
                   ? []
                   : answersOrdered.map((a) => ({ id: a.id, text: a.text })),
-              activeAt: session.statusChangedAt.toISOString(),
+              activeAt: (session.activeQuestionStartedAt ?? session.statusChangedAt).toISOString(),
               ratingMin: question.ratingMin ?? null,
               ratingMax: question.ratingMax ?? null,
               ratingLabelMin: question.ratingLabelMin ?? null,
@@ -5354,6 +5362,7 @@ export const sessionRouter = router({
             questionId: true,
             round: true,
             score: true,
+            isCorrect: true,
             responseTimeMs: true,
             question: {
               select: {
@@ -5382,7 +5391,7 @@ export const sessionRouter = router({
 
         if (questionCountsTowardsTotalQuestions(v.question.type as QuestionType)) {
           if (v.question.type === 'SHORT_TEXT' || v.question.type === 'NUMERIC_ESTIMATE') {
-            if (v.score > 0) {
+            if (v.isCorrect ?? v.score > 0) {
               s.correctCount++;
             }
             continue;
@@ -5429,7 +5438,7 @@ export const sessionRouter = router({
               : {}),
           };
         })
-        .filter((e) => e.totalScore > 0)
+        .filter((e) => e.totalScore > 0 || e.correctCount > 0)
         .sort(
           (a, b) => b.totalScore - a.totalScore || a.totalResponseTimeMs - b.totalResponseTimeMs,
         );
@@ -5502,6 +5511,7 @@ export const sessionRouter = router({
           status: 'FINISHED',
           currentQuestion: null,
           currentRound: 1,
+          activeQuestionStartedAt: null,
           statusChangedAt: now,
           endedAt: now,
         },
@@ -5808,6 +5818,7 @@ export const sessionRouter = router({
         },
         select: {
           score: true,
+          isCorrect: true,
           streakCount: true,
           streakBonus: true,
           selectedAnswers: { select: { answerOptionId: true } },
@@ -5827,7 +5838,7 @@ export const sessionRouter = router({
       let wasCorrect: boolean | null = null;
       if (isScored && myVote) {
         if (questionType === 'SHORT_TEXT' || questionType === 'NUMERIC_ESTIMATE') {
-          wasCorrect = myVote.score > 0;
+          wasCorrect = myVote.isCorrect ?? myVote.score > 0;
         } else {
           const selectedSet = new Set(myVote.selectedAnswers.map((a) => a.answerOptionId));
           const correctSet = new Set(correctIds);

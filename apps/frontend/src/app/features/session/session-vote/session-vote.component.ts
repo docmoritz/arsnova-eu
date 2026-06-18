@@ -70,7 +70,7 @@ import {
 import { CountdownFingersComponent } from '../../../shared/countdown-fingers/countdown-fingers.component';
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
 import { remainingCountdownSeconds } from '../session-countdown.util';
-import { recordServerTimeIso } from '../session-server-clock';
+import { recordServerTimeIso, recordServerTimeSample } from '../session-server-clock';
 import {
   consumeParticipantJoinArrival,
   hasParticipantJoinArrival,
@@ -182,6 +182,8 @@ const MESSAGES_TIMEOUT_SERIOUS = [
   $localize`:@@sessionVote.msgTimeoutS2:Die Zeit ist um – warte auf die nächste Frage.`,
   $localize`:@@sessionVote.msgTimeoutS3:Zu spät abgestimmt. Nächste Chance folgt.`,
 ];
+const CLIENT_LATE_SUBMIT_GRACE_MS = 2_000;
+
 function pickRandom(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -192,6 +194,16 @@ function isScoredQuestionType(type: CurrentQuestion['type'] | null | undefined):
     type === 'MULTIPLE_CHOICE' ||
     type === 'SHORT_TEXT' ||
     type === 'NUMERIC_ESTIMATE'
+  );
+}
+
+function isClosedVoteServerMessage(message: string): boolean {
+  const normalized = localizeKnownServerMessage(message);
+  return (
+    normalized.includes('Die Zeit für diese Frage ist abgelaufen') ||
+    normalized.includes('Die Frage ist nicht mehr aktiv') ||
+    normalized.includes('Diese Frage ist nicht aktiv') ||
+    normalized.includes('Diese Abstimmungsrunde ist nicht aktiv')
   );
 }
 
@@ -411,6 +423,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   readonly selectedAnswerIds = signal<Set<string>>(new Set());
   readonly voteSent = signal(false);
+  readonly voteClosed = signal(false);
   readonly voteError = signal<string | null>(null);
   readonly voteSending = signal(false);
   readonly readingReadySubmitting = signal(false);
@@ -430,6 +443,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   readonly timeoutMessage = signal<string | null>(null);
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
   private fingerHideTimeout: ReturnType<typeof setTimeout> | null = null;
+  private lateSubmitCloseTimeout: ReturnType<typeof setTimeout> | null = null;
   private lobbyArrivalTimeout: ReturnType<typeof setTimeout> | null = null;
   private pendingJoinArrival = false;
   private readonly onVisibilityChange = () => {
@@ -1087,6 +1101,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     const s = this.countdownSeconds();
     return s !== null && s <= 0;
   });
+  readonly voteInteractionLocked = computed(
+    () => this.voteSent() || this.timerExpired() || this.voteClosed(),
+  );
+  readonly voteSubmissionLocked = computed(() => this.voteSent() || this.voteClosed());
 
   /** True, wenn alle Teilnehmer abgestimmt haben (Server liefert participantCount/totalVotes). Countdown wird dann ausgeblendet. */
   readonly allHaveVoted = computed(() => {
@@ -1525,7 +1543,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   });
   readonly voteSubmitDisabled = computed(() => {
     if (!this.showVoteSubmitAction()) return true;
-    if (this.voteSending() || this.debounced() || this.timerExpired()) return true;
+    if (this.voteSending() || this.debounced() || this.voteClosed() || this.timerExpired()) {
+      return true;
+    }
     if (this.hasAnswers()) {
       return this.selectedAnswerIds().size === 0;
     }
@@ -1637,7 +1657,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   selectRating(value: number): void {
-    if (this.voteSent() || !this.isActive() || this.timerExpired()) return;
+    if (this.voteInteractionLocked() || !this.isActive()) return;
     this.ratingValue.set(value);
     this.cdr.detectChanges();
   }
@@ -2448,8 +2468,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
   private async loadSessionInfo(): Promise<boolean> {
     try {
+      const requestedAt = Date.now();
       const session = await trpc.session.getInfo.query({ code: this.code });
-      recordServerTimeIso(session.serverTime);
+      recordServerTimeSample(session.serverTime, requestedAt);
       this.sessionId.set(session.id);
       this.status.set(session.status as SessionStatus);
       this.sessionSettings.set(session);
@@ -2653,7 +2674,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   private resetForSecondRoundStart(): void {
+    this.clearLateSubmitCloseTimeout();
     this.voteSent.set(false);
+    this.voteClosed.set(false);
     this.selectedAnswerIds.set(new Set());
     this.voteError.set(null);
     this.freeTextValue.set('');
@@ -2676,8 +2699,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     }
     this.lastSessionInfoRetryAt = now;
     try {
+      const requestedAt = Date.now();
       const session = await trpc.session.getInfo.query({ code: this.code });
-      recordServerTimeIso(session.serverTime);
+      recordServerTimeSample(session.serverTime, requestedAt);
       const nextStatus = session.status as SessionStatus;
       const prevStatus = this.status();
       const previousTeamMode = this.sessionSettings().teamMode === true;
@@ -2729,6 +2753,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.lobbyArrivalTimeout = null;
     }
     this.stopCountdown();
+    this.clearLateSubmitCloseTimeout();
   }
 
   private markParticipantOffline(): void {
@@ -2826,6 +2851,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   private startCountdownFromDeadline(deadline: number): void {
     this.stopCountdown();
+    this.clearLateSubmitCloseTimeout();
     this.timeoutMessage.set(null);
     const tick = (): void => {
       const remaining = remainingCountdownSeconds(deadline);
@@ -2839,6 +2865,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
               this.isPlayfulPreset() ? MESSAGES_TIMEOUT_PLAYFUL : MESSAGES_TIMEOUT_SERIOUS,
             ),
           );
+          this.scheduleLateSubmitClose();
         }
         this.fingerHideTimeout = setTimeout(() => {
           this.countdownSeconds.set(null);
@@ -2848,6 +2875,24 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     };
     tick();
     this.countdownTimer = setInterval(tick, 1000);
+  }
+
+  private scheduleLateSubmitClose(): void {
+    this.clearLateSubmitCloseTimeout();
+    this.lateSubmitCloseTimeout = setTimeout(() => {
+      this.lateSubmitCloseTimeout = null;
+      if (!this.voteSent()) {
+        this.voteClosed.set(true);
+      }
+    }, CLIENT_LATE_SUBMIT_GRACE_MS);
+  }
+
+  private clearLateSubmitCloseTimeout(): void {
+    if (!this.lateSubmitCloseTimeout) {
+      return;
+    }
+    clearTimeout(this.lateSubmitCloseTimeout);
+    this.lateSubmitCloseTimeout = null;
   }
 
   private stopCountdown(): void {
@@ -3316,8 +3361,10 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       }
 
       if (newId !== prevId) {
+        this.clearLateSubmitCloseTimeout();
         this.selectedAnswerIds.set(new Set());
         this.voteSent.set(false);
+        this.voteClosed.set(false);
         this.voteError.set(null);
         this.readingReadySubmitting.set(false);
         this.freeTextValue.set('');
@@ -3589,7 +3636,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   toggleAnswer(answerId: string): void {
-    if (this.voteSent() || this.debounced() || !this.isActive() || this.timerExpired()) return;
+    if (this.voteInteractionLocked() || this.debounced() || !this.isActive()) return;
     const now = Date.now();
     if (now - this.lastAnswerToggleAt < 90) return;
     this.lastAnswerToggleAt = now;
@@ -3608,7 +3655,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   async submitVote(overrideIds?: string[]): Promise<void> {
-    if (this.voteSending() || this.voteSent() || this.debounced() || this.timerExpired()) return;
+    if (this.voteSending() || this.voteSubmissionLocked() || this.debounced()) return;
     const now = Date.now();
     if (now - this.lastVoteSubmitAt < 450) return;
     this.lastVoteSubmitAt = now;
@@ -3658,6 +3705,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     this.voteSending.set(true);
     this.voteError.set(null);
     this.timeoutMessage.set(null);
+    this.clearLateSubmitCloseTimeout();
     this.voteSent.set(true);
     this.cdr.detectChanges();
 
@@ -3679,13 +3727,34 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         /* unsupported */
       }
     } catch (err: unknown) {
+      const localizedError = localizeKnownServerError(err, 'Abstimmung fehlgeschlagen.');
+      const voteClosedByServer = isClosedVoteServerMessage(localizedError);
       this.voteSent.set(false);
-      this.voteError.set(localizeKnownServerError(err, 'Abstimmung fehlgeschlagen.'));
-      if (!overrideIds) this.selectedAnswerIds.set(new Set());
+      this.voteError.set(localizedError);
+      if (voteClosedByServer) {
+        this.voteClosed.set(true);
+        this.stopCountdown();
+        this.countdownSeconds.set(0);
+      } else if (this.timerExpired()) {
+        this.voteClosed.set(true);
+      } else if (!overrideIds) {
+        this.selectedAnswerIds.set(new Set());
+      }
     } finally {
       this.voteSending.set(false);
       setTimeout(() => this.debounced.set(false), 300);
     }
+  }
+
+  async onVoteSubmitPointerDown(event: PointerEvent): Promise<void> {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+    if (this.voteSubmitDisabled()) {
+      return;
+    }
+    event.preventDefault();
+    await this.submitVote();
   }
 
   async sendEmoji(emoji: string): Promise<void> {

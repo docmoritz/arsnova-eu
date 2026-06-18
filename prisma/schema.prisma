@@ -108,6 +108,7 @@ model Session {
   type            SessionType   @default(QUIZ)    // Story 8.1: Quiz oder Q&A
   status          SessionStatus @default(LOBBY)
   statusChangedAt DateTime      @default(now())    // Zeitpunkt des letzten Statuswechsels (Story 3.5 Countdown-Sync)
+  activeQuestionStartedAt DateTime?                // Serverzeit, zu der die aktuell abstimmbare Frage/Runde gestartet wurde
   title           String?                          // Story 8.1: Titel für Q&A-Runden
   moderationMode  Boolean       @default(false)   // Story 8.4: Q&A-Fragen vorab moderieren
   qaEnabled       Boolean       @default(false)   // ADR-0009: Q&A-Kanal innerhalb einer Live-Session
@@ -209,6 +210,7 @@ model Vote {
   numericValue   Float?       // Story 1.2d: Numerische Schätzung (nur bei NUMERIC_ESTIMATE)
   responseTimeMs Int?         // Antwortzeit in Millisekunden (für Zeitbonus)
   score          Int          @default(0) // Berechnete Punkte (Schwierigkeit × Zeitbonus)
+  isCorrect      Boolean?     // Fachliche Korrektheit unabhängig von Zeitbonus/Punktehöhe
   streakCount    Int          @default(0) // Story 5.5: Aktuelle Antwort-Serie (0 = kein Streak)
   streakBonus    Float        @default(1.0) // Story 5.5: Angewandter Streak-Multiplikator
   round          Int          @default(1) // Story 2.7: Peer Instruction – Runde (1 oder 2)

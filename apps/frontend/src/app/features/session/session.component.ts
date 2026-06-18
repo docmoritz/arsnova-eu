@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { filter } from 'rxjs';
 import { trpc } from '../../core/trpc.client';
 import type { SessionInfoDTO } from '@arsnova/shared-types';
-import { recordServerTimeIso } from './session-server-clock';
+import { recordServerTimeSample } from './session-server-clock';
 
 /**
  * Session-Shell (Epic 2 + 3). Child-Routes: host, present, vote. Redirect '' → host.
@@ -41,11 +41,13 @@ export class SessionComponent implements OnInit, OnDestroy {
       return;
     }
     try {
+      const healthRequestedAt = Date.now();
       const info = await trpc.health.check.query();
       if (info.status !== 'ok') throw new Error('Backend nicht erreichbar');
-      recordServerTimeIso(info.timestamp);
+      recordServerTimeSample(info.timestamp, healthRequestedAt);
+      const sessionRequestedAt = Date.now();
       const session = await trpc.session.getInfo.query({ code: code.toUpperCase() });
-      recordServerTimeIso(session.serverTime);
+      recordServerTimeSample(session.serverTime, sessionRequestedAt);
       this.session.set(session);
     } catch (e: unknown) {
       const msg =

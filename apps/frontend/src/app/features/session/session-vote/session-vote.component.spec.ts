@@ -1581,6 +1581,274 @@ describe('SessionVoteComponent', () => {
     fixture.destroy();
   });
 
+  it('sperrt den Vote-Client nach serverseitig abgelehntem Timeout-Vote', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'single-choice-timeout',
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A', isCorrect: true },
+        { id: 'a2', text: 'B', isCorrect: false },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 10,
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+    voteSubmitMutateMock.mockRejectedValueOnce(
+      new Error('BAD_REQUEST: Die Zeit für diese Frage ist abgelaufen.'),
+    );
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.toggleAnswer('a1');
+    fixture.detectChanges();
+
+    await component.submitVote();
+    fixture.detectChanges();
+
+    expect(voteSubmitMutateMock).toHaveBeenCalledTimes(1);
+    expect(component.voteSent()).toBe(false);
+    expect(component.voteClosed()).toBe(true);
+    expect(component.voteSubmitDisabled()).toBe(true);
+    expect(component.voteError()).toContain('Die Zeit für diese Frage ist abgelaufen');
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector<HTMLButtonElement>('#vote-option-0')?.disabled).toBe(true);
+    expect(host.querySelector<HTMLButtonElement>('#vote-submit')?.disabled).toBe(true);
+
+    component.debounced.set(false);
+    component.toggleAnswer('a2');
+    await component.submitVote();
+
+    expect(component.selectedAnswerIds()).toEqual(new Set(['a1']));
+    expect(voteSubmitMutateMock).toHaveBeenCalledTimes(1);
+    fixture.destroy();
+  });
+
+  it('sendet einen bereits ausgeloesten Submit trotz lokal gerade abgelaufenem Countdown an den Server', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'single-choice-late-click',
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A', isCorrect: true },
+        { id: 'a2', text: 'B', isCorrect: false },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 10,
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.toggleAnswer('a1');
+    component.countdownSeconds.set(0);
+    component.voteClosed.set(false);
+    fixture.detectChanges();
+
+    expect(component.timerExpired()).toBe(true);
+    expect(component.voteSubmitDisabled()).toBe(true);
+
+    await component.submitVote();
+
+    expect(voteSubmitMutateMock).toHaveBeenCalledTimes(1);
+    expect(voteSubmitMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        answerIds: ['a1'],
+        questionId: 'single-choice-late-click',
+      }),
+    );
+    fixture.destroy();
+  });
+
+  it('erfasst den Submit-Intent bereits auf Pointer-Down, bevor ein spaeterer Click verschluckt wird', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'single-choice-pointer-submit',
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A', isCorrect: true },
+        { id: 'a2', text: 'B', isCorrect: false },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 10,
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.toggleAnswer('a1');
+    component.countdownSeconds.set(1);
+    fixture.detectChanges();
+
+    const event = {
+      button: 0,
+      pointerType: 'touch',
+      preventDefault: vi.fn(),
+    } as unknown as PointerEvent;
+    const submit = component.onVoteSubmitPointerDown(event);
+    component.countdownSeconds.set(0);
+    await submit;
+
+    expect(event.preventDefault).toHaveBeenCalledTimes(1);
+    expect(voteSubmitMutateMock).toHaveBeenCalledTimes(1);
+    expect(voteSubmitMutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        answerIds: ['a1'],
+        questionId: 'single-choice-pointer-submit',
+      }),
+    );
+
+    await component.submitVote();
+    expect(voteSubmitMutateMock).toHaveBeenCalledTimes(1);
+    fixture.destroy();
+  });
+
+  it('sperrt den Vote-Client nach dem lokalen Late-Submit-Fenster', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'single-choice-local-timeout',
+      text: 'Welche Antwort ist richtig?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A', isCorrect: true },
+        { id: 'a2', text: 'B', isCorrect: false },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 10,
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 50));
+
+    const component = fixture.componentInstance;
+    component.voteSent.set(false);
+    component.voteClosed.set(false);
+    vi.useFakeTimers();
+    try {
+      (
+        component as unknown as {
+          scheduleLateSubmitClose(): void;
+        }
+      ).scheduleLateSubmitClose();
+      vi.advanceTimersByTime(2000);
+      expect(component.voteClosed()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+      fixture.destroy();
+    }
+  });
+
   it('zaehlt bei normalisierten SHORT_TEXT-Eingaben dieselbe Laenge wie die Validierung', async () => {
     getInfoQueryMock.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',

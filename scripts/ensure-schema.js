@@ -73,7 +73,9 @@ const statements = [
   // Story 2.7: Peer Instruction
   `ALTER TYPE "SessionStatus" ADD VALUE IF NOT EXISTS 'DISCUSSION' AFTER 'RESULTS'`,
   `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "currentRound" INTEGER NOT NULL DEFAULT 1`,
+  `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "activeQuestionStartedAt" TIMESTAMP(3)`,
   `ALTER TABLE "Vote" ADD COLUMN IF NOT EXISTS "round" INTEGER NOT NULL DEFAULT 1`,
+  `ALTER TABLE "Vote" ADD COLUMN IF NOT EXISTS "isCorrect" BOOLEAN`,
   `ALTER TABLE "Quiz" ADD COLUMN IF NOT EXISTS "preset" TEXT NOT NULL DEFAULT 'PLAYFUL'`,
 
   // Unique-Constraint: eine Stimme pro Frage PRO RUNDE

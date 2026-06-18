@@ -566,6 +566,42 @@ Nach der Nachschaerfung lief `PARTICIPANTS=600 npm run load:smoke:host-vote-prog
 | `onHostVoteProgressChanged`           | 2 Messages |
 | Progress-Snapshot `totalVotes`        |        600 |
 
+## Lokaler Vote-Timer-Fairness-Retest am 2026-06-18
+
+Nach der Einführung von `Session.activeQuestionStartedAt`, `Vote.isCorrect`, dem 10-%-Mindestzeitfaktor
+für korrekte Timer-Antworten und der serverseitigen 2-Sekunden-Karenz wurde ein gezielter Last-Smoke
+für den Vote-Hotpath rund um das Timerende ergänzt:
+
+```bash
+npm run load:smoke:vote-timer-fairness
+```
+
+Der Smoke erstellt eine echte Session mit drei numerischen Schätzfragen und standardmäßig `600`
+Teilnehmenden. Er prüft:
+
+- Votes während `ACTIVE` vor Timerende.
+- Votes in `RESULTS` innerhalb der Backend-Karenz, wenn die Ergebnisfreigabe erst nach der
+  serverseitigen Deadline lag.
+- Votes in `RESULTS` außerhalb der Backend-Karenz.
+
+Beobachteter Lauf am 2026-06-18:
+
+| Szenario                       | akzeptiert | abgewiesen |  Dauer | `p50` |  `p95` |  `max` | Snapshot          |
+| ------------------------------ | ---------: | ---------: | -----: | ----: | -----: | -----: | ----------------- |
+| `ACTIVE` vor Timerende         |        600 |          0 | 1181ms | 728ms | 1149ms | 1170ms | 600 Votes in 17ms |
+| `RESULTS` innerhalb der Karenz |        600 |          0 | 1145ms | 927ms | 1122ms | 1127ms | 600 Votes in 29ms |
+| `RESULTS` außerhalb der Karenz |          0 |        600 |  894ms | 671ms |  871ms |  877ms | 0 Votes in 12ms   |
+
+Wertung:
+
+- Der neue Karenzpfad erzeugte bei 600 parallelen Votes keinen auffälligen Performance-Einbruch.
+- Die serverseitige Annahmeregel blieb deterministisch: innerhalb der Karenz wurden alle Votes
+  akzeptiert, außerhalb der Karenz wurden alle Votes abgewiesen.
+- Der zusätzliche Aufwand pro Vote bleibt konstant: ein zusätzlich gelesenes Session-Feld,
+  ein zusätzlich gespeichertes Vote-Feld und wenige Zeitvergleiche.
+- Der Test ersetzt keinen Produktionslasttest mit realen Mobilfunkbedingungen, liefert aber
+  konkrete Regressionsevidenz für die neue Timer-Fairness-Logik.
+
 ## Produktionsbefund am 2026-05-09
 
 Am 2026-05-09 wurde zusaetzlich ein realer 500er-Join-Lauf gegen die Produktionsinstanz `https://arsnova.eu` fuer die Session `6LTFZF` gefahren.

@@ -952,8 +952,8 @@
                     [class.vote-answer--correct]="isCorrect"
                     [class.vote-answer--wrong]="isWrong"
                     [class.vote-answer--result-selected]="isResultSelected"
-                    [class.vote-answer--disabled]="voteSent() || !isActive() || timerExpired()"
-                    [disabled]="voteSent() || !isActive() || timerExpired()"
+                    [class.vote-answer--disabled]="voteInteractionLocked() || !isActive()"
+                    [disabled]="voteInteractionLocked() || !isActive()"
                     (click)="toggleAnswer(a.id)"
                     [attr.aria-label]="getLetter(i) + ': ' + a.text"
                   >
@@ -998,7 +998,7 @@
                 [placeholder]="vpc.voteFreetextPlaceholder(isPlayfulPreset())"
                 maxlength="500"
                 rows="3"
-                [disabled]="voteSent() || timerExpired()"
+                [disabled]="voteInteractionLocked()"
               ></textarea>
             </div>
           } @else if ($any(q).type === 'FREETEXT' && isResults()) {
@@ -1023,7 +1023,7 @@
                 (input)="onTextVoteInput($any($event.target).value)"
                 [placeholder]="vpc.voteShortTextPlaceholder(isPlayfulPreset())"
                 [attr.maxlength]="shortTextNativeMaxLength()"
-                [disabled]="voteSent() || timerExpired()"
+                [disabled]="voteInteractionLocked()"
               />
               <div class="vote-freetext__meta">
                 <span
@@ -1095,7 +1095,7 @@
                   <button
                     class="vote-rating__btn"
                     [class.vote-rating__btn--selected]="ratingValue() === val"
-                    [disabled]="voteSent() || debounced() || timerExpired()"
+                    [disabled]="voteInteractionLocked() || debounced()"
                     role="radio"
                     [attr.aria-checked]="ratingValue() === val"
                     [attr.aria-label]="ratingValueAriaLabel(val)"
@@ -1136,7 +1136,7 @@
                   [value]="numericInputValue()"
                   (input)="numericInputValue.set($any($event.target).value)"
                   (keydown.enter)="submitVote()"
-                  [disabled]="voteSent() || timerExpired()"
+                  [disabled]="voteInteractionLocked()"
                   [attr.inputmode]="numericIsInteger() ? 'numeric' : 'decimal'"
                   [attr.aria-invalid]="numericInputInvalid() ? 'true' : null"
                   [attr.aria-describedby]="numericInputDescriptionIds()"
@@ -1915,6 +1915,7 @@
           class="vote-page__bottom-action vote-page__bottom-action--primary"
           [class.vote-submit--pending]="voteSending()"
           [disabled]="voteSubmitDisabled()"
+          (pointerdown)="onVoteSubmitPointerDown($event)"
           (click)="submitVote()"
         >
           <span>{{ vpc.voteSubmitCta(isPlayfulPreset()) }}</span>

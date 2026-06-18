@@ -173,6 +173,43 @@ describe('quizScoring', () => {
     expect(outside).toBe(0);
   });
 
+  it('behaelt bei korrekten bewertbaren Antworten am Timerende Mindestpunkte', () => {
+    expect(
+      calculateVoteScore({
+        type: 'SINGLE_CHOICE',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: ['a1'],
+        correctAnswerIds: ['a1'],
+        responseTimeMs: 10_000,
+        timerDurationMs: 10_000,
+      }),
+    ).toBe(200);
+
+    expect(
+      calculateVoteScore({
+        type: 'SHORT_TEXT',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: [],
+        correctAnswerIds: [],
+        freeText: 'Paris',
+        correctShortTextAnswers: ['Paris'],
+        responseTimeMs: 10_000,
+        timerDurationMs: 10_000,
+      }),
+    ).toBe(200);
+
+    expect(
+      calculateVoteScore({
+        type: 'SINGLE_CHOICE',
+        difficulty: 'MEDIUM',
+        selectedAnswerIds: ['a2'],
+        correctAnswerIds: ['a1'],
+        responseTimeMs: 10_000,
+        timerDurationMs: 10_000,
+      }),
+    ).toBe(0);
+  });
+
   it('normalisiert NUMERIC_ESTIMATE-Abstaende je Seite des Toleranzbands', () => {
     expect(
       calculateNumericEstimateScoreRatio({

@@ -112,7 +112,7 @@ import { CountdownFingersComponent } from '../../../shared/countdown-fingers/cou
 import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
 import { questionTypeLabel } from '../../../shared/question-type-label';
 import { remainingCountdownSeconds } from '../session-countdown.util';
-import { recordServerTimeIso } from '../session-server-clock';
+import { recordServerTimeIso, recordServerTimeSample } from '../session-server-clock';
 import { MusicEqualizerIconComponent } from '../../../shared/music-equalizer-icon/music-equalizer-icon.component';
 import { FeedbackHostComponent } from '../../feedback/feedback-host.component';
 import { tempoTrendEmoji, tempoTrendLabel } from '../../feedback/feedback.config';
@@ -1663,8 +1663,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   private async reloadSessionInfo(): Promise<SessionInfoDTO> {
+    const requestedAt = Date.now();
     const session = await trpc.session.getInfo.query({ code: this.code.toUpperCase() });
-    recordServerTimeIso(session.serverTime);
+    recordServerTimeSample(session.serverTime, requestedAt);
     this.sessionUnavailable.set(false);
     this.session.set(session);
     this.syncQaTitleDraftFromSession();
@@ -1920,8 +1921,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   /** Periodische Kalibrierung gegen die Serverzeit (Health), falls keine Status-Events kommen. */
   private async refreshServerClockSkew(): Promise<void> {
     try {
+      const requestedAt = Date.now();
       const h = await trpc.health.check.query();
-      recordServerTimeIso(h.timestamp);
+      recordServerTimeSample(h.timestamp, requestedAt);
     } catch {
       /* ignorieren */
     }

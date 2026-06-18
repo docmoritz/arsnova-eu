@@ -6,7 +6,7 @@
 **Datum:** 2026-05-24
 **Entscheider:** Projektteam
 
-**Letzter Repo-Abgleich:** 2026-05-31
+**Letzter Repo-Abgleich:** 2026-06-18
 
 ## Kontext
 
@@ -39,6 +39,7 @@ Aktuell zaehlen nur diese Fragetypen in die Wettbewerbswertung:
 - `SINGLE_CHOICE`
 - `MULTIPLE_CHOICE`
 - `SHORT_TEXT`
+- `NUMERIC_ESTIMATE`
 
 Diese Fragetypen:
 
@@ -60,7 +61,7 @@ Diese Fragetypen:
 - unterbrechen den Streak nicht
 - koennen angezeigt und exportiert werden, sind aber keine Wettbewerbsbeitraege
 
-Wenn ein neuer bewertbarer Fragetyp wie `estimated_answer` eingefuehrt wird, muss er explizit in die gemeinsamen Scoring-Helfer aufgenommen werden. Er darf nicht nur in einer einzelnen UI-Ansicht mitgezaehlt werden.
+Wenn ein neuer bewertbarer Fragetyp eingefuehrt wird, muss er explizit in die gemeinsamen Scoring-Helfer aufgenommen werden. Er darf nicht nur in einer einzelnen UI-Ansicht mitgezaehlt werden.
 
 ### 2. Grundpunkte und Schwierigkeitsgrad
 
@@ -107,7 +108,7 @@ SHORT_TEXT partial, MEDIUM:
 
 ### 3. Antwortzeit und Timer
 
-Die Antwortzeit wird serverseitig aus `Date.now() - session.statusChangedAt` berechnet, wenn `statusChangedAt` vorhanden ist. Sie wird auch dann gespeichert, wenn fuer die Frage kein Countdown aktiv ist. Nur wenn keine Server-Startzeit verfuegbar ist, darf ein uebergebener Client-Wert als Fallback verwendet werden.
+Die Antwortzeit wird serverseitig aus `Date.now() - session.activeQuestionStartedAt` berechnet, wenn die abstimmbare Frage/Runde eine Server-Startzeit hat. `statusChangedAt` ist nur noch Fallback fuer bereits aktive Altsessions ohne `activeQuestionStartedAt`. Die Antwortzeit wird auch dann gespeichert, wenn fuer die Frage kein Countdown aktiv ist. Nur wenn keine Server-Startzeit verfuegbar ist, darf ein uebergebener Client-Wert als Fallback verwendet werden.
 
 Der effektive Timer einer Frage wird so bestimmt:
 
@@ -126,13 +127,13 @@ Fuer Peer-Instruction-Runde 2 gilt absichtlich:
 - keine Antwortzeitwirkung auf Punkte
 - keine Antwortzeitwirkung auf Tiebreaker
 
-Wenn ein Timer aktiv ist, werden zu spaete Votes nach Ablauf plus 2 Sekunden Toleranz abgelehnt. Wenn kein Timer aktiv ist, wird keine Timeout-Grenze angewendet.
+Wenn ein Timer aktiv ist, werden zu spaete Votes nach Ablauf plus 2 Sekunden Backend-Karenz abgelehnt. Diese Karenz toleriert Clock-Drift und schlechte Mobilverbindungen. Sie gilt nur, wenn der Host erst nach der serverseitigen Deadline in `RESULTS` oder `DISCUSSION` gewechselt ist. Bei vorzeitiger Ergebnisfreigabe schliesst die Abstimmung sofort, damit nach sichtbarer Loesung keine nachtraeglichen Stimmen angenommen werden. Wenn kein Timer aktiv ist, wird keine Timeout-Grenze angewendet.
 
 Punkteformel mit aktivem Timer:
 
 ```text
 scoreBeforeStreak =
-  round(difficultyMultiplier * basePoints * max(0, 1 - responseTimeMs / timerDurationMs))
+  round(difficultyMultiplier * basePoints * max(0.1, 1 - responseTimeMs / timerDurationMs))
 ```
 
 Punkteformel ohne aktiven Timer:
@@ -142,7 +143,7 @@ scoreBeforeStreak =
   round(difficultyMultiplier * basePoints)
 ```
 
-Die Antwortzeit ist damit kein zusaetzlicher Bonus. Bei aktivem Timer reduziert spaeteres Antworten die Punkte. Ohne aktiven Timer gibt es keine zeitabhaengige Punktreduktion.
+Die Antwortzeit ist damit kein zusaetzlicher Bonus. Bei aktivem Timer reduziert spaeteres Antworten die Punkte. Korrekte bewertbare Antworten behalten am Timerende mindestens 10 % des zeitabhaengigen Anteils, damit eine serverseitig angenommene richtige Antwort nicht als 0-Punkte-Antwort erscheint. Fachlich falsche Antworten bleiben 0 Punkte. Ohne aktiven Timer gibt es keine zeitabhaengige Punktreduktion.
 
 ### 4. Streaks
 
@@ -151,14 +152,15 @@ Streaks gelten nur fuer bewertbare Fragetypen:
 - `SINGLE_CHOICE`
 - `MULTIPLE_CHOICE`
 - `SHORT_TEXT`
+- `NUMERIC_ESTIMATE`
 
 Nicht bewertbare Fragetypen unterbrechen den Streak nicht.
 
 Ein Streak ist pro Session, Teilnehmer:in und Runde getrennt. Runde 1 und Runde 2 teilen also keinen gemeinsamen Streak-Zaehler.
 
-Die Streak-Regel:
+Die Streak-Regel nutzt die gespeicherte fachliche Korrektheit (`Vote.isCorrect`), nicht `score > 0`:
 
-- Falsche oder nicht positiv bewertete Antwort: `streakCount = 0`
+- Falsche Antwort: `streakCount = 0`
 - Erste richtige Antwort nach keiner oder falscher bewertbarer Antwort: `streakCount = 1`
 - Weitere richtige bewertbare Antwort derselben Runde: vorheriger `streakCount + 1`
 
@@ -287,6 +289,7 @@ Fuer Veranstaltungen mit 250+ Teilnehmenden ist diese Regel unkritisch, solange 
 ## Umsetzungsleitplanken
 
 - `calculateVoteScore` bleibt die Quelle fuer den Score eines einzelnen Votes vor Streak.
+- `Vote.isCorrect` ist die Quelle fuer fachliche Korrektheit in Streak, Scorecard und Korrektzaehlung. Punkte duerfen nicht als Ersatz fuer Korrektheit interpretiert werden.
 - `getStreakMultiplier` und `questionAffectsStreak` bleiben die Quelle fuer Streak-Regeln.
 - Wettbewerbsaggregation verwendet `selectEffectiveCompetitionVotes`.
 - Antwortzeit fuer Rankings wird ueber die gemeinsame Wettbewerbsregel bestimmt; Runde 2 liefert dafuer immer `0`.
@@ -294,6 +297,9 @@ Fuer Veranstaltungen mit 250+ Teilnehmenden ist diese Regel unkritisch, solange 
   - richtige/falsche SC- und MC-Auswahl
   - Kurzantwort mit Teilpunkten
   - Timer mit Antwortzeitfaktor
+  - Timerende mit korrekter Antwort und Mindestzeitfaktor
+  - Backend-Karenz innerhalb/ausserhalb der 2-Sekunden-Grenze
+  - vorzeitige Ergebnisfreigabe ohne nachtraegliche Karenzannahme
   - Frage ohne Countdown
   - Peer-Instruction-Runde 2 ohne Timerwirkung
   - Streak-Aufbau und Streak-Reset
@@ -325,6 +331,14 @@ Stand 2026-06-17:
 - Runde 2 ersetzt Runde 1 auch für `NUMERIC_ESTIMATE`; Runde-2-Antwortzeiten bleiben für Tiebreaker ohne Wirkung.
 - Die fachliche Detaildoku steht in [numeric-estimate.md](../../features/numeric-estimate.md).
 - Neue bewertbare Fragetypen muessen weiterhin `quizScoring.ts`, Effective-Vote-Auswahl, Leaderboards, Scorecards, Bonuscodes und Exporte gemeinsam erweitern.
+
+Stand 2026-06-18:
+
+- `Vote.isCorrect` speichert die fachliche Korrektheit unabhaengig von `score`. Streaks, Scorecards und Korrektzaehlungen nutzen dieses Feld mit Fallback auf `score > 0` fuer Altdaten.
+- `Session.activeQuestionStartedAt` ist die serverseitige Startzeit der aktuell abstimmbaren Frage/Runde. Sie verhindert, dass `statusChangedAt` durch Ergebnisfreigabe oder Diskussion die Antwortzeit und Deadline nachtraeglich verschiebt.
+- Korrekte bewertbare Timer-Antworten behalten am Timerende mindestens 10 % Zeitfaktor; falsche Antworten bleiben 0 Punkte.
+- Die 2-Sekunden-Karenz akzeptiert Votes nach automatischem/hostseitigem Wechsel in `RESULTS` oder `DISCUSSION` nur, wenn der Statuswechsel nach der Deadline lag. Bei vorzeitiger Ergebnisfreigabe werden weitere Votes abgelehnt.
+- Der neue Last-Smoke `npm run load:smoke:vote-timer-fairness` prueft diese Timer-Fairness mit standardmaessig 600 Teilnehmenden.
 
 ---
 

@@ -141,6 +141,33 @@ Für den erweiterten lokalen 600er-Check:
 PARTICIPANTS=600 npm run load:smoke:host-vote-progress
 ```
 
+### Vote-Timer-Fairness-Last-Smoke
+
+Nach Änderungen an `vote.submit`, Timer-Scoring, Deadline-Prüfung, Karenzlogik oder
+`Session.activeQuestionStartedAt` sollte zusätzlich der Timer-Fairness-Smoke laufen:
+
+```bash
+npm run dev:backend
+npm run load:smoke:vote-timer-fairness
+```
+
+Der Smoke erstellt eine Session mit drei `NUMERIC_ESTIMATE`-Fragen und standardmäßig `600`
+Teilnehmenden. Er prüft drei Lastfälle:
+
+- `ACTIVE`: 600 parallele Votes vor Timerende werden akzeptiert.
+- `RESULTS` innerhalb der 2s-Backend-Karenz: 600 parallele Votes werden noch akzeptiert,
+  sofern die Ergebnisfreigabe erst nach der serverseitigen Deadline erfolgte.
+- `RESULTS` außerhalb der Karenz: 600 parallele Votes werden abgewiesen.
+
+Wichtige Parameter:
+
+```bash
+PARTICIPANTS=600 TIMER_SECONDS=8 TRPC_URL=http://127.0.0.1:3000/trpc npm run load:smoke:vote-timer-fairness
+```
+
+Der Smoke ergänzt den Host-Progress-Smoke: Er misst nicht den WebSocket-Fan-out, sondern den
+serverseitigen Vote-Hotpath rund um Timerende, Karenz und Ergebnisfreigabe.
+
 ---
 
 ## Wo Tests liegen

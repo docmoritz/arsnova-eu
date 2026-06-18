@@ -74,9 +74,6 @@ export const voteRouter = router({
       if (participant.session.status === 'FINISHED') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Diese Session ist beendet.' });
       }
-      if (participant.session.status !== 'ACTIVE') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Die Frage ist nicht mehr aktiv.' });
-      }
       void touchParticipantPresence(input.sessionId, input.participantId);
       void recordVoteActivity();
       const question = await prisma.question.findFirst({
@@ -122,12 +119,34 @@ export const voteRouter = router({
       const statusChangedAtMs = participant.session.statusChangedAt
         ? new Date(participant.session.statusChangedAt).getTime()
         : null;
+      const activeQuestionStartedAtMs = participant.session.activeQuestionStartedAt
+        ? new Date(participant.session.activeQuestionStartedAt).getTime()
+        : participant.session.status === 'ACTIVE'
+          ? statusChangedAtMs
+          : null;
       const hasServerQuestionStart =
-        statusChangedAtMs !== null && Number.isFinite(statusChangedAtMs);
+        activeQuestionStartedAtMs !== null && Number.isFinite(activeQuestionStartedAtMs);
+      const deadline =
+        timerSeconds && timerSeconds > 0 && hasServerQuestionStart
+          ? activeQuestionStartedAtMs + timerSeconds * 1000
+          : null;
+      const withinTimerGrace = deadline !== null && requestReceivedAtMs <= deadline + 2000;
+      const statusChangedAfterDeadline =
+        deadline !== null &&
+        statusChangedAtMs !== null &&
+        Number.isFinite(statusChangedAtMs) &&
+        statusChangedAtMs >= deadline;
+      const acceptsLateVote =
+        participant.session.status === 'RESULTS' || participant.session.status === 'DISCUSSION'
+          ? withinTimerGrace && statusChangedAfterDeadline
+          : false;
 
-      if (timerSeconds && timerSeconds > 0 && hasServerQuestionStart) {
-        const deadline = statusChangedAtMs + timerSeconds * 1000;
-        if (requestReceivedAtMs > deadline + 2000) {
+      if (participant.session.status !== 'ACTIVE' && !acceptsLateVote) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Die Frage ist nicht mehr aktiv.' });
+      }
+
+      if (deadline !== null) {
+        if (!withinTimerGrace) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
             message: 'Die Zeit für diese Frage ist abgelaufen.',
@@ -147,7 +166,7 @@ export const voteRouter = router({
         });
       }
       const responseTimeMs = hasServerQuestionStart
-        ? Math.max(0, requestReceivedAtMs - statusChangedAtMs)
+        ? Math.max(0, requestReceivedAtMs - activeQuestionStartedAtMs)
         : (input.responseTimeMs ?? null);
       const answerIds = [...new Set(input.answerIds ?? [])];
       const allowedAnswerIds = new Set(question.answers.map((answer) => answer.id));
@@ -471,6 +490,15 @@ export const voteRouter = router({
         numericEstimateToleranceBand,
       });
 
+      const voteIsCorrect =
+        questionType === 'SHORT_TEXT'
+          ? (shortTextEvaluation?.points ?? 0) > 0
+          : questionType === 'NUMERIC_ESTIMATE'
+            ? numericIsCorrectOverride === true
+            : questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE'
+              ? isExactCorrectSelection(answerIds, correctAnswerIds)
+              : null;
+
       const existing = await prisma.vote.findUnique({
         where: {
           sessionId_participantId_questionId_round: {
@@ -491,7 +519,7 @@ export const voteRouter = router({
       let streakMultiplier = 1.0;
 
       if (questionAffectsStreak(questionType)) {
-        const isCorrect = baseScore > 0;
+        const isCorrect = voteIsCorrect === true;
 
         if (isCorrect) {
           // Letztes SC/MC-Vote derselben Runde (nach Zeit), nicht „letztes mit streakCount > 0“:
@@ -505,9 +533,9 @@ export const voteRouter = router({
               question: { type: { in: [...SCORED_QUESTION_TYPES] } },
             },
             orderBy: { votedAt: 'desc' },
-            select: { streakCount: true, score: true },
+            select: { streakCount: true, score: true, isCorrect: true },
           });
-          if (!lastChoiceVote || lastChoiceVote.score <= 0) {
+          if (!lastChoiceVote || !(lastChoiceVote.isCorrect ?? lastChoiceVote.score > 0)) {
             streakCount = 1;
           } else {
             streakCount = lastChoiceVote.streakCount + 1;
@@ -529,6 +557,7 @@ export const voteRouter = router({
           numericValue: input.numericValue ?? null,
           responseTimeMs,
           score,
+          isCorrect: voteIsCorrect,
           streakCount,
           streakBonus: streakMultiplier,
           round,
@@ -540,9 +569,9 @@ export const voteRouter = router({
       if (participant.session.code) {
         const progressIsCorrect =
           questionType === 'SHORT_TEXT'
-            ? (shortTextEvaluation?.points ?? 0) > 0
+            ? voteIsCorrect === true
             : questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE'
-              ? isExactCorrectSelection(answerIds, correctAnswerIds)
+              ? voteIsCorrect === true
               : undefined;
         recordVoteCachesForCode(participant.session.code, input.questionId, round, {
           answerIds: shortTextMatchedAnswer ? [shortTextMatchedAnswer.id] : answerIds,

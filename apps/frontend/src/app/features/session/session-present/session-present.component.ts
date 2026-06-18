@@ -24,7 +24,7 @@ import type {
   SessionInfoDTO,
   TeamLeaderboardEntryDTO,
 } from '@arsnova/shared-types';
-import { recordServerTimeIso } from '../session-server-clock';
+import { recordServerTimeSample } from '../session-server-clock';
 import { localizePath } from '../../../core/locale-router';
 import {
   getEffectiveLocale,
@@ -328,8 +328,9 @@ export class SessionPresentComponent implements OnInit, OnDestroy {
 
   private async refreshSessionMeta(): Promise<void> {
     try {
+      const requestedAt = Date.now();
       const session = await trpc.session.getInfo.query({ code: this.code.toUpperCase() });
-      recordServerTimeIso(session.serverTime);
+      recordServerTimeSample(session.serverTime, requestedAt);
       this.showHomeCta.set(false);
       this.session.set(session);
       if (session.status === 'FINISHED') {

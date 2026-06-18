@@ -4,7 +4,7 @@ import { getSkewAdjustedNow } from './session-server-clock';
  * Verbleibende Countdown-Sekunden bis zur Server-Deadline.
  * Host und Vote nutzen dieselbe Formel, damit Beamer und Handys dieselbe Zahl zeigen.
  * `ceil`: volle Sekunde zählt noch, bis die Deadline wirklich erreicht ist (kein Round-Drift zwischen Clients).
- * Standard-`now` nutzt den aus getInfo/Health kalibrierten Offset (siehe `recordServerTimeIso`).
+ * Standard-`now` nutzt den aus getInfo/Health kalibrierten Offset (siehe `recordServerTimeSample`).
  */
 export function remainingCountdownSeconds(
   deadlineMs: number,

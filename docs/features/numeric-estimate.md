@@ -3,7 +3,7 @@
 # Numerische Schätzfrage (Story 1.2d)
 
 > **Zielgruppe:** Product Owner, Entwickler, Lehrpersonen
-> **Stand:** 2026-06-17 (Story 1.2d als implementiert bewertet)
+> **Stand:** 2026-06-18 (Story 1.2d als implementiert bewertet)
 
 ## Zweck
 
@@ -55,6 +55,7 @@ classDiagram
     +Float numericValue
     +Int round
     +Int score
+    +Boolean isCorrect
     +Int responseTimeMs
     +String participantId
   }
@@ -160,6 +161,25 @@ Vote.score = Fragepunkte * Streak-Multiplikator
 ```
 
 Runde 2 folgt der Effective-Vote-Regel: Gibt es für eine Frage eine Runde-2-Abgabe, ersetzt diese die Runde-1-Abgabe in Wettbewerbswertungen. Runde-2-Antwortzeiten werden nicht als Tiebreaker genutzt.
+
+## Timer-Fairness
+
+Die Backend-Wertung verwendet die serverseitige Startzeit der aktiven Frage/Runde
+(`Session.activeQuestionStartedAt`). Dadurch bleibt die Antwortzeit stabil, auch wenn der Host nach
+Timerende in `RESULTS` oder `DISCUSSION` wechselt.
+
+Bei aktivem Timer gilt eine 2-Sekunden-Backend-Karenz für Netzwerk- und Clock-Drift:
+
+- Geht ein Vote kurz nach Timerende ein und wurde die Ergebnisphase erst nach der serverseitigen
+  Deadline geöffnet, kann er noch angenommen werden.
+- Nach Ablauf der Karenz wird der Vote abgewiesen.
+- Gibt der Host Ergebnisse vorzeitig frei, schließt die Abstimmung sofort; die Karenz öffnet keinen
+  nachträglichen Abstimmungsweg nach sichtbarer Lösung.
+
+Eine fachlich korrekte, serverseitig angenommene Schätzung bleibt auch am Timerende korrekt
+(`Vote.isCorrect = true`) und erhält mindestens 10 % des zeitabhängigen Punkteanteils. Punkte und
+Korrektheit sind getrennte Konzepte: `score` ist der Wettbewerbswert, `isCorrect` ist die fachliche
+Bewertung im Toleranzband.
 
 ## Ergebnis- und Statistikansicht
 
