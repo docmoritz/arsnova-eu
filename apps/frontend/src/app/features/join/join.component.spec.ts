@@ -266,6 +266,26 @@ describe('JoinComponent', () => {
     expect(comp.isTaken('Albert Einstein')).toBe(false);
   });
 
+  it('markiert lange Pseudonyme als vergeben, wenn das Backend den gekuerzten Namen meldet', async () => {
+    const longNickname = NICKNAME_LISTS.PRIMARY_SCHOOL.find((name) => name.length > 30)!;
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      nicknameTheme: 'PRIMARY_SCHOOL',
+      allowCustomNicknames: false,
+    });
+    vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
+      nicknames: [longNickname.slice(0, 30)],
+      participantCount: 1,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(comp.isTaken(longNickname)).toBe(true);
+  });
+
   it('zeigt bei Q&A standardmäßig die Kita-Pseudonymliste auch ohne Quiz-Einstellungen', async () => {
     vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
       id: 'sess-qa',
@@ -388,6 +408,34 @@ describe('JoinComponent', () => {
       rejoinToken: undefined,
     });
     expect(consumeParticipantJoinArrival('ABC123')).toBe(true);
+    expect(navSpy).toHaveBeenCalledWith(['session', 'ABC123', 'vote']);
+  });
+
+  it('laesst lange Pseudonyme aus der Liste beitreten und sendet den Backend-kompatiblen Namen', async () => {
+    const longNickname = NICKNAME_LISTS.PRIMARY_SCHOOL.find((name) => name.length > 30)!;
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      nicknameTheme: 'PRIMARY_SCHOOL',
+      allowCustomNicknames: false,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    const router = fixture.debugElement.injector.get(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    comp.selectedNickname.set(longNickname);
+    expect(comp.canSubmit()).toBe(true);
+    await comp.submitJoin();
+    await fixture.whenStable();
+
+    expect(trpc.session.join.mutate).toHaveBeenCalledWith({
+      code: 'ABC123',
+      nickname: longNickname.slice(0, 30),
+      rejoinToken: undefined,
+    });
     expect(navSpy).toHaveBeenCalledWith(['session', 'ABC123', 'vote']);
   });
 

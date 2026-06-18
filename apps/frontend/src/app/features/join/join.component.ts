@@ -41,6 +41,15 @@ const NICKNAME_STORAGE_KEY = 'arsnova-nickname';
 const SESSION_POLL_MS = 3000;
 const SESSION_POLL_JITTER_MS = 600;
 const PARTICIPANT_NICKNAME_REFRESH_MS = 12000;
+const PARTICIPANT_NICKNAME_MAX_LENGTH = 30;
+
+function toParticipantNickname(value: string): string {
+  return value.trim().slice(0, PARTICIPANT_NICKNAME_MAX_LENGTH);
+}
+
+function toParticipantNicknameKey(value: string): string {
+  return toParticipantNickname(value).toLowerCase();
+}
 
 /**
  * Teilnehmer-Einstieg (QR/Link). Code validieren → Lobby (Story 3.1). Nickname (3.2) → session/:code/vote.
@@ -192,8 +201,8 @@ export class JoinComponent implements OnInit, OnDestroy {
   );
 
   readonly canSubmit = computed(() => {
-    const sel = this.selectedNickname().trim();
-    const custom = this.customNickname().trim();
+    const sel = toParticipantNickname(this.selectedNickname());
+    const custom = toParticipantNickname(this.customNickname());
     const allowCustom = this.session()?.allowCustomNicknames ?? true;
     const hasName =
       this.session()?.anonymousMode === true ||
@@ -205,11 +214,11 @@ export class JoinComponent implements OnInit, OnDestroy {
 
   readonly effectiveNickname = computed(() => {
     if (this.session()?.anonymousMode === true) {
-      return `Teilnehmende ${(this.session()?.participantCount ?? 0) + 1}`;
+      return toParticipantNickname(`Teilnehmende ${(this.session()?.participantCount ?? 0) + 1}`);
     }
-    const custom = this.customNickname().trim();
+    const custom = toParticipantNickname(this.customNickname());
     if (custom.length > 0) return custom;
-    return this.selectedNickname().trim();
+    return toParticipantNickname(this.selectedNickname());
   });
 
   /** i18n: participant count label (singular). */
@@ -393,7 +402,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   private async loadParticipants(): Promise<void> {
     try {
       const payload = await trpc.session.getParticipantNicknames.query({ code: this.code });
-      const set = new Set(payload.nicknames.map((nickname) => nickname.trim().toLowerCase()));
+      const set = new Set(payload.nicknames.map((nickname) => toParticipantNicknameKey(nickname)));
       this.takenNicknames.set(set);
       this.lastParticipantsRefreshAt = Date.now();
     } catch {
@@ -409,7 +418,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   }
 
   isTaken(nickname: string): boolean {
-    return this.takenNicknames().has(nickname.trim().toLowerCase());
+    return this.takenNicknames().has(toParticipantNicknameKey(nickname));
   }
 
   selectTeam(teamId: string): void {
@@ -440,7 +449,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   private async joinAnonymous(session: SessionInfoDTO): Promise<void> {
     this.joining.set(true);
     try {
-      const nickname = `Teilnehmende ${session.participantCount + 1}`;
+      const nickname = toParticipantNickname(`Teilnehmende ${session.participantCount + 1}`);
       const result = await trpc.session.join.mutate({
         code: this.code,
         nickname,
@@ -467,20 +476,20 @@ export class JoinComponent implements OnInit, OnDestroy {
   async submitJoin(): Promise<void> {
     if (this.joining() || !this.canSubmit()) return;
     const nickname = this.effectiveNickname();
-    if (!nickname || nickname.length > 30) return;
+    if (!nickname) return;
     this.error.set(null);
     this.joining.set(true);
     try {
       const result = await trpc.session.join.mutate({
         code: this.code,
-        nickname: nickname.slice(0, 30),
+        nickname,
         teamId: this.selectedTeamId().trim() || undefined,
         rejoinToken: this.getStoredRejoinToken(),
       });
       recordServerTimeIso(result.serverTime);
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(`${PARTICIPANT_STORAGE_KEY}-${this.code}`, result.participantId);
-        localStorage.setItem(`${NICKNAME_STORAGE_KEY}-${this.code}`, nickname.slice(0, 30));
+        localStorage.setItem(`${NICKNAME_STORAGE_KEY}-${this.code}`, nickname);
       }
       this.persistConfirmedTeam(result.teamId);
       setParticipantJoinArrival(this.code);
