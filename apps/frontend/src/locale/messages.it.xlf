@@ -335,8 +335,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="seo.descHelp" datatype="html">
-        <source>Kurz erklärt: Sessions, Quiz, Blitzlicht und die wichtigsten Abläufe auf arsnova.eu.</source>
-        <target>Sessioni, quiz, round lampo e flussi principali su arsnova.eu, in breve.</target>
+        <source>Kurz erklärt: Live-Sessions, Quiz-Frageformate, Blitzlicht, Q&amp;A und Moderationsabläufe auf arsnova.eu.</source>
+        <target>Guida rapida a sessioni live, formati di domanda, sondaggio rapido, Q&amp;A e flussi di moderazione su arsnova.eu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/seo-route-meta.ts</context>
           <context context-type="linenumber">117</context>
@@ -3166,11 +3166,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.intro" datatype="html">
-        <source> Diese Seite richtet sich an <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Lehrende, Trainer:innen und Seminarleiter:innen<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: Du planst Trainings, Workshops, Lehrveranstaltungen oder Events und willst Interaktion ohne Hürden – Quiz, Q&amp;A und Blitzlicht in einer Session. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Ohne verpflichtende Anmeldung<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> für dich und deine Gruppe: Du startest, alle Teilnehmenden sind direkt mit dabei.</source>
-        <target>Questa pagina è pensata per <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>docenti, formatori e responsabili di seminario<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: organizzi formazioni, workshop, lezioni o eventi e vuoi interazione senza attriti — quiz, Q&amp;A e sondaggio rapido in un’unica sessione. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Nessuna registrazione obbligatoria<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> per te o per il gruppo: avvii tu e tutte le persone partecipanti sono subito con te.</target>
+        <source> Diese Seite richtet sich an <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Lehrende, Trainer:innen und Vortragende<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>, die aus einer Präsentation eine echte Live-Situation machen wollen: kurze Checks, Diskussionen, Q&amp;A, Blitzlicht und Auswertung laufen in einer Session zusammen. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Ohne Pflichtkonto<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> für deine Gruppe: Code oder QR zeigen, Smartphones raus, loslegen. </source>
+        <target>Questa pagina è pensata per <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>docenti, formatrici e formatori, relatrici e relatori<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> che vogliono trasformare una presentazione in una vera situazione live: verifiche rapide, discussione, Q&amp;A, sondaggio rapido e restituzione stanno tutti nella stessa sessione. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Nessun account obbligatorio<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> per il gruppo: mostri codice o QR, smartphone alla mano, si parte.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">27,34</context>
+          <context context-type="linenumber">27,33</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.uspTitle" datatype="html">
@@ -3182,19 +3182,244 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.usp1" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Im Unterschied zu<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> verbreiteten Angeboten wie Kahoot oder Mentimeter liegt der Schwerpunkt hier auf <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Datenschutz und Kontrolle über deine Inhalte<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: kein Pflichtkonto für dich oder deine Gruppe, <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz-Inhalte bleiben zunächst local-first im Browser<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>, das Projekt ist <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Open Source<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>, der Betrieb erfolgt über <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>EU-Infrastruktur<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (Host in Deutschland) – nachvollziehbar statt geschlossener Plattform.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>A differenza delle<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> offerte diffuse come Kahoot o Mentimeter, qui l’attenzione è sulla <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>protezione dei dati e sul controllo dei tuoi contenuti<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: nessun account obbligatorio per te o il tuo gruppo, <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>i contenuti del quiz restano dapprima local-first nel browser<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>, il progetto è <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>open source<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>, e il servizio gira su <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>infrastruttura nell’UE<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (host in Germania): trasparente, non una piattaforma chiusa.</target>
+        <source> arsnova.eu ist als <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Live-Regie für Unterricht, Training und Talks<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> gedacht: Du wechselst nicht zwischen Präsentation, Chat, Umfragetool und Quiz-App, sondern steuerst Interaktion, Beamer-Ansicht und Ergebnisfreigabe an einem Ort. </source>
+        <target>arsnova.eu è una <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>regia live per lezioni, formazione e talk<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: invece di passare tra slide, chat, strumenti di sondaggio e app per quiz, gestisci interazione, vista proiettore e pubblicazione dei risultati da un unico posto.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">39,47</context>
+          <context context-type="linenumber">37,41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.usp2" datatype="html">
-        <source> In einer Veranstaltung verbindest du <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz, Q&amp;A und Blitzlicht<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> – statt mehrere Tools nebeneinander zu bedienen. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (zwei Abstimmungsrunden mit Diskussionsphase dazwischen) sowie <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>KaTeX<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> und Markdown unterstützen typische Szenarien in Hochschule, Weiterbildung und Business – vom spontanen Check bis zur gemeinsamen Erfolgskontrolle.</source>
-        <target>Nello stesso evento unisci <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>quiz, Q&amp;A e sondaggio rapido<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> — senza dover gestire più strumenti in parallelo. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (due turni di voto con discussione in mezzo) insieme a <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>KaTeX<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> e Markdown si adattano a scenari tipici in università, formazione continua e contesto aziendale: da un check rapido a una verifica condivisa dei risultati.</target>
+        <source> Der Fokus liegt auf <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>didaktischer Kontrolle und Datenschutz<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: Inhalte bleiben zunächst local-first im Browser, Teilnehmende brauchen kein Konto, das Projekt ist Open Source und für EU-orientierten Betrieb ausgelegt. Markdown und KaTeX machen fachliche Fragen präsentationstauglich, von MINT-Formeln bis zum kurzen Fallbeispiel. </source>
+        <target>Il focus è su <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>controllo didattico e protezione dei dati<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>: i contenuti restano prima di tutto local-first nel browser, i partecipanti non hanno bisogno di un account, il progetto è open source ed è pensato per un uso orientato all’UE. Markdown e KaTeX rendono le domande disciplinari pronte per la presentazione, dalle formule STEM ai brevi casi pratici.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">48,54</context>
+          <context context-type="linenumber">42,47</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatsTitle" datatype="html">
+        <source> Frageformate: passend zum didaktischen Ziel </source>
+        <target>Formati di domanda: quello giusto per il tuo obiettivo didattico</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">51,53</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatsLead" datatype="html">
+        <source> Wähle das Format nach der Situation im Raum: Willst du Wissen prüfen, Haltungen sichtbar machen, Begriffe einsammeln oder Schätzungen diskutieren? Die Formate sind bewusst getrennt, damit Ergebnisanzeige, Bewertung und Moderation zum Einsatzzweck passen. </source>
+        <target>Scegli il formato in base alla situazione in aula: vuoi verificare conoscenze, rendere visibili opinioni, raccogliere concetti o discutere stime? I formati sono volutamente separati, così visualizzazione, valutazione e moderazione restano coerenti con lo scopo.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">54,58</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatsGridAria" datatype="html">
+        <source>Verfügbare Quiz-Frageformate</source>
+        <target>Formati di domande quiz disponibili</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSingleChoiceTitle" datatype="html">
+        <source>Single Choice</source>
+        <target>Single Choice</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSingleChoiceTag" datatype="html">
+        <source> eine richtige Option </source>
+        <target>una sola opzione corretta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">70,72</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSingleChoiceBody" datatype="html">
+        <source> Für punktgenaue Verständnischecks: Eine Antwort ist korrekt, Ergebnis und Punkte sind sofort klar. </source>
+        <target>Per controlli di comprensione puntuali: una risposta è corretta, risultato e punti sono subito chiari.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">73,76</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatMultipleChoiceTitle" datatype="html">
+        <source>Multiple Choice</source>
+        <target>Multiple Choice</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">82</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatMultipleChoiceTag" datatype="html">
+        <source> mehrere richtige Optionen </source>
+        <target>più opzioni corrette</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">83,85</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatMultipleChoiceBody" datatype="html">
+        <source> Für komplexere Konzepte, typische Fehlannahmen oder Fragen wie „Welche Aussagen stimmen?“ – mehrere Lösungen können zählen. </source>
+        <target>Per concetti più complessi, false credenze tipiche o domande come “Quali affermazioni sono corrette?” — possono contare più risposte.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">86,89</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatShortTextTitle" datatype="html">
+        <source>Kurzantwort</source>
+        <target>Risposta breve</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">95</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatShortTextTag" datatype="html">
+        <source> Musterlösung statt Auswahl </source>
+        <target>soluzione modello, non scelta guidata</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">96,98</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatShortTextBody" datatype="html">
+        <source> Teilnehmende formulieren kurz selbst. Du hinterlegst Musterlösungen; arsnova.eu kann Schreibvarianten, Toleranz und bei Bedarf Zahlen oder Einheiten auswerten. </source>
+        <target>Le persone partecipanti rispondono brevemente con parole proprie. Tu inserisci soluzioni modello; arsnova.eu può valutare varianti di scrittura, tolleranze e, se serve, numeri o unità.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">99,102</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatFreeTextTitle" datatype="html">
+        <source>Freitext</source>
+        <target>Testo libero</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatFreeTextTag" datatype="html">
+        <source> offene Antworten </source>
+        <target>risposte aperte</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">109,111</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatFreeTextBody" datatype="html">
+        <source> Für Ideen, Reflexionen und Erwartungsabfragen. Keine automatische Bewertung; Antworten lassen sich sammeln und als Wortwolke sichtbar machen. </source>
+        <target>Per idee, riflessioni e aspettative. Nessuna valutazione automatica; le risposte possono essere raccolte e mostrate come nuvola di parole.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">112,115</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSurveyTitle" datatype="html">
+        <source>Umfrage</source>
+        <target>Sondaggio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSurveyTag" datatype="html">
+        <source> Meinungsbild ohne richtig/falsch </source>
+        <target>quadro d’opinione senza giusto/sbagliato</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">122,124</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatSurveyBody" datatype="html">
+        <source> Für Prioritäten, Vorwissen oder Entscheidungen im Raum. Optionen werden gezählt, ohne Scorelogik. </source>
+        <target>Per priorità, conoscenze pregresse o decisioni in aula. Le opzioni vengono conteggiate senza logica di punteggio.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">125,128</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatRatingTitle" datatype="html">
+        <source>Bewertungsskala</source>
+        <target>Scala di valutazione</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatRatingTag" datatype="html">
+        <source> Skala mit eigenen Polen </source>
+        <target>scala con estremi personalizzati</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">135,137</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatRatingBody" datatype="html">
+        <source> Für Zustimmung, Sicherheit, Tempo oder Feedback von niedrig bis hoch; optional mit benannten Endpunkten. </source>
+        <target>Per accordo, sicurezza, ritmo o feedback da basso ad alto, anche con estremi nominati.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">138,141</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatNumericEstimateTitle" datatype="html">
+        <source>Numerische Schätzfrage</source>
+        <target>Domanda di stima numerica</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatNumericEstimateTag" datatype="html">
+        <source> Zahlen schätzen, Streuung sehen </source>
+        <target>stimare numeri, vedere la dispersione</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">148,150</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatNumericEstimateBody" datatype="html">
+        <source> Für Jahreszahlen, Größenordnungen, Messwerte und Wahrscheinlichkeiten. Mit Referenzwert, Toleranzband, Histogramm, Statistik und optionaler zweiter Runde. </source>
+        <target>Per anni, ordini di grandezza, misure e probabilità. Con valore di riferimento, banda di tolleranza, istogramma, statistiche e secondo turno opzionale.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">151,154</context>
+        </context-group>
+      </trans-unit>
+
+      <trans-unit id="help.formatsBlitzNote" datatype="html">
+        <source> Blitzlicht ist davon getrennt: Es ist für spontane Live-Rückmeldungen gedacht, wenn du keine vollständige Quizfrage bauen willst. </source>
+        <target>Il sondaggio rapido è separato da questi formati: serve per feedback live spontanei quando non vuoi costruire una domanda quiz completa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/help/help.component.html</context>
+          <context context-type="linenumber">158,161</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoTitle" datatype="html">
@@ -3206,19 +3431,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoCardHint" datatype="html">
-        <source> Ein vorinstalliertes Beispiel-Quiz zeigt alle Frageformate (Multiple Choice, Freitext, Bewertungsskala usw.) inkl. KaTeX-Formeln und Markdown – ohne etwas anlegen zu müssen. Du findest es in deiner Quiz-Sammlung („Deine Quiz-Sammlung&quot;) und kannst es dort in der Vorschau öffnen.</source>
-        <target>Un quiz di esempio preinstallato mostra tutti i tipi di domande (scelta multipla, testo libero, scala di valutazione, ecc.) incluse formule KaTeX e Markdown, senza dover creare nulla. Lo trovi nella tua raccolta quiz (« La tua raccolta quiz ») e puoi aprirlo lì in anteprima.</target>
+        <source> Ein vorinstalliertes Beispiel-Quiz zeigt die Frageformate in konkreten Unterrichtsmomenten: Wissenscheck, Wortwolke, Kurzantwort, Schätzfrage, Bewertungsskala, Formeln und Markdown. Du findest es in deiner Quiz-Sammlung und kannst es dort in der Vorschau öffnen. </source>
+        <target>Un quiz di esempio preinstallato mostra i formati di domanda in momenti didattici concreti: verifica rapida, nuvola di parole, risposta breve, stima, scala di valutazione, formule e Markdown. Lo trovi nella tua raccolta quiz e puoi aprirlo in anteprima.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">59,64</context>
+          <context context-type="linenumber">166,171</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoTip" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Tipp:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Gib deiner Gruppe vor der ersten echten Session den Link zur Vorschau – so lernen alle den Ablauf und die Oberfläche kennen, ohne Druck.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Suggerimento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Condividi il link all’anteprima con il gruppo prima della prima sessione reale: così tutti possono familiarizzare con flusso e interfaccia senza pressione.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Tipp:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Öffne die Vorschau vor der ersten Live-Session einmal auf einem zweiten Gerät. So siehst du sofort, wie Host-Ansicht und Teilnehmenden-Screen zusammenspielen. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Suggerimento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> apri una volta l’anteprima su un secondo dispositivo prima della prima sessione live. Vedrai subito come lavorano insieme vista host e schermo dei partecipanti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">66,68</context>
+          <context context-type="linenumber">173,176</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstartTitle" datatype="html">
@@ -3230,27 +3455,27 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart1" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz anlegen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> „Deine Quiz-Sammlung&quot; öffnen, neues Quiz erstellen, Fragen und Einstellungen festlegen.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Crea quiz:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Apri "La tua raccolta quiz", crea un nuovo quiz, definisci domande e impostazioni.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz anlegen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> „Deine Quiz-Sammlung&quot; öffnen, neues Quiz erstellen und pro Frage das passende Format wählen. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Crea quiz:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> apri “La tua raccolta quiz”, crea un nuovo quiz e scegli il formato giusto per ogni domanda.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">75,77</context>
+          <context context-type="linenumber">183,185</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart2" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Veranstaltung starten:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> In der Quiz-Sammlung „Veranstaltung starten&quot; wählen – ein 6-stelliger Code entsteht. Code oder QR-Code mit deiner Gruppe teilen.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia evento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Seleziona "Avvia evento" nella raccolta di quiz: verrà creato un codice di 6 cifre. Condividi il codice o il codice QR con il tuo gruppo.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Veranstaltung starten:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Stil, Timer, Teams und Rangliste festlegen. Danach entsteht ein 6-stelliger Code, den du als Text oder QR-Code teilst. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia evento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> imposta stile, timer, team e classifica. Poi viene creato un codice a 6 caratteri, da condividere come testo o QR code.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">79,81</context>
+          <context context-type="linenumber">187,189</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart3" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Live durchführen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Fragen nacheinander freigeben, abstimmen lassen, Ergebnisse live anzeigen.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Esibiti dal vivo:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Rispondi le domande una dopo l'altra, falle votare, mostra i risultati dal vivo.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Live moderieren:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Frage zeigen, Antwortphase starten, Ergebnisse freigeben oder zurückhalten und bei Bedarf eine zweite Runde anschließen. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Modera live:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> mostra la domanda, avvia la fase di risposta, pubblica o trattieni i risultati e aggiungi un secondo turno quando è utile.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">83,85</context>
+          <context context-type="linenumber">191,193</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostTitle" datatype="html">
@@ -3262,19 +3487,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostLead" datatype="html">
-        <source> Du startest eine Live-Session, teilst den Code und steuerst Quiz, Q&amp;A und Blitzlicht.</source>
-        <target>Avvii una sessione live, condividi il codice e controlli quiz, Q&amp;A e altre aree live.</target>
+        <source> In der Host-Ansicht führst du durch die Session wie durch eine kleine Senderegie: Teilnehmende reinholen, Inhalte freigeben, Diskussion öffnen und Ergebnisse sichtbar machen. </source>
+        <target>Nella vista host guidi la sessione come una piccola regia: fai entrare i partecipanti, pubblichi i contenuti, apri la discussione e rendi visibili i risultati.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">91,94</context>
+          <context context-type="linenumber">199,203</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostStartStep" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Session starten:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> In deiner Quiz-Sammlung eine Veranstaltung starten und festlegen, ob sie mit Quiz oder Q&amp;A beginnt. Dann entsteht ein 6-stelliger Code.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia sessione:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Avvia un evento dalla tua raccolta quiz e scegli se inizia con un quiz o con Q&amp;A. In questo modo si crea un codice di 6 caratteri.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Session starten:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> In deiner Quiz-Sammlung eine Veranstaltung starten und festlegen, ob sie mit Quiz oder Q&amp;A beginnt. Dann entsteht der Beitrittscode. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia sessione:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> dalla tua raccolta quiz avvia un evento e scegli se iniziare con quiz o Q&amp;A. A quel punto viene creato il codice di accesso.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">97,100</context>
+          <context context-type="linenumber">206,208</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostLobby" datatype="html">
@@ -3286,35 +3511,35 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostBeamer" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Beamer-Ansicht:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Große Darstellung von Frage, Antworten, Countdown und Ergebnissen für die Projektion im Raum.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Vista proiettore:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Ampia visualizzazione di domande, risposte, conto alla rovescia e risultati per la proiezione nella stanza.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Beamer- und Presenter-Ansicht:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Frage, Antworten, Countdown und Ergebnisse erscheinen groß genug für Projektion, Stream oder zweiten Bildschirm. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Vista proiettore e presentatore:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> domanda, risposte, conto alla rovescia e risultati sono abbastanza grandi per proiezione, streaming o secondo schermo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">106,108</context>
+          <context context-type="linenumber">214,216</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostSteuerung" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Steuerung:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Nutze „Nächste Frage“, um die Frage zu zeigen. Optional kannst du zuerst nur den Text einblenden (Lesephase), bevor du die Antworten freigibst und die Abstimmung startest. Schließe die Runde mit „Ergebnis zeigen“ ab.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Comandi:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Usa «Prossima domanda» per mostrare la domanda. Facoltativamente puoi mostrare prima solo il testo (fase di lettura), prima di sbloccare le risposte e avviare la votazione. Chiudi il turno con «Mostra risultato».</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Steuerung:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Nutze „Nächste Frage“, um den Inhalt einzublenden. Optional läuft zuerst eine Lesephase, danach startest du die Antwortphase und entscheidest, wann das Ergebnis auf den Screen kommt. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Controlli:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> usa “Domanda successiva” per portare il contenuto sullo schermo. Puoi iniziare con una fase di lettura, poi aprire la fase di risposta e decidere quando mostrare il risultato.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">110,113</context>
+          <context context-type="linenumber">218,221</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostPeer" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (Doppelrunden):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Bei Quiz- und Blitzlicht-Fragen: Erst abstimmen lassen → „Diskussionsphase&quot; starten („Diskutiert mit eurem Nachbarn&quot;) → „Zweite Abstimmung&quot; – Vorher/Nachher-Vergleich zeigt, wie sich das Stimmungsbild durch den Austausch verändert hat.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (doppio turno):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Per quiz e sondaggio rapido: prima il voto → avvia la «fase di discussione» («parlate con chi avete accanto») → «secondo voto» — il prima/dopo mostra come cambia l’immagine dell’atmosfera dopo lo scambio.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (Doppelrunden):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Bei geeigneten Quizfragen, Schätzfragen und Blitzlicht-Runden: erst abstimmen lassen, Diskussion starten, dann erneut abstimmen. Der Vorher/Nachher-Vergleich macht Lernfortschritt sichtbar. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (doppi turni):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> per domande quiz adatte, domande di stima e sondaggi rapidi: prima si vota, poi si discute, quindi si vota di nuovo. Il confronto prima/dopo rende visibile il progresso di apprendimento.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">115,119</context>
+          <context context-type="linenumber">223,226</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostSettings" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Einstellungen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Beim Start legst du den Stil („Seriös&quot; oder „Spielerisch&quot;) und die Optionen fest (Rangliste, Sound, Lesephase, Team-Modus, Nicknamen, Timer). Deine Teilnehmenden übernehmen automatisch dein Theme.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Impostazioni:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Quando inizi, imposti lo stile ("Serio" o "Giocoso") e le opzioni (classifica, suono, fase di lettura, modalità squadra, soprannomi, timer). I tuoi partecipanti adottano automaticamente il tuo tema.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Einstellungen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Beim Start legst du Stil und Optionen fest: seriös oder spielerisch, mit oder ohne Rangliste, Sound, Lesephase, Team-Modus, Nicknamen und Timer. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Impostazioni:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> all’avvio scegli stile e opzioni: serio o giocoso, con o senza classifica, audio, fase di lettura, modalità team, nickname e timer.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">121,124</context>
+          <context context-type="linenumber">228,231</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.blitzTitle" datatype="html">
@@ -3327,7 +3552,7 @@
       </trans-unit>
       <trans-unit id="help.quickFeedbackIntro" datatype="html">
         <source> Schnelle Stimmungs- und Wissensabfragen – z. B. vor der Pause, zum Einstieg oder für spontane Checks. Nutzbar im Host-Bereich deiner Live-Session oder direkt von der Startseite.</source>
-        <target>Sondaggi veloci su umore e contenuti —ad esempio prima della pausa, per aprire la sessione o per un controllo al volo. Disponibili nell’area host della sessione live o direttamente dalla pagina iniziale.</target>
+        <target>Sondaggi rapidi su clima e comprensione, prima della pausa, in apertura o per una verifica al volo. Disponibili nell’area host della sessione live o direttamente dalla pagina iniziale.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
           <context context-type="linenumber">130,134</context>
@@ -3494,11 +3719,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionTypes" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Fragetypen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Multiple Choice, Single Choice, Freitext, Umfrage, Bewertungsskala – pro Frage optional mit Timer und Schwierigkeitsgrad.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Tipi di domande:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Scelta multipla, scelta singola, testo libero, sondaggio, scala di valutazione - facoltativamente con timer e livello di difficoltà per domanda.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Fragetypen:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Single Choice, Multiple Choice, Kurzantwort, Freitext, Umfrage, Bewertungsskala und numerische Schätzfrage – pro Frage optional mit Timer und Schwierigkeitsgrad. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Tipi di domanda:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Single Choice, Multiple Choice, risposta breve, testo libero, sondaggio, scala di valutazione e domanda di stima numerica — ogni domanda può avere timer e difficoltà opzionali.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">218,220</context>
+          <context context-type="linenumber">325,328</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionImport" datatype="html">
@@ -3518,11 +3743,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoQuizHint" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Demo-Quiz:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Ein vorinstalliertes Quiz zeigt alle Frageformate mit Beispielen inkl. KaTeX-Formeln und Markdown. In der Quiz-Sammlung in der Vorschau öffnen.</source>
-        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz demo:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Un quiz preinstallato mostra tutti i tipi di domande con esempi, incluse formule KaTeX e Markdown. Aprilo direttamente dalla pagina iniziale con « Gioca la demo » (scheda « Avvia evento ») oppure dall’anteprima nella tua raccolta quiz.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Demo-Quiz:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Ein vorinstalliertes Quiz zeigt alle Formate mit Beispielen inkl. KaTeX-Formeln und Markdown. In der Quiz-Sammlung in der Vorschau öffnen. </source>
+        <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz dimostrativo:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> un quiz preinstallato mostra tutti i formati con esempi, incluse formule KaTeX e Markdown. Aprilo in anteprima dalla raccolta quiz.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">233,236</context>
+          <context context-type="linenumber">341,344</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.stylesTitle" datatype="html">

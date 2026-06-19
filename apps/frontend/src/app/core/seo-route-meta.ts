@@ -114,7 +114,7 @@ function seoTitleHelp(): string {
 }
 
 function seoDescHelp(): string {
-  return $localize`:@@seo.descHelp:Kurz erklärt: Sessions, Quiz, Blitzlicht und die wichtigsten Abläufe auf arsnova.eu.`;
+  return $localize`:@@seo.descHelp:Kurz erklärt: Live-Sessions, Quiz-Frageformate, Blitzlicht, Q&A und Moderationsabläufe auf arsnova.eu.`;
 }
 
 function seoTitleNewsArchive(): string {

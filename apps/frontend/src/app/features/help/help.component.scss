@@ -25,7 +25,7 @@
   font: var(--mat-sys-body-large);
   color: var(--mat-sys-on-surface);
   line-height: 1.7;
-  max-inline-size: min(65ch, 100%);
+  max-inline-size: min(72ch, 100%);
   margin-inline: auto;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -45,6 +45,12 @@
 
 .legal-article :deep(h2:first-of-type) {
   margin-top: 1.5rem;
+}
+
+.legal-article h3 {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
 }
 
 .legal-article :deep(p) {
@@ -94,6 +100,69 @@
 .legal-article :deep(a:focus-visible) {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
+}
+
+.legal-article .help-section-lead {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.legal-article .help-format-grid {
+  list-style: none;
+  display: grid;
+  gap: 0.875rem;
+  margin: 1rem 0;
+  padding-left: 0;
+}
+
+.legal-article .help-format-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.875rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-high) 72%, transparent);
+}
+
+.legal-article .help-format-card__icon {
+  width: 2rem;
+  height: 2rem;
+  margin-top: 0.1rem;
+  color: var(--mat-sys-primary);
+  font-size: 2rem;
+}
+
+.legal-article .help-format-card__body {
+  min-width: 0;
+}
+
+.legal-article .help-format-card p {
+  margin: 0.25rem 0 0;
+}
+
+.legal-article .help-format-card__tag {
+  display: block;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-large);
+  text-transform: uppercase;
+}
+
+.legal-article .help-format-note {
+  margin-top: 0.75rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--mat-sys-primary);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+@media (min-width: 840px) {
+  .legal-article .help-format-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .legal-article .help-format-card--wide {
+    grid-column: 1 / -1;
+  }
 }
 
 .legal-article :deep(.help-section--demo) {

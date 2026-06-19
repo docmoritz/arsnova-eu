@@ -26,45 +26,153 @@
         </header>
         <p i18n="@@help.intro">
           Diese Seite richtet sich an
-          <strong>Lehrende, Trainer:innen und Seminarleiter:innen</strong>: Du planst Trainings,
-          Workshops, Lehrveranstaltungen oder Events und willst Interaktion ohne Hürden – Quiz,
-          Q&amp;A und Blitzlicht in einer Session.
-          <strong>Ohne verpflichtende Anmeldung</strong> für dich und deine Gruppe: Du startest,
-          alle Teilnehmenden sind direkt mit dabei.
+          <strong>Lehrende, Trainer:innen und Vortragende</strong>, die aus einer Präsentation eine
+          echte Live-Situation machen wollen: kurze Checks, Diskussionen, Q&amp;A, Blitzlicht und
+          Auswertung laufen in einer Session zusammen. <strong>Ohne Pflichtkonto</strong> für deine
+          Gruppe: Code oder QR zeigen, Smartphones raus, loslegen.
         </p>
 
         <section>
           <h2 i18n="@@help.uspTitle">Was arsnova.eu anders macht</h2>
           <p i18n="@@help.usp1">
-            <strong>Im Unterschied zu</strong> verbreiteten Angeboten wie Kahoot oder Mentimeter
-            liegt der Schwerpunkt hier auf
-            <strong>Datenschutz und Kontrolle über deine Inhalte</strong>: kein Pflichtkonto für
-            dich oder deine Gruppe,
-            <strong>Quiz-Inhalte bleiben zunächst local-first im Browser</strong>, das Projekt ist
-            <strong>Open Source</strong>, der Betrieb erfolgt über
-            <strong>EU-Infrastruktur</strong> (Host in Deutschland) – nachvollziehbar statt
-            geschlossener Plattform.
+            arsnova.eu ist als <strong>Live-Regie für Unterricht, Training und Talks</strong>
+            gedacht: Du wechselst nicht zwischen Präsentation, Chat, Umfragetool und Quiz-App,
+            sondern steuerst Interaktion, Beamer-Ansicht und Ergebnisfreigabe an einem Ort.
           </p>
           <p i18n="@@help.usp2">
-            In einer Veranstaltung verbindest du <strong>Quiz, Q&amp;A und Blitzlicht</strong> –
-            statt mehrere Tools nebeneinander zu bedienen. <strong>Peer Instruction</strong> (zwei
-            Abstimmungsrunden mit Diskussionsphase dazwischen) sowie <strong>KaTeX</strong> und
-            Markdown unterstützen typische Szenarien in Hochschule, Weiterbildung und Business – vom
-            spontanen Check bis zur gemeinsamen Erfolgskontrolle.
+            Der Fokus liegt auf <strong>didaktischer Kontrolle und Datenschutz</strong>: Inhalte
+            bleiben zunächst local-first im Browser, Teilnehmende brauchen kein Konto, das Projekt
+            ist Open Source und für EU-orientierten Betrieb ausgelegt. Markdown und KaTeX machen
+            fachliche Fragen präsentationstauglich, von MINT-Formeln bis zum kurzen Fallbeispiel.
+          </p>
+        </section>
+
+        <section class="help-section--formats" aria-labelledby="help-formats-title">
+          <h2 id="help-formats-title" i18n="@@help.formatsTitle">
+            Frageformate: passend zum didaktischen Ziel
+          </h2>
+          <p class="help-section-lead" i18n="@@help.formatsLead">
+            Wähle das Format nach der Situation im Raum: Willst du Wissen prüfen, Haltungen sichtbar
+            machen, Begriffe einsammeln oder Schätzungen diskutieren? Die Formate sind bewusst
+            getrennt, damit Ergebnisanzeige, Bewertung und Moderation zum Einsatzzweck passen.
+          </p>
+          <ul
+            class="help-format-grid"
+            i18n-aria-label="@@help.formatsGridAria"
+            aria-label="Verfügbare Quiz-Frageformate"
+          >
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">
+                radio_button_checked
+              </mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatSingleChoiceTitle">Single Choice</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatSingleChoiceTag">
+                  eine richtige Option
+                </p>
+                <p i18n="@@help.formatSingleChoiceBody">
+                  Für punktgenaue Verständnischecks: Eine Antwort ist korrekt, Ergebnis und Punkte
+                  sind sofort klar.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">checklist</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatMultipleChoiceTitle">Multiple Choice</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatMultipleChoiceTag">
+                  mehrere richtige Optionen
+                </p>
+                <p i18n="@@help.formatMultipleChoiceBody">
+                  Für komplexere Konzepte, typische Fehlannahmen oder Fragen wie „Welche Aussagen
+                  stimmen?“ – mehrere Lösungen können zählen.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">short_text</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatShortTextTitle">Kurzantwort</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatShortTextTag">
+                  Musterlösung statt Auswahl
+                </p>
+                <p i18n="@@help.formatShortTextBody">
+                  Teilnehmende formulieren kurz selbst. Du hinterlegst Musterlösungen; arsnova.eu
+                  kann Schreibvarianten, Toleranz und bei Bedarf Zahlen oder Einheiten auswerten.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">notes</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatFreeTextTitle">Freitext</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatFreeTextTag">
+                  offene Antworten
+                </p>
+                <p i18n="@@help.formatFreeTextBody">
+                  Für Ideen, Reflexionen und Erwartungsabfragen. Keine automatische Bewertung;
+                  Antworten lassen sich sammeln und als Wortwolke sichtbar machen.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">poll</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatSurveyTitle">Umfrage</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatSurveyTag">
+                  Meinungsbild ohne richtig/falsch
+                </p>
+                <p i18n="@@help.formatSurveyBody">
+                  Für Prioritäten, Vorwissen oder Entscheidungen im Raum. Optionen werden gezählt,
+                  ohne Scorelogik.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">linear_scale</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatRatingTitle">Bewertungsskala</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatRatingTag">
+                  Skala mit eigenen Polen
+                </p>
+                <p i18n="@@help.formatRatingBody">
+                  Für Zustimmung, Sicherheit, Tempo oder Feedback von niedrig bis hoch; optional mit
+                  benannten Endpunkten.
+                </p>
+              </div>
+            </li>
+            <li class="help-format-card help-format-card--wide">
+              <mat-icon class="help-format-card__icon" aria-hidden="true">analytics</mat-icon>
+              <div class="help-format-card__body">
+                <h3 i18n="@@help.formatNumericEstimateTitle">Numerische Schätzfrage</h3>
+                <p class="help-format-card__tag" i18n="@@help.formatNumericEstimateTag">
+                  Zahlen schätzen, Streuung sehen
+                </p>
+                <p i18n="@@help.formatNumericEstimateBody">
+                  Für Jahreszahlen, Größenordnungen, Messwerte und Wahrscheinlichkeiten. Mit
+                  Referenzwert, Toleranzband, Histogramm, Statistik und optionaler zweiter Runde.
+                </p>
+              </div>
+            </li>
+          </ul>
+          <p class="help-format-note" i18n="@@help.formatsBlitzNote">
+            Blitzlicht ist davon getrennt: Es ist für spontane Live-Rückmeldungen gedacht, wenn du
+            keine vollständige Quizfrage bauen willst.
           </p>
         </section>
 
         <section class="help-section--demo">
           <h2 i18n="@@help.demoTitle">Demo-Quiz</h2>
           <p i18n="@@help.demoCardHint">
-            Ein vorinstalliertes Beispiel-Quiz zeigt alle Frageformate (Multiple Choice, Freitext,
-            Bewertungsskala usw.) inkl. KaTeX-Formeln und Markdown – ohne etwas anlegen zu müssen.
-            Du findest es in deiner Quiz-Sammlung („Deine Quiz-Sammlung") und kannst es dort in der
+            Ein vorinstalliertes Beispiel-Quiz zeigt die Frageformate in konkreten
+            Unterrichtsmomenten: Wissenscheck, Wortwolke, Kurzantwort, Schätzfrage, Bewertungsskala,
+            Formeln und Markdown. Du findest es in deiner Quiz-Sammlung und kannst es dort in der
             Vorschau öffnen.
           </p>
           <p i18n="@@help.demoTip">
-            <strong>Tipp:</strong> Gib deiner Gruppe vor der ersten echten Session den Link zur
-            Vorschau – so lernen alle den Ablauf und die Oberfläche kennen, ohne Druck.
+            <strong>Tipp:</strong> Öffne die Vorschau vor der ersten Live-Session einmal auf einem
+            zweiten Gerät. So siehst du sofort, wie Host-Ansicht und Teilnehmenden-Screen
+            zusammenspielen.
           </p>
         </section>
 
@@ -72,16 +180,16 @@
           <h2 i18n="@@help.quickstartTitle">Schnellstart</h2>
           <ol class="help-steps">
             <li i18n="@@help.quickstart1">
-              <strong>Quiz anlegen:</strong> „Deine Quiz-Sammlung" öffnen, neues Quiz erstellen,
-              Fragen und Einstellungen festlegen.
+              <strong>Quiz anlegen:</strong> „Deine Quiz-Sammlung" öffnen, neues Quiz erstellen und
+              pro Frage das passende Format wählen.
             </li>
             <li i18n="@@help.quickstart2">
-              <strong>Veranstaltung starten:</strong> In der Quiz-Sammlung „Veranstaltung starten"
-              wählen – ein 6-stelliger Code entsteht. Code oder QR-Code mit deiner Gruppe teilen.
+              <strong>Veranstaltung starten:</strong> Stil, Timer, Teams und Rangliste festlegen.
+              Danach entsteht ein 6-stelliger Code, den du als Text oder QR-Code teilst.
             </li>
             <li i18n="@@help.quickstart3">
-              <strong>Live durchführen:</strong> Fragen nacheinander freigeben, abstimmen lassen,
-              Ergebnisse live anzeigen.
+              <strong>Live moderieren:</strong> Frage zeigen, Antwortphase starten, Ergebnisse
+              freigeben oder zurückhalten und bei Bedarf eine zweite Runde anschließen.
             </li>
           </ol>
         </section>
@@ -89,38 +197,37 @@
         <section>
           <h2 i18n="@@help.hostTitle">Veranstaltung leiten</h2>
           <p i18n="@@help.hostLead">
-            Du startest eine Live-Session, teilst den Code und steuerst Quiz, Q&amp;A und
-            Blitzlicht.
+            In der Host-Ansicht führst du durch die Session wie durch eine kleine Senderegie:
+            Teilnehmende reinholen, Inhalte freigeben, Diskussion öffnen und Ergebnisse sichtbar
+            machen.
           </p>
           <ul>
             <li i18n="@@help.hostStartStep">
               <strong>Session starten:</strong> In deiner Quiz-Sammlung eine Veranstaltung starten
-              und festlegen, ob sie mit Quiz oder Q&amp;A beginnt. Dann entsteht ein 6-stelliger
-              Code.
+              und festlegen, ob sie mit Quiz oder Q&amp;A beginnt. Dann entsteht der Beitrittscode.
             </li>
             <li i18n="@@help.hostLobby">
               <strong>Lobby:</strong> Du siehst, wer beigetreten ist; ein QR-Code zum Beitritt wird
               angezeigt.
             </li>
             <li i18n="@@help.hostBeamer">
-              <strong>Beamer-Ansicht:</strong> Große Darstellung von Frage, Antworten, Countdown und
-              Ergebnissen für die Projektion im Raum.
+              <strong>Beamer- und Presenter-Ansicht:</strong> Frage, Antworten, Countdown und
+              Ergebnisse erscheinen groß genug für Projektion, Stream oder zweiten Bildschirm.
             </li>
             <li i18n="@@help.hostSteuerung">
-              <strong>Steuerung:</strong> Nutze „Nächste Frage“, um die Frage zu zeigen. Optional
-              kannst du zuerst nur den Text einblenden (Lesephase), bevor du die Antworten freigibst
-              und die Abstimmung startest. Schließe die Runde mit „Ergebnis zeigen“ ab.
+              <strong>Steuerung:</strong> Nutze „Nächste Frage“, um den Inhalt einzublenden.
+              Optional läuft zuerst eine Lesephase, danach startest du die Antwortphase und
+              entscheidest, wann das Ergebnis auf den Screen kommt.
             </li>
             <li i18n="@@help.hostPeer">
-              <strong>Peer Instruction (Doppelrunden):</strong> Bei Quiz- und Blitzlicht-Fragen:
-              Erst abstimmen lassen → „Diskussionsphase" starten („Diskutiert mit eurem Nachbarn") →
-              „Zweite Abstimmung" – Vorher/Nachher-Vergleich zeigt, wie sich das Stimmungsbild durch
-              den Austausch verändert hat.
+              <strong>Peer Instruction (Doppelrunden):</strong> Bei geeigneten Quizfragen,
+              Schätzfragen und Blitzlicht-Runden: erst abstimmen lassen, Diskussion starten, dann
+              erneut abstimmen. Der Vorher/Nachher-Vergleich macht Lernfortschritt sichtbar.
             </li>
             <li i18n="@@help.hostSettings">
-              <strong>Einstellungen:</strong> Beim Start legst du den Stil („Seriös" oder
-              „Spielerisch") und die Optionen fest (Rangliste, Sound, Lesephase, Team-Modus,
-              Nicknamen, Timer). Deine Teilnehmenden übernehmen automatisch dein Theme.
+              <strong>Einstellungen:</strong> Beim Start legst du Stil und Optionen fest: seriös
+              oder spielerisch, mit oder ohne Rangliste, Sound, Lesephase, Team-Modus, Nicknamen und
+              Timer.
             </li>
           </ul>
         </section>
@@ -215,8 +322,9 @@
               Vorschau prüfen.
             </li>
             <li i18n="@@help.collectionTypes">
-              <strong>Fragetypen:</strong> Multiple Choice, Single Choice, Freitext, Umfrage,
-              Bewertungsskala – pro Frage optional mit Timer und Schwierigkeitsgrad.
+              <strong>Fragetypen:</strong> Single Choice, Multiple Choice, Kurzantwort, Freitext,
+              Umfrage, Bewertungsskala und numerische Schätzfrage – pro Frage optional mit Timer und
+              Schwierigkeitsgrad.
             </li>
             <li i18n="@@help.collectionImport">
               <strong>Import / Export:</strong> Quiz als JSON importieren oder exportieren. Mit dem
@@ -230,7 +338,7 @@
               Die Geräteangaben helfen nur bei der Orientierung.
             </li>
             <li i18n="@@help.demoQuizHint">
-              <strong>Demo-Quiz:</strong> Ein vorinstalliertes Quiz zeigt alle Frageformate mit
+              <strong>Demo-Quiz:</strong> Ein vorinstalliertes Quiz zeigt alle Formate mit
               Beispielen inkl. KaTeX-Formeln und Markdown. In der Quiz-Sammlung in der Vorschau
               öffnen.
             </li>

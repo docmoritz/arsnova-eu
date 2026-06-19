@@ -49,4 +49,22 @@ describe('HelpComponent', () => {
     expect(text).toContain('Tempo-Feedback');
     expect(text).toContain('aggregierte Tendenz');
   });
+
+  it('differenziert die verfügbaren Quiz-Frageformate', async () => {
+    const fixture = TestBed.createComponent(HelpComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Single Choice');
+    expect(text).toContain('Multiple Choice');
+    expect(text).toContain('Kurzantwort');
+    expect(text).toContain('Freitext');
+    expect(text).toContain('Umfrage');
+    expect(text).toContain('Bewertungsskala');
+    expect(text).toContain('Numerische Schätzfrage');
+    expect(text).toContain('Musterlösungen');
+    expect(text).toContain('Keine automatische Bewertung');
+    expect(text).toContain('Referenzwert');
+  });
 });
