@@ -898,7 +898,7 @@ mat-card-actions.l-stack {
   flex: 1 1 0;
   min-width: 0;
   width: auto;
-  /* „Deine Quiz-Sammlung“ (mat-tonal-button): Schatten per !important gegen M3-Defaults */
+  /* Sekundärer Quiz-Sammlungs-CTA: Schatten per !important gegen M3-Defaults */
   box-shadow: none !important;
   filter: none !important;
 }
@@ -2088,6 +2088,10 @@ mat-card-actions.l-stack {
 .home-motd-backdrop {
   position: absolute;
   inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  appearance: none;
   background: color-mix(in srgb, var(--mat-sys-scrim) 45%, transparent);
 }
 
@@ -2098,6 +2102,10 @@ mat-card-actions.l-stack {
   position: relative;
   z-index: 1;
   width: min(36rem, 100%);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
   /* Ohne max-height wächst das Sheet über den Viewport; Touch-Scroll bleibt oft am Kind hängen →
      oberer Text nicht erreichbar. Scroll nur im Body (flex + min-height:0). */
   display: flex;

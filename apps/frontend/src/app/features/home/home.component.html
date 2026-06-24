@@ -29,13 +29,13 @@
           class="home-hero-preset-toggle"
         >
           <!-- Spielerisch zuerst: Default; vermeidet kurzen „Seriös“-Flash bei Hydration/Mobile. -->
-          <mat-button-toggle value="spielerisch" (click)="themePreset.setPreset('spielerisch')">
+          <mat-button-toggle value="spielerisch" (change)="themePreset.setPreset('spielerisch')">
             <span class="home-preset-option">
               <mat-icon class="home-preset-icon--playful">celebration</mat-icon>
               <span i18n>Spielerisch</span>
             </span>
           </mat-button-toggle>
-          <mat-button-toggle value="serious" (click)="themePreset.setPreset('serious')">
+          <mat-button-toggle value="serious" (change)="themePreset.setPreset('serious')">
             <span class="home-preset-option">
               <mat-icon>work</mat-icon>
               <span i18n>Seriös</span>
@@ -47,11 +47,11 @@
       <div class="home-hero-host-row">
         <a
           matButton="tonal"
-          [routerLink]="localizedPath('/quiz')"
+          [routerLink]="localizedPath('/quiz/new')"
           class="home-hero-host-link"
           (mouseenter)="preloadQuiz()"
           i18n="@@home.heroChip.quizStart"
-          >Quiz erstellen oder starten</a
+          >Quiz erstellen</a
         >
         <button
           matButton="tonal"
@@ -98,16 +98,15 @@
           Umfragen mit 100 % Fokus auf Datenschutz.
         </p>
       </div>
-      <div
+      <section
         class="home-step-trail"
-        role="group"
         i18n-aria-label="@@home.stepTrailAria"
         aria-label="So geht's: Code eingeben, live dabei."
       >
         <span class="home-step-chip" aria-hidden="true" i18n="@@home.step1">Code eingeben</span>
         <span class="home-step-trail__arrow" aria-hidden="true">→</span>
         <span class="home-step-chip" aria-hidden="true" i18n="@@home.step3">Live dabei</span>
-      </div>
+      </section>
     } @else {
       <p class="home-hero-serious-tagline" i18n="@@home.seriousTagline">
         Klar strukturiert für Unterricht, Meetings und Events – Teilnehmende brauchen nur den
@@ -177,6 +176,9 @@
             [class.home-code-segments--shake]="codeShaking()"
             [class.home-code-segments--joining]="isJoining()"
             (click)="focusCodeInput()"
+            (keydown.enter)="focusCodeInput()"
+            (keydown.space)="focusCodeInput(); $event.preventDefault()"
+            tabindex="0"
           >
             @for (slot of codeSlots; track slot) {
               <span
@@ -371,7 +373,7 @@
             <span i18n>Veranstalten</span>
           </mat-card-subtitle>
           <mat-card-title class="home-card__title" i18n="@@homeHostCard.title"
-            >Mit einem Quiz starten</mat-card-title
+            >Quiz vorbereiten oder starten</mat-card-title
           >
         </div>
       </mat-card-header>
@@ -389,6 +391,15 @@
             <span i18n="@@homeHostCard.primaryCta">Letztes Quiz starten</span>
           </a>
         }
+        <a
+          matButton="filled"
+          [routerLink]="localizedPath('/quiz/new')"
+          class="home-cta"
+          (mouseenter)="preloadQuiz()"
+        >
+          <mat-icon class="home-cta__icon">add_circle</mat-icon>
+          <span i18n="@@homeHostCard.createQuizCta">Neues Quiz erstellen</span>
+        </a>
         <div class="home-cta-row">
           <a
             matButton="tonal"
@@ -399,7 +410,7 @@
             [matBadgeHidden]="quizCount() === 0"
           >
             <mat-icon class="home-cta__icon">library_books</mat-icon>
-            <span i18n="@@homeHostCard.libraryCta">Deine Quiz-Sammlung</span>
+            <span i18n="@@homeHostCard.libraryCta">Quiz-Sammlung öffnen</span>
           </a>
         </div>
         <div class="home-card__tertiary">
@@ -480,16 +491,16 @@
           </div>
         }
         @if (showHostSharingHint()) {
-          <div class="home-host-sharing-hint" role="status">
+          <output class="home-host-sharing-hint" aria-live="polite">
             <mat-icon class="home-host-sharing-hint__icon" aria-hidden="true">link</mat-icon>
-            <div class="home-host-sharing-hint__content">
-              <p class="home-host-sharing-hint__text">
+            <span class="home-host-sharing-hint__content">
+              <span class="home-host-sharing-hint__text">
                 @if (hostSharingOriginSummary(); as originSummary) {
                   <span i18n="@@homeHostCard.syncLinkedHintWithOrigin">
                     Quizze werden mit {{ originSummary }} geteilt.
                   </span>
                 }
-              </p>
+              </span>
               <button
                 matButton="outlined"
                 type="button"
@@ -501,8 +512,8 @@
                 >
                 <span i18n="@@homeHostCard.syncUnlinkCta">Verknüpfung lösen</span>
               </button>
-            </div>
-          </div>
+            </span>
+          </output>
         }
       </mat-card-actions>
     </mat-card>
@@ -510,11 +521,16 @@
 
   @if (motd()) {
     <div class="home-motd-layer">
-      <div class="home-motd-backdrop" aria-hidden="true" (click)="onMotdBackdropClick()"></div>
-      <div
+      <button
+        type="button"
+        class="home-motd-backdrop"
+        aria-hidden="true"
+        tabindex="-1"
+        (click)="onMotdBackdropClick()"
+      ></button>
+      <dialog
         class="home-motd-sheet"
-        role="dialog"
-        aria-modal="true"
+        open
         aria-labelledby="home-motd-title"
         aria-describedby="home-motd-body"
         (click)="onMotdSheetClick($event)"
@@ -563,7 +579,6 @@
           </button>
           <div
             class="home-motd-sheet__thumbs"
-            role="group"
             i18n-aria-label="@@motd.thumbGroupAria"
             aria-label="Bewertung der Meldung"
           >
@@ -597,7 +612,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </dialog>
     </div>
   }
 </div>
