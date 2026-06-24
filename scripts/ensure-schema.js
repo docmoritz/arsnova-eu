@@ -50,6 +50,7 @@ function getMotdFeatureSeedFiles() {
   return [
     'prisma/migrations/20260604140000_motd_tempo_feedback/migration.sql',
     'prisma/migrations/20260617133000_motd_numeric_estimate/migration.sql',
+    'prisma/migrations/20260624113000_motd_ai_quiz_generation/migration.sql',
   ];
 }
 
