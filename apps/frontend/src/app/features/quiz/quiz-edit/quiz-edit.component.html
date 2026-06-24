@@ -1660,17 +1660,30 @@
           >
         </button>
         <button
+          matButton="tonal"
+          type="button"
+          class="quiz-edit__bottom-action"
+          (click)="addAnotherQuestion()"
+          i18n-aria-label="@@quiz.edit.addAnotherQuestionButtonAria"
+          aria-label="Weitere Frage hinzufügen"
+        >
+          <mat-icon>add_circle</mat-icon>
+          <span class="quiz-edit__bottom-action-label" i18n="@@quiz.edit.addAnotherQuestionButton"
+            >Weitere Frage</span
+          >
+        </button>
+        <button
           matButton="filled"
           type="button"
           class="quiz-edit__bottom-action quiz-edit__bottom-actions-save"
           (click)="saveAll()"
           [disabled]="!hasPendingChanges()"
           i18n-aria-label="@@quiz.edit.saveAllButton"
-          aria-label="Speichern"
+          aria-label="Änderungen speichern"
         >
           <mat-icon>save</mat-icon>
           <span class="quiz-edit__bottom-action-label" i18n="@@quiz.edit.saveAllButton"
-            >Speichern</span
+            >Änderungen speichern</span
           >
         </button>
         <button

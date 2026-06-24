@@ -112,6 +112,7 @@ const VOTE_ANCHOR_RESULT_MESSAGE = 'vote-result-message';
 const VOTE_ANCHOR_ERROR = 'vote-error';
 const AUTO_JOIN_NICKNAME_CANDIDATE_LIMIT = 80;
 const SESSION_NICKNAME_CONFLICT_DE = 'Dieser Nickname ist in dieser Session bereits vergeben.';
+const QUESTION_MEDIA_MARKDOWN_PATTERN = /!\[[^\]]*]\([^)]+\)|<img\b/i;
 
 export type VoteAutoScrollPhase = 'read' | 'vote' | 'result';
 
@@ -130,6 +131,15 @@ type StoredVoteResponse = {
   sent: true;
   updatedAt: string;
 };
+
+function stripHostOnlyQuestionNotes(value: string): string {
+  return value
+    .split('\n')
+    .filter((line) => !/^>\s*\*\*Unterrichtsidee:\*\*/.test(line.trim()))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 function parseSessionChannelTab(value: string | null): SessionChannelTab | null {
   return value === 'quiz' || value === 'qa' || value === 'quickFeedback' ? value : null;
@@ -2347,6 +2357,14 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     );
     this.markdownCache.set(value, rendered);
     return rendered;
+  }
+
+  renderQuestionMarkdown(value: string): SafeHtml {
+    return this.renderMarkdown(stripHostOnlyQuestionNotes(value));
+  }
+
+  questionHasMedia(value: string): boolean {
+    return QUESTION_MEDIA_MARKDOWN_PATTERN.test(value);
   }
 
   /** Nach Session-Ende: optional Bonus-Code zeigen, sonst direkt zur Startseite. */

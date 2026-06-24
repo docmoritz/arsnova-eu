@@ -835,19 +835,19 @@ describe('HomeComponent', () => {
       expect(comp.hasHostedQuiz()).toBe(true);
     });
 
-    it('zeigt ohne eigenes Quiz (nur Demo) keinen gefuellten Primaer-CTA auf der Veranstalten-Karte', () => {
+    it('zeigt ohne eigenes Quiz den Erstellen-CTA und die Sammlung getrennt auf der Veranstalten-Karte', () => {
       const fixture = createHomeFixture();
       fixture.detectChanges();
 
       const filled = fixture.nativeElement.querySelector(
         '.home-card--create .mat-mdc-unelevated-button',
-      );
-      expect(filled).toBeNull();
+      ) as HTMLAnchorElement | null;
+      expect(filled?.textContent).toContain('Neues Quiz erstellen');
 
       const secondary = fixture.nativeElement.querySelector(
         '.home-card--create .home-cta--secondary',
       ) as HTMLAnchorElement | null;
-      expect(secondary?.textContent).toContain('Deine Quiz-Sammlung');
+      expect(secondary?.textContent).toContain('Quiz-Sammlung öffnen');
     });
   });
 });

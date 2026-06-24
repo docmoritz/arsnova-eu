@@ -1647,6 +1647,9 @@ describe('QuizEditComponent', () => {
     const saveButton = bottomAction?.querySelector(
       '.quiz-edit__bottom-actions-save',
     ) as HTMLButtonElement | null;
+    const addAnotherButton = bottomAction?.querySelector(
+      'button[aria-label="Weitere Frage hinzufügen"]',
+    ) as HTMLButtonElement | null;
     const cancelButton = bottomAction?.querySelector(
       'button[mat-button], button:not([matButton])',
     ) as HTMLButtonElement | null;
@@ -1665,9 +1668,10 @@ describe('QuizEditComponent', () => {
     expect(backLink?.textContent).toContain('Zurück');
     expect(previewButton?.textContent).toContain('Vorschau');
     expect(cancelButton?.textContent).toContain('Verwerfen');
-    expect(saveButton?.textContent).toContain('Speichern');
+    expect(addAnotherButton?.textContent).toContain('Weitere Frage');
+    expect(saveButton?.textContent).toContain('Änderungen speichern');
     expect(cancelButton?.getAttribute('aria-label')).toBe('Verwerfen');
-    expect(saveButton?.getAttribute('aria-label')).toBe('Speichern');
+    expect(saveButton?.getAttribute('aria-label')).toBe('Änderungen speichern');
     expect(backLinks).toHaveLength(1);
     expect(previewButtons).toHaveLength(2);
     expect(metadataSubmit).toBeNull();

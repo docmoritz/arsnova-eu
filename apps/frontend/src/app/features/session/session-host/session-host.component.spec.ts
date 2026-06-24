@@ -5500,7 +5500,7 @@ describe('SessionHostComponent', () => {
     fixture.destroy();
   });
 
-  it('zeigt in der Diskussionsphase die Aktionen "Zweite Abstimmung" und "Überspringen" im unteren Exit-Anker', async () => {
+  it('zeigt in der Diskussionsphase die Aktionen "Zweite Abstimmung" und den klaren Weiter-Button im unteren Exit-Anker', async () => {
     getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'DISCUSSION' });
     onStatusChangedSubscribeMock.mockImplementation(
       (_input: unknown, opts: { onData: (d: unknown) => void }) => {
@@ -5555,7 +5555,11 @@ describe('SessionHostComponent', () => {
     );
 
     expect(exitAnchor.className).toContain('session-host__exit-anchor--with-primary');
-    expect(buttonTexts).toEqual(['Zweite Abstimmung', 'Überspringen', 'Session beenden']);
+    expect(buttonTexts).toEqual([
+      'Zweite Abstimmung',
+      'Zur nächsten Frage ohne zweite Abstimmung',
+      'Session beenden',
+    ]);
     fixture.destroy();
   });
 

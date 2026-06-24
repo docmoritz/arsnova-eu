@@ -4,22 +4,19 @@
       <div class="quiz-empty-state__content">
         <mat-icon class="quiz-empty-state__icon">library_books</mat-icon>
         <h2 class="quiz-empty-state__text" i18n="@@quizList.emptyWelcome">Willkommen!</h2>
-        <p class="quiz-empty-state__hint" i18n>Starte mit der Demo und lerne so die App kennen.</p>
+        <p class="quiz-empty-state__hint" i18n="@@quizList.emptyHint">
+          Du hast noch kein eigenes Quiz. Erstelle eins oder probiere zuerst die Demo aus.
+        </p>
       </div>
     </div>
   }
-  @if (demoQuizWhenLibraryEmpty(); as quiz) {
-    <div class="quiz-list__lead-demo l-stack l-stack--sm">
-      <ng-container
-        [ngTemplateOutlet]="quizItemCard"
-        [ngTemplateOutletContext]="{ $implicit: quiz }"
-      />
-    </div>
-  }
   <div class="quiz-list__actions">
+    <a matButton="filled" routerLink="new" i18n-aria-label aria-label="Neues Quiz erstellen">
+      <mat-icon>add_circle</mat-icon>
+      <span i18n>Neues Quiz erstellen</span>
+    </a>
     <button
-      matButton="filled"
-      color="primary"
+      matButton="tonal"
       type="button"
       class="quiz-list__ai-trigger"
       (click)="toggleAiImport()"
@@ -31,10 +28,6 @@
       <mat-icon>upload_file</mat-icon>
       <span i18n>Importieren</span>
     </button>
-    <a matButton="tonal" routerLink="new" i18n-aria-label aria-label="Neues Quiz erstellen">
-      <mat-icon>add_circle</mat-icon>
-      <span i18n>Neues Quiz erstellen</span>
-    </a>
     <input
       #importFileInput
       type="file"
@@ -43,6 +36,23 @@
       (change)="onImportFileSelected($event)"
     />
   </div>
+  @if (demoQuizWhenLibraryEmpty(); as quiz) {
+    <section class="quiz-list__lead-demo l-stack l-stack--sm" aria-labelledby="quiz-demo-heading">
+      <div class="quiz-list__demo-head">
+        <mat-icon aria-hidden="true">school</mat-icon>
+        <div>
+          <h2 id="quiz-demo-heading" class="quiz-list__demo-title" i18n>Demo-Quiz ausprobieren</h2>
+          <p class="quiz-list__demo-hint" i18n>
+            Die Demo ist ein Probelauf. Für deine Veranstaltung erstelle oben ein eigenes Quiz.
+          </p>
+        </div>
+      </div>
+      <ng-container
+        [ngTemplateOutlet]="quizItemCard"
+        [ngTemplateOutletContext]="{ $implicit: quiz }"
+      />
+    </section>
+  }
 
   @if (actionInfo()) {
     <div class="quiz-list__info" role="status">

@@ -201,7 +201,9 @@
 }
 
 .session-host__exit-anchor-button .mdc-button__label {
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .session-host__exit-anchor-button--primary {

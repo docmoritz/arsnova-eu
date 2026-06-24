@@ -1941,6 +1941,27 @@ export class QuizEditComponent implements OnDestroy {
     });
   }
 
+  addAnotherQuestion(): void {
+    if (!this.saveAll()) {
+      return;
+    }
+
+    this.editingQuestionId.set(null);
+    this.resetQuestionForm('SINGLE_CHOICE');
+    this.submitted.set(false);
+    this.submitError.set(null);
+    this.questionFormPanelOpen.set(true);
+
+    requestAnimationFrame(() => {
+      const el = this.questionFormElement?.nativeElement;
+      scrollElementIntoAppShell(el, 'start');
+      const firstEditable = el?.querySelector<HTMLElement>(
+        'textarea, input, [contenteditable="true"], button, [tabindex]:not([tabindex="-1"])',
+      );
+      firstEditable?.focus({ preventScroll: true });
+    });
+  }
+
   private commitAllQuestionChanges(): boolean {
     try {
       for (const [questionId, questionInput] of this.sortedStoredQuestionDraftEntries()) {
@@ -2084,7 +2105,7 @@ export class QuizEditComponent implements OnDestroy {
 
   private showSaveConfirmation(): void {
     this.snackBar.open(
-      $localize`:@@quizEdit.saveConfirmation:Gespeichert. Deine Änderungen sind jetzt in der Vorschau und im Live-Quiz übernommen.`,
+      $localize`:@@quizEdit.saveConfirmation:Änderungen gespeichert. Frage, Quizdaten und Einstellungen sind jetzt in Vorschau und Live-Quiz übernommen.`,
       '',
       {
         duration: 6000,

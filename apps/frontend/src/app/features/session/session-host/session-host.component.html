@@ -3131,8 +3131,12 @@
             class="session-host__exit-anchor-button"
             [disabled]="controlPending()"
             (click)="nextQuestion()"
+            i18n-aria-label="@@sessionHost.skipDiscussionNextQuestionAria"
+            aria-label="Zur nächsten Frage ohne zweite Abstimmung"
           >
-            <span i18n>Überspringen</span>
+            <span i18n="@@sessionHost.skipDiscussionNextQuestion"
+              >Zur nächsten Frage ohne zweite Abstimmung</span
+            >
           </button>
         }
         <button

@@ -386,6 +386,13 @@ export function voteSentLabel(playful: boolean): string {
   return $localize`:@@sessionVote.sentSerious:Antwort gesendet`;
 }
 
+export function voteSentHint(playful: boolean): string {
+  if (playful) {
+    return $localize`:@@sessionVote.sentHintPlayful:Deine Antwort ist gespeichert. Die Runde läuft noch für die Gruppe.`;
+  }
+  return $localize`:@@sessionVote.sentHintSerious:Deine Antwort ist gespeichert. Die Runde endet, wenn die Zeit abläuft oder die Moderation fortfährt.`;
+}
+
 export function voteRewardCorrect(playful: boolean): string {
   if (playful) {
     return $localize`:@@sessionVote.rewardCorrectPlayful:🎉 Volltreffer!`;

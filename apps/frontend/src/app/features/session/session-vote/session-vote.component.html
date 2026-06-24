@@ -796,7 +796,7 @@
             </div>
             <div
               class="vote-question__text markdown-body"
-              [innerHTML]="renderMarkdown(q.text)"
+              [innerHTML]="renderQuestionMarkdown(q.text)"
             ></div>
             <div class="vote-reading-banner" role="status" aria-live="polite">
               <mat-icon class="vote-reading-banner__icon" aria-hidden="true">menu_book</mat-icon>
@@ -854,7 +854,7 @@
             </div>
             <div
               class="vote-question__text markdown-body"
-              [innerHTML]="renderMarkdown(q.text)"
+              [innerHTML]="renderQuestionMarkdown(q.text)"
             ></div>
           </div>
           <div class="vote-discussion" role="status" aria-live="polite">
@@ -917,9 +917,18 @@
             </div>
             <div
               class="vote-question__text markdown-body"
-              [innerHTML]="renderMarkdown(q.text)"
+              [innerHTML]="renderQuestionMarkdown(q.text)"
             ></div>
           </div>
+
+          @if (isActive() && questionHasMedia(q.text) && !voteSent()) {
+            <div class="vote-media-hint" role="note">
+              <mat-icon aria-hidden="true">touch_app</mat-icon>
+              <span i18n="@@sessionVote.mediaAnswerHint"
+                >Das Bild ist nur zur Ansicht. Wähle deine Antwort unten aus.</span
+              >
+            </div>
+          }
 
           @if (timeoutMessage() && !voteSent()) {
             <div class="vote-timeout" role="status" aria-live="polite">
@@ -1253,8 +1262,11 @@
           @if (voteSent()) {
             @if (isActive()) {
               <div class="vote-sent" role="status" aria-live="polite">
-                <mat-icon>check_circle</mat-icon>
-                <span>{{ vpc.voteSentLabel(isPlayfulPreset()) }}</span>
+                <mat-icon aria-hidden="true">check_circle</mat-icon>
+                <span class="vote-sent__copy">
+                  <span class="vote-sent__title">{{ vpc.voteSentLabel(isPlayfulPreset()) }}</span>
+                  <span class="vote-sent__hint">{{ vpc.voteSentHint(isPlayfulPreset()) }}</span>
+                </span>
               </div>
             }
             @if (motivationMessage()) {
