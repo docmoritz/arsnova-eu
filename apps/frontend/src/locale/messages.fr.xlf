@@ -16782,8 +16782,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.dailyHighscoresTitle" datatype="html">
-        <source> Session-Tagesrekorde der letzten 30 Tage</source>
-        <target>Records quotidiens de session des 30 derniers jours</target>
+        <source> Session-Tagesrekorde der letzten 100 Tage</source>
+        <target>Records quotidiens de session des 100 derniers jours</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
           <context context-type="linenumber">280,282</context>
@@ -16798,11 +16798,53 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.dailyHighscoresChartAria" datatype="html">
-        <source>Linienchart der Session-Tagesrekorde der letzten 30 UTC-Tage</source>
-        <target>Graphique linéaire des records quotidiens de session des 30 derniers jours UTC</target>
+        <source>Linienchart der Session-Tagesrekorde der letzten 100 UTC-Tage</source>
+        <target>Graphique linéaire des records quotidiens de session des 100 derniers jours UTC</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
           <context context-type="linenumber">296</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMedianLabel" datatype="html">
+        <source>Median</source>
+        <target>Médiane</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMedianHint" datatype="html">
+        <source> Typischer Wert über alle bisher erfassten Tagesrekorde. </source>
+        <target>Valeur typique sur l'ensemble des records quotidiens enregistrés jusqu'à présent.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresStdDevLabel" datatype="html">
+        <source>Standardabweichung</source>
+        <target>Écart type</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresStdDevHint" datatype="html">
+        <source> Streuung über alle bisher erfassten Tagesrekorde. </source>
+        <target>Dispersion de l'ensemble des records quotidiens enregistrés jusqu'à présent.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMaxLabel" datatype="html">
+        <source>Maximum</source>
+        <target>Maximum</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMaxHint" datatype="html">
+        <source> Höchster Wert innerhalb der letzten 100 UTC-Tage im Diagramm. </source>
+        <target>Valeur la plus élevée sur les 100 derniers jours UTC affichés sur le graphique.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
         </context-group>
       </trans-unit>
       <trans-unit id="app.footer.statusLoading" datatype="html">

@@ -2734,6 +2734,17 @@ export const DailyHighscoreEntrySchema = z.object({
 });
 export type DailyHighscoreEntry = z.infer<typeof DailyHighscoreEntrySchema>;
 
+/** Deskriptive Statistik über alle täglichen Highscores im betrachteten Zeitraum. */
+export const DailyHighscoresStatisticsSchema = z.object({
+  /** Median der Tagesrekorde. */
+  median: z.number().int().min(0),
+  /** Standardabweichung der Tagesrekorde. */
+  standardDeviation: z.number().min(0),
+  /** Maximum der Tagesrekorde im Zeitraum. */
+  max: z.number().int().min(0),
+});
+export type DailyHighscoresStatistics = z.infer<typeof DailyHighscoresStatisticsSchema>;
+
 /** DTO: Server-Auslastung für die Startseite (Story 0.4) */
 export const ServerStatsDTOSchema = z.object({
   /** Alle noch nicht beendeten Sessions. */
@@ -2753,8 +2764,10 @@ export const ServerStatsDTOSchema = z.object({
   activeBlitzRounds: z.number(),
   /** Höchste je in einer Session registrierte Teilnehmerzahl (Joins, plattformweit). */
   maxParticipantsSingleSession: z.number().int().min(0),
-  /** Verlauf der Session-Tagesrekorde der letzten 30 UTC-Tage in chronologischer Reihenfolge. */
-  dailyHighscores: z.array(DailyHighscoreEntrySchema).length(30),
+  /** Verlauf der Session-Tagesrekorde der letzten 100 UTC-Tage in chronologischer Reihenfolge. */
+  dailyHighscores: z.array(DailyHighscoreEntrySchema).length(100),
+  /** Deskriptive Statistik über die täglichen Highscores. */
+  dailyHighscoresStatistics: DailyHighscoresStatisticsSchema,
   /** ISO-8601: Serverzeitpunkt, als sich der Rekord zuletzt erhöhte (`PlatformStatistic.updatedAt`), sonst null — nicht Session-Start/-Ende. */
   maxParticipantsStatisticUpdatedAt: z.string().datetime().nullable(),
   /** Betriebsstatus (SLO-nah) für den Footer. */

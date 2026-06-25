@@ -291,6 +291,30 @@ mat-dialog-actions {
   height: 100%;
 }
 
+.status-help-dialog__history-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.8rem;
+}
+
+.status-help-dialog__history-stats .status-help-dialog__metric {
+  gap: 0.35rem;
+  padding: 0.6rem;
+}
+
+.status-help-dialog__history-stats .status-help-dialog__metric strong {
+  font: var(--mat-sys-headline-small);
+  font-weight: 700;
+}
+
+.status-help-dialog__history-stats .status-help-dialog__metric-head {
+  font: var(--mat-sys-label-small);
+}
+
+.status-help-dialog__history-stats .status-help-dialog__metric-hint {
+  font: var(--mat-sys-body-small);
+  line-height: 1.35;
+}
+
 .status-help-dialog__legend {
   margin: 0;
   padding: 0;
@@ -401,6 +425,26 @@ mat-dialog-actions {
   .status-help-dialog__metric-groups,
   .status-help-dialog__metrics {
     gap: 0.5rem;
+  }
+
+  .status-help-dialog__history-stats {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0.6rem;
+  }
+
+  .status-help-dialog__history-stats .status-help-dialog__metric {
+    gap: 0.25rem;
+    padding: 0.5rem 0.55rem;
+  }
+
+  .status-help-dialog__history-stats .status-help-dialog__metric strong {
+    font: var(--mat-sys-title-large);
+    line-height: 1;
+  }
+
+  .status-help-dialog__history-stats .status-help-dialog__metric-head,
+  .status-help-dialog__history-stats .status-help-dialog__metric-hint {
+    line-height: 1.25;
   }
 
   .status-help-dialog__metric {

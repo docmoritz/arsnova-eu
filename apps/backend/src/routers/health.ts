@@ -26,7 +26,7 @@ import { readSloSignals, type SloSignals } from '../lib/sloTelemetry';
 import type { ServerStatsDTO, FooterStatusDTO } from '@arsnova/shared-types';
 
 const ACTIVE_SESSION_MIN_PARTICIPANTS = 5;
-const DAILY_HIGHSCORE_DAYS = 30;
+const DAILY_HIGHSCORE_DAYS = 100;
 const SERVER_STATS_CACHE_TTL_MS = 30_000;
 const SERVER_STATUS_SCORE_THRESHOLDS = {
   busy: 60,
@@ -82,6 +82,48 @@ function buildDailyHighscores(
       updatedAt: entry?.updatedAt ?? null,
     };
   });
+}
+
+function calculateDailyHighscoresStatistics(entries: Array<{ count: number }>): {
+  median: number;
+  standardDeviation: number;
+  max: number;
+} {
+  const counts = entries.map((e) => e.count).sort((a, b) => a - b);
+  const n = counts.length;
+
+  if (n === 0) {
+    return { median: 0, standardDeviation: 0, max: 0 };
+  }
+
+  // Median berechnen
+  const median = n % 2 === 0 ? (counts[n / 2 - 1] + counts[n / 2]) / 2 : counts[Math.floor(n / 2)];
+
+  // Mittelwert für Standardabweichung
+  const mean = counts.reduce((sum, count) => sum + count, 0) / n;
+
+  // Standardabweichung berechnen
+  const variance = counts.reduce((sum, count) => sum + Math.pow(count - mean, 2), 0) / n;
+  const standardDeviation = Math.sqrt(variance);
+
+  // Maximum berechnen
+  const max = counts[n - 1];
+
+  return { median: Math.round(median), standardDeviation, max };
+}
+
+function calculateDailyHighscoreWindowMax(entries: Array<{ count: number }>): number {
+  return entries.reduce((currentMax, entry) => Math.max(currentMax, entry.count), 0);
+}
+
+function buildDailyHighscoreStatisticsEntries(
+  rows: Array<{ date: Date; maxParticipantsSingleSession: number }>,
+): Array<{ count: number }> {
+  return rows
+    .map((row) => ({
+      count: Math.max(0, row.maxParticipantsSingleSession),
+    }))
+    .filter((entry) => entry.count > 0);
 }
 
 function getLoadStatus({
@@ -200,7 +242,6 @@ async function computeServerStats(): Promise<ServerStatsDTO> {
     status: { not: 'FINISHED' as const },
   };
   const dailyHighscoreRangeEnd = getUtcDayStart(new Date());
-  const dailyHighscoreRangeStart = addUtcDays(dailyHighscoreRangeEnd, -(DAILY_HIGHSCORE_DAYS - 1));
 
   let activeBlitzRounds = 0;
   try {
@@ -273,12 +314,6 @@ async function computeServerStats(): Promise<ServerStatsDTO> {
     })();
     const dailyHighscoreRowsPromise = prisma.dailyStatistic
       .findMany({
-        where: {
-          date: {
-            gte: dailyHighscoreRangeStart,
-            lte: dailyHighscoreRangeEnd,
-          },
-        },
         orderBy: { date: 'asc' },
         select: {
           date: true,
@@ -342,6 +377,12 @@ async function computeServerStats(): Promise<ServerStatsDTO> {
       sessionTransitionsLastMinute: loadSignals.sessionTransitionsLastMinute,
       activeCountdownSessions: loadSignals.activeCountdownSessions,
     });
+    const dailyHighscores = buildDailyHighscores(dailyHighscoreRows, dailyHighscoreRangeEnd);
+    const dailyHighscoreStatisticsEntries =
+      buildDailyHighscoreStatisticsEntries(dailyHighscoreRows);
+    const dailyHighscoresStatistics = calculateDailyHighscoresStatistics(
+      dailyHighscoreStatisticsEntries,
+    );
     return {
       openSessions,
       activeSessions,
@@ -352,12 +393,17 @@ async function computeServerStats(): Promise<ServerStatsDTO> {
       completedSessions: completedSessionsTotal,
       activeBlitzRounds,
       maxParticipantsSingleSession: platformRow.maxParticipantsSingleSession,
-      dailyHighscores: buildDailyHighscores(dailyHighscoreRows, dailyHighscoreRangeEnd),
+      dailyHighscores,
+      dailyHighscoresStatistics: {
+        ...dailyHighscoresStatistics,
+        max: calculateDailyHighscoreWindowMax(dailyHighscores),
+      },
       maxParticipantsStatisticUpdatedAt: platformRow.updatedAtIso,
       serviceStatus: getServiceStatus(loadStatus, sloSignals),
       loadStatus,
     };
   } catch {
+    const emptyHighscores = buildDailyHighscores([]);
     return {
       openSessions: 0,
       activeSessions: 0,
@@ -368,7 +414,8 @@ async function computeServerStats(): Promise<ServerStatsDTO> {
       completedSessions: 0,
       activeBlitzRounds: 0,
       maxParticipantsSingleSession: 0,
-      dailyHighscores: buildDailyHighscores([]),
+      dailyHighscores: emptyHighscores,
+      dailyHighscoresStatistics: calculateDailyHighscoresStatistics(emptyHighscores),
       maxParticipantsStatisticUpdatedAt: null,
       serviceStatus: 'stable' as const,
       loadStatus: 'healthy' as const,

@@ -278,7 +278,7 @@ export interface ServerStatusHelpDialogData {
               class="status-help-dialog__section-title"
               i18n="@@help.dailyHighscoresTitle"
             >
-              Session-Tagesrekorde der letzten 30 Tage
+              Session-Tagesrekorde der letzten 100 Tage
             </h3>
             <p
               class="status-help-dialog__copy status-help-dialog__copy--compact"
@@ -293,9 +293,40 @@ export interface ServerStatusHelpDialogData {
               class="status-help-dialog__history-canvas"
               role="img"
               i18n-aria-label="@@help.dailyHighscoresChartAria"
-              aria-label="Linienchart der Session-Tagesrekorde der letzten 30 UTC-Tage"
+              aria-label="Linienchart der Session-Tagesrekorde der letzten 100 UTC-Tage"
             ></canvas>
           </div>
+          @if (dailyHighscoresStatisticsFormatted(); as historyStats) {
+            <div class="status-help-dialog__metrics status-help-dialog__history-stats">
+              <article class="status-help-dialog__metric">
+                <div class="status-help-dialog__metric-head">
+                  <span i18n="@@help.dailyHighscoresMedianLabel">Median</span>
+                </div>
+                <strong>{{ historyStats.median }}</strong>
+                <p class="status-help-dialog__metric-hint" i18n="@@help.dailyHighscoresMedianHint">
+                  Typischer Wert über alle bisher erfassten Tagesrekorde.
+                </p>
+              </article>
+              <article class="status-help-dialog__metric">
+                <div class="status-help-dialog__metric-head">
+                  <span i18n="@@help.dailyHighscoresStdDevLabel">Standardabweichung</span>
+                </div>
+                <strong>{{ historyStats.standardDeviation }}</strong>
+                <p class="status-help-dialog__metric-hint" i18n="@@help.dailyHighscoresStdDevHint">
+                  Streuung über alle bisher erfassten Tagesrekorde.
+                </p>
+              </article>
+              <article class="status-help-dialog__metric">
+                <div class="status-help-dialog__metric-head">
+                  <span i18n="@@help.dailyHighscoresMaxLabel">Maximum</span>
+                </div>
+                <strong>{{ historyStats.max }}</strong>
+                <p class="status-help-dialog__metric-hint" i18n="@@help.dailyHighscoresMaxHint">
+                  Höchster Wert innerhalb der letzten 100 UTC-Tage im Diagramm.
+                </p>
+              </article>
+            </div>
+          }
         </section>
       } @else {
         <section class="status-help-dialog__state" aria-live="polite">
@@ -410,6 +441,17 @@ export class ServerStatusHelpDialogComponent {
     }
   });
 
+  readonly dailyHighscoresStatisticsFormatted = computed(() => {
+    const statistics = this.effectiveStats()?.dailyHighscoresStatistics;
+    if (!statistics) return null;
+
+    return {
+      median: this.formatNumber(statistics.median),
+      standardDeviation: this.formatNumber(statistics.standardDeviation),
+      max: this.formatNumber(statistics.max),
+    };
+  });
+
   constructor() {
     this.destroyRef.onDestroy(() => this.destroyChart());
 
@@ -476,5 +518,12 @@ export class ServerStatusHelpDialogComponent {
 
   private destroyChart(): void {
     this.chartRenderer?.destroy();
+  }
+
+  private formatNumber(value: number, maximumFractionDigits = 0): string {
+    return new Intl.NumberFormat(this.locale, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits,
+    }).format(value);
   }
 }

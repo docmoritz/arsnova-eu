@@ -5,10 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ServerStatusHelpDialogComponent } from './server-status-help-dialog.component';
 
 function buildDailyHighscores() {
-  return Array.from({ length: 30 }, (_, index) => ({
-    date: `2026-04-${String(index + 1).padStart(2, '0')}`,
+  return Array.from({ length: 100 }, (_, index) => ({
+    date: `2026-${String(Math.floor(index / 28) + 1).padStart(2, '0')}-${String((index % 28) + 1).padStart(2, '0')}`,
     count: index + 1,
-    updatedAt: `2026-04-${String(index + 1).padStart(2, '0')}T12:00:00.000Z`,
+    updatedAt: `2026-${String(Math.floor(index / 28) + 1).padStart(2, '0')}-${String((index % 28) + 1).padStart(2, '0')}T12:00:00.000Z`,
   }));
 }
 
@@ -41,6 +41,11 @@ describe('ServerStatusHelpDialogComponent', () => {
               activeBlitzRounds: 3,
               maxParticipantsSingleSession: 412,
               dailyHighscores: buildDailyHighscores(),
+              dailyHighscoresStatistics: {
+                median: 50,
+                standardDeviation: 12.4,
+                max: 100,
+              },
               maxParticipantsStatisticUpdatedAt: '2026-04-05T10:15:00.000Z',
               serviceStatus: 'limited',
               loadStatus: 'busy',
@@ -74,10 +79,19 @@ describe('ServerStatusHelpDialogComponent', () => {
     expect(text).toContain('Mit laufendem Countdown im aktuellen Aktivitätsfenster');
     expect(text).toContain('Alle je beendeten Live-Sessions (kumulativ)');
     expect(text).toContain('Rekordteilnahme');
-    expect(text).toContain('Session-Tagesrekorde der letzten 30 Tage');
+    expect(text).toContain('Session-Tagesrekorde der letzten 100 Tage');
     expect(text).toContain(
       'Jeder Punkt zeigt den Rekord der größten einzelnen Session eines UTC-Tages.',
     );
+    expect(text).toContain('Median');
+    expect(text).toContain('Typischer Wert über alle bisher erfassten Tagesrekorde.');
+    expect(text).toContain('Standardabweichung');
+    expect(text).toContain('Streuung über alle bisher erfassten Tagesrekorde.');
+    expect(text).toContain('Maximum');
+    expect(text).toContain('Höchster Wert innerhalb der letzten 100 UTC-Tage im Diagramm.');
+    expect(text).toContain('50');
+    expect(text).toContain('12');
+    expect(text).toContain('100');
     expect(text).toContain('412');
     expect((fixture.nativeElement as HTMLElement).querySelector('canvas')).not.toBeNull();
   });
@@ -125,6 +139,11 @@ describe('ServerStatusHelpDialogComponent', () => {
               activeBlitzRounds: 0,
               maxParticipantsSingleSession: 96,
               dailyHighscores: buildDailyHighscores(),
+              dailyHighscoresStatistics: {
+                median: 50,
+                standardDeviation: 12.4,
+                max: 100,
+              },
               maxParticipantsStatisticUpdatedAt: '2026-04-05T10:15:00.000Z',
               serviceStatus: 'stable',
               loadStatus: 'healthy',

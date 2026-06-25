@@ -187,10 +187,15 @@ describe('health.stats', () => {
     expect(result.activeCountdownSessions).toBe(0);
     expect(result.completedSessions).toBe(0);
     expect(result.maxParticipantsSingleSession).toBe(0);
-    expect(result.dailyHighscores).toHaveLength(30);
+    expect(result.dailyHighscores).toHaveLength(100);
     expect(
       result.dailyHighscores.every((entry) => entry.count === 0 && entry.updatedAt === null),
     ).toBe(true);
+    expect(result.dailyHighscoresStatistics).toEqual({
+      median: 0,
+      standardDeviation: 0,
+      max: 0,
+    });
     expect(result.maxParticipantsStatisticUpdatedAt).toBeNull();
     expect(result.serviceStatus).toBe('stable');
     expect(result.loadStatus).toBe('healthy');
@@ -507,7 +512,7 @@ describe('health.stats', () => {
     expect(result.totalParticipants).toBe(14);
   });
 
-  it('liefert die letzten 30 UTC-Tage chronologisch und füllt Lücken mit 0 auf', async () => {
+  it('liefert die letzten 100 UTC-Tage chronologisch und füllt Lücken mit 0 auf', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-04T15:30:00.000Z'));
     vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
@@ -528,9 +533,9 @@ describe('health.stats', () => {
     try {
       const result = await caller.stats(undefined);
 
-      expect(result.dailyHighscores).toHaveLength(30);
+      expect(result.dailyHighscores).toHaveLength(100);
       expect(result.dailyHighscores[0]).toEqual({
-        date: '2026-04-05',
+        date: '2026-01-25',
         count: 0,
         updatedAt: null,
       });
@@ -539,6 +544,55 @@ describe('health.stats', () => {
         { date: '2026-05-03', count: 0, updatedAt: null },
         { date: '2026-05-04', count: 23, updatedAt: '2026-05-04T12:45:00.000Z' },
       ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('berechnet dailyHighscoresStatistics nur aus aktiven Tagesrekorden', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-01-06T15:30:00.000Z'));
+    vi.mocked(prisma.session.count).mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+    vi.mocked(prisma.platformStatistic.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.dailyStatistic.findMany).mockResolvedValue([
+      {
+        date: new Date('2025-01-01T00:00:00.000Z'),
+        maxParticipantsSingleSession: 0,
+        updatedAt: new Date('2025-01-01T12:00:00.000Z'),
+      },
+      {
+        date: new Date('2025-01-02T00:00:00.000Z'),
+        maxParticipantsSingleSession: 0,
+        updatedAt: new Date('2025-01-02T12:00:00.000Z'),
+      },
+      {
+        date: new Date('2025-01-03T00:00:00.000Z'),
+        maxParticipantsSingleSession: 10,
+        updatedAt: new Date('2025-01-03T12:00:00.000Z'),
+      },
+      {
+        date: new Date('2025-01-04T00:00:00.000Z'),
+        maxParticipantsSingleSession: 20,
+        updatedAt: new Date('2025-01-04T12:00:00.000Z'),
+      },
+      {
+        date: new Date('2025-01-05T00:00:00.000Z'),
+        maxParticipantsSingleSession: 0,
+        updatedAt: new Date('2025-01-05T12:00:00.000Z'),
+      },
+      {
+        date: new Date('2025-01-06T00:00:00.000Z'),
+        maxParticipantsSingleSession: 30,
+        updatedAt: new Date('2025-01-06T12:45:00.000Z'),
+      },
+    ] as never);
+
+    try {
+      const result = await caller.stats(undefined);
+
+      expect(result.dailyHighscoresStatistics.median).toBe(20);
+      expect(result.dailyHighscoresStatistics.standardDeviation).toBeCloseTo(8.16497, 5);
+      expect(result.dailyHighscoresStatistics.max).toBe(30);
     } finally {
       vi.useRealTimers();
     }

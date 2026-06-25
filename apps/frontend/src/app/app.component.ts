@@ -45,6 +45,8 @@ const PWA_UPDATE_READY_FALLBACK_MS = 8_000;
 const FOOTER_STATUS_POLL_INTERVAL_MS = 5 * 60 * 1000;
 const FOOTER_STATS_DIALOG_REFRESH_MS = 30_000;
 
+type DailyHighscorePoint = ServerStatsDTO['dailyHighscores'][number];
+
 /** Browser-Event für „App installieren“ (PWA). */
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -589,6 +591,69 @@ export class AppComponent implements OnInit, OnDestroy {
     this.refreshFooterStatusPollingState({ immediate: document.visibilityState === 'visible' });
   };
 
+  private decorateFooterStatsForLocalVisualCheck(stats: ServerStatsDTO): ServerStatsDTO {
+    if (!isDevMode()) return stats;
+    if (typeof window === 'undefined') return stats;
+    if (!this.isLocalDevHost(window.location.hostname)) return stats;
+
+    const dailyHighscores = this.buildLocalDevDailyHighscores(stats.dailyHighscores);
+    const hasPersistedHistory =
+      stats.dailyHighscoresStatistics.max > 0 ||
+      stats.dailyHighscores.some((entry) => entry.count > 0);
+
+    return {
+      ...stats,
+      dailyHighscores,
+      dailyHighscoresStatistics: hasPersistedHistory
+        ? stats.dailyHighscoresStatistics
+        : this.calculateDailyHighscoresStatistics(dailyHighscores),
+    };
+  }
+
+  private buildLocalDevDailyHighscores(
+    points: ServerStatsDTO['dailyHighscores'],
+  ): ServerStatsDTO['dailyHighscores'] {
+    const peak = Math.max(...points.map((entry) => entry.count), 0);
+    const upperBound = Math.max(peak, 120);
+    const floor = Math.max(12, Math.round(upperBound * 0.2));
+
+    return points.map((entry, index) => {
+      const wave = Math.sin(index / 5.2) * upperBound * 0.18;
+      const waveB = Math.cos(index / 8.4) * upperBound * 0.08;
+      const staircase = (index % 9) * (upperBound * 0.018);
+      const pulse = index % 17 === 0 ? upperBound * 0.16 : index % 13 === 0 ? upperBound * 0.09 : 0;
+      const trend = Math.floor(index / 20) * (upperBound * 0.028);
+      const count = Math.max(floor, Math.round(floor + wave + waveB + staircase + pulse + trend));
+
+      return {
+        ...entry,
+        count,
+        updatedAt: `${entry.date}T12:00:00.000Z`,
+      } satisfies DailyHighscorePoint;
+    }) as ServerStatsDTO['dailyHighscores'];
+  }
+
+  private calculateDailyHighscoresStatistics(
+    points: ServerStatsDTO['dailyHighscores'],
+  ): ServerStatsDTO['dailyHighscoresStatistics'] {
+    const counts = points.map((entry) => entry.count).sort((left, right) => left - right);
+    if (!counts.length) {
+      return { median: 0, standardDeviation: 0, max: 0 };
+    }
+
+    const middle = Math.floor(counts.length / 2);
+    const median =
+      counts.length % 2 === 0 ? (counts[middle - 1] + counts[middle]) / 2 : counts[middle];
+    const mean = counts.reduce((sum, count) => sum + count, 0) / counts.length;
+    const variance = counts.reduce((sum, count) => sum + (count - mean) ** 2, 0) / counts.length;
+
+    return {
+      median: Math.round(median),
+      standardDeviation: Math.round(Math.sqrt(variance)),
+      max: counts[counts.length - 1],
+    };
+  }
+
   private async loadFooterStats(options?: { forceFresh?: boolean }): Promise<void> {
     if (this.footerStatsLoading()) return;
 
@@ -604,7 +669,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.footerStatsLoading.set(true);
     try {
       const stats = await trpc.health.stats.query();
-      this.footerStats.set(stats);
+      this.footerStats.set(this.decorateFooterStatsForLocalVisualCheck(stats));
       this.footerStatsLoadedAt = Date.now();
     } catch {
       this.footerStats.set(null);

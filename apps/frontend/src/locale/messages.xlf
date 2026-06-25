@@ -14784,7 +14784,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.dailyHighscoresTitle" datatype="html">
-        <source> Session-Tagesrekorde der letzten 30 Tage </source>
+        <source> Session-Tagesrekorde der letzten 100 Tage </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
           <context context-type="linenumber">280,282</context>
@@ -14798,10 +14798,46 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.dailyHighscoresChartAria" datatype="html">
-        <source>Linienchart der Session-Tagesrekorde der letzten 30 UTC-Tage</source>
+        <source>Linienchart der Session-Tagesrekorde der letzten 100 UTC-Tage</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
           <context context-type="linenumber">296</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMedianLabel" datatype="html">
+        <source>Median</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMedianHint" datatype="html">
+        <source> Typischer Wert über alle bisher erfassten Tagesrekorde. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresStdDevLabel" datatype="html">
+        <source>Standardabweichung</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresStdDevHint" datatype="html">
+        <source> Streuung über alle bisher erfassten Tagesrekorde. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMaxLabel" datatype="html">
+        <source>Maximum</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="help.dailyHighscoresMaxHint" datatype="html">
+        <source> Höchster Wert innerhalb der letzten 100 UTC-Tage im Diagramm. </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/shared/server-status-help-dialog/server-status-help-dialog.component.ts</context>
         </context-group>
       </trans-unit>
       <trans-unit id="app.footer.statusLoading" datatype="html">
