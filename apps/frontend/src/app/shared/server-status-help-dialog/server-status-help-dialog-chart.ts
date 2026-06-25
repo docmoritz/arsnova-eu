@@ -181,11 +181,11 @@ export class ServerStatusHistoryChartRenderer {
       fill: false,
       pointBackgroundColor: palette.point,
       pointBorderColor: palette.point,
-      pointHitRadius: 16,
+      pointHitRadius: 12,
       pointHoverBackgroundColor: palette.point,
       pointHoverBorderColor: palette.point,
-      pointHoverRadius: 4,
-      pointRadius: 2.5,
+      pointHoverRadius: 3,
+      pointRadius: 0,
       tension: 0.32,
     };
   }
