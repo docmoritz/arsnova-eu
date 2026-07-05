@@ -1,6 +1,6 @@
 # Deployment: arsnova.eu auf Debian Root-Server
 
-> **Stand:** 2026-05-31 — abgeglichen mit `docker-compose.prod.yml`, `.env.production.example`, `scripts/deploy.sh`, Root-[README](../README.md), [ENVIRONMENT.md](ENVIRONMENT.md), [SECURITY-OVERVIEW.md](SECURITY-OVERVIEW.md) und [TESTING.md](TESTING.md).
+> **Stand:** 2026-07-05 — abgeglichen mit `docker-compose.prod.yml`, `.env.production.example`, `scripts/deploy.sh`, Root-[README](../README.md), [ENVIRONMENT.md](ENVIRONMENT.md), [SECURITY-OVERVIEW.md](SECURITY-OVERVIEW.md), [TESTING.md](TESTING.md) und [server-erste-hilfe.md](server-erste-hilfe.md).
 >
 > **Domain:** Die hier beschriebene Produktionsinstanz ist unter
 > https://arsnova.eu erreichbar. Falls bei künftigen Deployments ein
@@ -483,7 +483,7 @@ Das Repository enthält die aktuelle Produktionsvorlage in [`docker-compose.prod
 - App-Ports `3000`, `3001`, `3002` sind nur auf `127.0.0.1` gebunden; externer Zugriff läuft ausschließlich über Nginx/TLS.
 - `.env.production` wird per `env_file` in die Container geladen. Das vermeidet leere Secrets, wenn `docker compose` ohne Shell-Export gestartet wird.
 - Der App-Healthcheck prüft `http://localhost:3000/trpc/health.check`.
-- Fixe Laufzeitwerte (`PORT`, `HOST`, `WS_PORT`, `YJS_WS_PORT`, `NODE_ENV`) sind im Compose gesetzt; Secrets und Verbindungsdaten kommen aus `.env.production`.
+- Fixe Laufzeitwerte (`PORT`, `HOST`, `WS_PORT`, `YJS_WS_PORT`, `YJS_WS_HOST`, `NODE_ENV`) sind im Compose bzw. in `.env.production` gesetzt; Secrets und Verbindungsdaten kommen aus `.env.production`.
 
 Start immer mit der Repo-Datei:
 
@@ -814,3 +814,5 @@ Für **arsnova.eu** in der Erstphase reicht der **Ein-Server**; Cluster oder clo
 ---
 
 Dieses Dokument ist als Vorschlag und Referenz gedacht. Die genaue Nginx-Konfiguration (insbesondere WebSocket-Pfade) solltet ihr an eure tatsächlichen Client-Verbindungs-URLs anpassen; bei Bedarf kann das Backend/Frontend so erweitert werden, dass ein gemeinsamer Host und Pfad für HTTP und WebSockets verwendet wird.
+
+**Stand:** 2026-07-05 — im Gleichschritt mit [ENVIRONMENT.md](ENVIRONMENT.md), [TESTING.md](TESTING.md) und [server-erste-hilfe.md](server-erste-hilfe.md) gepflegt.

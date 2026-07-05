@@ -6,7 +6,7 @@
 **Datum:** 2026-03-17  
 **Entscheider:** Projektteam
 
-**Letzter Repo-Abgleich:** 2026-05-31
+**Letzter Repo-Abgleich:** 2026-07-05
 
 ## Kontext
 
@@ -144,7 +144,7 @@ Diese Aufteilung ist Teil der Architekturentscheidung.
 - Ergebnisse muessen zwischen Laeufen vergleichbar und fuer Entwickler:innen lesbar sein.
 - Neue kritische Live-Flows erhalten frueh eine Entscheidung, ob sie primaer in `k6`, `Artillery` oder beiden Werkzeugen getestet werden.
 
-## Umsetzungsstand (2026-05-31)
+## Umsetzungsstand (2026-07-05)
 
 Im Repo existieren konkrete `k6`-Skripte unter `scripts/load/`, darunter `k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js` und `k6-session-hotpaths-500vu.js`. Dazu kommen Node-basierte Schnellchecks wie `concurrent-50-http.mjs`, `session-participants-50.mjs` und `ws-status-subscribers.mjs`. Ein vollstaendiges Artillery-Setup ist im aktuellen Repo noch nicht eingecheckt; Artillery bleibt damit Standard-Zielbild fuer Realtime-/E2E-nahe Lastszenarien, aber noch kein implementierter Testpfad.
 

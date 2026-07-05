@@ -2,7 +2,14 @@
  * k6: 50 VUs — einmal Join pro VU, dann Lobby-Polling (GET-Batch wie session-participants-50.mjs).
  *
  *   SESSION_CODE=AB12CD BASE_URL=http://127.0.0.1:3000 k6 run scripts/load/k6-trpc-session-50vu.js
+ *   SESSION_CODE=AB12CD npm run load:k6:session
+ *
+ * Docker (Linux/WSL2):
  *   docker run --rm -i --network host -e SESSION_CODE=AB12CD -e BASE_URL=http://127.0.0.1:3000 \
+ *     grafana/k6 run - <scripts/load/k6-trpc-session-50vu.js
+ *
+ * Docker (macOS):
+ *   docker run --rm -i -e SESSION_CODE=AB12CD -e BASE_URL=http://host.docker.internal:3000 \
  *     grafana/k6 run - <scripts/load/k6-trpc-session-50vu.js
  */
 import http from 'k6/http';

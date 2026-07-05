@@ -1,6 +1,6 @@
 # Produktdatenblatt: arsnova.eu
 
-**Stand:** 2026-04-13  
+**Stand:** 2026-07-05
 **Produktkategorie:** Webbasierte Interaktions- und Abstimmungsplattform  
 **Einsatzkontext:** Lehre, Training, Workshops, Konferenzen, Beteiligungsformate
 
@@ -22,13 +22,13 @@ Die Lösung ist auf zwei Zielgruppen gleichzeitig ausgelegt:
 Diese Produktbeschreibung wurde aus zwei Primärquellen konsolidiert:
 
 - **Backlog-Quelle:** `Backlog.md`
-  - Gesamtumfang: **95 Stories**
-  - Status laut Story-Übersicht: **80 fertig**, **15 offen**
-  - Epics: **0 bis 10**
+  - Gesamtumfang: **112 Stories**
+  - Status laut Story-Übersicht: **90 fertig**, **1 in Arbeit**, **21 offen**
+  - Epics: **0 bis 10** plus **Epic 11** als noch nicht beauftragter Erweiterungspfad
 - **Test-Quelle:** alle automatisierten Unit-/Komponententests in Backend und Frontend
-  - **Frontend:** 43 Spec-Dateien (`*.spec.ts`), zuletzt 343 Tests
-  - **Backend:** 27 Testdateien (`*.test.ts`), zuletzt 169 Tests
-  - Zusammen: **512 automatisierte Tests** als Verhaltensnachweis
+  - **Frontend:** 43 Spec-Dateien (`*.spec.ts`)
+  - **Backend:** 27 Testdateien (`*.test.ts`)
+  - Zusammen: **über 500 automatisierte Tests** als Verhaltensnachweis
 
 Hinweis: Die Darstellung bleibt produktdatenblatt-typisch verdichtet, bezieht sich aber auf den vollständigen Story- und Testbestand.
 
@@ -47,13 +47,13 @@ Hinweis: Die Darstellung bleibt produktdatenblatt-typisch verdichtet, bezieht si
 - Fragetypen: Single-/Multiple-Choice, Freitext, Kurzantwort, Umfrage, Rating, numerische Schätzfrage.
 - Markdown/KaTeX inkl. Bild-URL/Lightbox und KI-unterstütztem Import.
 - Numerische Schätzfragen (`NUMERIC_ESTIMATE`) unterstützen Ganzzahl-/Dezimal-Eingaben, Plausibilitätsgrenzen, absolutes/relatives Toleranzband, optionale zwei Runden, Statistik, Histogramm und Nähe-Scoring.
-- Offene Punkte: Sync-Härtung/Skalierung, Editor-Toolbar-Ausbau, Word-Cloud-2.0.
+- Offene Punkte: Sync-Härtung/Skalierung, Editor-Toolbar-Ausbau, Word-Cloud-2.0, Schlüsselwort-/Token-Bewertung für `SHORT_TEXT`-Ausbau (1.2ec/1.2ed), neue Fragentypen 1.2f–1.2i.
 
 ## Epic 2 – Session-Start und Host-Steuerung
 
 - Session-ID/Upload, QR-Einstieg, Host-/Presenter-Härtung, Lobby, Steuerkonsole, Beamer-Modus.
 - Lesephase und Peer-Instruction (zweite Runde mit Vergleich) integriert.
-- Aktuelle Erweiterungen: phasengesteuerte Einsprunglogik und verbesserte Round-2-/Ergebnisführung.
+- Aktuelle Erweiterungen: phasengesteuerte Einsprunglogik, verbesserte Round-2-/Ergebnisführung und vorbereitende Arbeiten an asynchronen Quiz-Modi (2.9).
 
 ## Epic 3 – Teilnehmerfluss
 
@@ -81,7 +81,7 @@ Hinweis: Die Darstellung bleibt produktdatenblatt-typisch verdichtet, bezieht si
 ## Epic 8 – Q&A
 
 - Start, Einreichen, bidirektionales Voting, Host-Sortiermodi (`Meist unterstuetzt`, `Beste Fragen`, `Umstritten`), Q&A-Wortwolke und Moderation umgesetzt.
-- Offen: delegierbare Moderation.
+- Offen: delegierbare Moderation (8.5) und didaktischer Live-Moderationskompass (8.9).
 
 ## Epic 9 – Admin/Recht
 
@@ -146,9 +146,13 @@ Damit ist die Produktbeschreibung nicht nur backlog-basiert, sondern auch verhal
 
 - Last-/Performance-Tests (0.7)
 - Komplexitätsreduktion/Refactor-Hotspots (0.8)
+- Neue Fragentypen und Auswertungslogik (1.2ec–1.2ed, 1.2f–1.2i)
 - Sync-Sicherheit/Skalierung (1.6c/1.6d)
+- Asynchrone Quiz-Modi (2.9)
 - Q&A-Erweiterungen (8.5–8.7)
+- Didaktischer Live-Moderationskompass (8.9)
 - Abschlussläufe Accessibility/UX (6.5/6.6)
+- Word-Cloud-2.0 (1.14a)
 
 ---
 

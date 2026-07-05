@@ -6,6 +6,8 @@
 **Zweck:** Dieses Dokument hilft dir dabei, dein Thema klar abzugrenzen, sinnvoll zu gewichten und mit belastbaren Repo-Bezügen vorzubereiten. Es ersetzt keine Prüfungsabsprachen mit der Betreuung.  
 **Backlog-Bezug:** Maßgeblich ist der aktuelle Stand in [`Backlog.md`](../../Backlog.md); dieses Dokument dupliziert bewusst keine Story-Zahlen mehr, damit Themenabgrenzungen bei Backlog-Änderungen nicht veralten. Bei größeren Änderungen bitte Beispiele und Repo-Bezüge neu prüfen.
 
+**Aktuelle Repo-Anker für Beispiele:** Je nach Schwerpunkt lassen sich die Vorträge gut mit den derzeitigen offenen oder laufenden Themen verknüpfen, zum Beispiel **0.7** (Last- & Performance-Tests), **1.2ec–1.2ed** (Short Answer / gemeinsame Bewertungsbasis), **6.5–6.6** (Barrierefreiheit / UX-Testreihen) oder **8.5 / 8.9** (Q&A-Moderation / didaktischer Live-Kompass). Für ein abgeschlossenes, gut dokumentiertes Gegenbeispiel eignet sich weiterhin **Epic 10 / MOTD**.
+
 Wichtig: Deine **eigene praktische Arbeit** kann schmaler sein als die **sechs Vortragsthemen** zusammen. Genau deshalb dienen die Vorträge dazu, aus einzelnen Tickets oder Schwerpunkten wieder ein **größeres softwaretechnisches Bild** von **arsnova.eu** zu machen.
 
 ## Kurz gesagt
@@ -271,6 +273,7 @@ Ein guter Reflexionspunkt ist eine Stelle, an der die KI zwar schnell Code für 
 - den typischen Ablauf von Spezifikation über Implementierung bis zur Absicherung
 - die Bedeutung von kleinen Schritten, prüfbaren Diffs und Reviewbarkeit
 - konkrete Beispiele dafür, wie KI in diesen Ablauf eingebettet wurde
+- aktuelle Repo-Bezüge wie **0.7** (Last-/Performance-Tests), **6.5 / 6.6** (A11y und UX-Tests) oder CI-nahe Checks aus [`docs/TESTING.md`](../TESTING.md)
 
 ### Guter Einstieg im Repo
 
@@ -351,4 +354,4 @@ Spannend ist hier die Frage, ob KI dir beim Sammeln und Strukturieren von Option
 
 ---
 
-_Stand: 2026-04-07 · Datei: `Fallstudie-Software-Engineering-Beschreibung-6-Abschlussvortraege.md` · Bei größeren Änderungen am Stack oder an der Prüfungsform dieses Dokument und die Verweise in [`docs/README.md`](../README.md) mitprüfen._
+_Stand: 2026-07-05 · Datei: `Fallstudie-Software-Engineering-Beschreibung-6-Abschlussvortraege.md` · Bei größeren Änderungen am Stack, an der Prüfungsform oder an den Prioritäten in [`Backlog.md`](../../Backlog.md) dieses Dokument und die Verweise in [`docs/README.md`](../README.md) mitprüfen._

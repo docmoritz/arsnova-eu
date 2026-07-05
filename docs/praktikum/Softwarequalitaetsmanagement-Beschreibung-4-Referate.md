@@ -154,6 +154,7 @@ Hier ist eine ehrliche Beobachtung besonders stark: Hat euch KI beim Zusammenfas
 
 ### Guter Einstieg im Repo
 
+- [`HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](./HANDOUT-LAST-UND-PERFORMANCE-TESTS.md) — Werkzeuge und Ist-Stand (k6, Artillery, Playwright, Lighthouse)
 - [`SECURITY-OVERVIEW.md`](../SECURITY-OVERVIEW.md)
 - Lighthouse- oder A11y-Reports im Frontend-Kontext
 - relevante Architektur- oder Betriebsdokumentation in `docs/`
@@ -266,11 +267,13 @@ Eine gute Reflexionsfrage lautet hier: Hat KI euch geholfen, Muster in Tests, Di
 
 ## 4. Orientierung im Repo
 
+- [`README.md`](../../README.md) und [`docs/README.md`](../README.md) für die übergreifende Repo- und Doku-Landkarte
 - [`PRAKTIKUM-SQM.md`](./PRAKTIKUM-SQM.md) für Aufgaben, Aufbau und Praktikumsrahmen
 - [`TESTING.md`](../TESTING.md) für Test- und CI-Grundlagen
+- [`ENVIRONMENT.md`](../ENVIRONMENT.md) für Betriebsannahmen, Env-Variablen und Proxy-/Deploy-Kontext
 - [`SECURITY-OVERVIEW.md`](../SECURITY-OVERVIEW.md) für sicherheitsnahe Qualitätsaspekte
 - [`Backlog.md`](../../Backlog.md) und [`CONTRIBUTING.md`](../../CONTRIBUTING.md) für DoD, Prozess und Reviewbezug
 
 ---
 
-_Stand: 2026-04-01 · Datei: `Softwarequalitaetsmanagement-Beschreibung-4-Referate.md` · Bei größeren Änderungen an Prüfungsform, Repo-Struktur oder Projektprozess dieses Dokument und seine Verweise mitprüfen._
+_Stand: 2026-07-05 · Datei: `Softwarequalitaetsmanagement-Beschreibung-4-Referate.md` · Bei größeren Änderungen an Prüfungsform, Repo-Struktur oder Projektprozess dieses Dokument und seine Verweise mitprüfen._

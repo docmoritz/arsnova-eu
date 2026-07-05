@@ -2,7 +2,7 @@
 
 # 🎓 Onboarding: arsnova.eu
 
-**Stand:** 2026-06-04
+**Stand:** 2026-07-05
 
 Willkommen im Entwickler-Team von **arsnova.eu**. Dieses Dokument hilft dir als Studierende oder Studierender dabei, das Projekt zu verstehen, die Entwicklungsumgebung aufzusetzen und produktiv mitzuarbeiten.
 
@@ -137,6 +137,8 @@ npm run dev:frontend:de   # → http://localhost:4200 (Angular, DE-Quelltexte)
 
 **Funktioniert alles?** Öffne **`http://localhost:4200`** im Browser (Standard-`dev`). Du solltest die Startseite mit dem **Server-Status-Widget** sehen. Wenn du **`npm run dev:en`** oder **`npm run dev:frontend:en`** nutzt, ist die URL **`http://localhost:4200/en/`**. Backend-Health (inkl. Redis) und tRPC laufen auf Port 3000; WebSocket auf 3001, Yjs auf 3002.
 
+**SQM-Schwerpunkt Last/Performance?** Nach dem lokalen Start: [`docs/praktikum/Arbeitsanweisungen SQM/05-last-pilot-durchfuehren.md`](praktikum/Arbeitsanweisungen%20SQM/05-last-pilot-durchfuehren.md) und [`docs/praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md) — erster Check: `npm run dev:backend` und `npm run load:k6:health`.
+
 ### Typische Stolperstellen beim ersten Start
 
 | Symptom                                 | Wahrscheinliche Ursache                                        | Direkt ausprobieren                                                   |
@@ -233,46 +235,48 @@ Das System ist nach dem **Local-First**-Prinzip entworfen:
 
 ## 4. Aktueller Stand vs. Ziel-Architektur
 
-> **Epics 0–5, 7.1, 9 und 10 (MOTD) sind umgesetzt; Epic 8 ist im Kern mit 8.1–8.4, den Sortiermodi 8.6/8.7 und dem Tempo-Blitzlicht 8.8 umgesetzt.** Epic 6 ist im Kern umgesetzt, offen bleiben Abschlussprüfung Barrierefreiheit und UX-Testreihen. Dieser Abschnitt zeigt den groben aktuellen Stand; für Architekturdetails sind `docs/architecture/handbook.md`, `docs/diagrams/` und die ADRs maßgeblich. Offene Stories: [`Backlog.md`](../Backlog.md).
+> **Epics 0–5, 7.1, 9 und 10 sind umgesetzt; Epic 6 ist im Kern umgesetzt, offen bleiben Abschlussprüfung Barrierefreiheit und UX-Testreihen; Epic 8 ist im Kern mit 8.1–8.4, 8.6–8.8 umgesetzt, offen bleiben 8.5 und 8.9.** Zusätzlich sind die numerische Schätzfrage 1.2d sowie die Kurzantwort-/Scoring-Bausteine 1.2e–1.2eb umgesetzt, während 0.7, 0.8, 1.2ec–1.2ed, 1.2f–1.2i, 1.6c–1.6d, 1.14a und 2.9 noch offen bzw. in Arbeit sind. Dieser Abschnitt zeigt den groben aktuellen Stand; für Architekturdetails sind `docs/architecture/handbook.md`, `docs/diagrams/` und die ADRs maßgeblich. Offene Stories: [`Backlog.md`](../Backlog.md).
 
-### Was bereits funktioniert (✅ Implementiert – Stand: 2026-06-04)
+### Was bereits funktioniert (✅ Implementiert – Stand: 2026-07-05)
 
-| Komponente                                                              | Beschreibung                                                                                                                            |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Express + tRPC-Server                                                   | Backend auf Port 3000 mit `health.check`, `health.footerBundle`, `health.stats`, `health.ping` (Subscription)                           |
-| Angular 21.2.x Frontend                                                 | Standalone Components, Signals, Angular Material 3, tokenbasiertes Theming, Startseite mit Server-Status-Widget                         |
-| tRPC-Client                                                             | `httpBatchLink` (Queries/Mutations) + `wsLink` (Subscriptions)                                                                          |
-| Redis-Anbindung                                                         | `ioredis`-Client, Health-Check, Rate-Limiting (Sliding-Window), Session-Code-Lockout                                                    |
-| tRPC WebSocket                                                          | Separater WebSocket-Server (Port 3001) für Subscriptions                                                                                |
-| Yjs y-websocket Relay                                                   | Backend startet y-websocket-Server (Port 3002) für Multi-Device-Sync                                                                    |
-| Server-Status (Epic 0.4)                                                | `health.footerBundle` im Footer, `health.stats` im Detaildialog, `PlatformStatistic`/`DailyStatistic`, Service-/Laststatus              |
-| Session-, Vote-, Q&A-, Blitzlicht-, Word-Cloud-, Admin- und MOTD-Router | `session`, `vote`, `qa`, `quickFeedback`, `wordCloud`, `admin`, `motd` (Epic 10) mit Rate-Limiting; Live-Subscriptions für Session-Pfad |
-| Tempo-Blitzlicht                                                        | `TEMPO` als `quickFeedback`-Template mit vier Icons, mutablem Redis-Hotpath, Tendenzmodus und Spotlight-Einstiegen                      |
-| Quiz-Scoring, Kurzantwort und Schätzfrage                               | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `SHORT_TEXT` und `NUMERIC_ESTIMATE` sind bewertbar; Auswertungen nutzen die Effective-Vote-Regel    |
-| Prisma-Schema                                                           | Vollständiges Datenbankmodell inkl. Q&A, MOTD, Admin-Audit, `PlatformStatistic` und `DailyStatistic`                                    |
-| Zod v4-Schemas (`shared-types`)                                         | Alle Input-/Output-Schemas, DTOs, Enums und Exportverträge definiert                                                                    |
-| Docker Compose                                                          | PostgreSQL 16 + Redis 7 (+ optional App-Container) per `docker compose up`                                                              |
-| CI/CD-Pipeline                                                          | GitHub Actions: Prisma validate/generate, TypeScript, ESLint, Tests, Docker-Build (Node 20/22)                                          |
-| Session- und Besitzhärtung                                              | Host-Token, `hostProcedure`, Feedback-Host-Token, datensparsame Teilnehmerpfade und `accessProof` für Quiz-Historie                     |
-| Basis-Lasttest-Bausteine                                                | `scripts/load/` mit `k6`-Skripten und Node-Simulationen; Frontend-Smoke-Flow `smoke:unified-session` vorhanden                          |
+| Komponente                                                              | Beschreibung                                                                                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Express + tRPC-Server                                                   | Backend auf Port 3000 mit `health.check`, `health.footerBundle`, `health.stats`, `health.ping` (Subscription)                        |
+| Angular 21.2.x Frontend                                                 | Standalone Components, Signals, Angular Material 3, tokenbasiertes Theming, Startseite mit Server-Status-Widget                      |
+| tRPC-Client                                                             | `httpBatchLink` (Queries/Mutations) + `wsLink` (Subscriptions)                                                                       |
+| Redis-Anbindung                                                         | `ioredis`-Client, Health-Check, Rate-Limiting (Sliding-Window), Session-Code-Lockout                                                 |
+| tRPC WebSocket                                                          | Separater WebSocket-Server (Port 3001) für Subscriptions                                                                             |
+| Yjs y-websocket Relay                                                   | Backend startet y-websocket-Server (Port 3002) für Multi-Device-Sync                                                                 |
+| Server-Status (Epic 0.4)                                                | `health.footerBundle` im Footer, `health.stats` im Detaildialog, `PlatformStatistic`/`DailyStatistic`, Service-/Laststatus           |
+| Session-, Vote-, Q&A-, Blitzlicht-, Word-Cloud-, Admin- und MOTD-Router | `session`, `vote`, `qa`, `quickFeedback`, `wordCloud`, `admin`, `motd` mit Rate-Limiting; Live-Subscriptions für Session-Pfad        |
+| Tempo-Blitzlicht                                                        | `TEMPO` als `quickFeedback`-Template mit vier Icons, mutablem Redis-Hotpath, Tendenzmodus und Spotlight-Einstiegen                   |
+| Quiz-Scoring, Kurzantwort und Schätzfrage                               | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `SHORT_TEXT` und `NUMERIC_ESTIMATE` sind bewertbar; Auswertungen nutzen die Effective-Vote-Regel |
+| Prisma-Schema                                                           | Vollständiges Datenbankmodell inkl. Q&A, MOTD, Admin-Audit, `PlatformStatistic` und `DailyStatistic`                                 |
+| Zod v4-Schemas (`shared-types`)                                         | Alle Input-/Output-Schemas, DTOs, Enums und Exportverträge definiert                                                                 |
+| Docker Compose                                                          | PostgreSQL 16 + Redis 7 (+ optional App-Container) per `docker compose up`                                                           |
+| CI/CD-Pipeline                                                          | GitHub Actions: Prisma validate/generate, TypeScript, ESLint, Tests, Docker-Build (Node 20/22)                                       |
+| Session- und Besitzhärtung                                              | Host-Token, `hostProcedure`, Feedback-Host-Token, datensparsame Teilnehmerpfade und `accessProof` für Quiz-Historie                  |
+| Basis-Lasttest-Bausteine                                                | `scripts/load/` mit `k6`-Skripten und Node-Simulationen; Frontend-Smoke-Flow `smoke:unified-session` vorhanden                       |
 
 ### Was als nächstes ansteht (🔲 Geplant / offen)
 
-| Thema                        | Kurzbeschreibung                                                                                    | Backlog / Referenz |
-| ---------------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
-| Barrierefreiheit & UX        | Story **6.5** (Abschlussprüfung), **6.6** (Thinking Aloud)                                          | Epic 6             |
-| Neue Fragentypen             | **1.2ec–1.2ed**, **1.2f–1.2i**: verbleibende Kurzantwort-/Fragentyp-Erweiterungen                   | Epic 1             |
-| Q&A-Moderation               | Delegierte Q&A-Moderation (**8.5**) bleibt offen; Tempo-Blitzlicht (**8.8**) ist umgesetzt          | Epic 8, ADR-0011   |
-| Last & Performance           | **0.7** in Arbeit: vorhandene `k6`-/Smoke-Bausteine zu vollständiger E2E-/Realtime-Strecke ausbauen | Epic 0, ADR-0013   |
-| Sync & Word Cloud / Refactor | **1.6c**, **1.6d**, **1.14a** sowie **0.8** (Komplexitätsabbau / McCabe-Hotspots)                   | Backlog            |
+| Thema                        | Kurzbeschreibung                                                                                      | Backlog / Referenz |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
+| Barrierefreiheit & UX        | Story **6.5** (Abschlussprüfung), **6.6** (Thinking Aloud)                                            | Epic 6             |
+| Neue Fragentypen             | **1.2ec–1.2ed**, **1.2f–1.2i**: verbleibende Kurzantwort-/Fragentyp-Erweiterungen                     | Epic 1             |
+| Q&A-Moderation               | Delegierte Q&A-Moderation (**8.5**) bleibt offen; didaktischer Live-Kompass (**8.9**) ebenfalls offen | Epic 8, ADR-0011   |
+| Last & Performance           | **0.7** in Arbeit: vorhandene `k6`-/Smoke-Bausteine zu vollständiger E2E-/Realtime-Strecke ausbauen   | Epic 0, ADR-0013   |
+| Sync & Word Cloud / Refactor | **1.6c**, **1.6d**, **1.14a** sowie **0.8** (Komplexitätsabbau / McCabe-Hotspots)                     | Backlog            |
+
+**Hinweis für neue Stories:** **Epic 11** ist aktuell nur ein nicht beauftragter Erweiterungspfad für Verlagszugänge und ein Redaktionsbackend.
 
 Vollständige Story-Liste und Status: [`Backlog.md`](../Backlog.md).
 
 ---
 
-## 5. Komponentenbeschreibung (Stand: 2026-06-04)
+## 5. Komponentenbeschreibung (Stand: 2026-07-05)
 
-Das folgende Diagramm zeigt eine vereinfachte **Backend-Architektur**. Neben Quiz und Session sind `Q&A`, `Blitzlicht` inkl. Tempo-Template, `wordCloud`, `Admin` und **`motd` (Epic 10)** integriert.
+Das folgende Diagramm zeigt eine vereinfachte **Backend-/Frontend-Architektur** des aktuellen Projektstands. Neben Quiz und Session sind `Q&A`, `Blitzlicht` inkl. Tempo-Template, `wordCloud`, `Admin` und **`motd` (Epic 10)** integriert.
 
 ```mermaid
 graph TB
@@ -345,7 +349,7 @@ graph TB
     express --> yws
 ```
 
-> ✅ = im Projektstand 2026-06-04 umgesetzt
+> ✅ = im Projektstand 2026-07-05 umgesetzt
 
 ### A. Frontend (Angular 21.2.x)
 
@@ -356,6 +360,16 @@ Das Frontend nutzt modernste Angular-Features:
 - **tRPC-Client:** `httpBatchLink` (Queries/Mutations) und `wsLink` (Subscriptions) – beide aktiv.
 - **Server-Status-Widget:** Footer-Dot über `health.footerBundle`; Detaildialog lädt `health.stats` inkl. Tagesrekord-Chart.
 - **Yjs & IndexedDB:** Quiz-Daten Local-First im Browser; Yjs für Multi-Device-Sync.
+
+### B. Praktikum und Dokumentation
+
+Wenn du dich noch orientierst, starte immer mit der kompakten Landkarte für Studierende: [`docs/praktikum/EINSTIEG-TOOLS-UND-STACK.md`](praktikum/EINSTIEG-TOOLS-UND-STACK.md). Dort sind die wichtigen Grundbegriffe, Setup-Schritte und der Weg zu den restlichen Praktikumsdokumenten gebündelt.
+
+Für Qualität und Tests sind diese Einstiege besonders relevant:
+
+- [`docs/TESTING.md`](TESTING.md)
+- [`docs/praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md)
+- [`docs/praktikum/PRAKTIKUM-SQM.md`](praktikum/PRAKTIKUM-SQM.md)
 - **Unified Live Session:** Session-Shell mit Kanälen für Quiz, Q&A und Blitzlicht; zusätzlich Standalone-Blitzlicht über die Startseite.
 - **MOTD:** Startseiten-Overlay, Archivzugang und Admin-Pflege sind in die Angular-App integriert.
 

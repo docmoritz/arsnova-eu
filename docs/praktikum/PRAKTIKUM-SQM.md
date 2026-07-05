@@ -173,8 +173,13 @@ Kurzer Abschnitt (**1–3 Seiten**):
 
 ### 6.4 Last & Skalierung
 
+- **Arbeitsanweisung (Pilot):** [`Arbeitsanweisungen SQM/05-last-pilot-durchfuehren.md`](./Arbeitsanweisungen%20SQM/05-last-pilot-durchfuehren.md)
+- **Messprotokoll-Vorlage:** [`VORLAGE-MESSPROTOKOLL-LAST.md`](./VORLAGE-MESSPROTOKOLL-LAST.md)
+- **Einstieg (Tools, Befehle, Ist-Stand):** [`HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](./HANDOUT-LAST-UND-PERFORMANCE-TESTS.md)
 - Backlog: **Story 0.7** (Last- & Performance-Tests mit E2E-Szenarien).
 - ADR: [`docs/architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md`](../architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md).
+- Skripte: `scripts/load/` · Befehle: [`docs/TESTING.md`](../TESTING.md) (Abschnitt Last-Smokes)
+- Ergebnisberichte: [`docs/implementation/LASTTEST-500-ERGEBNIS-2026-05-09.md`](../implementation/LASTTEST-500-ERGEBNIS-2026-05-09.md)
 
 ### 6.5 Reviews & DoD
 
@@ -216,18 +221,18 @@ Die KI „ersetzt“ **kein** Review — sie **unterstützt** Lesen und Struktur
 
 ## 8. 10-Block-Plan (SQM)
 
-| Block  | Schwerpunkt                    | Artefakte (Beispiel)                                                          |
-| ------ | ------------------------------ | ----------------------------------------------------------------------------- |
-| **1**  | Onboarding + Modell            | Repo bauen, `npm test`, ein Flow manuell; **1 Seite** Rollenverständnis       |
-| **2**  | DoD & Risiken                  | DoD extrahieren, **Risikoliste** Top-5                                        |
-| **3**  | Testlandschaft                 | Karte: welche Tests wo; **Lücke** wählen                                      |
-| **4**  | Umsetzung Test/Qualität        | PR mit Specs oder Doc; Review-Checkliste **v1**                               |
-| **5**  | E2E-Konzept                    | Toolwahl begründen, **2–3** Szenarien beschrieben                             |
-| **6**  | E2E-Implementierung            | Erste lauffähige Tests (oder Prototyp + offene Punkte dokumentiert)           |
-| **7**  | Performance/A11y               | Lighthouse auf **2** Routen, **konkrete** Findings                            |
-| **8**  | Think Aloud **oder** KI-Reader | Durchführung + **kurze** Auswertung **oder** Reader-Matrix                    |
-| **9**  | Guidde **oder** Last/CI        | Guide-Link **oder** Last-Szenario-Skizze (0.7/ADR-0013)                       |
-| **10** | Abgabe                         | Konzept + Portfolio + KI-Reflexion; **kurze** Präsentation (falls vorgesehen) |
+| Block  | Schwerpunkt                    | Artefakte (Beispiel)                                                                                                                                                                             |
+| ------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **1**  | Onboarding + Modell            | Repo bauen, `npm test`, ein Flow manuell; **1 Seite** Rollenverständnis                                                                                                                          |
+| **2**  | DoD & Risiken                  | DoD extrahieren, **Risikoliste** Top-5                                                                                                                                                           |
+| **3**  | Testlandschaft                 | Karte: welche Tests wo; **Lücke** wählen                                                                                                                                                         |
+| **4**  | Umsetzung Test/Qualität        | PR mit Specs oder Doc; Review-Checkliste **v1**                                                                                                                                                  |
+| **5**  | E2E-Konzept                    | Toolwahl begründen, **2–3** Szenarien beschrieben                                                                                                                                                |
+| **6**  | E2E-Implementierung            | Erste lauffähige Tests (oder Prototyp + offene Punkte dokumentiert)                                                                                                                              |
+| **7**  | Performance/A11y               | Lighthouse auf **2** Routen, **konkrete** Findings                                                                                                                                               |
+| **8**  | Think Aloud **oder** KI-Reader | Durchführung + **kurze** Auswertung **oder** Reader-Matrix                                                                                                                                       |
+| **9**  | Guidde **oder** Last/CI        | Guide-Link **oder** Last-Pilot + Messprotokoll ([`05-last-pilot`](./Arbeitsanweisungen%20SQM/05-last-pilot-durchfuehren.md), [`VORLAGE-MESSPROTOKOLL-LAST.md`](./VORLAGE-MESSPROTOKOLL-LAST.md)) |
+| **10** | Abgabe                         | Konzept + Portfolio + KI-Reflexion; **kurze** Präsentation (falls vorgesehen)                                                                                                                    |
 
 **Wenn Zeit knapp wird:** Priorität **Tests/Review-Checkliste** + **eine** qualitative Methode (Think Aloud **oder** KI-Reader).
 
@@ -276,6 +281,7 @@ Sofort an die **Betreuung**; keine öffentlichen Issue-Details zu **Exploits** o
 
 - [`README.md`](../../README.md) — Produktüberblick und Setup-Einstieg
 - [`docs/TESTING.md`](../TESTING.md) — Befehle, CI
+- [`HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](./HANDOUT-LAST-UND-PERFORMANCE-TESTS.md) — Last-/Performance-Werkzeuge (k6, Artillery, Playwright, Lighthouse)
 - [`Backlog.md`](../../Backlog.md) — DoD, Story **0.7**, **6.5**, **6.6**
 - [`docs/SECURITY-OVERVIEW.md`](../SECURITY-OVERVIEW.md)
 - [`docs/vibe-coding/`](../vibe-coding/) — Prompt-Beispiele (optional erweiterbar)
@@ -316,6 +322,27 @@ Du nutzt einen KI-Chat: „Finde Sicherheitslücken in diesem Diff.“ Die KI be
 
 ---
 
+### Aufgabe 5 — k6-Ergebnis interpretieren
+
+Ein k6-Lauf auf `health.stats` meldet:
+
+- `http_req_failed = 0 %`
+- `http_req_duration p(95) = 2,8 ms`
+- alle Checks ✓
+
+Ein zweiter Lauf auf dem **gleichen** Rechner, aber per Docker auf macOS **ohne** `host.docker.internal`, meldet:
+
+- `http_req_failed = 100 %`
+- `checks_succeeded = 0 %`
+
+**Fragen:**
+
+1. Ist der **erste** Lauf ein Beweis, dass arsnova.eu **500 gleichzeitige Teilnehmende in Produktion** problemlos trägt?
+2. Was ist beim **zweiten** Lauf die wahrscheinlichste Ursache — Anwendungsbug oder Test-Setup?
+3. Welche **zwei** Informationen fehlen dir noch, bevor du den ersten Lauf als „grün“ ins Messprotokoll schreibst?
+
+---
+
 ### Musterlösungen
 
 **Zu 1:** Kernaussage: DoD ist **gemeinsame** Qualitätsvereinbarung; kleine Änderungen können **Regressionen** verursachen. Vorschlag: **Risiko einordnen** (nur CSS vs. Logik), ggf. **bestehenden** Test erweitern oder **explizite** Ausnahme mit **Ticket** und **Frist**. Ton: **konstruktiv**, **Alternative** anbieten.
@@ -326,6 +353,8 @@ Du nutzt einen KI-Chat: „Finde Sicherheitslücken in diesem Diff.“ Die KI be
 
 **Zu 4:** (1) **Diff selbst** ansehen — trifft die Aussage zu? (2) **Offizielle** Quellen / Team fragen — kein Blindvertrauen. (3) **Nur** verifizierte Punkte ins Review; **spekulative** KI-Hinweise als **Frage** formulieren, nicht als Befund.
 
+**Zu 5:** (1) **Nein** — der Health-Lauf prüft nur einen **read-only** Hotpath unter **50 VUs**, nicht Join/Vote/WebSocket unter 500 TN in Prod. (2) **Test-Setup** — auf macOS erreicht Docker mit `--network host` das Host-Backend oft nicht; Lösung: `host.docker.internal` oder `npm run load:k6:health`. (3) Z. B. **Commit-Stand**, **Hardware**, **k6 vs. Docker**, ob **Backend/Redis/Postgres** unter Last mitgemessen wurden; außerdem: reproduzierbarer Befehl und Vergleich mit einem **fachlichen** Szenario (Join/Vote).
+
 ---
 
-_Stand: 2026-04-01 · Pflege bei Änderungen am SQM-Setup: dieses Dokument und Verweis in `docs/README.md` anpassen._
+_Stand: 2026-07-05 · Pflege bei Änderungen am SQM-Setup: dieses Dokument und Verweis in `docs/README.md` anpassen._

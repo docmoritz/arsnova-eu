@@ -4,7 +4,7 @@
 
 **Lokal** vor PR: mindestens `npm run build`, `npm run lint`, `npm test` (entspricht den wesentlichen CI-Gates). Vollständige DoD: [Backlog.md](../Backlog.md) „Definition of Done“. Nach größeren Änderungen an **`@arsnova/shared-types`**: wie in Root-[README](../README.md) zuerst `npm run build -w @arsnova/shared-types` bzw. Root-`npm run build` nutzen.
 
-**Stand:** 2026-05-31 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; Jobs: `build`, `typecheck`, `lint`, `audit` informational, `test`, `docker`, optional `deploy`) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
+**Stand:** 2026-07-05 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; Jobs: `build`, `typecheck`, `lint`, `audit` informational, `test`, `docker`, optional `deploy`) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
 
 ---
 
@@ -71,6 +71,7 @@ Auf dem Server übernimmt `scripts/deploy.sh` die Reihenfolge **Build → Postgr
 | `smoke:host-present-auth`   | Host/Present-Auth-Smoke             |
 | `smoke:host-music`          | Host-Musik-/Sound-Smoke             |
 | `smoke:short-text`          | Kurzantwort-Flow-Smoke              |
+| `smoke:numeric-estimate`    | Numerische-Schätzfrage-Flow-Smoke   |
 | `smoke:quiz-sync`           | Quiz-Sync-Flow-Skript               |
 | `smoke:unified-session`     | Unified-Session-Flow-Skript         |
 | `lighthouse:a11y`           | Lighthouse A11y (lokal)             |
@@ -113,11 +114,44 @@ Diese Skripte erwarten ebenfalls eine laufende lokale App mit Backend und Fronte
 
 ```bash
 BASE_URL=http://localhost:4200 npm run smoke:short-text -w @arsnova/frontend
+BASE_URL=http://localhost:4200 npm run smoke:numeric-estimate -w @arsnova/frontend
 BASE_URL=http://localhost:4200 npm run smoke:host-music -w @arsnova/frontend
 BASE_URL=http://localhost:4200 npm run smoke:unified-session -w @arsnova/frontend
 ```
 
-Für Performance-/Lastarbeit liegen ergänzend Arbeitsbausteine in `scripts/load/` und `docs/implementation/LASTTEST-ARSNOVA-ARCHITEKTUR-ARBEITSAUFTRAG.md`. Sie sind bewusst nicht Teil der Standard-CI-Gates.
+Für Performance-/Lastarbeit liegen ergänzend Arbeitsbausteine in `scripts/load/` und `docs/implementation/LASTTEST-ARSNOVA-ARCHITEKTUR-ARBEITSAUFTRAG.md`. Sie sind bewusst nicht Teil der Standard-CI-Gates. Praktikums-Einstieg: [`docs/praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md).
+
+### k6-Lasttests (protokollnah)
+
+Skripte: `scripts/load/k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js`, `k6-session-hotpaths-500vu.js`. Voraussetzung: laufendes Backend (`npm run dev:backend`).
+
+**Empfohlen:** NPM-Wrapper — nutzt lokales `k6`, sonst automatisch Docker (`grafana/k6`):
+
+```bash
+npm run load:k6:health
+SESSION_CODE=AB12CD npm run load:k6:session
+MODE=join-wave SESSION_CODE=AB12CD VUS=50 npm run load:k6:hotpaths
+```
+
+Implementierung: [`scripts/load/run-k6.mjs`](../scripts/load/run-k6.mjs). k6 ist **kein** npm-Paket; native Installation optional (`brew install k6` auf macOS).
+
+| Plattform                | Verhalten des Wrappers                             |
+| ------------------------ | -------------------------------------------------- |
+| mit lokalem `k6`         | `BASE_URL=http://127.0.0.1:3000`                   |
+| Docker auf macOS/Windows | `BASE_URL=http://host.docker.internal:3000`        |
+| Docker auf Linux/WSL     | `--network host`, `BASE_URL=http://127.0.0.1:3000` |
+
+Manuell per Docker (macOS):
+
+```bash
+docker run --rm -i \
+  -e BASE_URL=http://host.docker.internal:3000 \
+  grafana/k6 run - < scripts/load/k6-trpc-health-50vu.js
+```
+
+Session- und Hotpath-Skripte benötigen `SESSION_CODE` (6 Zeichen) bzw. bei Hotpath-Modi `PARTICIPANT_IDS`, `QUESTION_ID` usw. — siehe Kommentarkopf in den Skripten.
+
+Weitere Node-Last-Smokes (ohne k6): `npm run load:simulate:50`, `npm run load:simulate:session:50` (erfordert `SESSION_CODE`).
 
 ### Host-Vote-Progress-Last-Smoke
 
@@ -179,6 +213,12 @@ Gezielte Regressionen für die aktuelle Host-Härtung:
 
 - **Q&A / moderatorView:** `npm run test -w @arsnova/backend -- src/__tests__/qa.test.ts`
 - Die Datei deckt explizit ab, dass `qa.list` und `qa.onQuestionsUpdated` mit `moderatorView: true` ohne Host-Token serverseitig abgelehnt und mit gültigem Host-Token zugelassen werden.
+
+Weitere aktuell relevante Regressionen:
+
+- **NUMERIC_ESTIMATE / Zwei-Runden-Flow:** `npm run load:smoke:vote-timer-fairness` und die zugehörigen Backend-/Frontend-Tests für Toleranzband, Karenz und Ergebnisfreigabe.
+- **Host-Progress:** `npm run load:smoke:host-vote-progress` nach Änderungen am Vote- oder Realtime-Pfad.
+- **Session-Bewertung / MOTD:** die vorhandenen `SessionFeedback`-, `motd*.test.ts`- und Admin-Tests, wenn Auswertung, Header oder Audit-Log angepasst werden.
 
 ---
 

@@ -6,14 +6,21 @@
  * - MODE=active-question
  * - MODE=vote-spike
  *
- * Beispiele:
+ * Beispiele (lokal):
  *   MODE=join-wave SESSION_CODE=AB12CD BASE_URL=http://127.0.0.1:3000 k6 run scripts/load/k6-session-hotpaths-500vu.js
+ *   MODE=join-wave SESSION_CODE=AB12CD npm run load:k6:hotpaths
  *
  *   MODE=active-question SESSION_CODE=AB12CD PARTICIPANT_IDS="id1,id2,..." QUESTION_ID=<uuid> \
  *     BASE_URL=http://127.0.0.1:3000 k6 run scripts/load/k6-session-hotpaths-500vu.js
  *
  *   MODE=vote-spike SESSION_ID=<uuid> SESSION_CODE=AB12CD PARTICIPANT_IDS="id1,id2,..." QUESTION_ID=<uuid> ANSWER_ID=<uuid> \
  *     BASE_URL=http://127.0.0.1:3000 k6 run scripts/load/k6-session-hotpaths-500vu.js
+ *
+ * Docker (Linux/WSL2): BASE_URL=http://127.0.0.1:3000, Flag --network host
+ * Docker (macOS): BASE_URL=http://host.docker.internal:3000, ohne --network host
+ *
+ *   docker run --rm -i -e BASE_URL=http://host.docker.internal:3000 -e MODE=join-wave \
+ *     -e SESSION_CODE=AB12CD -e VUS=500 grafana/k6 run - <scripts/load/k6-session-hotpaths-500vu.js
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';

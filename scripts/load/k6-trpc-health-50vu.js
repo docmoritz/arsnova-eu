@@ -2,9 +2,17 @@
  * k6: 50 virtuelle Nutzer, 30 s, wiederholter tRPC-GET `health.stats`.
  *
  * Installation: https://k6.io/docs/get-started/installation/
- * Oder: docker run --rm -i --network host grafana/k6 run - <scripts/load/k6-trpc-health-50vu.js
  *
  *   BASE_URL=http://127.0.0.1:3000 k6 run scripts/load/k6-trpc-health-50vu.js
+ *   npm run load:k6:health
+ *
+ * Docker (Linux/WSL2):
+ *   docker run --rm -i --network host -e BASE_URL=http://127.0.0.1:3000 \
+ *     grafana/k6 run - <scripts/load/k6-trpc-health-50vu.js
+ *
+ * Docker (macOS — ohne --network host, sonst 100 % HTTP-Fehler):
+ *   docker run --rm -i -e BASE_URL=http://host.docker.internal:3000 \
+ *     grafana/k6 run - <scripts/load/k6-trpc-health-50vu.js
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';

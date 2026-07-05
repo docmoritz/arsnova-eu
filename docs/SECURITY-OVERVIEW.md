@@ -4,7 +4,7 @@
 
 Kurzreferenz für **Annahmen, Grenzen und eingebaute Kontrollen**. Kein vollständiges Threat-Model und keine Rechtsberatung; technische Tiefe: Handbuch, ADRs, Prisma, `session.ts` / DTO-Schicht.
 
-**Stand:** 2026-05-31 — abgeglichen mit Root-[README](../README.md), [deployment-debian-root-server.md](deployment-debian-root-server.md), [ENVIRONMENT.md](ENVIRONMENT.md), Admin-Flow und aktuellem Backend. Enthalten sind Host-/Feedback-Host-Token, Admin-Tokens, besitzgebundene Quiz-Historie (`accessProof`), MOTD, Server-Status (`health.footerBundle` / `health.stats`) und Plattformstatistik (`PlatformStatistic`, `DailyStatistic`).
+**Stand:** 2026-07-05 — abgeglichen mit Root-[README](../README.md), [docs/README.md](README.md), [deployment-debian-root-server.md](deployment-debian-root-server.md), [ENVIRONMENT.md](ENVIRONMENT.md), [TESTING.md](TESTING.md), Admin-Flow und aktuellem Backend. Enthalten sind Host-/Feedback-Host-Token, Admin-Tokens, besitzgebundene Quiz-Historie (`accessProof`), MOTD, Server-Status (`health.footerBundle` / `health.stats`) und Plattformstatistik (`PlatformStatistic`, `DailyStatistic`).
 
 ---
 
@@ -30,8 +30,8 @@ Kurzreferenz für **Annahmen, Grenzen und eingebaute Kontrollen**. Kein vollstä
 - **Blitzlicht-Host:** Standalone-Blitzlicht (`/feedback/:code`) nutzt ein eigenes **Feedback-Host-Token** via `x-feedback-host-token`. Session-gebundenes Blitzlicht nutzt dagegen das normale Session-Host-Token. Dadurch bleiben Session-Host und Standalone-Blitzlicht getrennte Besitzkontexte.
 - **Teilnehmende:** Öffentliche Join-/Vote-Pfade mit Session-Code. Teilnehmerdaten sind auf Minimalzwecke geschnitten: Nickname-Kollisionen für Join, eigener Datensatz für Vote, keine öffentliche Voll-Liste. Rate-Limits greifen je nach Pfad unterschiedlich: Session-Code-Fehlversuche und Session-Erstellung pro IP, Vote-Submit pro Teilnehmenden-ID.
 - **Quiz-Sammlungs-Historie:** Endpunkte wie `session.getBonusTokensForQuiz`, `session.getLastSessionFeedbackForQuiz` und `session.getActiveQuizIds` verlangen zusätzlich einen **besitzgebundenen `accessProof`** zur hochgeladenen Quizkopie. Die Historie ist damit nicht mehr allein über `quizId` öffentlich enumerierbar.
-- **Admin:** Separater Pfad `/admin`; **`ADMIN_SECRET`** (Env), danach Admin-Session mit TTL in Redis. Token-Transport über `Authorization: Bearer ...` oder `x-admin-token`; Schutz zentral über `adminProcedure`. Umgesetzt sind Recherche, Detailansicht, Legal Hold, Einzel-/Massenlöschung, Behördenexport, Quiz-Import-Export und Rekord-Reset.
-- **MOTD (Epic 10):** **Öffentlich:** `motd.getCurrent`, `listArchive`, `getHeaderState`, `recordInteraction` — **rate-limited** pro IP ([ENVIRONMENT.md](ENVIRONMENT.md), `rateLimit.ts`). **Schreibend:** nur Admin-Prozeduren — MOTD, Vorlagen, Statistiken und Audit-Log `MotdAuditLog`.
+- **Admin:** Separater Pfad `/admin`; **`ADMIN_SECRET`** (Env), danach Admin-Session mit TTL in Redis. Token-Transport über `Authorization: Bearer ...` oder `x-admin-token`; Schutz zentral über `adminProcedure`. Umgesetzt sind Recherche, Detailansicht, Legal Hold, Einzel-/Massenlöschung, Behördenexport, Quiz-Import-Export und Rekord-Reset. Für Betrieb und Go-Live gelten die gleichen Secrets- und Proxy-Annahmen wie in [ENVIRONMENT.md](ENVIRONMENT.md) und [docs/deployment-debian-root-server.md](deployment-debian-root-server.md).
+- **MOTD (Epic 10):** **Öffentlich:** `motd.getCurrent`, `listArchive`, `getHeaderState`, `recordInteraction` — **rate-limited** pro IP ([ENVIRONMENT.md](ENVIRONMENT.md), `rateLimit.ts`). **Schreibend:** nur Admin-Prozeduren — MOTD, Vorlagen, Statistiken und Audit-Log `MotdAuditLog`. Für die praktische Prüfung siehe [TESTING.md](TESTING.md).
 
 Die App **ersetzt keine** organisationsweite IAM- oder VPN-Lösung.
 
@@ -75,6 +75,8 @@ Vor öffentlichem Betrieb müssen Betreiber zusätzlich klären und testen:
 - **MOTD / Plattform-Kommunikation:** [ADR-0018](architecture/decisions/0018-message-of-the-day-platform-communication.md), [motd.md](features/motd.md)
 - **i18n & Daten in Übersetzungen:** [ADR-0008](architecture/decisions/0008-i18n-internationalization.md)
 - **Architektur gesamt:** [handbook.md](architecture/handbook.md)
-- **Umgebungsvariablen:** [ENVIRONMENT.md](ENVIRONMENT.md)
+- **Umgebungsvariablen:** [ENVIRONMENT.md](ENVIRONMENT.md), [deployment-debian-root-server.md](deployment-debian-root-server.md)
+
+**Stand-Hinweis:** 2026-07-05 — dieselben Betriebsannahmen gelten in [README.md](../README.md), [docs/README.md](README.md) und [docs/ENVIRONMENT.md](ENVIRONMENT.md).
 
 Bei **Sicherheitsvorfällen** oder **Datenschutz-Anfragen**: Prozess mit Betrieb/legal klären; Audit-Log für Admin-Aktionen (Löschen/Export) im Schema `AdminAuditLog`.

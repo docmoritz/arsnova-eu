@@ -1,10 +1,12 @@
 # Einstieg: Werkzeuge und Technologien (für Studierende ohne Vorerfahrung)
 
-**Stand:** 2026-05-31
+**Stand:** 2026-07-05
 
 **Zielgruppe:** Du kannst **grundlegend programmieren** (z. B. Variablen, Schleifen, Funktionen in einer Hochschulsprache), kennst aber **noch nicht** die **Entwicklungswerkzeuge** und **Projekttechnologien** von arsnova.eu.
 
 **Zweck dieses Dokuments:** Eine **Landkarte** — was es gibt, **wofür** es im Projekt da ist, und **wo** du es dir aneignest. Es ersetzt **keine** ausführlichen Tutorials; die verlinkten Dokumente und die jeweilige Einführungsveranstaltung ergänzen es.
+
+**Aktuelle Repo-Anker:** Für den Einstieg besonders hilfreich sind neben diesem Dokument die [Dokumentations-Landkarte](../README.md), [onboarding.md](../onboarding.md), [Backlog.md](../../Backlog.md), [TESTING.md](../TESTING.md) und das Handout zu [Last- und Performance-Tests](./HANDOUT-LAST-UND-PERFORMANCE-TESTS.md). Sie zeigen dir den aktuellen Weg von Setup über Entwicklung bis zu Qualitätssicherung.
 
 **Als Nächstes nach dem Lesen:** Praktisches Setup Schritt für Schritt: [`docs/onboarding.md`](../onboarding.md).
 
@@ -87,22 +89,25 @@ Welche **weiteren** Dokumente für deine Veranstaltung Pflicht sind, sagt dir di
 | **Redis**                     | **Schneller flüchtiger Speicher** für Rate-Limits, Session-/Presence-Hilfsdaten und Blitzlicht-Zustand; keine dauerhafte Datenbank. | Im Kurs reicht zunächst: wissen, dass der Stack Redis **braucht** (Docker). Tiefer einsteigen kannst du später über das Architektur-Handbuch.                 |
 | **Yjs / IndexedDB**           | Local-First-Speicher für die Quiz-Sammlung der Lehrperson; Sync zwischen Geräten läuft über ein Yjs-WebSocket-Relay.                | [`docs/architecture/quiz-library-sync.md`](../architecture/quiz-library-sync.md), später bei Aufgaben rund um Quiz-Sync.                                      |
 
+Wenn du dir nur einen ersten roten Faden merken willst, dann ist es dieser: **erst Setup, dann die wichtigsten Docs, dann die ersten Tickets**. Die technische Tiefe kommt schrittweise aus dem Projekt heraus, nicht am ersten Tag auswendig.
+
 ---
 
 ## 4. Projektbegriffe, die du früh kennen solltest
 
 Diese Begriffe musst du nicht sofort im Detail beherrschen. Du solltest sie aber wiedererkennen, wenn du Tickets, Reviews oder Code liest.
 
-| Begriff                        | Kurz erklärt                                                                                                                                                    |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Session / Live-Session**     | Laufende Veranstaltung mit einem sechsstelligen Code. Eine Session kann Quiz, Q&A und Blitzlicht bündeln.                                                       |
-| **Local-First**                | Die dauerhafte Quiz-Sammlung liegt im Browser der Lehrperson, nicht dauerhaft in einer zentralen Quiz-Cloud.                                                    |
-| **DTO / Data-Stripping**       | Das Backend filtert Daten, bevor Teilnehmende sie sehen. Beispiel: `isCorrect` darf vor der Ergebnisphase nicht an die Teilnehmer-Ansicht gehen.                |
-| **Kurzantwort / `SHORT_TEXT`** | Bewertbarer Fragetyp für kurze Text-, Zahlen- oder Einheitenantworten. Nicht mit offenem Freitext verwechseln.                                                  |
-| **Effective Vote**             | Bewertungsregel: Bei Peer Instruction ersetzt Runde 2 die Runde 1; ohne Runde 2 zählt Runde 1. Wichtig für Leaderboards, Scorecards, Teams und Bonus-Codes.     |
-| **Server-Status**              | Footer- und Hilfedialog-Anzeige für Betriebszustand, Systemlast und Plattformstatistiken. Technisch u. a. `health.footerBundle` und `health.stats`.             |
-| **MOTD**                       | Message of the Day: Plattform-Kommunikation mit Startseiten-Overlay, Archiv, Admin-Pflege und aggregierten Interaktionszählern.                                 |
-| **Moderator / Tempo**          | Aktuelle Zielbilder: Delegierte Q&A-Moderation hat noch keine eigene Moderator-Route/Token; Tempo ist als Blitzlicht-Template geplant, nicht als eigener Kanal. |
+| Begriff                        | Kurz erklärt                                                                                                                                                              |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Session / Live-Session**     | Laufende Veranstaltung mit einem sechsstelligen Code. Eine Session kann Quiz, Q&A und Blitzlicht bündeln.                                                                 |
+| **Local-First**                | Die dauerhafte Quiz-Sammlung liegt im Browser der Lehrperson, nicht dauerhaft in einer zentralen Quiz-Cloud.                                                              |
+| **DTO / Data-Stripping**       | Das Backend filtert Daten, bevor Teilnehmende sie sehen. Beispiel: `isCorrect` darf vor der Ergebnisphase nicht an die Teilnehmer-Ansicht gehen.                          |
+| **Kurzantwort / `SHORT_TEXT`** | Bewertbarer Fragetyp für kurze Text-, Zahlen- oder Einheitenantworten. Nicht mit offenem Freitext verwechseln.                                                            |
+| **Effective Vote**             | Bewertungsregel: Bei Peer Instruction ersetzt Runde 2 die Runde 1; ohne Runde 2 zählt Runde 1. Wichtig für Leaderboards, Scorecards, Teams und Bonus-Codes.               |
+| **Server-Status**              | Footer- und Hilfedialog-Anzeige für Betriebszustand, Systemlast und Plattformstatistiken. Technisch u. a. `health.footerBundle` und `health.stats`.                       |
+| **MOTD**                       | Message of the Day: Plattform-Kommunikation mit Startseiten-Overlay, Archiv, Admin-Pflege und aggregierten Interaktionszählern.                                           |
+| **Moderator / Tempo**          | Aktuelle Zielbilder: Delegierte Q&A-Moderation hat noch keine eigene Moderator-Route/Token; Tempo ist als Blitzlicht-Template geplant, nicht als eigener Kanal.           |
+| **Last- / Performance-Tests**  | Mehrere Werkzeuge je nach Szenario (k6, Artillery, Playwright, Lighthouse). Einstieg: [`HANDOUT-LAST-UND-PERFORMANCE-TESTS.md`](./HANDOUT-LAST-UND-PERFORMANCE-TESTS.md). |
 
 Mehr Begriffe und genaue Abgrenzungen stehen im [`docs/GLOSSAR.md`](../GLOSSAR.md).
 
@@ -113,7 +118,8 @@ Mehr Begriffe und genaue Abgrenzungen stehen im [`docs/GLOSSAR.md`](../GLOSSAR.m
 1. Dieses Dokument **einmal durchlesen** (Orientierung).
 2. [`docs/onboarding.md`](../onboarding.md) — Umgebung **wirklich aufsetzen**, bis `npm run dev` läuft und **`http://localhost:4200`** die Startseite zeigt.
 3. Die **kursinterne Einführungsveranstaltung** oder die dazugehörige Pflichtlektüre verfolgen.
-4. Mit dem **ersten Arbeitspaket** deiner Veranstaltung starten; bei Produktbegriffen das [Projekt-Glossar](../GLOSSAR.md), bei Setup-Fragen das [Onboarding](../onboarding.md) öffnen.
+4. Je nach Aufgabe zuerst das [Projekt-Glossar](../GLOSSAR.md), die [Praktikumsübersichten](./PRAKTIKUM.md) oder die [Qualitätsdokumentation](../TESTING.md) öffnen.
+5. Mit dem **ersten Arbeitspaket** deiner Veranstaltung starten; für neue Begriffe immer wieder auf die verlinkten Canonical Docs zurückspringen.
 
 ---
 

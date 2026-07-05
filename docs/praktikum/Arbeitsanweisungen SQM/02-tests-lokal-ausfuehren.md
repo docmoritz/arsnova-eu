@@ -20,5 +20,7 @@ Führe die lokalen Tests einmal selbstständig aus und halte das Ergebnis fest.
 ## Relevante Unterlagen
 
 - [PRAKTIKUM-SQM.md](../PRAKTIKUM-SQM.md)
+- [HANDOUT-LAST-UND-PERFORMANCE-TESTS.md](../HANDOUT-LAST-UND-PERFORMANCE-TESTS.md) (falls Schwerpunkt Last/Performance)
+- [Arbeitsanweisung 05 — Last-Pilot](./05-last-pilot-durchfuehren.md) (falls Schwerpunkt Last/Performance)
 - [TESTING.md](../../TESTING.md)
 - [onboarding.md](../../onboarding.md)

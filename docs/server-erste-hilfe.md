@@ -12,7 +12,7 @@ Es ergänzt [deployment-debian-root-server.md](deployment-debian-root-server.md)
 - Container: `arsnova-v3-app`, `arsnova-v3-postgres`, `arsnova-v3-redis`
 - App lokal: `127.0.0.1:3000`
 - tRPC-WebSocket: `127.0.0.1:3001`
-- Yjs-WebSocket: `127.0.0.1:3002`
+- Yjs-WebSocket: `127.0.0.1:3002` (im Container bei Bedarf `YJS_WS_HOST=0.0.0.0`)
 - Nginx als einziger öffentlicher Einstieg auf 80/443
 
 ## 0. Sofortregeln
@@ -662,7 +662,7 @@ curl -fsS http://127.0.0.1:3000/trpc/health.check
 Dann in der Nginx-Konfiguration prüfen:
 
 - `/trpc-ws` proxyt auf `127.0.0.1:3001`
-- `/yjs-ws` proxyt auf `127.0.0.1:3002`
+- `/yjs-ws` proxyt auf `127.0.0.1:3002` oder auf den Yjs-Host des Containers, wenn er nicht direkt auf Loopback lauscht
 - `Upgrade` und `Connection` Header sind gesetzt
 - Timeouts sind nicht zu niedrig
 
@@ -955,3 +955,5 @@ curl -fsS http://127.0.0.1:3000/trpc/health.check
 - [ENVIRONMENT.md](ENVIRONMENT.md) - Env-Variablen und Schnelldiagnose
 - [TESTING.md](TESTING.md) - Produktions-/Smoke-Checks
 - [SECURITY-OVERVIEW.md](SECURITY-OVERVIEW.md) - Sicherheits- und Datenschutzüberblick
+
+**Stand:** 2026-07-05 — abgeglichen mit [deployment-debian-root-server.md](deployment-debian-root-server.md), [ENVIRONMENT.md](ENVIRONMENT.md) und [TESTING.md](TESTING.md).

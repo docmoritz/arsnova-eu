@@ -54,6 +54,9 @@
     "load:simulate:session:50": "node scripts/load/session-participants-50.mjs",
     "load:smoke:host-vote-progress": "node scripts/load/host-vote-progress-200.mjs",
     "load:smoke:vote-timer-fairness": "node scripts/load/vote-timer-fairness-600.mjs",
+    "load:k6:health": "node scripts/load/run-k6.mjs scripts/load/k6-trpc-health-50vu.js",
+    "load:k6:session": "node scripts/load/run-k6.mjs scripts/load/k6-trpc-session-50vu.js",
+    "load:k6:hotpaths": "node scripts/load/run-k6.mjs scripts/load/k6-session-hotpaths-500vu.js",
     "start:prod": "node scripts/start-backend-prod.mjs",
     "verify:production-serving": "node scripts/verify-production-serving.mjs",
     "prepare": "husky || true"

@@ -1,6 +1,6 @@
 # Kapazitätsschätzung: 16 Kerne, 16 GB RAM (konservativ)
 
-**Stand:** 2026-04-01 — Codebase mit **tRPC-WebSocket-Subscriptions** für Session/Q&A/Vote/Health (Implementierung: **Polling** gegen PostgreSQL in den Subscriptions, kein Redis-Pub/Sub für jedes Live-Event). Zusätzlich: **MOTD**-Lesepfade (HTTP/tRPC), **Yjs**-Relay (Quiz-Sync), **Blitzlicht** in Redis.  
+**Stand:** 2026-07-05 — Codebase mit **tRPC-WebSocket-Subscriptions** für Session/Q&A/Vote/Health (Implementierung: **Polling** gegen PostgreSQL in den Subscriptions, kein Redis-Pub/Sub für jedes Live-Event). Zusätzlich: **MOTD**-Lesepfade (HTTP/tRPC), **Yjs**-Relay (Quiz-Sync), **Blitzlicht** in Redis.
 **Ziel:** Konservative Obergrenzen für **gleichzeitige Quizze** (verschiedene Dozenten) und **current participants** (wie in `health.stats`: Teilnehmer in nicht beendeten Sessions).
 
 ---
@@ -41,7 +41,7 @@
 ### 4.1 Max. Anzahl gleichzeitige Quizze (verschiedene Dozenten)
 
 - Begrenzend ist nicht die DB (Speicher für Sessions), sondern **Verbindungen und Node-Ressourcen**: Pro Quiz typisch **1 Dozent (1 WS)** + **N Studenten (N WS)**.
-- Grobe Rechnung: Nutzbar für Verbindungen ~~**2–2,5 GB** Node-Heap für Client-State; bei \*\*~~2 MB pro verbundenem Client** → **~1.000–1.200\*\* gleichzeitige Verbindungen vertretbar.
+- Grobe Rechnung: Nutzbar für Verbindungen: etwa **2–2,5 GB** Node-Heap für Client-State; bei **~2 MB pro verbundenem Client** sind **~1.000–1.200** gleichzeitige Verbindungen vertretbar.
 - Mit **Ø 30 Teilnehmer pro Quiz** (1 Dozent + 29 Studenten) → **1.200 / 30 ≈ 40** Quizze.
 - **Konservativ** (Reserve für Peaks, Yjs, Health, andere Requests):
   - **Max. gleichzeitige Quizze: 20–25** (bei durchschnittlich 30–40 Teilnehmern pro Quiz).

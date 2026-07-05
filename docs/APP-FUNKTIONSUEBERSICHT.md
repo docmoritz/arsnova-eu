@@ -1,8 +1,8 @@
 # arsnova.eu – ausführliche Funktionsübersicht der App
 
-> Stand dieser Übersicht: 2026-06-04
+> Stand dieser Übersicht: 2026-07-05
 >
-> Grundlage: Auswertung des aktuellen Repos, insbesondere `apps/frontend`, `apps/backend`, `libs/shared-types`, `prisma/schema.prisma`, `README.md`, `docs/ROUTES_AND_STORIES.md` und der Feature-Dokumente unter `docs/features/`.
+> Grundlage: Auswertung des aktuellen Repos, insbesondere `apps/frontend`, `apps/backend`, `libs/shared-types`, `prisma/schema.prisma`, `README.md`, `docs/README.md`, `docs/ROUTES_AND_STORIES.md`, `docs/TESTING.md` und der Feature-Dokumente unter `docs/features/`.
 
 ## Ziel dieser Datei
 
