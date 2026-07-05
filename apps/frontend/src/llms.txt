@@ -1,0 +1,34 @@
+# arsnova.eu
+
+> arsnova.eu is an open-source audience response web app for education, training, workshops and organizations. It combines live quizzes, Q&A, word clouds and quick feedback in a privacy-conscious, self-hostable system.
+
+arsnova.eu is available in German, English, French, Italian and Spanish. The public reference instance runs at https://arsnova.eu. The project is MIT licensed and intended for institutions that want to evaluate, fork or run their own instance.
+
+This file is a curated orientation for language models and agents. It is not an access-control mechanism. Automated crawlers should respect https://arsnova.eu/robots.txt, and live session content, admin routes and participant data are not public documentation.
+
+## Product
+
+- [English app](https://arsnova.eu/en/): Public reference instance and English entry point.
+- [German app](https://arsnova.eu/de/): German entry point and default locale.
+- [Help](https://arsnova.eu/en/help): User-facing help and orientation.
+- [Quiz area](https://arsnova.eu/en/quiz): Local-first quiz creation and session start.
+- [News archive](https://arsnova.eu/en/news-archive): Public product updates and operator messages.
+
+## Legal and Privacy
+
+- [Privacy policy](https://arsnova.eu/en/legal/privacy): Data protection information for the public instance.
+- [Imprint](https://arsnova.eu/en/legal/imprint): Provider information and contact details.
+
+## Source and Documentation
+
+- [Source repository](https://github.com/kqc-real/arsnova.eu): MIT-licensed TypeScript monorepo.
+- [Project README](https://github.com/kqc-real/arsnova.eu#readme): Product scope, architecture, operation and local evaluation.
+- [Architecture handbook](https://github.com/kqc-real/arsnova.eu/blob/main/docs/architecture/handbook.md): Architecture documentation for operators and contributors.
+- [Security overview](https://github.com/kqc-real/arsnova.eu/blob/main/docs/SECURITY-OVERVIEW.md): Security and data protection model.
+- [Deployment guide](https://github.com/kqc-real/arsnova.eu/blob/main/docs/deployment-debian-root-server.md): Production deployment notes for self-hosting.
+
+## Optional
+
+- [Status page](https://arsnova.betteruptime.com/): External availability status for the public reference instance.
+- [Sitemap](https://arsnova.eu/sitemap.xml): Search-engine sitemap.
+- [Robots policy](https://arsnova.eu/robots.txt): Crawler policy.

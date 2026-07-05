@@ -68,25 +68,24 @@ if (fs.existsSync(frontendDist)) {
   });
 
   if (hasLocalizedBuild) {
-    // i18n-Build legt robots.txt nur unter /<locale>/ ab; ohne eigene Route liefert SPA-Fallback HTML → SEO-Tools „invalid“.
+    // i18n-Build legt Root-Metadateien nur unter /<locale>/ ab; ohne eigene Route liefert SPA-Fallback HTML.
     const robotsLocaleOrder = [
       ...(fallbackLocale ? [fallbackLocale] : []),
       ...availableLocales.filter((l) => l !== fallbackLocale),
     ];
-    let robotsFile: string | null = null;
-    for (const locale of robotsLocaleOrder) {
-      const candidate = path.join(frontendDist, locale, 'robots.txt');
-      if (fs.existsSync(candidate)) {
-        robotsFile = path.resolve(candidate);
-        break;
+
+    const resolveRootMetaFile = (fileName: string): string | null => {
+      for (const locale of robotsLocaleOrder) {
+        const candidate = path.join(frontendDist, locale, fileName);
+        if (fs.existsSync(candidate)) {
+          return path.resolve(candidate);
+        }
       }
-    }
-    if (!robotsFile) {
-      const rootRobots = path.join(frontendDist, 'robots.txt');
-      if (fs.existsSync(rootRobots)) {
-        robotsFile = path.resolve(rootRobots);
-      }
-    }
+      const rootFile = path.join(frontendDist, fileName);
+      return fs.existsSync(rootFile) ? path.resolve(rootFile) : null;
+    };
+
+    const robotsFile = resolveRootMetaFile('robots.txt');
     if (robotsFile) {
       const robotsPath = robotsFile;
       app.get('/robots.txt', (_req, res) => {
@@ -95,25 +94,21 @@ if (fs.existsSync(frontendDist)) {
       });
     }
 
-    let sitemapFile: string | null = null;
-    for (const locale of robotsLocaleOrder) {
-      const candidate = path.join(frontendDist, locale, 'sitemap.xml');
-      if (fs.existsSync(candidate)) {
-        sitemapFile = path.resolve(candidate);
-        break;
-      }
-    }
-    if (!sitemapFile) {
-      const rootSitemap = path.join(frontendDist, 'sitemap.xml');
-      if (fs.existsSync(rootSitemap)) {
-        sitemapFile = path.resolve(rootSitemap);
-      }
-    }
+    const sitemapFile = resolveRootMetaFile('sitemap.xml');
     if (sitemapFile) {
       const sitemapPath = sitemapFile;
       app.get('/sitemap.xml', (_req, res) => {
         res.type('application/xml; charset=utf-8');
         res.sendFile(sitemapPath);
+      });
+    }
+
+    const llmsFile = resolveRootMetaFile('llms.txt');
+    if (llmsFile) {
+      const llmsPath = llmsFile;
+      app.get('/llms.txt', (_req, res) => {
+        res.type('text/markdown; charset=utf-8');
+        res.sendFile(llmsPath);
       });
     }
 

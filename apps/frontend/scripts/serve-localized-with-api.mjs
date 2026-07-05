@@ -6,6 +6,7 @@
  * Dann: http://localhost:4200/ → /de/, /en/, /fr/, /it/, /es/ mit funktionierender API inkl. Subscriptions.
  */
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
@@ -22,6 +23,24 @@ const BACKEND_YJS_WS_URL = `ws://localhost:${YJS_WS_PORT}`;
 const SUPPORTED_LOCALES = ['de', 'en', 'fr', 'it', 'es'];
 
 const app = express();
+
+const resolveRootMetaFile = (fileName) => {
+  for (const locale of SUPPORTED_LOCALES) {
+    const candidate = path.join(distBrowser, locale, fileName);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  const rootFile = path.join(distBrowser, fileName);
+  return fs.existsSync(rootFile) ? rootFile : null;
+};
+
+const serveRootMetaFile = (fileName, contentType) => {
+  const filePath = resolveRootMetaFile(fileName);
+  if (!filePath) return;
+  app.get(`/${fileName}`, (_, res) => {
+    res.type(contentType);
+    res.sendFile(filePath);
+  });
+};
 
 app.use('/trpc', express.raw({ type: '*/*' }), async (req, res) => {
   const pathAndQuery = req.url?.startsWith('/') ? req.url : `/${req.url ?? ''}`;
@@ -44,6 +63,10 @@ app.use('/trpc', express.raw({ type: '*/*' }), async (req, res) => {
     res.status(502).send('Backend nicht erreichbar. Bitte Backend starten (z. B. npm run dev -w @arsnova/backend).');
   }
 });
+
+serveRootMetaFile('robots.txt', 'text/plain; charset=utf-8');
+serveRootMetaFile('sitemap.xml', 'application/xml; charset=utf-8');
+serveRootMetaFile('llms.txt', 'text/markdown; charset=utf-8');
 
 // /assets/* aus de/ (lokalisiert: Icons/Manifest unter /de/ nutzen /assets/ absolut)
 app.use('/assets', express.static(path.join(distBrowser, 'de', 'assets')));

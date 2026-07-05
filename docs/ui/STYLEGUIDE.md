@@ -2,7 +2,7 @@
 
 # UI Styleguide (Angular Material 3)
 
-**Stand:** 2026-05-31 — abgeglichen mit Angular 21.2, `apps/frontend/src/styles.scss`, `apps/frontend/src/styles/playful-inner-chrome.scss`, den Shared-Styles unter `apps/frontend/src/app/shared/styles/`, [TOKENS.md](TOKENS.md) und [PR-CHECKLIST-UI.md](PR-CHECKLIST-UI.md).
+**Stand:** 2026-07-05 — abgeglichen mit Angular 21.2, `apps/frontend/src/styles.scss`, `apps/frontend/src/styles/playful-inner-chrome.scss`, den Shared-Styles unter `apps/frontend/src/app/shared/styles/`, [TOKENS.md](TOKENS.md) und [PR-CHECKLIST-UI.md](PR-CHECKLIST-UI.md).
 
 ## Ziel und Geltungsbereich
 
@@ -25,7 +25,7 @@ Ergänzend zur ADR `docs/architecture/decisions/0005-use-angular-material-design
 - `color-scheme` steuert Light/Dark-Verhalten.
 - Bei Komponenten gilt: Farben nur aus Tokens, keine ad-hoc Hex-Werte.
 - Standard-Hintergrund/Farbe für die App orientiert sich an `--app-bg-root`, `--mat-sys-surface` und `--mat-sys-on-surface`.
-- Material Icons sind selbst gehostet und nutzen `font-display: block`; keine externen Font-Requests einführen.
+- Material Icons sind selbst gehostet und nutzen `font-display: swap`; keine externen Font-Requests einführen.
 
 ## Komponentenrichtlinien
 
@@ -346,7 +346,7 @@ Die App richtet sich auch an Trainer:innen, Workshop- und Event-Moderation sowie
 
 ## Performance (Lighthouse)
 
-- **Fonts:** Material Icons nutzen `font-display: block`, damit Icons erst nach Font-Load angezeigt werden (mit `swap` wuerde der System-Font-Fallback leere Kästchen zeigen). Kein Preload im Index, um Ladepfade nicht zu stören.
+- **Fonts:** Material Icons nutzen `font-display: swap`, damit Lighthouse keine unsichtbare Textphase meldet und die Icons nach dem Font-Load regulär ersetzen. Kein Preload im Index, um Ladepfade nicht zu stören.
 - **Mobile (~67 %):** Lighthouse simuliert 4x langsamere CPU. Die App ist eine reine Client-SPA: ~386 kB Initial-JS (Framework, Router, Material) plus Home-Chunk muessen geparst und ausgefuehrt werden, bevor Inhalt da ist. Bereits umgesetzt: Preset-Toast und Server-Status-Widget lazy/defer; Health-Check nach First Paint. Deutlich ueber 67 % Mobile erreichbar nur mit weniger Initial-JS (z. B. SSR/Pre-Render fuer Shell) oder Akzeptanz des SPA-Kosten.
 - **SSR/Pre-Render:** `@angular/ssr` ist aktiv. Routen `''`, `help`, `quiz` werden beim Build pre-rendert (statisches HTML in `dist/browser`). Root-Route nutzt ggf. `index.csr.html` (Fallback); Backend liefert `index.csr.html` aus, wenn `index.html` fehlt. ThemePresetService und AppComponent nutzen `isPlatformBrowser`, damit Prerender (Node) nicht auf `localStorage`/`navigator` zugreift. Voll-SSR (laufender Node-Server pro Request) wird nicht genutzt – nur Pre-Render + Auslieferung durch Express.
 - **Diagnose:** In Lighthouse unter „Reduce JavaScript execution time“ / „View Treemap“ prüfen, welche Skripte die meiste Haupt-Thread-Zeit verbrauchen.
