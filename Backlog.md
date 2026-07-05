@@ -289,7 +289,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
       - Session-Start
     - Die Dokumentation beschreibt, wie die Lasttests gestartet werden, welche Infrastruktur benötigt wird und wie Resultate zu interpretieren sind.
     - Neue Performance-Erkenntnisse aus diesen Tests fliessen in Backlog, ADRs oder Optimierungsstories zurück.
-    - **Architekturvorgabe:** Die Tool-Auswahl und Rollentrennung folgen ADR-0013; `k6` ist der Standard für protokollnahe Lasttests, `Artillery` für Realtime- und E2E-nahe Lastszenarien, `Playwright` bleibt funktionale Browser-Referenz und `autocannon` ist nur ein lokales Entwicklerwerkzeug für Hotspots.
+    - **Architekturvorgabe:** Die Tool-Auswahl und Rollentrennung folgen ADR-0013; `k6` ist der Standard für protokollnahe Lasttests, `Artillery` für Realtime- und E2E-nahe Lastszenarien, `Playwright` bleibt funktionale Browser-Referenz; schnelle Hotspot-Checks laufen über Node-Skripte unter `scripts/load/`.
   - **Aktueller Implementierungsstand (2026-07-05, abgeglichen mit [ADR-0013](docs/architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md)):**
     - **k6 (protokollnah):** `k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js`, `k6-session-hotpaths-500vu.js` (Modi `join-wave`, `active-question`, `vote-spike`).
     - **Node-Smokes / Simulationen:** `concurrent-50-http.mjs`, `session-participants-50.mjs`, `ws-status-subscribers.mjs`, `host-vote-progress-200.mjs`, `vote-timer-fairness-600.mjs` — Root-NPM: `load:simulate:50`, `load:simulate:session:50`, `load:smoke:host-vote-progress`, `load:smoke:vote-timer-fairness`.

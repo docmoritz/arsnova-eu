@@ -85,17 +85,17 @@ Es wird nicht als alleiniges Lasttest-Tool verstanden, sondern als:
 - Grundlage fuer browsernahe Lastszenarien
 - Werkzeug fuer reproduzierbare UI-Flows, die bei Bedarf mit Artillery kombiniert werden
 
-### 4. `autocannon` ist das lokale Schnellwerkzeug fuer Backend-Hotspots
+### 4. Node-Skripte fuer schnelle lokale Hotspot-Checks
 
-`autocannon` wird als optionales Entwicklerwerkzeug fuer sehr schnelle lokale Mikrobenchmarks einzelner Node-/HTTP-Hotspots zugelassen.
+Fuer sehr schnelle Vorher/Nachher-Vergleiche einzelner Backend-Endpunkte ohne vollstaendiges k6-Setup nutzt das Repo **eigene Node-Skripte** unter `scripts/load/`, z. B. `concurrent-50-http.mjs` (`npm run load:simulate:50`).
 
 Einsatzschwerpunkte:
 
-- lokale Checks einzelner Endpunkte
-- schnelle Vorher/Nachher-Vergleiche nach Refactorings
-- fruehe Grobpruefung ohne vollstaendiges Lasttest-Setup
+- lokale Checks einzelner tRPC-/HTTP-Hotpaths
+- schnelle Grobpruefung waehrend der Entwicklung
+- Ergaenzung zu k6, kein Ersatz fuer Schwellenwert-Lasttests
 
-Es ist **kein** Ersatz fuer `k6` oder `Artillery`, sondern ein zusaetzliches Werkzeug fuer kurze Entwicklungszyklen.
+Externe Mikrobenchmark-CLIs sind **nicht** vorgesehen; die Rolle ist durch die eingecheckten Node-Smokes abgedeckt.
 
 ### 5. Kein monolithisches Ein-Tool-Modell
 
@@ -106,7 +106,7 @@ Stattdessen gilt:
 - `k6` fuer reproduzierbare, threshold-basierte Lasttests
 - `Artillery` fuer Realtime- und E2E-nahe Lastszenarien
 - `Playwright` fuer funktionale Browser-Referenzszenarien
-- `autocannon` fuer schnelle lokale Hotspot-Checks
+- Node-Skripte unter `scripts/load/` fuer schnelle lokale Hotspot-Checks
 
 Diese Aufteilung ist Teil der Architekturentscheidung.
 

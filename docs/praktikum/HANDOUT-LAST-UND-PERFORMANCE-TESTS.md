@@ -12,14 +12,14 @@
 
 arsnova.eu ist **kein** klassisches HTTP-only-System. Live-Sessions laufen über **tRPC**, **WebSockets**, **Redis** und **PostgreSQL**. Deshalb nutzen wir **mehrere Werkzeuge** mit klarer Rollentrennung — nicht ein einziges Lasttest-Tool für alles.
 
-| Kategorie                                  | Standardwerkzeug                     | Status im Repo                                   |
-| ------------------------------------------ | ------------------------------------ | ------------------------------------------------ |
-| Protokollnahe Last (HTTP/tRPC)             | **k6**                               | Skripte vorhanden                                |
-| Realtime / WebSocket / E2E-nahe Last       | **Artillery**                        | Architektur-Standard, **noch nicht eingecheckt** |
-| Funktionale Browser-Flows                  | **Playwright**                       | Smokes & Benchmarks vorhanden                    |
-| Schnelle lokale Hotspot-Checks             | **autocannon**                       | Optional, nicht eingecheckt                      |
-| Frontend-Ladeverhalten (Nutzerwahrnehmung) | **Lighthouse** + Chrome DevTools     | Dokumentiert, manuell                            |
-| Einfache Node-Simulationen                 | eigene Skripte unter `scripts/load/` | Vorhanden                                        |
+| Kategorie                                  | Standardwerkzeug                      | Status im Repo                                   |
+| ------------------------------------------ | ------------------------------------- | ------------------------------------------------ |
+| Protokollnahe Last (HTTP/tRPC)             | **k6**                                | Skripte vorhanden                                |
+| Realtime / WebSocket / E2E-nahe Last       | **Artillery**                         | Architektur-Standard, **noch nicht eingecheckt** |
+| Funktionale Browser-Flows                  | **Playwright**                        | Smokes & Benchmarks vorhanden                    |
+| Schnelle lokale Hotspot-Checks             | **Node-Skripte** (`load:simulate:50`) | Vorhanden                                        |
+| Frontend-Ladeverhalten (Nutzerwahrnehmung) | **Lighthouse** + Chrome DevTools      | Dokumentiert, manuell                            |
+| Einfache Node-Simulationen                 | eigene Skripte unter `scripts/load/`  | Vorhanden                                        |
 
 Verbindliche Entscheidung: [ADR-0013](../architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md).
 
@@ -157,9 +157,9 @@ Details: [`docs/TESTING.md`](../TESTING.md).
 
 ---
 
-### 2.4 Node-Skripte unter `scripts/load/` — Smokes ohne k6
+### 2.4 Node-Skripte unter `scripts/load/` — Smokes und Hotspot-Checks ohne k6
 
-Ergänzende Bausteine, die echte tRPC-/WebSocket-Pfade nutzen:
+Ergänzende Bausteine für schnelle lokale Checks und echte tRPC-/WebSocket-Pfade — **ohne** separates Mikrobenchmark-Tool:
 
 | Skript                        | NPM-Befehl (Root)                        | Zweck                                           |
 | ----------------------------- | ---------------------------------------- | ----------------------------------------------- |
@@ -203,12 +203,6 @@ Diese Smokes sind **kein** Ersatz für einen vollständigen 500er-Lauf, aber wic
 - `npm run lighthouse:a11y -w @arsnova/frontend`
 
 **Merke:** Lighthouse immer gegen einen **Production-Build** messen, nicht gegen `ng serve`.
-
----
-
-### 2.6 autocannon — optionale Mikrobenchmarks
-
-Laut ADR-0013 dürfen Entwickler:innen **autocannon** für schnelle Vorher/Nachher-Vergleiche einzelner HTTP-Endpunkte nutzen. Im Repo ist **kein** Skript eingecheckt; es ersetzt weder k6 noch Artillery.
 
 ---
 
