@@ -564,6 +564,7 @@ jobs:
     env:
       DEPLOY_DIR: /home/deploy/arsnova.eu
       DEPLOY_BRANCH: main
+      DEPLOY_SHA: ${{ github.sha }}
 
     steps:
       - name: Validate deploy configuration
@@ -581,7 +582,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
-          envs: DEPLOY_DIR,DEPLOY_BRANCH
+          envs: DEPLOY_DIR,DEPLOY_BRANCH,DEPLOY_SHA
           script: |
             set -e
             export DEPLOY_DIR="${DEPLOY_DIR:-/home/deploy/arsnova.eu}"
@@ -591,7 +592,7 @@ jobs:
             git checkout "$DEPLOY_BRANCH"
             git reset --hard "origin/$DEPLOY_BRANCH"
             chmod +x scripts/deploy.sh
-            ./scripts/deploy.sh
+            DEPLOY_SHA="$DEPLOY_SHA" ./scripts/deploy.sh
 
   # ─── Post-Deploy Smoke Check ───────────────────────────────────────────────
   post-deploy-smoke:
@@ -636,7 +637,7 @@ jobs:
     env:
       DEPLOY_DIR: /home/deploy/arsnova.eu
       DEPLOY_BRANCH: main
-      ROLLBACK_SHA: ${{ github.event.before }}
+      DEPLOY_SHA: ${{ github.event.before }}
 
     steps:
       - name: Validate rollback configuration
@@ -645,7 +646,7 @@ jobs:
           test -n "${{ secrets.DEPLOY_HOST }}" || (echo "Missing secret: DEPLOY_HOST" && exit 1)
           test -n "${{ secrets.DEPLOY_USER }}" || (echo "Missing secret: DEPLOY_USER" && exit 1)
           test -n "${{ secrets.DEPLOY_SSH_KEY }}" || (echo "Missing secret: DEPLOY_SSH_KEY" && exit 1)
-          test -n "${ROLLBACK_SHA}" || (echo "Missing rollback SHA" && exit 1)
+          test -n "${DEPLOY_SHA}" || (echo "Missing rollback SHA" && exit 1)
           echo "Rollback configuration looks complete."
 
       - name: Roll back via SSH
@@ -655,7 +656,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
-          envs: DEPLOY_DIR,DEPLOY_BRANCH,ROLLBACK_SHA
+          envs: DEPLOY_DIR,DEPLOY_BRANCH,DEPLOY_SHA
           script: |
             set -e
             export DEPLOY_DIR="${DEPLOY_DIR:-/home/deploy/arsnova.eu}"
@@ -663,6 +664,5 @@ jobs:
             cd "$DEPLOY_DIR"
             git fetch origin
             git checkout "$DEPLOY_BRANCH"
-            git reset --hard "$ROLLBACK_SHA"
             chmod +x scripts/deploy.sh
-            ./scripts/deploy.sh
+            DEPLOY_SHA="$DEPLOY_SHA" ./scripts/deploy.sh
