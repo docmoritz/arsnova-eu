@@ -341,7 +341,7 @@ jobs:
         run: |
           set -euo pipefail
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
-          npx prisma db push --schema prisma/schema.prisma --skip-generate
+          npx prisma db push --schema prisma/schema.prisma
 
       - name: Build shared types
         run: npm run build -w @arsnova/shared-types
