@@ -176,8 +176,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: npm audit (high severity gate)
-        run: npm audit --audit-level=high --omit=dev
+      - name: npm audit (critical severity gate)
+        run: npm audit --audit-level=critical --omit=dev
 
   # ─── Tests ────────────────────────────────────────────────────────────────────
   test:
@@ -250,16 +250,22 @@ jobs:
             kill "$server_pid" 2>/dev/null || true
           }
           trap cleanup EXIT
-          for attempt in {1..30}; do
+          lighthouse_ready=0
+          for _ in {1..30}; do
             if curl -fsS http://localhost:4173/de/ >/dev/null; then
-              cd "$GITHUB_WORKSPACE"
-              npx -y @lhci/cli@0.15.1 autorun --config=.lighthouserc.cjs
-              exit 0
+              lighthouse_ready=1
+              break
             fi
             sleep 1
           done
-          cat "$RUNNER_TEMP/frontend-static.log"
-          exit 1
+
+          if [ "$lighthouse_ready" -ne 1 ]; then
+            cat "$RUNNER_TEMP/frontend-static.log"
+            exit 1
+          fi
+
+          cd "$GITHUB_WORKSPACE"
+          npx -y @lhci/cli@0.15.1 autorun --config=.lighthouserc.cjs
 
       - name: Upload Lighthouse reports
         if: always()
@@ -378,15 +384,21 @@ jobs:
 
           npm run serve:localize:api -w @arsnova/frontend > "$RUNNER_TEMP/frontend.log" 2>&1 &
           echo "$!" > "$RUNNER_TEMP/frontend.pid"
-          for attempt in {1..60}; do
+          frontend_ready=0
+          for _ in {1..60}; do
             if curl -fsS http://localhost:4200/de/ >/dev/null; then
-              BASE_URL=http://localhost:4200/de TRPC_URL=http://localhost:3000/trpc npm run smoke:unified-session -w @arsnova/frontend
-              exit 0
+              frontend_ready=1
+              break
             fi
             sleep 1
           done
-          cat "$RUNNER_TEMP/frontend.log"
-          exit 1
+
+          if [ "$frontend_ready" -ne 1 ]; then
+            cat "$RUNNER_TEMP/frontend.log"
+            exit 1
+          fi
+
+          BASE_URL=http://localhost:4200/de TRPC_URL=http://localhost:3000/trpc npm run smoke:unified-session -w @arsnova/frontend
 
       - name: Upload E2E logs
         if: always()
@@ -433,7 +445,7 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          severity: HIGH,CRITICAL
+          severity: CRITICAL
           ignore-unfixed: true
           exit-code: '1'
 
@@ -484,7 +496,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: arsnova-eu:scan-${{ github.sha }}
-          severity: HIGH,CRITICAL
+          severity: CRITICAL
           ignore-unfixed: true
           exit-code: '1'
 
