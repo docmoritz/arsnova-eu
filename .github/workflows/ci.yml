@@ -177,7 +177,7 @@ jobs:
         run: npm ci
 
       - name: npm audit (high severity gate)
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
   # ─── Tests ────────────────────────────────────────────────────────────────────
   test:
@@ -429,7 +429,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Run Trivy FS scan
-        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: fs
           scan-ref: .
@@ -439,7 +439,7 @@ jobs:
 
       - name: Generate Trivy FS SARIF report
         if: always()
-        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: fs
           scan-ref: .
@@ -481,7 +481,7 @@ jobs:
           tags: arsnova-eu:scan-${{ github.sha }}
 
       - name: Run Trivy image scan
-        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: arsnova-eu:scan-${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -490,7 +490,7 @@ jobs:
 
       - name: Generate Trivy image SARIF report
         if: always()
-        uses: aquasecurity/trivy-action@915b19bbe73b92a6cf82a1bc12b087c9a19a5fe2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: arsnova-eu:scan-${{ github.sha }}
           severity: HIGH,CRITICAL

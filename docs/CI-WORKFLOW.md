@@ -143,7 +143,7 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 
 ### 4.6 audit
 
-- **Was?** `npm audit --audit-level=high` als Gate.
+- **Was?** `npm audit --audit-level=high --omit=dev` als Gate (Produktionsabhängigkeiten).
 - **Wo?** Audit-Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Alle Events außer `schedule`.
 - **Warum?** Blockiert bekannte High-Severity-Schwachstellen vor dem Merge/Deploy.
