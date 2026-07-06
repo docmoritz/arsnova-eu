@@ -605,7 +605,19 @@ jobs:
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
 
       - name: Verify production serving
-        run: node scripts/verify-production-serving.mjs "https://${{ secrets.DEPLOY_HOST }}"
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+
+          if printf '%s' "$DEPLOY_HOST" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "DEPLOY_HOST ist eine IP-Adresse ($DEPLOY_HOST). TLS-Zertifikate enthalten i. d. R. DNS-Namen, nicht IP-SANs."
+            echo "Setze DEPLOY_HOST auf den öffentlichen DNS-Namen mit gültigem Zertifikat (z. B. arsnova.eu)."
+            exit 1
+          fi
+
+          SMOKE_URL="https://$DEPLOY_HOST"
+          node scripts/verify-production-serving.mjs "$SMOKE_URL"
 
   # ─── Rollback (wenn Post-Deploy-Smoke fehlschlägt) ───────────────────────
   rollback-on-smoke-failure:
