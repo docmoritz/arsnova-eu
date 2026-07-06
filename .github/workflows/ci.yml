@@ -382,7 +382,7 @@ jobs:
             sleep 1
           done
 
-          npm run serve:localize:api -w @arsnova/frontend > "$RUNNER_TEMP/frontend.log" 2>&1 &
+          PORT=4200 BACKEND_URL=http://localhost:3000 npm run serve:localize:api -w @arsnova/frontend > "$RUNNER_TEMP/frontend.log" 2>&1 &
           echo "$!" > "$RUNNER_TEMP/frontend.pid"
           frontend_ready=0
           for _ in {1..60}; do
