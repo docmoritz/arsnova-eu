@@ -11,13 +11,53 @@
  * Default BASE_URL: http://localhost:3000
  */
 const base = process.argv[2] || 'http://localhost:3000';
+const REQUEST_TIMEOUT_MS = Number(process.env.VERIFY_REQUEST_TIMEOUT_MS || '8000');
+const RETRY_ATTEMPTS = Number(process.env.VERIFY_RETRY_ATTEMPTS || '8');
+const RETRY_DELAY_MS = Number(process.env.VERIFY_RETRY_DELAY_MS || '1500');
 
 function printCheck(label, ok, detail) {
   console.log(`${label}:`, ok ? '✓' : '✗', detail ? `(${detail})` : '');
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatError(error) {
+  if (!error) return 'unknown error';
+  const parts = [];
+  if (error.message) parts.push(error.message);
+  if (error.code) parts.push(`code=${error.code}`);
+  if (error.cause?.code) parts.push(`cause=${error.cause.code}`);
+  if (error.cause?.message) parts.push(`causeMsg=${error.cause.message}`);
+  return parts.join(' | ');
+}
+
+async function fetchWithRetry(path, options = {}) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      return await fetch(`${base}${path}`, {
+        ...options,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      lastError = error;
+      console.log(
+        `WARN Request ${path} fehlgeschlagen (attempt ${attempt}/${RETRY_ATTEMPTS}): ${formatError(error)}`,
+      );
+      if (attempt < RETRY_ATTEMPTS) {
+        await sleep(RETRY_DELAY_MS);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 async function fetchText(path) {
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetchWithRetry(path, {
     headers: { 'Accept-Encoding': 'gzip, deflate, br' },
     redirect: 'follow',
   });
@@ -32,7 +72,7 @@ async function fetchText(path) {
 }
 
 async function fetchJson(path) {
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetchWithRetry(path, {
     headers: { 'Accept-Encoding': 'gzip, deflate, br' },
   });
 
@@ -49,6 +89,11 @@ async function main() {
   console.log('');
 
   try {
+    console.log(
+      `Netzwerk-Resilienz: attempts=${RETRY_ATTEMPTS}, delay=${RETRY_DELAY_MS}ms, timeout=${REQUEST_TIMEOUT_MS}ms`,
+    );
+    console.log('');
+
     const root = await fetchText('/');
     const locale = await fetchText('/de/');
     const api = await fetchJson(
@@ -111,7 +156,7 @@ async function main() {
       process.exitCode = 1;
     }
   } catch (e) {
-    console.error('Fehler:', e.message);
+    console.error('Fehler:', formatError(e));
     console.log(
       '\nStelle sicher, dass das Backend läuft (z. B. npm run start:prod oder npm run build -w @arsnova/backend && NODE_ENV=production node apps/backend/dist/index.js).',
     );
