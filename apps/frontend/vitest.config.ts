@@ -18,6 +18,12 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html'],
       reportsDirectory: './coverage',
+      thresholds: {
+        statements: 60,
+        branches: 55,
+        functions: 65,
+        lines: 60,
+      },
       exclude: [
         '**/node_modules/**',
         '**/*.spec.ts',

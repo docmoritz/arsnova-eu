@@ -1,10 +1,10 @@
-<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD013 MD060 -->
 
 # Tests & CI — Referenz
 
 **Lokal** vor PR: mindestens `npm run build`, `npm run lint`, `npm test` (entspricht den wesentlichen CI-Gates). Vollständige DoD: [Backlog.md](../Backlog.md) „Definition of Done“. Nach größeren Änderungen an **`@arsnova/shared-types`**: wie in Root-[README](../README.md) zuerst `npm run build -w @arsnova/shared-types` bzw. Root-`npm run build` nutzen.
 
-**Stand:** 2026-07-05 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; Jobs: `build`, `typecheck`, `lint`, `audit` informational, `test`, `docker`, optional `deploy`) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
+**Stand:** 2026-07-06 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; inkl. `dependency-review`, `actionlint`, `trivy-fs`, `trivy-image`, `post-deploy-smoke`) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
 
 ---
 
@@ -34,17 +34,39 @@ Workspace-spezifisch:
 
 Auslöser: **Push** und **Pull Request** auf `main`.
 
-| Job / Phase                            | Inhalt                                                                                                                                                                                                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **build** (Node 20 & 22)               | `npm ci` → `prisma validate` → `prisma generate` → `tsc -b apps/backend` → Frontend `tsc --noEmit` → `build:localize` (Frontend, **alle** konfigurierten Locales `de/en/fr/it/es`)                                                                                         |
-| **typecheck** (Node 20 & 22, parallel) | `npm ci` → `prisma validate` → `prisma generate` → `npm run typecheck` (inkl. `build` für `shared-types`, dann `--noEmit`)                                                                                                                                                 |
-| **lint**                               | `npm run lint` (nach build)                                                                                                                                                                                                                                                |
-| **audit**                              | `npm audit --audit-level=high` (informational, blockiert nicht)                                                                                                                                                                                                            |
-| **test**                               | `npm test` (nach build)                                                                                                                                                                                                                                                    |
-| **docker**                             | Docker-Image-Build (ohne Push), nach build                                                                                                                                                                                                                                 |
-| **deploy**                             | Nur bei Push auf `main` oder einen zusätzlich im Workflow-Trigger eingetragenen `DEPLOY_BRANCH` **und** Repository-Variable `DEPLOY_ENABLED=true`; läuft nach **`lint`, `test`, `docker`, `typecheck`** (alle müssen grün sein); ruft serverseitig `scripts/deploy.sh` auf |
+| Job / Phase                            | Inhalt                                                                                                                                                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **dependency-review**                  | PR-abhängiger Dependency-Risiko-Check (`fail-on-severity: high`)                                                                                                                                            |
+| **actionlint**                         | Linting/Validierung der GitHub-Workflow-Dateien                                                                                                                                                             |
+| **build** (Node 20 & 22)               | `npm ci` → `prisma validate` → `prisma generate` → `tsc -b apps/backend` → Frontend `tsc --noEmit` → `build:localize` (Frontend, **alle** konfigurierten Locales `de/en/fr/it/es`)                          |
+| **typecheck** (Node 20 & 22, parallel) | `npm ci` → `prisma validate` → `prisma generate` → `npm run typecheck` (inkl. `build` für `shared-types`, dann `--noEmit`)                                                                                  |
+| **lint**                               | `npm run lint` (nach build)                                                                                                                                                                                 |
+| **audit**                              | `npm audit --audit-level=high` (**blockierend**)                                                                                                                                                            |
+| **test**                               | `npm run test:coverage` (nach build, inkl. Coverage-Thresholds)                                                                                                                                             |
+| **trivy-fs**                           | Trivy-Scan des Repository-Dateisystems (HIGH/CRITICAL, blockierend)                                                                                                                                         |
+| **trivy-image**                        | Docker-Image-Build für Scan + Trivy-Image-Scan (HIGH/CRITICAL, blockierend)                                                                                                                                 |
+| **lighthouse**                         | Lighthouse CI gegen `/de/` und `/en/`; Reports als Artifact                                                                                                                                                 |
+| **e2e**                                | Playwright Smoke E2E mit Postgres/Redis + Service-Logs als Artifact                                                                                                                                         |
+| **docker**                             | Docker-Image-Build (ohne Push), nach build                                                                                                                                                                  |
+| **deploy**                             | Nur bei Push auf `main` und `DEPLOY_ENABLED=true`; läuft nach **`lint`, `test`, `docker`, `typecheck`, `lighthouse`, `e2e`, `audit`, `trivy-fs`, `trivy-image`**; ruft serverseitig `scripts/deploy.sh` auf |
+| **post-deploy-smoke**                  | Prüft nach erfolgreichem Deploy die Produktionsauslieferung via `scripts/verify-production-serving.mjs`                                                                                                     |
 
 Matrix: **zwei** LTS-Versionen (**20** und **22**), `fail-fast: false`.
+
+Für die ausführliche, schrittweise Erklärung (inkl. Ablaufdiagramm) siehe [CI-WORKFLOW.md](CI-WORKFLOW.md).
+
+### Reports & Artefakte in GitHub Actions
+
+Artifacts findest du in einem Run unter: **Actions → CI-Run öffnen → Artifacts**.
+
+| Artefaktname            | Erzeugender Job | Inhalt                                                                    | Retention |
+| ----------------------- | --------------- | ------------------------------------------------------------------------- | --------- |
+| `frontend-dist-browser` | `build`         | Frontend-Produktionsbuild (`apps/frontend/dist/browser`)                  | 1 Tag     |
+| `coverage-reports`      | `test`          | Coverage-Reports aus `apps/backend/coverage` und `apps/frontend/coverage` | 7 Tage    |
+| `lighthouse-reports`    | `lighthouse`    | Lighthouse-Ausgabe aus `.lighthouseci`                                    | 7 Tage    |
+| `e2e-service-logs`      | `e2e`           | `backend.log` und `frontend.log`                                          | 7 Tage    |
+| `trivy-fs-report`       | `trivy-fs`      | SARIF-Report (`trivy-fs.sarif`)                                           | 7 Tage    |
+| `trivy-image-report`    | `trivy-image`   | SARIF-Report (`trivy-image.sarif`)                                        | 7 Tage    |
 
 ### Produktions-/Deploy-Checks
 
