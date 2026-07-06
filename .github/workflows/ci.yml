@@ -141,7 +141,7 @@ jobs:
 
   # ─── Lint ────────────────────────────────────────────────────────────────────
   lint:
-    name: ESLint
+    name: lint
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name != 'schedule'
