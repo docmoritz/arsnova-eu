@@ -2,7 +2,8 @@
 # =============================================================================
 # arsnova.eu – Deploy-Skript (auf dem Server oder via CI per SSH)
 # Voraussetzung: Im Repo-Verzeichnis, .env.production vorhanden.
-# Nutzung: ./scripts/deploy.sh   oder   bash scripts/deploy.sh
+# CI setzt DEPLOY_SHA auf den exakt geprüften Commit.
+# Manuell ohne DEPLOY_SHA wird der aktuelle Stand von origin/$DEPLOY_BRANCH verwendet.
 # =============================================================================
 
 set -euo pipefail
@@ -14,6 +15,7 @@ cd "$REPO_ROOT"
 COMPOSE_FILE="docker-compose.prod.yml"
 ENV_FILE=".env.production"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
+DEPLOY_SHA="${DEPLOY_SHA:-}"
 HEALTH_MAX_WAIT_SECONDS="${HEALTH_MAX_WAIT_SECONDS:-180}"
 
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -32,10 +34,37 @@ compose() {
   docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
 }
 
-echo ">>> Schritt 1: Neuesten Code von GitHub holen (Branch: $DEPLOY_BRANCH) …"
-git fetch origin
-git checkout "$DEPLOY_BRANCH"
-git reset --hard "origin/$DEPLOY_BRANCH"
+echo ">>> Schritt 1: Ziel-Commit holen und exakt auschecken (Branch: $DEPLOY_BRANCH) …"
+git fetch --prune origin "$DEPLOY_BRANCH"
+
+if [[ -z "$DEPLOY_SHA" ]]; then
+  DEPLOY_SHA="$(git rev-parse FETCH_HEAD)"
+  echo ">>> Kein DEPLOY_SHA gesetzt; verwende aktuellen Remote-Stand: $DEPLOY_SHA"
+fi
+
+if [[ ! "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Fehler: ungültiger DEPLOY_SHA: $DEPLOY_SHA"
+  exit 1
+fi
+
+if ! git cat-file -e "${DEPLOY_SHA}^{commit}" 2>/dev/null; then
+  echo ">>> Ziel-Commit ist lokal noch nicht vorhanden; hole ihn explizit …"
+  git fetch origin "$DEPLOY_SHA"
+fi
+
+if ! git cat-file -e "${DEPLOY_SHA}^{commit}" 2>/dev/null; then
+  echo "Fehler: Ziel-Commit $DEPLOY_SHA konnte nicht gefunden werden."
+  exit 1
+fi
+
+git checkout --detach --force "$DEPLOY_SHA"
+
+checked_out_sha="$(git rev-parse HEAD)"
+if [[ "$checked_out_sha" != "$DEPLOY_SHA" ]]; then
+  echo "Fehler: Ausgecheckter Commit ($checked_out_sha) entspricht nicht DEPLOY_SHA ($DEPLOY_SHA)."
+  exit 1
+fi
+
 echo ">>> Git sync abgeschlossen ($(git log -1 --format='%h %s'))"
 
 echo ""
