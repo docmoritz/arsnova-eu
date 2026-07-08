@@ -186,56 +186,63 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Warum?** Prüft Session-/Kanal-Hotpaths (Vote, Q&A, Redis-Blitzlicht, Realtime-WS) ohne Browser; ergänzt E2E um API-nahe Last-Smokes.
 - **Artefakt:** `classroom-smoke-reports` (JSON pro Szenario + `backend.log`).
 
-### 4.11 load-test
+### 4.11 artillery-500
+
+- **Was?** Artillery-Live-Session (Quiz + Q&A + Blitzlicht, HTTP + WebSocket); Standard 100 TN im CI-Runner, konfigurierbar bis 500.
+- **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml); Runner [../scripts/load/run-artillery-500.mjs](../scripts/load/run-artillery-500.mjs).
+- **Wann?** Nur bei `schedule` oder `workflow_dispatch`.
+- **Artefakt:** `artillery-500-reports` (Summary JSON + Artillery-Report + `backend.log`).
+
+### 4.12 load-test
 
 - **Was?** k6-Health-Loadtest gegen Produktion.
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml), Skript in [../scripts/load/k6-trpc-health-50vu.js](../scripts/load/k6-trpc-health-50vu.js).
 - **Wann?** Nur bei `schedule` oder `workflow_dispatch`.
 - **Warum?** Regelmäßige Lastsicht, ohne jeden PR-Run zu verlangsamen.
 
-### 4.12 trivy-fs
+### 4.13 trivy-fs
 
 - **Was?** Security-Scan des Repository-Dateisystems (HIGH/CRITICAL).
 - **Wo?** Trivy-Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Alle Events außer `schedule`.
 - **Warum?** Deckt bekannte Schwachstellen/Fehlkonfigurationen in Dateien und Dependencies auf.
 
-### 4.13 trivy-image
+### 4.14 trivy-image
 
 - **Was?** Baut ein Scan-Image und führt Trivy-Image-Scan aus (HIGH/CRITICAL).
 - **Wo?** In [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Nach `build`, außer bei `schedule`.
 - **Warum?** Findet container-spezifische Risiken vor Deployment.
 
-### 4.14 docker
+### 4.15 docker
 
 - **Was?** Docker-Image-Build (ohne Push).
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml), Build-Definition in [../Dockerfile](../Dockerfile).
 - **Wann?** Nach `build`, außer bei `schedule`.
 - **Warum?** Prüft, dass das Release-Artefakt (Container) tatsächlich baubar ist.
 
-### 4.15 deploy-freshness
+### 4.16 deploy-freshness
 
 - **Was?** Prüft kurz vor dem Production-Deploy, ob der geprüfte Commit (`github.sha`) noch der aktuelle `main`-HEAD ist.
 - **Wo?** Deploy-Freshness-Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Nur bei `push` auf `main` und wenn `DEPLOY_ENABLED=true` gesetzt ist, nach allen Quality-Gates.
 - **Warum?** Verhindert stale Deployments: Ein älterer, langsamer CI-Lauf darf keinen inzwischen überholten Commit mehr produktiv ausrollen.
 
-### 4.16 deploy
+### 4.17 deploy
 
 - **Was?** Server-Deploy via SSH; führt serverseitig [../scripts/deploy.sh](../scripts/deploy.sh) aus.
 - **Wo?** Deploy-Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Nur wenn `deploy-freshness` bestätigt hat, dass `github.sha` noch aktueller `main`-HEAD ist.
 - **Warum?** Produktivdeployment bleibt kontrolliert, an alle Quality-Gates gekoppelt und auf den tatsächlich geprüften Commit gepinnt.
 
-### 4.17 post-deploy-smoke
+### 4.18 post-deploy-smoke
 
 - **Was?** Nachgelagerter Smoke-Check auf der Zielumgebung über [../scripts/verify-production-serving.mjs](../scripts/verify-production-serving.mjs).
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Nur wenn `deploy` erfolgreich war.
 - **Warum?** Verifiziert, dass die produktive Auslieferung wirklich erreichbar und gesund ist.
 
-### 4.18 rollback-on-smoke-failure
+### 4.19 rollback-on-smoke-failure
 
 - **Was?** Automatischer Rollback auf den vorherigen Commit (`github.event.before`) und erneutes serverseitiges Deployment.
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).

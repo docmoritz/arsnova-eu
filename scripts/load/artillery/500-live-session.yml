@@ -1,0 +1,27 @@
+config:
+  target: "{{ $processEnvironment.ARTILLERY_HTTP_TARGET }}"
+  phases:
+    - duration: "{{ $processEnvironment.ARTILLERY_RAMP_SECONDS }}"
+      arrivalCount: "{{ $processEnvironment.ARTILLERY_MAX_VUS }}"
+      maxVusers: "{{ $processEnvironment.ARTILLERY_MAX_VUS }}"
+      name: join-vote-wave
+  processor: "./processor.mjs"
+  plugins:
+    expect: {}
+
+scenarios:
+  - name: participant-live-500
+    flow:
+      - function: joinSession
+      - function: connectParticipantStatusWs
+      - think: 1
+      - function: pollSessionInfo
+      - function: fetchCurrentQuestion
+      - think: 0.5
+      - function: submitVote
+      - function: maybeSubmitQa
+      - function: submitBlitzlicht
+      - function: waitForResultsPhase
+      - function: fetchResultsQuestion
+      - think: 3
+      - function: disconnectParticipantStatusWs
