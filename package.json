@@ -61,6 +61,7 @@
     "load:k6:health": "node scripts/load/run-k6.mjs scripts/load/k6-trpc-health-50vu.js",
     "load:k6:session": "node scripts/load/run-k6.mjs scripts/load/k6-trpc-session-50vu.js",
     "load:k6:hotpaths": "node scripts/load/run-k6.mjs scripts/load/k6-session-hotpaths-500vu.js",
+    "load:artillery:500": "node scripts/load/run-artillery-500.mjs",
     "start:prod": "node scripts/start-backend-prod.mjs",
     "verify:production-serving": "node scripts/verify-production-serving.mjs",
     "prepare": "husky || true"
@@ -79,6 +80,7 @@
     "@eslint/js": "^10.0.1",
     "@types/qrcode": "^1.5.6",
     "ajv": "^8.18.0",
+    "artillery": "^2.0.33",
     "astro": "^5.18.0",
     "concurrently": "^9.0.0",
     "eslint": "^10.0.0",

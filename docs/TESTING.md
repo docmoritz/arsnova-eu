@@ -173,6 +173,17 @@ docker run --rm -i \
   grafana/k6 run - < scripts/load/k6-trpc-health-50vu.js
 ```
 
+### Artillery-Lasttest (Realtime, bis 500 TN)
+
+Unified Live-Session: Join-Welle, Quiz-Vote, Q&A (20 %), Blitzlicht, WebSocket-Status/Host-Progress, Ergebnis-Fan-out.
+
+```bash
+npm run dev:backend
+PARTICIPANTS=500 npm run load:artillery:500
+```
+
+Skripte: [`scripts/load/run-artillery-500.mjs`](../scripts/load/run-artillery-500.mjs), [`scripts/load/artillery/500-live-session.yml`](../scripts/load/artillery/500-live-session.yml). CI-Job `artillery-500` (Schedule/Manuell, Standard 100 TN auf Runner).
+
 Session- und Hotpath-Skripte benötigen `SESSION_CODE` (6 Zeichen) bzw. bei Hotpath-Modi `PARTICIPANT_IDS`, `QUESTION_ID` usw. — siehe Kommentarkopf in den Skripten.
 
 Weitere Node-Last-Smokes (ohne k6): `npm run load:simulate:50`, `npm run load:simulate:session:50` (erfordert `SESSION_CODE`).

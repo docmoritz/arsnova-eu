@@ -12,14 +12,14 @@
 
 arsnova.eu ist **kein** klassisches HTTP-only-System. Live-Sessions laufen über **tRPC**, **WebSockets**, **Redis** und **PostgreSQL**. Deshalb nutzen wir **mehrere Werkzeuge** mit klarer Rollentrennung — nicht ein einziges Lasttest-Tool für alles.
 
-| Kategorie                                  | Standardwerkzeug                      | Status im Repo                                   |
-| ------------------------------------------ | ------------------------------------- | ------------------------------------------------ |
-| Protokollnahe Last (HTTP/tRPC)             | **k6**                                | Skripte vorhanden                                |
-| Realtime / WebSocket / E2E-nahe Last       | **Artillery**                         | Architektur-Standard, **noch nicht eingecheckt** |
-| Funktionale Browser-Flows                  | **Playwright**                        | Smokes & Benchmarks vorhanden                    |
-| Schnelle lokale Hotspot-Checks             | **Node-Skripte** (`load:simulate:50`) | Vorhanden                                        |
-| Frontend-Ladeverhalten (Nutzerwahrnehmung) | **Lighthouse** + Chrome DevTools      | Dokumentiert, manuell                            |
-| Einfache Node-Simulationen                 | eigene Skripte unter `scripts/load/`  | Vorhanden                                        |
+| Kategorie                                  | Standardwerkzeug                      | Status im Repo                               |
+| ------------------------------------------ | ------------------------------------- | -------------------------------------------- |
+| Protokollnahe Last (HTTP/tRPC)             | **k6**                                | Skripte vorhanden                            |
+| Realtime / WebSocket / E2E-nahe Last       | **Artillery**                         | `load:artillery:500` (HTTP + WS, bis 500 TN) |
+| Funktionale Browser-Flows                  | **Playwright**                        | Smokes & Benchmarks vorhanden                |
+| Schnelle lokale Hotspot-Checks             | **Node-Skripte** (`load:simulate:50`) | Vorhanden                                    |
+| Frontend-Ladeverhalten (Nutzerwahrnehmung) | **Lighthouse** + Chrome DevTools      | Dokumentiert, manuell                        |
+| Einfache Node-Simulationen                 | eigene Skripte unter `scripts/load/`  | Vorhanden                                    |
 
 Verbindliche Entscheidung: [ADR-0013](../architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md).
 
@@ -116,16 +116,28 @@ MODE=join-wave SESSION_CODE=AB12CD BASE_URL=http://127.0.0.1:3000 VUS=500 \
 
 **Was es ist:** Node.js-basiertes Lasttest-Framework mit gutem WebSocket-Support; eignet sich für komplexere Mehrnutzer-Flows.
 
-**Wofür wir es planen** (ADR-0013):
+**Wofür wir es nutzen** (ADR-0013):
 
-- WebSocket-/Subscription-Szenarien unter Last
-- Q&A-Live-Flows, Freitext mit Live-Auswertung
-- Reconnect nach Verbindungsabbruch
-- Kombination mit Playwright für browsernahe Last
+- Unified Live-Session unter Last: Join-Welle, Quiz-Vote, Q&A, Blitzlicht
+- WebSocket-Subscriptions (`onStatusChanged`, Host `onHostVoteProgressChanged`)
+- Ergebnis-Fan-out nach `revealResults`
 
-**Status:** **Noch nicht im Repo eingecheckt.** k6 und Node-Skripte decken die kritischen Hotpaths vorläufig ab; Artillery ist das **Zielbild** für Story 0.7.
+**Im Repo:**
 
-**Für dein Praktikum:** Du kannst Artillery **konzeptionell** beschreiben und eine Pilot-Skizze liefern — oder an bestehenden k6-/Node-Bausteinen weiterarbeiten. Absprache mit der Betreuung.
+| NPM-Skript           | Zweck                                                               |
+| -------------------- | ------------------------------------------------------------------- |
+| `load:artillery:500` | 500 TN (konfigurierbar), HTTP + WS, JSON-Summary + Artillery-Report |
+
+**Start (lokal, Backend läuft):**
+
+```bash
+npm run dev:backend
+PARTICIPANTS=500 npm run load:artillery:500
+```
+
+**CI:** Job `artillery-500` bei `schedule` / `workflow_dispatch` (Standard: 100 TN auf Runner; volle 500 lokal oder per Repository-Variable `ARTILLERY_PARTICIPANTS`).
+
+**Skripte:** `scripts/load/run-artillery-500.mjs`, `scripts/load/artillery/500-live-session.yml`, `scripts/load/artillery/processor.mjs`
 
 ---
 
@@ -231,8 +243,8 @@ Story **0.7** im [`Backlog.md`](../../Backlog.md) ist **🟡 in Arbeit** (Implem
 | -------------------------------------------------- | ----------------------------------------------------- |
 | k6-Skripte + Node-Smokes                           | ✅ vorhanden (inkl. 500er-Hotpaths, Host-Vote-Smokes) |
 | Dokumentation & Ergebnisberichte                   | ✅ vorhanden                                          |
-| Vote unter Last (Join, Spike, Timer, Host-Fan-out) | 🟡 teilweise (k6 + Smokes; kein Artillery/E2E-Last)   |
-| Artillery-Szenarien                                | ❌ offen                                              |
+| Vote unter Last (Join, Spike, Timer, Host-Fan-out) | 🟡 teilweise (k6 + Smokes + Artillery-500)            |
+| Artillery-Szenarien                                | 🟡 Unified-500 (Reconnect/Freitext noch offen)        |
 | PR-/CI-Smoke (z. B. leichter k6-Health-Check)      | ❌ offen                                              |
 | Freitext/Q&A/Reconnect unter Last                  | ❌ offen                                              |
 | Maschinenlesbare Reports + Laufvergleich           | ❌ offen                                              |
@@ -310,7 +322,7 @@ Kurzfolie für das Erstgespräch — du kannst die Studierende durch diese Punkt
 
 1. **Kontext:** arsnova.eu ist realtime-lastig; ein Tool reicht nicht → ADR-0013.
 2. **Jetzt nutzbar:** k6 + `scripts/load/` + Playwright-Smokes + Lighthouse.
-3. **Noch geplant:** Artillery, CI-Smoke, Q&A/Freitext/Reconnect unter Last.
+3. **Noch geplant:** Reconnect-Welle, Freitext/Q&A-Schwerlast, browsernahe Artillery+Playwright-Szenarien.
 4. **Erster Hands-on:** `npm run dev:backend` → `load:simulate:50` → `npm run load:k6:health`.
 5. **Artefakt für SQM:** Messprotokoll eines Pilot-Laufs **oder** Konzept für ein fehlendes Szenario (Absprache).
 6. **Grenze:** Prod-Last nur mit Freigabe; Fokus lokal oder produktionsnahe Testumgebung laut LASTTEST-500-Doku.

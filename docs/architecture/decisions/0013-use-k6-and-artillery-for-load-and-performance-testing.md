@@ -146,7 +146,7 @@ Diese Aufteilung ist Teil der Architekturentscheidung.
 
 ## Umsetzungsstand (2026-07-05)
 
-Im Repo existieren konkrete `k6`-Skripte unter `scripts/load/`, darunter `k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js` und `k6-session-hotpaths-500vu.js`. Dazu kommen Node-basierte Schnellchecks wie `concurrent-50-http.mjs`, `session-participants-50.mjs` und `ws-status-subscribers.mjs`. Ein vollstaendiges Artillery-Setup ist im aktuellen Repo noch nicht eingecheckt; Artillery bleibt damit Standard-Zielbild fuer Realtime-/E2E-nahe Lastszenarien, aber noch kein implementierter Testpfad.
+Im Repo existieren konkrete `k6`-Skripte unter `scripts/load/`, darunter `k6-trpc-health-50vu.js`, `k6-trpc-session-50vu.js` und `k6-session-hotpaths-500vu.js`. Dazu kommen Node-basierte Schnellchecks wie `concurrent-50-http.mjs`, `session-participants-50.mjs` und `ws-status-subscribers.mjs`. **Artillery:** `npm run load:artillery:500` modelliert die Unified-Live-Session mit bis zu 500 Teilnehmenden (HTTP + WebSocket); CI-Job `artillery-500` bei Schedule/Manuell.
 
 ---
 
