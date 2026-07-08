@@ -110,7 +110,7 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Was?** Ermittelt, ob der Change-Set ausschließlich Doku-Dateien enthält (`docs/*` und `*.md`).
 - **Wo?** Job `changes` in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Bei `push` und `pull_request` (bei `schedule`/`workflow_dispatch` standardmäßig `docs_only=false`).
-- **Warum?** Spart Runner-Zeit, weil schwere Jobs bei docs-only Änderungen gezielt übersprungen werden.
+- **Warum?** Spart Runner-Zeit: Bei docs-only laufen die Jobs weiter (Ruleset-Pflichtchecks behalten Matrix-Namen), schwere Steps werden per Fast Pass übersprungen.
 
 ### 4.1 dependency-review
 
@@ -363,7 +363,7 @@ Damit die Pipeline-Regeln wirklich verbindlich sind, sollten in GitHub Branch Pr
 
 Empfehlung: `deploy-freshness`, `deploy`, `post-deploy-smoke` und `rollback-on-smoke-failure` nicht als PR-required setzen, da diese nur im Push/Release-Pfad relevant sind.
 
-Hinweis docs-only: Bei reinen Doku-PRs setzt `changes` `docs_only=true` und überspringt die schweren Jobs. Wenn das Ruleset dieselben Checks trotzdem als required verlangt, entsteht ein Deadlock — dann Ruleset anpassen (docs-only von Pflicht-Checks ausnehmen) oder minimalen Nicht-Doku-Change mitliefern.
+**Docs-only und Ruleset:** GitHub-Rulesets können Pflicht-Checks nicht pfadabhängig ausnehmen. Stattdessen melden docs-only-PRs dieselben Check-Namen per **Fast Pass** (Job läuft, schwere Steps werden übersprungen) als `success` — so bleibt das Ruleset für Code-PRs streng, Doku-PRs bleiben mergebar.
 
 ---
 
