@@ -184,6 +184,17 @@ PARTICIPANTS=500 npm run load:artillery:500
 
 Skripte: [`scripts/load/run-artillery-500.mjs`](../scripts/load/run-artillery-500.mjs), [`scripts/load/artillery/500-live-session.yml`](../scripts/load/artillery/500-live-session.yml). CI-Job `artillery-500` (Schedule/Manuell, Standard 100 TN auf Runner).
 
+### Artillery-Reconnect-Welle (bis 500 TN)
+
+Quiz-only: Join → WS-Status subscribe → Disconnect-Welle → Reconnect-Welle → Host `revealResults` → Assert `RESULTS` bei allen TN.
+
+```bash
+npm run dev:backend
+PARTICIPANTS=500 npm run load:artillery:reconnect:500
+```
+
+Skripte: [`scripts/load/run-artillery-reconnect-500.mjs`](../scripts/load/run-artillery-reconnect-500.mjs), [`scripts/load/artillery/500-reconnect-wave.yml`](../scripts/load/artillery/500-reconnect-wave.yml). CI-Job `artillery-reconnect-500` (Schedule/Manuell, Standard 100 TN auf Runner). Classroom-Smoke (30 TN): `npm run load:smoke:ws-reconnect-wave-classroom-30`.
+
 Session- und Hotpath-Skripte benötigen `SESSION_CODE` (6 Zeichen) bzw. bei Hotpath-Modi `PARTICIPANT_IDS`, `QUESTION_ID` usw. — siehe Kommentarkopf in den Skripten.
 
 Weitere Node-Last-Smokes (ohne k6): `npm run load:simulate:50`, `npm run load:simulate:session:50` (erfordert `SESSION_CODE`).

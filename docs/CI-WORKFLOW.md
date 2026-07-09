@@ -97,6 +97,7 @@ flowchart TD
 
   A --> R[load-test k6<br/>nur schedule oder workflow_dispatch]
   A --> R2[artillery-500<br/>nur schedule oder workflow_dispatch]
+  A --> R2a[artillery-reconnect-500<br/>nur schedule oder workflow_dispatch]
 ```
 
 Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
@@ -203,6 +204,13 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml); Runner [../scripts/load/run-artillery-500.mjs](../scripts/load/run-artillery-500.mjs).
 - **Wann?** Nur bei `schedule` oder `workflow_dispatch`.
 - **Artefakt:** `artillery-500-reports` (Summary JSON + Artillery-Report + `backend.log`).
+
+### 4.11a artillery-reconnect-500
+
+- **Was?** Artillery-Reconnect-Welle (Quiz-only): Join → WS subscribe → Disconnect → Reconnect → Host-Reveal → Assert `RESULTS`; Standard 100 TN im CI-Runner, konfigurierbar bis 500.
+- **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml); Runner [../scripts/load/run-artillery-reconnect-500.mjs](../scripts/load/run-artillery-reconnect-500.mjs).
+- **Wann?** Nur bei `schedule` oder `workflow_dispatch`.
+- **Artefakt:** `artillery-reconnect-500-reports` (Summary JSON + Artillery-Report + `backend.log`).
 
 ### 4.12 load-test
 
