@@ -671,6 +671,7 @@ jobs:
           npm run load:smoke:qa-classroom-30 | tee "$REPORT_DIR/qa.json"
           npm run load:smoke:demo-classroom-30 | tee "$REPORT_DIR/demo-quiz.json"
           npm run load:smoke:ws-vote-progress-classroom-30 | tee "$REPORT_DIR/ws-vote-progress.json"
+          npm run load:smoke:ws-reconnect-wave-classroom-30 | tee "$REPORT_DIR/ws-reconnect-wave.json"
 
       - name: Upload classroom smoke reports
         if: always() && needs.changes.outputs.docs_only != 'true'

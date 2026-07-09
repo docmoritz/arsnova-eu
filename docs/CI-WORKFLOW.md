@@ -186,12 +186,13 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 
 ### 4.10 classroom-smokes
 
-- **Was?** Vier protokollnahe Unterrichts-Szenarien (je 30 TN) gegen lokales Backend: Blitzlicht-Tempo, Q&A, Demo-Quiz mit 9 Fragen, WebSocket Vote-Progress (Host-WS + HTTP-Votes).
+- **Was?** Fünf protokollnahe Unterrichts-Szenarien (je 30 TN) gegen lokales Backend: Blitzlicht-Tempo, Q&A, Demo-Quiz mit 9 Fragen, WebSocket Vote-Progress (Host-WS + HTTP-Votes), WebSocket-Reconnect-Welle.
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml); Skripte:
   - [../scripts/load/blitzlicht-classroom-30.mjs](../scripts/load/blitzlicht-classroom-30.mjs)
   - [../scripts/load/qa-classroom-30.mjs](../scripts/load/qa-classroom-30.mjs)
   - [../scripts/load/demo-quiz-classroom-30.mjs](../scripts/load/demo-quiz-classroom-30.mjs)
   - [../scripts/load/ws-vote-progress-classroom-30.mjs](../scripts/load/ws-vote-progress-classroom-30.mjs)
+  - [../scripts/load/ws-reconnect-wave-classroom-30.mjs](../scripts/load/ws-reconnect-wave-classroom-30.mjs)
 - **Wann?** Push/PR auf `main` und `workflow_dispatch`, außer `docs_only` und `schedule`.
 - **Warum?** Prüft Session-/Kanal-Hotpaths (Vote, Q&A, Redis-Blitzlicht, Realtime-WS) ohne Browser; ergänzt E2E um API-nahe Last-Smokes.
 - **Artefakt:** `classroom-smoke-reports` (JSON pro Szenario + `backend.log`).
