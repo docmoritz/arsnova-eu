@@ -249,7 +249,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - [x] **TypeScript-Kompilierung:** `tsc --noEmit` für `libs/shared-types`, `apps/backend` und `apps/frontend` — alle drei müssen fehlerfrei kompilieren.
     - [x] **Prisma-Validierung:** `prisma validate` prüft das Schema auf Korrektheit.
     - [x] **Linting:** ESLint prüft alle `.ts`-Dateien auf Regelverstöße (Root-Config: `eslint.config.mjs`).
-    - [x] **Security-Audit:** `npm audit --audit-level=critical --omit=dev` als Gate (strenger als ursprünglich gefordertes `high`).
+    - [x] **Security-Audit:** CI-Job `Security Audit` mit `npm audit --audit-level=critical --omit=dev` (Gate blockiert nur **Critical**; das ist **schwächer** als das ursprüngliche AC `high`, weil `audit-level` die Mindest-Severity zum Fail ist). DoD (Deployment) verlangt weiterhin keine neuen Schwachstellen ≥ high — bei Bedarf lokal `npm audit --audit-level=high --omit=dev` prüfen; CI auf `high` wäre erst nach Bereinigung der Prod-Dependencies sinnvoll.
     - [x] **Docker-Image:** Multi-Stage-Dockerfile baut ein produktionsfertiges Image (`node:20-alpine`).
     - [x] **Docker-Build:** CI baut das Docker-Image erfolgreich (kein Push in Registry, nur Build-Test).
     - [x] **Caching:** `node_modules` wird via `actions/cache` zwischengespeichert, um CI-Laufzeit zu verkürzen.
