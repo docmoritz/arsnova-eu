@@ -35,6 +35,7 @@ Thumbs.db
 # ---------- Test & Coverage ----------
 coverage/
 e2e/test-output/
+artifacts/
 scripts/load/artillery/.session.json
 scripts/load/artillery/.runtime-state.json
 scripts/load/artillery/.results-ready.flag
