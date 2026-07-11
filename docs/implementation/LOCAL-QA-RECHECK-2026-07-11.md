@@ -23,15 +23,15 @@ Frontend-Laufzeit.
 - **Lighthouse:** 6/6 Läufe für `/de/` und `/en/` bestanden. Performance
   0,79–0,80, Accessibility 1,00, LCP 3.705–3.829 ms, CLS 0,004–0,007 und
   TBT 138–199 ms.
-- **Prisma-Migrationen:** alle 36 Migrationen mit `prisma migrate deploy` gegen
-  eine leere PostgreSQL-Datenbank erfolgreich angewendet; Schema anschließend
-  aktuell.
+- **Prisma-Migrationen:** alle 37 Migrationen mit `prisma migrate deploy` gegen
+  eine leere PostgreSQL-Datenbank erfolgreich angewendet; ein anschließendes
+  `prisma migrate diff --exit-code` bestätigt null Schema-Drift.
 - **Produktionsabhängigkeiten:** `npm audit --audit-level=high --omit=dev`
   meldet 0 Schwachstellen.
 - **Container:** Produktionsimage erfolgreich gebaut; Trivy Filesystem und Image
-  melden 0 High-/Critical-Befunde. Der Production-Entrypoint wendete alle 36
+  melden 0 High-/Critical-Befunde. Der Production-Entrypoint wendete alle 37
   Migrationen gegen eine leere Datenbank an.
-- **GitHub-Enforcement:** Das aktive Ruleset verlangt 18 strikte Statuschecks,
+- **GitHub-Enforcement:** Das aktive Ruleset verlangt 19 strikte Statuschecks,
   einschließlich Workflow-Lint, Format, Landing-Build und CodeQL. `production`
   und `performance-staging` erlauben nur geschützte Branches; Admin-Bypass ist
   deaktiviert.
@@ -52,6 +52,10 @@ Frontend-Laufzeit.
 5. Das Runtime-Image übernimmt keine Builder- oder globalen npm-Werkzeuge mehr,
    aktualisiert Alpine-Sicherheitspatches und ersetzt den fehlertoleranten
    `db push --accept-data-loss`-Startpfad durch hartes `prisma migrate deploy`.
+6. Der CI-Nachlauf deckte zehn historische `Session`-Felder auf, die nur per
+   `db push`, aber nie als Migration versioniert worden waren. Eine idempotente
+   Reconciliation-Migration schließt diese Lücke; das neue Gate `Migration Drift`
+   verhindert Wiederholungen.
 
 ## Verbleibender Betriebsnachweis
 

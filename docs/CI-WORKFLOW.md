@@ -17,7 +17,7 @@ Für detaillierte lokale Testkommandos und zusätzliche Last-/Smoke-Varianten si
 
 Wenn du neu im Projekt bist, reicht dieses mentale Modell:
 
-1. **Vorstufe (früh):** `changes` erkennt docs-only Änderungen; parallel dazu prüfen `dependency-review`, `actionlint` und `format` frühe PR-, Workflow- und Formatrisiken.
+1. **Vorstufe (früh):** `changes` erkennt docs-only Änderungen; parallel dazu prüfen `dependency-review`, `actionlint`, `format` und `migration` frühe PR-, Workflow-, Format- und Datenbankschemarisiken.
 2. **Technische Basis:** Das Projekt muss in einer realistischen Umgebung bauen (`build`, `landing-build`, `typecheck`, `lint`, i18n-Konsistenz).
 3. **Verhalten:** Tests müssen grün sein und Mindestqualität halten (`test:coverage`, `e2e`, `classroom-smokes`, `lighthouse`).
 4. **Sicherheit:** `audit`, Dependency Review und Trivy blockieren ab High; CodeQL prüft SAST, die CI erzeugt ein CycloneDX-SBOM.
@@ -71,6 +71,7 @@ flowchart TD
   Z --> E[typecheck<br/>skip bei docs_only/schedule]
   Z --> F[audit<br/>skip bei docs_only/schedule]
   Z --> G[trivy-fs<br/>skip bei docs_only/schedule]
+  Z --> G2[migration drift<br/>migrate deploy + schema diff]
 
   D --> H[lint]
   D --> I[test:coverage]
@@ -89,6 +90,7 @@ flowchart TD
   E --> Q
   F --> Q
   G --> Q
+  G2 --> Q
   M --> Q
 
   Q --> N[deploy]
@@ -141,6 +143,13 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Wo?** Build-Schritte in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Fast immer; Kernjob für viele Abhängigkeiten.
 - **Warum?** Bestätigt, dass das System baubar ist und alle Folgechecks auf einem validen Build aufsetzen.
+
+### 4.3a migration
+
+- **Was?** Wendet die vollständige versionierte Migrationskette auf eine leere PostgreSQL-Datenbank an und vergleicht das Ergebnis mit `prisma/schema.prisma`.
+- **Wo?** Job `migration` in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
+- **Wann?** Bei allen Events außer `schedule`; docs-only Änderungen erhalten einen schnellen grünen Platzhalter.
+- **Warum?** Verhindert, dass Schemafelder nur durch `prisma db push` existieren und frische Deployments trotz erfolgreichem `migrate deploy` zur Laufzeit scheitern.
 
 ### 4.4 typecheck
 

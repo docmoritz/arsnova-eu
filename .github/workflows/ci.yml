@@ -168,6 +168,57 @@ jobs:
           FORMAT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: npm run format:check:changed
 
+  migration:
+    name: Migration Drift
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name != 'schedule'
+    env:
+      DATABASE_URL: postgresql://arsnova_user:secretpassword@localhost:5432/arsnova_v3_migration?schema=public
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: arsnova_user
+          POSTGRES_PASSWORD: secretpassword
+          POSTGRES_DB: arsnova_v3_migration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U arsnova_user -d arsnova_v3_migration"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Docs-only fast pass
+        if: needs.changes.outputs.docs_only == 'true'
+        run: echo "Docs-only change — skipping migration drift check."
+
+      - name: Checkout
+        if: needs.changes.outputs.docs_only != 'true'
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+
+      - name: Setup Node.js 22
+        if: needs.changes.outputs.docs_only != 'true'
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npm ci
+
+      - name: Apply versioned migrations
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npx prisma migrate deploy --schema prisma/schema.prisma
+
+      - name: Reject migration/schema drift
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+
   # ─── Build & Validate ────────────────────────────────────────────────────────
   build:
     name: Build & Validate (Node ${{ matrix.node-version }})
@@ -1283,6 +1334,7 @@ jobs:
         changes,
         actionlint,
         format,
+        migration,
         landing-build,
         lint,
         test,
