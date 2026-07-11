@@ -16,6 +16,10 @@ zeigt aber offene Yjs-Reconnect-Konvergenz, ein überschrittenes
 produktionsnaher Lauf darf diese Befunde nicht durch pauschale
 „Reconnect/Vote bestanden“-Aussagen überdecken.
 
+Der [QA-Nachlauf vom 2026-07-11](./LOCAL-QA-RECHECK-2026-07-11.md) belegt die
+Korrekturen dieser vier Fehlergruppen. Gegenstand dieses Arbeitsauftrags sind
+damit vor allem Staging-Langlauf, reales Monitoring und Baseline-Freigabe.
+
 ## 2. Hintergrund
 
 arsnova.eu ist ein Audience-Response-System fuer Live-Lehrveranstaltungen. Kritische Last entsteht nicht gleichmaessig, sondern in kurzen synchronen Wellen:

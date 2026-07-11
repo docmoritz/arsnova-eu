@@ -37,6 +37,12 @@ dokumentiert. Kurzstand:
 - Drei von sechs Browser-Flow-Smokes und das mobile Lighthouse-Performance-Gate
   waren nicht grün.
 
+Der [gezielte QA-Nachlauf vom 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+schließt diese technischen Befunde: Yjs konvergierte nach Reconnect in 6 ms,
+die beiden akzeptierenden 600er Vote-Pfade hielten mit p95 766 ms und 968 ms das
+1.000-ms-Gate ein, 6/6 Browser-Flows und 6/6 Lighthouse-Läufe bestanden. Als
+offener Nachweis verbleiben Staging-Langlauf und Baseline-Freigabe.
+
 Dieser Lauf ist ein lokaler Entwicklungsnachweis, keine freigegebene Baseline.
 Insbesondere darf die bloße Existenz eines Szenarios nicht mit einem bestandenen
 Nachweis gleichgesetzt werden.

@@ -151,9 +151,29 @@ function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
+function canonicalJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => canonicalJson(entry)).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function canonicalStateVector(doc) {
+  const entries = [...Y.decodeStateVector(Y.encodeStateVector(doc)).entries()].sort(
+    ([leftClientId], [rightClientId]) => leftClientId - rightClientId,
+  );
+  return sha256(JSON.stringify(entries));
+}
+
 function docFingerprint(doc) {
   return {
-    stateVectorSha256: sha256(Y.encodeStateVector(doc)),
+    stateVectorSha256: canonicalStateVector(doc),
     snapshot: doc.getMap(ROOT_KEY).toJSON(),
   };
 }
@@ -241,7 +261,7 @@ async function waitForConvergence(clients, timeoutMs, label) {
   while (performance.now() - startedAt < timeoutMs) {
     const fingerprints = clients.map(({ doc }) => docFingerprint(doc));
     const vectors = new Set(fingerprints.map(({ stateVectorSha256 }) => stateVectorSha256));
-    const snapshots = new Set(fingerprints.map(({ snapshot }) => JSON.stringify(snapshot)));
+    const snapshots = new Set(fingerprints.map(({ snapshot }) => canonicalJson(snapshot)));
     if (vectors.size === 1 && snapshots.size === 1) {
       return {
         latencyMs: Math.round(performance.now() - startedAt),
@@ -337,6 +357,7 @@ function printSummary(report) {
 async function execute(config) {
   const startedAt = new Date();
   const runId = randomUUID();
+  process.setMaxListeners(Math.max(process.getMaxListeners(), config.clients + 10));
   const clients = Array.from({ length: config.clients }, (_, index) => createClient(index, config));
   const failures = [];
   let initialResults = [];

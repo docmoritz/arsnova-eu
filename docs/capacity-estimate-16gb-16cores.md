@@ -101,6 +101,11 @@ eine klare Degradation oberhalb der Zielstufe. Der Lauf fand auf lokaler
 Hardware statt und validiert nicht die hier geschätzte CAX31-Kapazität; siehe
 [Messprotokoll](implementation/LOCAL-TESTRUN-2026-07-10.md).
 
+Nach der Vote-Hotpath-Optimierung hielt der
+[QA-Nachlauf vom 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+auch mit 600 Teilnehmenden das 1.000-ms-Gate: p95 766 ms aktiv und 968 ms
+innerhalb der Karenz. Eine CAX31-Aussage erfordert weiterhin den Staging-Lauf.
+
 ### 7.2 SLO 2 – Host-Statuswechsel sichtbar bei Teilnehmern
 
 - **SLI:** Zeit von Host-Aktion (`nextQuestion`, `revealAnswers`, `revealResults`) bis Anzeige des neuen Status beim Teilnehmer.

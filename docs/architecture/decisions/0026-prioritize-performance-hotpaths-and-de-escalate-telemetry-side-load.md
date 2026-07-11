@@ -261,7 +261,7 @@ Stand 2026-06-17:
 - Vote-getriebene Progress-Signale werden kurz gebuendelt, damit Vote-Spitzen den Host nicht mit Re-Renders und WebSocket-Fan-out fluten.
 - Ein gezielter Last-Smoke `npm run load:smoke:host-vote-progress` prueft fuer 200 parallele `NUMERIC_ESTIMATE`-Votes, dass der Progress-Endstand ankommt und keine vote-tragenden Current-Question-Events erzeugt werden.
 
-Stand 2026-07-10:
+Stand 2026-07-11:
 
 - CI-Job `classroom-smokes` deckt auf PR/Push sechs protokollnahe
   Unterrichts-Szenarien ab und ist ein direktes Deploy-Gate.
@@ -276,12 +276,16 @@ Stand 2026-07-10:
   Yjs-Dokumente konvergierten nach Offline-Reconnect reproduzierbar nicht und
   der 600er Timer-Fairness-Lauf überschritt das 1.000-ms-p95-Gate. Drei
   Browser-Referenzflows und das Lighthouse-Performance-Gate waren ebenfalls rot.
-- Primaer offen bleiben damit Ursachenklärung und Nachtest dieser Befunde,
-  30/60-Minuten-Staging-Läufe, freigegebene Produktionsbaselines und der
-  produktionsnahe 500er-Voll-Lauf unter realem Monitoring.
+- Der
+  [QA-Nachlauf](../../implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+  schließt diese lokalen Befunde: Yjs-Reconnect, 600er Vote-p95, sechs
+  Browser-Flows und sechs Lighthouse-Läufe bestanden.
+- Primaer offen bleiben damit 30/60-Minuten-Staging-Läufe, freigegebene
+  Produktionsbaselines und der produktionsnahe 500er-Voll-Lauf unter realem
+  Monitoring.
 - Docs-only-PRs nutzen in CI einen Fast Pass (Jobs melden Pflicht-Checks als
   `success`, schwere Steps werden uebersprungen).
 
 ---
 
-**Referenzen:** [ADR-0013: k6 und Artillery fuer Last- und Performance-Tests](./0013-use-k6-and-artillery-for-load-and-performance-testing.md), [ADR-0021: Trennung von Betriebsstatus und Laststatus](./0021-separate-service-status-from-load-status-with-live-slo-telemetry.md), [ADR-0025: Zukuenftige Erweiterungen standardmaessig als performance-kritisch behandeln](./0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md), [Lokaler Gesamt-Testlauf 2026-07-10](../../implementation/LOCAL-TESTRUN-2026-07-10.md), [health.ts](../../../apps/backend/src/routers/health.ts), [session.ts](../../../apps/backend/src/routers/session.ts), [join.component.ts](../../../apps/frontend/src/app/features/join/join.component.ts), [session-vote.component.ts](../../../apps/frontend/src/app/features/session/session-vote/session-vote.component.ts), [app.component.ts](../../../apps/frontend/src/app/app.component.ts), [platformStatistic.ts](../../../apps/backend/src/lib/platformStatistic.ts).
+**Referenzen:** [ADR-0013: k6 und Artillery fuer Last- und Performance-Tests](./0013-use-k6-and-artillery-for-load-and-performance-testing.md), [ADR-0021: Trennung von Betriebsstatus und Laststatus](./0021-separate-service-status-from-load-status-with-live-slo-telemetry.md), [ADR-0025: Zukuenftige Erweiterungen standardmaessig als performance-kritisch behandeln](./0025-treat-future-extensions-as-performance-critical-until-proven-otherwise.md), [Lokaler Gesamt-Testlauf 2026-07-10](../../implementation/LOCAL-TESTRUN-2026-07-10.md), [QA-Nachlauf 2026-07-11](../../implementation/LOCAL-QA-RECHECK-2026-07-11.md), [health.ts](../../../apps/backend/src/routers/health.ts), [session.ts](../../../apps/backend/src/routers/session.ts), [join.component.ts](../../../apps/frontend/src/app/features/join/join.component.ts), [session-vote.component.ts](../../../apps/frontend/src/app/features/session/session-vote/session-vote.component.ts), [app.component.ts](../../../apps/frontend/src/app/app.component.ts), [platformStatistic.ts](../../../apps/backend/src/lib/platformStatistic.ts).

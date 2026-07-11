@@ -3,16 +3,17 @@
 # Quiz-Sammlung – Synchronisierung
 
 **Zielgruppe:** Entwicklerinnen, Entwickler und technisch interessierte Personen
-**Stand:** 2026-07-10
+**Stand:** 2026-07-11
 **Status:** Living Document
 
-**Repo-Abgleich 2026-07-10:** Die Sync-Architektur ist weiterhin
+**Repo-Abgleich 2026-07-11:** Die Sync-Architektur ist weiterhin
 frontendzentriert. `QuizStoreService` ist die zentrale Implementierung,
 `getYjsWsUrl()` liefert lokale Direkt- und Proxy-Pfade und der Yjs-Stack ist im
-Frontend auf `yjs@13.6.30` gepinnt. Neben dem browserbasierten
+Frontend auf `yjs@13.6.31`, der Server auf das Yjs-13-kompatible
+`@y/websocket-server@0.1.1` gepinnt. Neben dem browserbasierten
 `check-quiz-sync-flow.mjs` existiert mit `scripts/load/yjs-sync-load.mjs` ein
-Mehrclient-Lasttest. Der Browser-Smoke bestand am 2026-07-10; der Lasttest
-konvergierte nach Offline-Updates und Reconnect reproduzierbar nicht.
+Mehrclient-Lasttest. Browser-Smoke und Mehrclient-Reconnect bestanden im
+QA-Nachlauf vom 2026-07-11.
 
 ## 1. Zweck
 
@@ -207,6 +208,12 @@ Offline-Updates und Reconnect von sechs Clients erreichten die Provider zwar
 innerhalb von rund 335 ms wieder den Sync-Zustand, aber auch nach 30 Sekunden
 keinen gemeinsamen State Vector. Transport-Reconnect und fachliche
 CRDT-Konvergenz sind deshalb getrennt zu bewerten.
+
+Nach der Versionsangleichung und kanonischen Snapshot-/State-Vector-Auswertung
+bestand der
+[QA-Nachlauf vom 2026-07-11](../implementation/LOCAL-QA-RECHECK-2026-07-11.md):
+30 Clients einschließlich sechs Offline-Reconnects konvergierten erneut in 6 ms,
+bei Reconnect-p95 329 ms und 0 Fehlern.
 
 Wenn der Test auf einem UI-Selector scheitert, ist zuerst das Script an die aktuelle UI
 anzupassen. Die Sync-Regression vom 30.04.2026 war dagegen ein echter Initialisierungsfehler

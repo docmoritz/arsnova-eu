@@ -7,6 +7,11 @@
 > Performance 0,55 und rund 11,1 s LCP. Die historischen 85 % beziehungsweise
 > 2,4 s dürfen daher nicht als aktueller Nachweis verwendet werden. Siehe
 > [Gesamt-Testlauf](../implementation/LOCAL-TESTRUN-2026-07-10.md).
+>
+> **Aktueller Nachweis (2026-07-11):** Nach produktionsnaher gzip-Auslieferung,
+> i18n-Hydration und Font-Reduktion bestanden 6/6 Läufe mit Performance
+> 0,79–0,80 und LCP 3,705–3,829 s. Siehe
+> [QA-Nachlauf](../implementation/LOCAL-QA-RECHECK-2026-07-11.md).
 
 **Ziel-URL:** http://localhost:4174/ (Production-Build, `dist/browser`)  
 **Lighthouse:** 12.x, Kategorien Performance, Best Practices, SEO (Headless Chrome)

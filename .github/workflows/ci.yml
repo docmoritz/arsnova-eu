@@ -16,9 +16,9 @@ on:
   workflow_dispatch:
     inputs:
       artillery_participants:
-        description: 'Teilnehmende für Artillery (100 CI-Standard, 500 Kapazitätslauf)'
+        description: 'Teilnehmende für Artillery (500 Kapazitätsstandard)'
         required: false
-        default: '100'
+        default: '500'
         type: string
       artillery_ramp_seconds:
         description: 'Ramp-up-Dauer für Artillery'
@@ -124,12 +124,9 @@ jobs:
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
 
       - name: Dependency review
-        continue-on-error: true
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48
-
-      - name: Dependency review result
-        if: always()
-        run: echo "Dependency review completed (informational, non-blocking in CI workflow)."
+        with:
+          fail-on-severity: high
 
   # ─── Workflow Lint (GitHub Actions) ───────────────────────────────────────
   actionlint:
@@ -143,6 +140,33 @@ jobs:
 
       - name: Run actionlint
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7
+
+  format:
+    name: Changed Files Format
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name != 'schedule'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check changed files with Prettier
+        env:
+          FORMAT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORMAT_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run format:check:changed
 
   # ─── Build & Validate ────────────────────────────────────────────────────────
   build:
@@ -203,6 +227,40 @@ jobs:
           path: apps/frontend/dist/browser
           if-no-files-found: error
           retention-days: 1
+
+  landing-build:
+    name: Build Landing
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event_name != 'schedule'
+
+    steps:
+      - name: Docs-only fast pass
+        if: needs.changes.outputs.docs_only == 'true'
+        run: echo "Docs-only change — skipping landing build."
+
+      - name: Checkout
+        if: needs.changes.outputs.docs_only != 'true'
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+
+      - name: Setup Node.js 22
+        if: needs.changes.outputs.docs_only != 'true'
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npm ci
+
+      - name: Build landing
+        if: needs.changes.outputs.docs_only != 'true'
+        env:
+          PUBLIC_GITHUB_REPO: ${{ github.repository }}
+          PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build:landing
 
   # Explizites `npm run typecheck` (Backend + Frontend, --noEmit) — ergänzt die
   # tsc-Schritte im build-Job; eigener Check in der PR-Übersicht, parallel zu build.
@@ -279,6 +337,10 @@ jobs:
         if: needs.changes.outputs.docs_only != 'true'
         run: npm run lint
 
+      - name: Check i18n locale consistency
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npm run check:i18n -w @arsnova/frontend
+
   # ─── Security Audit ──────────────────────────────────────────────────────────
   audit:
     name: Security Audit
@@ -306,9 +368,22 @@ jobs:
         if: needs.changes.outputs.docs_only != 'true'
         run: npm ci
 
-      - name: npm audit (critical severity gate)
+      - name: npm audit (high severity gate)
         if: needs.changes.outputs.docs_only != 'true'
-        run: npm audit --audit-level=critical --omit=dev
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Generate CycloneDX production SBOM
+        if: needs.changes.outputs.docs_only != 'true'
+        run: npm sbom --omit=dev --sbom-format=cyclonedx > sbom.cdx.json
+
+      - name: Upload production SBOM
+        if: always() && needs.changes.outputs.docs_only != 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: production-sbom
+          path: sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 30
 
   # ─── Tests ────────────────────────────────────────────────────────────────────
   test:
@@ -351,6 +426,7 @@ jobs:
         with:
           name: coverage-reports
           path: |
+            libs/shared-types/coverage
             apps/backend/coverage
             apps/frontend/coverage
           if-no-files-found: error
@@ -391,8 +467,7 @@ jobs:
         if: needs.changes.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
-          cd apps/frontend/dist/browser
-          python3 -m http.server 4173 > "$RUNNER_TEMP/frontend-static.log" 2>&1 &
+          node scripts/serve-static-compressed.mjs apps/frontend/dist/browser 4173 > "$RUNNER_TEMP/frontend-static.log" 2>&1 &
           server_pid="$!"
           cleanup() {
             kill "$server_pid" 2>/dev/null || true
@@ -412,7 +487,6 @@ jobs:
             exit 1
           fi
 
-          cd "$GITHUB_WORKSPACE"
           npx -y @lhci/cli@0.15.1 autorun --config=.lighthouserc.cjs
 
       - name: Upload Lighthouse reports
@@ -493,12 +567,12 @@ jobs:
         if: needs.changes.outputs.docs_only != 'true'
         run: npx prisma generate --schema prisma/schema.prisma
 
-      - name: Push Prisma schema
+      - name: Apply production migrations
         if: needs.changes.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
-          npx prisma db push --schema prisma/schema.prisma
+          npx prisma migrate deploy --schema prisma/schema.prisma
 
       - name: Build shared types
         if: needs.changes.outputs.docs_only != 'true'
@@ -565,7 +639,15 @@ jobs:
             exit 1
           fi
 
-          BASE_URL=http://localhost:4200/de TRPC_URL=http://localhost:3000/trpc npm run smoke:unified-session -w @arsnova/frontend
+          export BASE_URL=http://localhost:4200/de
+          export TRPC_URL=http://localhost:3000/trpc
+          export SMOKE_ARTIFACT_DIR="$RUNNER_TEMP/browser-smokes"
+          npm run smoke:host-present-auth -w @arsnova/frontend
+          npm run smoke:host-music -w @arsnova/frontend
+          npm run smoke:short-text -w @arsnova/frontend
+          npm run smoke:numeric-estimate -w @arsnova/frontend
+          npm run smoke:quiz-sync -w @arsnova/frontend
+          npm run smoke:unified-session -w @arsnova/frontend
 
       - name: Upload E2E logs
         if: always() && needs.changes.outputs.docs_only != 'true'
@@ -575,6 +657,7 @@ jobs:
           path: |
             ${{ runner.temp }}/backend.log
             ${{ runner.temp }}/frontend.log
+            ${{ runner.temp }}/browser-smokes
           if-no-files-found: ignore
           retention-days: 7
 
@@ -649,12 +732,12 @@ jobs:
         if: needs.changes.outputs.docs_only != 'true'
         run: npx prisma generate --schema prisma/schema.prisma
 
-      - name: Push Prisma schema
+      - name: Apply production migrations
         if: needs.changes.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
-          npx prisma db push --schema prisma/schema.prisma
+          npx prisma migrate deploy --schema prisma/schema.prisma
 
       - name: Build shared types
         if: needs.changes.outputs.docs_only != 'true'
@@ -756,7 +839,7 @@ jobs:
       YJS_WS_PORT: 3002
       TRPC_URL: http://localhost:3000/trpc
       WS_URL: ws://localhost:3001
-      PARTICIPANTS: ${{ inputs.artillery_participants || vars.ARTILLERY_PARTICIPANTS || '100' }}
+      PARTICIPANTS: ${{ inputs.artillery_participants || vars.ARTILLERY_PARTICIPANTS || '500' }}
       ARTILLERY_RAMP_SECONDS: ${{ inputs.artillery_ramp_seconds || vars.ARTILLERY_RAMP_SECONDS || '60' }}
 
     steps:
@@ -775,11 +858,11 @@ jobs:
       - name: Prisma generate
         run: npx prisma generate --schema prisma/schema.prisma
 
-      - name: Push Prisma schema
+      - name: Apply production migrations
         run: |
           set -euo pipefail
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
-          npx prisma db push --schema prisma/schema.prisma
+          npx prisma migrate deploy --schema prisma/schema.prisma
 
       - name: Build shared types
         run: npm run build -w @arsnova/shared-types
@@ -790,6 +873,7 @@ jobs:
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
           REPORT_DIR="$RUNNER_TEMP/artillery-500"
           mkdir -p "$REPORT_DIR"
+          # shellcheck disable=SC2317,SC2329
           cleanup() {
             if [ -f "$RUNNER_TEMP/backend.pid" ]; then
               kill "$(cat "$RUNNER_TEMP/backend.pid")" 2>/dev/null || true
@@ -881,7 +965,7 @@ jobs:
       YJS_WS_PORT: 3002
       TRPC_URL: http://localhost:3000/trpc
       WS_URL: ws://localhost:3001
-      PARTICIPANTS: ${{ inputs.artillery_participants || vars.ARTILLERY_PARTICIPANTS || '100' }}
+      PARTICIPANTS: ${{ inputs.artillery_participants || vars.ARTILLERY_PARTICIPANTS || '500' }}
       ARTILLERY_RAMP_SECONDS: ${{ inputs.artillery_ramp_seconds || vars.ARTILLERY_RAMP_SECONDS || '60' }}
 
     steps:
@@ -900,11 +984,11 @@ jobs:
       - name: Prisma generate
         run: npx prisma generate --schema prisma/schema.prisma
 
-      - name: Push Prisma schema
+      - name: Apply production migrations
         run: |
           set -euo pipefail
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
-          npx prisma db push --schema prisma/schema.prisma
+          npx prisma migrate deploy --schema prisma/schema.prisma
 
       - name: Build shared types
         run: npm run build -w @arsnova/shared-types
@@ -1007,6 +1091,7 @@ jobs:
           mkdir -p "$REPORT_DIR"
           run_status=0
           load_pid=""
+          # shellcheck disable=SC2317,SC2329
           cleanup() {
             if [ -n "$load_pid" ]; then
               kill "$load_pid" 2>/dev/null || true
@@ -1039,6 +1124,8 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'schedule' && vars.PRODUCTION_LOAD_ENABLED == 'true') || (github.event_name == 'workflow_dispatch' && inputs.run_production_load)
     timeout-minutes: 10
+    environment:
+      name: production
 
     steps:
       - name: Checkout
@@ -1073,7 +1160,7 @@ jobs:
         with:
           scan-type: fs
           scan-ref: .
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '1'
 
@@ -1133,7 +1220,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: arsnova-eu:scan-${{ github.sha }}
-          severity: CRITICAL
+          severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: '1'
 
@@ -1194,6 +1281,9 @@ jobs:
     needs:
       [
         changes,
+        actionlint,
+        format,
+        landing-build,
         lint,
         test,
         docker,

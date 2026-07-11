@@ -1,5 +1,10 @@
 # Lokaler Gesamt-Testlauf vom 2026-07-10
 
+> **Historischer Messstand:** Die hier dokumentierten roten Befunde wurden im
+> [gezielten QA-Nachlauf vom 2026-07-11](LOCAL-QA-RECHECK-2026-07-11.md)
+> reproduzierbar behoben. Dieses Protokoll bleibt als unveränderte Ausgangsmessung
+> erhalten.
+
 ## Zweck und Einordnung
 
 Dieser Lauf prüfte die aktuelle Unit-, Build-, Browser-, Last- und

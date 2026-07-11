@@ -23,6 +23,7 @@ tmp/
 
 # ---------- IDE ----------
 .idea/
+.cursor/mcp.json
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
@@ -34,6 +35,7 @@ Thumbs.db
 
 # ---------- Test & Coverage ----------
 coverage/
+.lighthouseci/
 e2e/test-output/
 artifacts/
 scripts/load/artillery/.session.json

@@ -17,18 +17,20 @@ werden.
 
 ## Letzter CI-naher lokaler Lauf
 
-Am **2026-07-10** wurde der lokalisierte Produktionsbuild für `/de/` und `/en/`
-je dreimal mit dem mobilen Profil gemessen. Beide URLs verfehlten reproduzierbar:
+Am **2026-07-11** bestand der lokalisierte Produktionsbuild für `/de/` und `/en/`
+alle sechs mobilen Läufe:
 
-- Performance-Score **0,55** statt mindestens **0,60**
-- LCP rund **11,1 s** statt höchstens **4 s**
+- Performance-Score **0,79–0,80**
+- Accessibility **1,00**
+- LCP **3,705–3,829 s**
+- CLS **0,004–0,007**
+- TBT **138–199 ms**
 
-Accessibility, CLS und TBT verletzten kein Gate. Der Lauf verwendete einen
-einfachen lokalen statischen Server ohne produktionsspezifische Kompression oder
-CDN. Das kann die absolute LCP beeinflussen; das lokale Hard-Gate bleibt dennoch
-rot und darf nicht als bestanden dokumentiert werden. Details und die übrigen
-Testergebnisse:
-[Lokaler Gesamt-Testlauf 2026-07-10](../implementation/LOCAL-TESTRUN-2026-07-10.md).
+Der frühere 11-s-LCP war überwiegend ein Messfehler durch den unkomprimierten
+Python-Testserver. Der CI-Server bildet nun die produktive gzip- und Cache-Semantik
+ab. Zusätzlich sind i18n-Hydration, statische Above-the-fold-Copy und ein von
+125 KB auf 29 KB reduzierter Material-Icons-Font aktiv. Details:
+[QA-Nachlauf 2026-07-11](../implementation/LOCAL-QA-RECHECK-2026-07-11.md).
 
 ## Wichtig: Production-Build messen
 
@@ -36,8 +38,8 @@ Testergebnisse:
 
 ```bash
 npm run build:prod
-npm run serve:localize -w @arsnova/frontend
-# Dann in Chrome: http://localhost:4200/de/ → DevTools → Lighthouse → Performance (Mobile)
+node scripts/serve-static-compressed.mjs apps/frontend/dist/browser 4173
+# Dann in Chrome: http://localhost:4173/de/ → DevTools → Lighthouse → Performance (Mobile)
 ```
 
 Hinweis: Der lokalisierte Build-Output liegt unter **`apps/frontend/dist/browser/`**. Beim Servieren immer **`dist/browser`** als Dokument-Wurzel nutzen, damit `/de/`, `/en/`, `/fr/`, `/it/` und `/es/` die App laden und nicht ein Verzeichnislisting.

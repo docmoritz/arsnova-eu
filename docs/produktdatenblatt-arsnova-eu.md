@@ -39,9 +39,10 @@ Hinweis: Die Darstellung bleibt produktdatenblatt-typisch verdichtet, bezieht si
 ## Epic 0 – Infrastruktur und Plattform
 
 - Redis, WebSocket-Adapter, Yjs-Basis, Serverstatus, Rate-Limiting, CI/CD produktiv umgesetzt.
-- Last-/Performance-Testsystematik ist weitgehend vorhanden; offen sind
-  insbesondere Yjs-Reconnect-Konvergenz, 600er Vote-Latenz, drei
-  Browser-Referenzflows, Lighthouse-LCP sowie Staging-Langläufe und Baselines.
+- Last-/Performance-Testsystematik ist weitgehend vorhanden; Yjs-Reconnect,
+  600er Vote-Latenz, sechs Browser-Referenzflows und Lighthouse sind im
+  [QA-Nachlauf 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+  lokal grün. Offen sind Staging-Langläufe und Baselines.
   McCabe-Refactor-Hotspots bleiben ebenfalls offen.
 
 ## Epic 1 – Quiz-Verwaltung
@@ -146,14 +147,15 @@ Damit ist die Produktbeschreibung nicht nur backlog-basiert, sondern auch verhal
 **Lieferstand:** Kernprodukt inkl. Sessionsteuerung, Teilnehmerfluss, Auswertung,
 Admin und MOTD ist produktiv funktionsfähig und durch Unit-, API- und
 Lasttests breit abgesichert. Der
-[lokale Gesamt-Testlauf vom 2026-07-10](implementation/LOCAL-TESTRUN-2026-07-10.md)
-zeigt jedoch offene Browser-, Yjs-, Vote-Latenz- und Lighthouse-Gates; „breit
-abgesichert“ ist deshalb keine vollständige Release-Freigabe.
+[QA-Nachlauf vom 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+belegt grüne lokale Browser-, Yjs-, Vote-Latenz- und Lighthouse-Gates. Eine
+vollständige Performance-Freigabe benötigt zusätzlich Staging-Langläufe und
+Produktionsbaselines.
 
 **Offene Inkremente mit hoher Relevanz:**
 
-- Abschluss Last-/Performance-Tests (0.7): rote lokale Gates beheben,
-  Staging-Langläufe und Produktionsbaselines freigeben
+- Abschluss Last-/Performance-Tests (0.7): Staging-Langläufe und
+  Produktionsbaselines freigeben
 - Komplexitätsreduktion/Refactor-Hotspots (0.8)
 - Neue Fragentypen und Auswertungslogik (1.2ec–1.2ed, 1.2f–1.2i)
 - Sync-Sicherheit/Skalierung (1.6c/1.6d)

@@ -245,17 +245,23 @@ Freitext/Wordcloud und einen 5-Minuten-Soak ab. Vollständige 500-TN-Läufe gege
 Staging benötigen eine explizite Freigabe.
 
 Story **0.7** im [`Backlog.md`](../../Backlog.md) bleibt **🟡 in Arbeit** (Stand
-2026-07-10): Testprofile, harte Latenz-/Fehler-Gates, standardisierte
+2026-07-11): Testprofile, harte Latenz-/Fehler-Gates, standardisierte
 JSON-/JUnit-Reports, Regressionsvergleich und Laufzeitprobes sind vorhanden.
 
 Der
 [lokale Gesamt-Testlauf vom 2026-07-10](../implementation/LOCAL-TESTRUN-2026-07-10.md)
 belegt 19/21 Last-/Performance-Szenarien als bestanden. Artillery Live und
 Reconnect erreichten jeweils 500/500 Teilnehmende, alle k6-Profile und der
-5-Minuten-Soak waren grün. Reproduzierbar offen sind dagegen die
+5-Minuten-Soak waren grün. Im damaligen Lauf reproduzierbar offen waren dagegen die
 Yjs-Konvergenz nach Offline-Reconnect und das 1.000-ms-p95-Gate beim
 600er Timer-Fairness-Lauf. Auch drei Browser-Referenzflows und das
 Lighthouse-Performance-Gate waren nicht grün.
+
+Der
+[gezielte QA-Nachlauf vom 2026-07-11](../implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+belegt die Korrekturen: Yjs-Reconnect, beide akzeptierenden 600er Vote-Pfade,
+6/6 Browser-Referenzflows und 6/6 Lighthouse-Läufe bestanden. Für Story 0.7
+bleiben Staging-Langlauf und Baseline-Freigabe.
 
 Neben der Ursachenklärung dieser Befunde stehen geprüfte
 30/60-Minuten-Pilotläufe in einer stabilen Staging-Umgebung und daraus
@@ -340,9 +346,9 @@ Kurzfolie für das Erstgespräch — du kannst die Studierende durch diese Punkt
 
 1. **Kontext:** arsnova.eu ist realtime-lastig; ein Tool reicht nicht → ADR-0013.
 2. **Jetzt nutzbar:** k6 + `scripts/load/` + Playwright-Smokes + Lighthouse.
-3. **Aktuell zu bearbeiten:** Yjs-Reconnect-Konvergenz, 600er
-   Vote-Timer-Latenz, drei browserseitige Live-/Ergebnis-Flows und Lighthouse-LCP.
-4. **Danach zu belegen:** stabile 30/60-Minuten-Staging-Läufe und daraus geprüfte
+3. **Lokal belegt:** Yjs-Reconnect, 600er Vote-Timer-Latenz, sechs Browser-Flows
+   und Lighthouse-LCP sind im QA-Nachlauf grün.
+4. **Aktuell zu belegen:** stabile 30/60-Minuten-Staging-Läufe und daraus geprüfte
    Produktionsbaselines.
 5. **Erster Hands-on:** `npm run dev:backend` → `load:simulate:50` → `npm run load:k6:health`.
 6. **Artefakt für SQM:** Messprotokoll eines Pilot-Laufs **oder** Konzept für ein fehlendes Szenario (Absprache).

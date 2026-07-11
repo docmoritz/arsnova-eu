@@ -137,7 +137,7 @@
 > Ergebnisnachweis (eigene Runde 2, Toleranzband und Rundenvergleich), nicht die
 > Existenz des Fragentyps.
 >
-> **Laufzeitabgleich Story 0.7 (2026-07-10):** Der [lokale Gesamt-Testlauf](docs/implementation/LOCAL-TESTRUN-2026-07-10.md) bestätigt 19/21 Last-/Performance-Szenarien, alle k6-Profile, beide Artillery-500-Profile und den 5-Minuten-Soak. Nicht bestanden sind die Yjs-Konvergenz nach Offline-Reconnect und das 1.000-ms-p95-Gate im 600er Timer-Fairness-Lauf. Zusätzlich scheiterten drei von sechs Browser-Flows sowie das Lighthouse-Performance-/LCP-Gate. Vor einer Baseline-Freigabe sind diese Befunde zu klären.
+> **Laufzeitabgleich Story 0.7 (2026-07-11):** Der [lokale Gesamt-Testlauf](docs/implementation/LOCAL-TESTRUN-2026-07-10.md) bestätigt 19/21 Last-/Performance-Szenarien, alle k6-Profile, beide Artillery-500-Profile und den 5-Minuten-Soak. Der [gezielte QA-Nachlauf](docs/implementation/LOCAL-QA-RECHECK-2026-07-11.md) schließt die damals roten Yjs-, 600er Vote-p95-, Browser- und Lighthouse-Befunde. Vor einer Baseline-Freigabe stehen noch Staging-Langläufe aus.
 >
 > **Ergänzung Angebotsoption Westermann (2026-05-28):** **Epic 11** beschreibt einen **noch nicht beauftragten** Erweiterungspfad für **personalisierte Verlagszugänge und ein Redaktionsbackend**; hierzu existiert im Monorepo aktuell bewusst **kein** Produktcode.
 >
@@ -257,7 +257,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - [x] **TypeScript-Kompilierung:** `tsc --noEmit` für `libs/shared-types`, `apps/backend` und `apps/frontend` — alle drei müssen fehlerfrei kompilieren.
     - [x] **Prisma-Validierung:** `prisma validate` prüft das Schema auf Korrektheit.
     - [x] **Linting:** ESLint prüft alle `.ts`-Dateien auf Regelverstöße (Root-Config: `eslint.config.mjs`).
-    - [x] **Security-Audit:** CI-Job `Security Audit` mit `npm audit --audit-level=critical --omit=dev` (Gate blockiert nur **Critical**; das ist **schwächer** als das ursprüngliche AC `high`, weil `audit-level` die Mindest-Severity zum Fail ist). DoD (Deployment) verlangt weiterhin keine neuen Schwachstellen ≥ high — bei Bedarf lokal `npm audit --audit-level=high --omit=dev` prüfen; CI auf `high` wäre erst nach Bereinigung der Prod-Dependencies sinnvoll.
+    - [x] **Security-Audit:** CI-Job `Security Audit` mit `npm audit --audit-level=high --omit=dev`, Dependency Review ab High, Trivy für High/Critical, CycloneDX-SBOM und separatem CodeQL-SAST-Workflow.
     - [x] **Docker-Image:** Multi-Stage-Dockerfile baut ein produktionsfertiges Image (`node:20-alpine`).
     - [x] **Docker-Build:** CI baut das Docker-Image erfolgreich (kein Push in Registry, nur Build-Test).
     - [x] **Caching:** `node_modules` wird via `actions/cache` zwischengespeichert, um CI-Laufzeit zu verkürzen.
@@ -300,7 +300,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - Die Dokumentation beschreibt, wie die Lasttests gestartet werden, welche Infrastruktur benötigt wird und wie Resultate zu interpretieren sind.
     - Neue Performance-Erkenntnisse aus diesen Tests fliessen in Backlog, ADRs oder Optimierungsstories zurück.
     - **Architekturvorgabe:** Die Tool-Auswahl und Rollentrennung folgen ADR-0013; `k6` ist der Standard für protokollnahe Lasttests, `Artillery` für Realtime- und E2E-nahe Lastszenarien, `Playwright` bleibt funktionale Browser-Referenz; schnelle Hotspot-Checks laufen über Node-Skripte unter `scripts/load/`.
-  - **Aktueller Implementierungsstand (2026-07-10, abgeglichen mit [ADR-0013](docs/architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md), [PERFORMANCE-TESTING.md](docs/PERFORMANCE-TESTING.md) und [CI-WORKFLOW.md](docs/CI-WORKFLOW.md)):**
+  - **Aktueller Implementierungsstand (2026-07-11, abgeglichen mit [ADR-0013](docs/architecture/decisions/0013-use-k6-and-artillery-for-load-and-performance-testing.md), [PERFORMANCE-TESTING.md](docs/PERFORMANCE-TESTING.md) und [CI-WORKFLOW.md](docs/CI-WORKFLOW.md)):**
     - **k6 (protokollnah):** Health, Session und Hotpaths (`join-wave`, `active-question`, `vote-spike`) mit SLO-parametrisierten Fehler-, p95-, p99- und Check-Thresholds.
     - **Artillery (Realtime/E2E-nahe Last):** Unified Session und Reconnect bis 500 TN; Prozessfehler und Host-Subscription-Fehler sind harte Gates. Der explizite Staging-Kapazitätsjob kombiniert Artillery mit einem Playwright-Referenzflow.
     - **Node-Szenarien:** sechs Classroom-30er als Deploy-Gate sowie Host-Vote-Progress, Timer-Fairness, Q&A-/Blitzlicht-Fan-out, Freitext-/Word-Cloud, Yjs-Mehrclient-Sync und konfigurierbarer Live-Session-Soak.
@@ -308,6 +308,7 @@ Eine Story gilt als **fertig**, wenn **alle** folgenden Kriterien erfüllt sind:
     - **CI:** PR/Push führt kurze Classroom-, Browser- und Lighthouse-Gates aus; Nacht/Manuell führt schwere Artillery-/Vote-, Yjs-, Freitext- und 5-Minuten-Soak-Szenarien aus. 30/60-Minuten-Läufe bleiben einer stabilen Staging-Umgebung vorbehalten.
     - **Dokumentation:** [`docs/PERFORMANCE-TESTING.md`](docs/PERFORMANCE-TESTING.md) ist das aktuelle Betriebs- und Testinventar; [`docs/TESTING.md`](docs/TESTING.md), [`docs/CI-WORKFLOW.md`](docs/CI-WORKFLOW.md) und das [Praktikums-Handout](docs/praktikum/HANDOUT-LAST-UND-PERFORMANCE-TESTS.md) verlinken darauf.
     - **Abgedeckt (Hotpaths):** Join, Session-Start, Quiz/Vote/Timer, Status-/Ergebnis-Fan-out, Host-Fortschritt, Q&A, Blitzlicht, Reconnect, Freitext-Live-Auswertung/Word-Cloud, Yjs-Sync sowie Kurz-/Langzeit-Laufzeitprofile.
+    - **Lokaler Nachlauf:** Yjs-Reconnect, beide akzeptierenden 600er Vote-p95-Pfade, 6/6 Browser-Flows und 6/6 Lighthouse-Läufe bestanden; offen bleiben Staging-Langlauf und Baseline-Freigabe.
     - **Akzeptanzkriterien — Erfüllungsgrad (Kurz):**
       - Setup lokal + CI/dediziert: **ja** (PR-Smokes, Nachtjobs und explizites Staging getrennt).
       - Vollständige E2E mit Angular-FE unter Last: **teilweise** (Playwright-Referenzflow parallel zum Staging-Artillery-Lauf; keine Browserfarm).

@@ -4,7 +4,7 @@
 
 **Lokal** vor PR: mindestens `npm run build`, `npm run lint`, `npm test` (entspricht den wesentlichen CI-Gates). Vollständige DoD: [Backlog.md](../Backlog.md) „Definition of Done“. Nach größeren Änderungen an **`@arsnova/shared-types`**: wie in Root-[README](../README.md) zuerst `npm run build -w @arsnova/shared-types` bzw. Root-`npm run build` nutzen.
 
-**Stand:** 2026-07-10 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; inkl. `dependency-review`, `actionlint`, `trivy-fs`, `trivy-image`, `post-deploy-smoke`) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
+**Stand:** 2026-07-11 · Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (Node **20** und **22**; inkl. `dependency-review`, `actionlint`, Format-, i18n-, Lighthouse-, Trivy- und Migrations-Gates) · SAST: [`.github/workflows/codeql.yml`](../.github/workflows/codeql.yml) · Deploy-Skript: [`scripts/deploy.sh`](../scripts/deploy.sh)
 
 ---
 
@@ -15,16 +15,17 @@
 | `npm run build`                     | `shared-types` → Backend `tsc` → Frontend `ng build`                                         |
 | `npm run typecheck`                 | `shared-types` bauen (`dist`), dann Backend + Frontend `tsc --noEmit`                        |
 | `npm run lint`                      | ESLint über `libs/` und `apps/`                                                              |
-| `npm test`                          | **Backend** Vitest + **Frontend** Vitest (sequentiell)                                       |
+| `npm test`                          | **Shared Contracts**, **Backend** und **Frontend** mit Vitest (sequentiell)                  |
 | `npm run format:check`              | Prettier (ohne Schreiben)                                                                    |
 | `npm run verify:production-serving` | HTTP-Smoke gegen einen laufenden Production-Serve (`/`, `/de/`, Compression, `health.stats`) |
 
 Workspace-spezifisch:
 
-| Workspace           | Tests                                              | Typcheck                                 |
-| ------------------- | -------------------------------------------------- | ---------------------------------------- |
-| `@arsnova/backend`  | `npm run test -w @arsnova/backend` (`vitest run`)  | `npm run typecheck -w @arsnova/backend`  |
-| `@arsnova/frontend` | `npm run test -w @arsnova/frontend` (`vitest run`) | `npm run typecheck -w @arsnova/frontend` |
+| Workspace               | Tests                                                  | Typcheck                                     |
+| ----------------------- | ------------------------------------------------------ | -------------------------------------------- |
+| `@arsnova/shared-types` | `npm run test -w @arsnova/shared-types` (`vitest run`) | `npm run typecheck -w @arsnova/shared-types` |
+| `@arsnova/backend`      | `npm run test -w @arsnova/backend` (`vitest run`)      | `npm run typecheck -w @arsnova/backend`      |
+| `@arsnova/frontend`     | `npm run test -w @arsnova/frontend` (`vitest run`)     | `npm run typecheck -w @arsnova/frontend`     |
 
 `npm run typecheck -w @arsnova/backend` setzt ein gebautes `@arsnova/shared-types` (`libs/shared-types/dist`) voraus; das Root-Skript `npm run typecheck` baut die Library zuerst.
 
@@ -42,11 +43,16 @@ dokumentiert.
 - Browser-Flow-Smokes: **3/6 bestanden**
 - Lighthouse: **fehlgeschlagen** (Performance 0,55; LCP rund 11,1 s)
 
-Reproduzierbar offen sind die Yjs-Konvergenz nach Offline-Reconnect, das
+Im Lauf vom 2026-07-10 reproduzierbar offen waren die Yjs-Konvergenz nach Offline-Reconnect, das
 1.000-ms-p95-Gate beim 600er Timer-Fairness-Lauf sowie die Browser-Flows
 Host-Join-Liveanzeige, `SHORT_TEXT`-Fragenübertragung und
 Numeric-Estimate-Ergebnisdarstellung. Ein grüner Unit-Testlauf ersetzt diese
 Laufzeit-Gates nicht.
+
+Der [gezielte QA-Nachlauf vom 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+belegt die Korrekturen: Yjs-Reconnect, beide 600er Vote-p95-Pfade, alle sechs
+Browser-Flows und alle sechs Lighthouse-Läufe sind grün. Offen bleibt der
+betriebliche 30-/60-Minuten-Staging-Langlauf mit freizugebender Baseline.
 
 ---
 
@@ -58,10 +64,12 @@ Auslöser: **Push** und **Pull Request** auf `main`.
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **dependency-review**                  | PR-abhängiger Dependency-Risiko-Check (`fail-on-severity: high`)                                                                                                                                                                |
 | **actionlint**                         | Linting/Validierung der GitHub-Workflow-Dateien                                                                                                                                                                                 |
+| **format**                             | Prettier-Gate für im PR/Push geänderte unterstützte Dateien                                                                                                                                                                     |
+| **landing-build**                      | Produktionsbuild der Astro-Landingpage                                                                                                                                                                                          |
 | **build** (Node 20 & 22)               | `npm ci` → `prisma validate` → `prisma generate` → `tsc -b apps/backend` → Frontend `tsc --noEmit` → `build:localize` (Frontend, **alle** konfigurierten Locales `de/en/fr/it/es`)                                              |
 | **typecheck** (Node 20 & 22, parallel) | `npm ci` → `prisma validate` → `prisma generate` → `npm run typecheck` (inkl. `build` für `shared-types`, dann `--noEmit`)                                                                                                      |
 | **lint**                               | `npm run lint` (nach build)                                                                                                                                                                                                     |
-| **audit**                              | `npm audit --audit-level=critical --omit=dev` (**blockierend ab Critical für Produktionsabhängigkeiten**)                                                                                                                       |
+| **audit**                              | `npm audit --audit-level=high --omit=dev`, CycloneDX-SBOM als Artefakt (**blockierend ab High für Produktionsabhängigkeiten**)                                                                                                  |
 | **test**                               | `npm run test:coverage` (nach build, inkl. Coverage-Thresholds)                                                                                                                                                                 |
 | **trivy-fs**                           | Trivy-Scan des Repository-Dateisystems (HIGH/CRITICAL, blockierend)                                                                                                                                                             |
 | **trivy-image**                        | Docker-Image-Build für Scan + Trivy-Image-Scan (HIGH/CRITICAL, blockierend)                                                                                                                                                     |

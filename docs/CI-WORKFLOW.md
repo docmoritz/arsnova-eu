@@ -17,10 +17,10 @@ Für detaillierte lokale Testkommandos und zusätzliche Last-/Smoke-Varianten si
 
 Wenn du neu im Projekt bist, reicht dieses mentale Modell:
 
-1. **Vorstufe (früh):** `changes` erkennt docs-only Änderungen; parallel dazu prüfen `dependency-review` und `actionlint` frühe PR- und Workflow-Risiken.
-2. **Technische Basis:** Das Projekt muss in einer realistischen Umgebung bauen (`build`, `typecheck`, `lint`).
+1. **Vorstufe (früh):** `changes` erkennt docs-only Änderungen; parallel dazu prüfen `dependency-review`, `actionlint` und `format` frühe PR-, Workflow- und Formatrisiken.
+2. **Technische Basis:** Das Projekt muss in einer realistischen Umgebung bauen (`build`, `landing-build`, `typecheck`, `lint`, i18n-Konsistenz).
 3. **Verhalten:** Tests müssen grün sein und Mindestqualität halten (`test:coverage`, `e2e`, `classroom-smokes`, `lighthouse`).
-4. **Sicherheit:** `audit` blockiert Critical-Severity; Trivy (`trivy-fs`, `trivy-image`) blockiert High/Critical.
+4. **Sicherheit:** `audit`, Dependency Review und Trivy blockieren ab High; CodeQL prüft SAST, die CI erzeugt ein CycloneDX-SBOM.
 5. **Release:** Nur wenn alles grün ist und der Commit noch aktueller `main`-HEAD ist (`deploy-freshness`), darf deployed werden (`deploy`), danach kommt der Gesundheitscheck (`post-deploy-smoke`).
 
 ### PR-Checkliste für Erstbeiträge
@@ -158,17 +158,20 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 
 ### 4.6 audit
 
-- **Was?** `npm audit --audit-level=critical --omit=dev` als Gate (Produktionsabhängigkeiten).
+- **Was?** `npm audit --audit-level=high --omit=dev` als Gate für
+  Produktionsabhängigkeiten plus CycloneDX-SBOM-Artefakt.
 - **Wo?** Audit-Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml).
 - **Wann?** Alle Events außer `schedule`.
-- **Warum?** Blockiert bekannte Critical-Severity-Schwachstellen vor dem Merge/Deploy.
+- **Warum?** Blockiert bekannte High-/Critical-Schwachstellen vor dem Merge/Deploy
+  und dokumentiert die ausgelieferten Komponenten.
 
 ### 4.7 test (Coverage-Gate)
 
-- **Was?** `npm run test:coverage` für Backend + Frontend.
+- **Was?** `npm run test:coverage` für Shared Contracts, Backend und Frontend.
 - **Wo?** Root-Script in [../package.json](../package.json), Schwellenwerte in
   [../apps/backend/vitest.config.ts](../apps/backend/vitest.config.ts) und
-  [../apps/frontend/vitest.config.ts](../apps/frontend/vitest.config.ts).
+  [../apps/frontend/vitest.config.ts](../apps/frontend/vitest.config.ts) sowie
+  [../libs/shared-types/vitest.config.ts](../libs/shared-types/vitest.config.ts).
 - **Wann?** Nach erfolgreichem `build`.
 - **Warum?** Prüft Verhalten und stellt Mindestabdeckung sicher.
 
@@ -179,14 +182,17 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml), Regeln in [../.lighthouserc.cjs](../.lighthouserc.cjs).
 - **Wann?** Nach `build`, außer bei `schedule`.
 - **Warum?** Qualitätssignal für Accessibility/Performance/Best-Practices/SEO.
-- **Letzter lokaler Nachweis:** Am 2026-07-10 scheiterte das Gate für `/de/` und
-  `/en/` reproduzierbar an Performance 0,55 und LCP rund 11,1 s; siehe
-  [lokaler Gesamt-Testlauf](implementation/LOCAL-TESTRUN-2026-07-10.md).
+- **Letzter lokaler Nachweis:** Am 2026-07-11 bestanden 6/6 Läufe mit
+  Performance 0,79–0,80 und LCP 3,705–3,829 s; siehe
+  [QA-Nachlauf](implementation/LOCAL-QA-RECHECK-2026-07-11.md).
 
 ### 4.9 e2e
 
-- **Was?** Playwright-Smoke mit echten Services (Postgres + Redis), Backend/Frontend-Start und Unified-Session-Flow.
-- **Wo?** Job in [../.github/workflows/ci.yml](../.github/workflows/ci.yml), Flow-Skript in [../apps/frontend/scripts/check-unified-session-flow.mjs](../apps/frontend/scripts/check-unified-session-flow.mjs).
+- **Was?** Sechs Playwright-Smokes mit echten Services (Postgres + Redis),
+  produktionsnahen Migrationen und Backend-/Frontend-Start: Host-/Presenter-Auth,
+  Host-Musik, `SHORT_TEXT`, `NUMERIC_ESTIMATE`, Quiz-Sync und Unified Session.
+- **Wo?** Job und Skriptinventar in [../.github/workflows/ci.yml](../.github/workflows/ci.yml)
+  und [../apps/frontend/package.json](../apps/frontend/package.json).
 - **Wann?** Nach `build`, außer bei `schedule`.
 - **Warum?** Testet den Nutzerfluss systemnah (nicht nur isolierte Unit-Tests).
 
@@ -207,7 +213,7 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 ### 4.11 artillery-500
 
 - **Was?** Artillery-Live-Session (Quiz + Q&A + Blitzlicht, HTTP + WebSocket);
-  Standard 100 TN im CI-Runner, konfigurierbar bis 500. Im selben geplanten Lauf
+  Standard 500 TN im CI-Runner. Im selben geplanten Lauf
   folgen die schweren Vote-Smokes für Host-Progress (200 TN), Timer-Fairness
   (600 TN), der Yjs-Mehrclient-Sync, der Freitext-/Wordcloud-Pfad und ein
   5-Minuten-Live-Session-Soak mit Backend-Prozess-, Redis- und PostgreSQL-Probes.
@@ -215,10 +221,8 @@ Wichtig: Jobs ohne direkte Abhängigkeit laufen **parallel**.
 - **Wann?** Nur bei `schedule` oder `workflow_dispatch`.
 - **Artefakt:** `artillery-500-reports` (standardisierte JSON-/JUnit-Reports, Artillery-Report + `backend.log`).
 - **Letzter lokaler Nachweis:** Artillery 500/500 und der 5-Minuten-Soak
-  bestanden. Der nachgelagerte Yjs-Lauf und das 600er Timer-Fairness-Latenzgate
-  scheiterten reproduzierbar; der Gesamtjob ist damit nicht als vollständig grün
-  zu bewerten. Details:
-  [LOCAL-TESTRUN-2026-07-10.md](implementation/LOCAL-TESTRUN-2026-07-10.md).
+  bestanden im Gesamtlauf; Yjs und das 600er Timer-Fairness-Latenzgate bestanden
+  im [QA-Nachlauf 2026-07-11](implementation/LOCAL-QA-RECHECK-2026-07-11.md).
 
 ### 4.11a artillery-reconnect-500
 

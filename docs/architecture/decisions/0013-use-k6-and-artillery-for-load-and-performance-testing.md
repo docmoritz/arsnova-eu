@@ -144,7 +144,7 @@ Diese Aufteilung ist Teil der Architekturentscheidung.
 - Ergebnisse muessen zwischen Laeufen vergleichbar und fuer Entwickler:innen lesbar sein.
 - Neue kritische Live-Flows erhalten frueh eine Entscheidung, ob sie primaer in `k6`, `Artillery` oder beiden Werkzeugen getestet werden.
 
-## Umsetzungsstand (2026-07-10)
+## Umsetzungsstand (2026-07-11)
 
 Im Repo existieren SLO-parametrisierte `k6`-Skripte für Health, Session und
 500-VU-Hotpaths sowie sechs kurze Classroom-Smokes als direktes Deploy-Gate.
@@ -168,6 +168,11 @@ nicht, der 600er Timer-Fairness-Lauf überschritt das 1.000-ms-p95-Gate, drei
 Browser-Referenzflows scheiterten und das Lighthouse-Performance-Gate blieb rot.
 Diese Befunde sind vor einer Baseline-Freigabe zu klären.
 
+Der
+[QA-Nachlauf vom 2026-07-11](../../implementation/LOCAL-QA-RECHECK-2026-07-11.md)
+schließt die vier technischen Befunde reproduzierbar. Offen bleibt damit der
+betriebliche Nachweis durch Staging-Langläufe und freigegebene Baselines.
+
 ---
 
-**Referenzen:** `Backlog.md` Story `0.7`, [PERFORMANCE-TESTING.md](../../PERFORMANCE-TESTING.md), [Lokaler Gesamt-Testlauf 2026-07-10](../../implementation/LOCAL-TESTRUN-2026-07-10.md), `apps/frontend/package.json`, `apps/backend/package.json`, [ADR-0003: tRPC fuer API](./0003-use-trpc-for-api.md), [ADR-0004: Yjs fuer Local-First-Speicherung](./0004-use-yjs-for-local-first-storage.md), [ADR-0009: Einheitliche Live-Session mit Tabs fuer Quiz, Q&A und Blitzlicht](./0009-unified-live-session-channels.md).
+**Referenzen:** `Backlog.md` Story `0.7`, [PERFORMANCE-TESTING.md](../../PERFORMANCE-TESTING.md), [Lokaler Gesamt-Testlauf 2026-07-10](../../implementation/LOCAL-TESTRUN-2026-07-10.md), [QA-Nachlauf 2026-07-11](../../implementation/LOCAL-QA-RECHECK-2026-07-11.md), `apps/frontend/package.json`, `apps/backend/package.json`, [ADR-0003: tRPC fuer API](./0003-use-trpc-for-api.md), [ADR-0004: Yjs fuer Local-First-Speicherung](./0004-use-yjs-for-local-first-storage.md), [ADR-0009: Einheitliche Live-Session mit Tabs fuer Quiz, Q&A und Blitzlicht](./0009-unified-live-session-channels.md).
