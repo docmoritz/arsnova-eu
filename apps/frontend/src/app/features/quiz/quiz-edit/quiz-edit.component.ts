@@ -11,6 +11,12 @@ import {
 } from '@angular/core';
 import { LocaleSwitchGuardService } from '../../../core/locale-switch-guard.service';
 import {
+  confidenceDefaultLabelHigh,
+  confidenceDefaultLabelLow,
+  resolveConfidenceLabelHigh,
+  resolveConfidenceLabelLow,
+} from '../../../shared/confidence-default-labels';
+import {
   AbstractControl,
   FormArray,
   FormControl,
@@ -877,6 +883,9 @@ export class QuizEditComponent implements OnDestroy {
     return questionSupportsConfidence(this.typeControl.value);
   }
 
+  readonly confidenceLabelLowPlaceholder = confidenceDefaultLabelLow();
+  readonly confidenceLabelHighPlaceholder = confidenceDefaultLabelHigh();
+
   questionTypeSupportsConfidence(type: SupportedQuestionType): boolean {
     return questionSupportsConfidence(type);
   }
@@ -886,11 +895,36 @@ export class QuizEditComponent implements OnDestroy {
   }
 
   confidencePreviewLabelLow(): string {
-    return this.form.controls.confidenceLabelLow.value.trim();
+    return resolveConfidenceLabelLow(this.form.controls.confidenceLabelLow.value);
   }
 
   confidencePreviewLabelHigh(): string {
-    return this.form.controls.confidenceLabelHigh.value.trim();
+    return resolveConfidenceLabelHigh(this.form.controls.confidenceLabelHigh.value);
+  }
+
+  confidenceLabelForQuestion(
+    question: { confidenceLabelLow?: string | null; confidenceLabelHigh?: string | null },
+    bound: 'low' | 'high',
+  ): string {
+    return bound === 'low'
+      ? resolveConfidenceLabelLow(question.confidenceLabelLow)
+      : resolveConfidenceLabelHigh(question.confidenceLabelHigh);
+  }
+
+  onConfidenceEnabledChanged(): void {
+    if (this.form.controls.confidenceEnabled.value) {
+      this.applyConfidenceLabelDefaultsIfEmpty();
+    }
+    this.onLivePreviewInput();
+  }
+
+  private applyConfidenceLabelDefaultsIfEmpty(): void {
+    if (!this.form.controls.confidenceLabelLow.value.trim()) {
+      this.form.controls.confidenceLabelLow.setValue(confidenceDefaultLabelLow());
+    }
+    if (!this.form.controls.confidenceLabelHigh.value.trim()) {
+      this.form.controls.confidenceLabelHigh.setValue(confidenceDefaultLabelHigh());
+    }
   }
 
   confidencePreviewAriaLabel(): string {
@@ -2868,8 +2902,17 @@ export class QuizEditComponent implements OnDestroy {
     this.form.controls.numericMax.setValue(question.numericMax ?? null);
     this.form.controls.numericTwoRounds.setValue(question.numericTwoRounds ?? false);
     this.form.controls.confidenceEnabled.setValue(question.confidenceEnabled ?? false);
-    this.form.controls.confidenceLabelLow.setValue(question.confidenceLabelLow ?? '');
-    this.form.controls.confidenceLabelHigh.setValue(question.confidenceLabelHigh ?? '');
+    if (question.confidenceEnabled) {
+      this.form.controls.confidenceLabelLow.setValue(
+        question.confidenceLabelLow?.trim() || confidenceDefaultLabelLow(),
+      );
+      this.form.controls.confidenceLabelHigh.setValue(
+        question.confidenceLabelHigh?.trim() || confidenceDefaultLabelHigh(),
+      );
+    } else {
+      this.form.controls.confidenceLabelLow.setValue(question.confidenceLabelLow ?? '');
+      this.form.controls.confidenceLabelHigh.setValue(question.confidenceLabelHigh ?? '');
+    }
   }
 
   private mergeQuestionWithDraft(

@@ -24,6 +24,10 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { trpc } from '../../../core/trpc.client';
 import {
+  resolveConfidenceLabelHigh,
+  resolveConfidenceLabelLow,
+} from '../../../shared/confidence-default-labels';
+import {
   localizeKnownServerError,
   localizeKnownServerMessage,
 } from '../../../core/localize-known-server-message';
@@ -2399,12 +2403,14 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
   confidenceLabelLow(): string {
     const q = this.currentQuestion();
-    return q && 'confidenceLabelLow' in q ? (q.confidenceLabelLow ?? '') : '';
+    const custom = q && 'confidenceLabelLow' in q ? q.confidenceLabelLow : null;
+    return resolveConfidenceLabelLow(custom);
   }
 
   confidenceLabelHigh(): string {
     const q = this.currentQuestion();
-    return q && 'confidenceLabelHigh' in q ? (q.confidenceLabelHigh ?? '') : '';
+    const custom = q && 'confidenceLabelHigh' in q ? q.confidenceLabelHigh : null;
+    return resolveConfidenceLabelHigh(custom);
   }
 
   confidenceAriaLabel(): string {

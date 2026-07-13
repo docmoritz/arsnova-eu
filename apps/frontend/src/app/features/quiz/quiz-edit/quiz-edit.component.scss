@@ -362,7 +362,7 @@
   gap: 1.25rem;
 }
 
-/* Ein Zeile trotz MDC-Floating-Label (Icon + Text darf nicht umbrechen) */
+/* Icon + Text im Floating-Label (Bewertungsskala); eine Zeile, kurze Beschriftungen */
 .quiz-edit-form__rating-boundary-inner {
   display: inline-flex;
   align-items: center;
@@ -392,6 +392,39 @@
     flex-wrap: nowrap !important;
     max-width: calc(100% - 1.5rem);
   }
+}
+
+.quiz-edit-form__confidence-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.quiz-edit-form__confidence-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.25rem;
+  padding: 0 0.125rem;
+  font: var(--mat-sys-body-small);
+  font-weight: 500;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.35;
+  hyphens: none;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+.quiz-edit-form__confidence-field mat-form-field {
+  margin-top: 0;
 }
 
 /* Team-Block: Zeile 1 Zähler | Zuweisung, Zeile 2 Namen | Vorschau */
@@ -634,16 +667,66 @@
   margin: 0;
 }
 
+.quiz-edit-question__confidence-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.quiz-edit-question__confidence-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+
+  .quiz-edit-question__rating-label {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: min(48%, 14rem);
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    line-height: 1.25;
+  }
+
+  .quiz-edit-question__rating-label--min {
+    justify-content: flex-start;
+    text-align: start;
+  }
+
+  .quiz-edit-question__rating-label--max {
+    justify-content: flex-end;
+    text-align: end;
+    margin-left: auto;
+  }
+}
+
+.quiz-edit-question__confidence-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+  align-items: center;
+
+  .quiz-edit-question__rating-step {
+    justify-self: center;
+    width: min(100%, 2rem);
+  }
+}
+
 @media (max-width: 359px) {
   .quiz-edit-form__confidence-preview-scale .quiz-edit-question__rating-step {
-    width: 1.75rem;
+    width: min(100%, 1.75rem);
     height: 1.75rem;
     font: var(--mat-sys-label-small);
   }
 
   .quiz-edit-form__confidence-preview-scale .quiz-edit-question__rating-label {
     font: var(--mat-sys-label-small);
-    white-space: normal;
     line-height: 1.25;
   }
 }

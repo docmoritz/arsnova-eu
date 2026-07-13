@@ -609,50 +609,56 @@
             </p>
             <mat-slide-toggle
               formControlName="confidenceEnabled"
-              (change)="onLivePreviewInput()"
+              (change)="onConfidenceEnabledChanged()"
               i18n="@@quizEdit.confidenceEnabledToggle"
             >
               Sicherheitsgrad abfragen
             </mat-slide-toggle>
             @if (form.controls.confidenceEnabled.value) {
               <div class="quiz-edit-form__grid">
-                <mat-form-field appearance="outline">
-                  <mat-label>
-                    <span class="quiz-edit-form__rating-boundary-inner">
-                      <mat-icon class="quiz-edit-form__rating-boundary-icon" aria-hidden="true"
-                        >first_page</mat-icon
-                      >
-                      <span i18n="@@quizEdit.confidenceLabelLowField"
-                        >Niedrige Sicherheit (optional)</span
-                      >
-                    </span>
-                  </mat-label>
-                  <input
-                    matInput
-                    formControlName="confidenceLabelLow"
-                    maxlength="50"
-                    (input)="onLivePreviewInput()"
-                  />
-                </mat-form-field>
+                <div class="quiz-edit-form__confidence-field">
+                  <label
+                    class="quiz-edit-form__confidence-field-label"
+                    for="quiz-edit-confidence-label-low"
+                  >
+                    <mat-icon aria-hidden="true">first_page</mat-icon>
+                    <span i18n="@@quizEdit.confidenceLabelLowField"
+                      >Niedrige Sicherheit (optional)</span
+                    >
+                  </label>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <input
+                      id="quiz-edit-confidence-label-low"
+                      matInput
+                      formControlName="confidenceLabelLow"
+                      maxlength="50"
+                      [placeholder]="confidenceLabelLowPlaceholder"
+                      (input)="onLivePreviewInput()"
+                    />
+                  </mat-form-field>
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>
-                    <span class="quiz-edit-form__rating-boundary-inner">
-                      <span i18n="@@quizEdit.confidenceLabelHighField"
-                        >Hohe Sicherheit (optional)</span
-                      >
-                      <mat-icon class="quiz-edit-form__rating-boundary-icon" aria-hidden="true"
-                        >last_page</mat-icon
-                      >
-                    </span>
-                  </mat-label>
-                  <input
-                    matInput
-                    formControlName="confidenceLabelHigh"
-                    maxlength="50"
-                    (input)="onLivePreviewInput()"
-                  />
-                </mat-form-field>
+                <div class="quiz-edit-form__confidence-field">
+                  <label
+                    class="quiz-edit-form__confidence-field-label"
+                    for="quiz-edit-confidence-label-high"
+                  >
+                    <span i18n="@@quizEdit.confidenceLabelHighField"
+                      >Hohe Sicherheit (optional)</span
+                    >
+                    <mat-icon aria-hidden="true">last_page</mat-icon>
+                  </label>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <input
+                      id="quiz-edit-confidence-label-high"
+                      matInput
+                      formControlName="confidenceLabelHigh"
+                      maxlength="50"
+                      [placeholder]="confidenceLabelHighPlaceholder"
+                      (input)="onLivePreviewInput()"
+                    />
+                  </mat-form-field>
+                </div>
               </div>
 
               <section
@@ -667,44 +673,33 @@
                   Vorschau für Teilnehmende
                 </p>
                 <div
-                  class="quiz-edit-question__rating quiz-edit-form__confidence-preview-scale"
+                  class="quiz-edit-question__confidence-scale quiz-edit-form__confidence-preview-scale"
                   role="img"
                   [attr.aria-label]="confidencePreviewAriaLabel()"
                 >
-                  @for (
-                    step of confidenceSteps();
-                    track step;
-                    let first = $first;
-                    let last = $last
-                  ) {
-                    <div class="quiz-edit-question__rating-cell">
-                      <span class="quiz-edit-question__rating-step" aria-hidden="true">{{
-                        step
-                      }}</span>
-                      @if (first && confidencePreviewLabelLow()) {
-                        <span
-                          class="quiz-edit-question__rating-label quiz-edit-question__rating-label--min"
-                          aria-hidden="true"
-                        >
-                          <mat-icon class="quiz-edit-question__rating-label-icon" aria-hidden="true"
-                            >first_page</mat-icon
-                          >
-                          {{ confidencePreviewLabelLow() }}
-                        </span>
-                      }
-                      @if (last && confidencePreviewLabelHigh()) {
-                        <span
-                          class="quiz-edit-question__rating-label quiz-edit-question__rating-label--max"
-                          aria-hidden="true"
-                        >
-                          {{ confidencePreviewLabelHigh() }}
-                          <mat-icon class="quiz-edit-question__rating-label-icon" aria-hidden="true"
-                            >last_page</mat-icon
-                          >
-                        </span>
-                      }
-                    </div>
-                  }
+                  <div class="quiz-edit-question__confidence-labels" aria-hidden="true">
+                    <span
+                      class="quiz-edit-question__rating-label quiz-edit-question__rating-label--min"
+                    >
+                      <mat-icon class="quiz-edit-question__rating-label-icon" aria-hidden="true"
+                        >first_page</mat-icon
+                      >
+                      {{ confidencePreviewLabelLow() }}
+                    </span>
+                    <span
+                      class="quiz-edit-question__rating-label quiz-edit-question__rating-label--max"
+                    >
+                      {{ confidencePreviewLabelHigh() }}
+                      <mat-icon class="quiz-edit-question__rating-label-icon" aria-hidden="true"
+                        >last_page</mat-icon
+                      >
+                    </span>
+                  </div>
+                  <div class="quiz-edit-question__confidence-buttons" aria-hidden="true">
+                    @for (step of confidenceSteps(); track step) {
+                      <span class="quiz-edit-question__rating-step">{{ step }}</span>
+                    }
+                  </div>
                 </div>
               </section>
             }
@@ -1683,41 +1678,36 @@
                       >
                         Sicherheitsgrad wird nach der Antwort abgefragt
                       </p>
-                      <div class="quiz-edit-question__rating">
-                        @for (
-                          step of confidenceSteps();
-                          track step;
-                          let first = $first;
-                          let last = $last
-                        ) {
-                          <div class="quiz-edit-question__rating-cell">
+                      <div
+                        class="quiz-edit-question__confidence-scale quiz-edit-question__rating--confidence"
+                      >
+                        <div class="quiz-edit-question__confidence-labels" aria-hidden="true">
+                          <span
+                            class="quiz-edit-question__rating-label quiz-edit-question__rating-label--min"
+                          >
+                            <mat-icon
+                              class="quiz-edit-question__rating-label-icon"
+                              aria-hidden="true"
+                              >first_page</mat-icon
+                            >
+                            {{ confidenceLabelForQuestion(question, 'low') }}
+                          </span>
+                          <span
+                            class="quiz-edit-question__rating-label quiz-edit-question__rating-label--max"
+                          >
+                            {{ confidenceLabelForQuestion(question, 'high') }}
+                            <mat-icon
+                              class="quiz-edit-question__rating-label-icon"
+                              aria-hidden="true"
+                              >last_page</mat-icon
+                            >
+                          </span>
+                        </div>
+                        <div class="quiz-edit-question__confidence-buttons" aria-hidden="true">
+                          @for (step of confidenceSteps(); track step) {
                             <span class="quiz-edit-question__rating-step">{{ step }}</span>
-                            @if (first && question.confidenceLabelLow) {
-                              <span
-                                class="quiz-edit-question__rating-label quiz-edit-question__rating-label--min"
-                              >
-                                <mat-icon
-                                  class="quiz-edit-question__rating-label-icon"
-                                  aria-hidden="true"
-                                  >first_page</mat-icon
-                                >
-                                {{ question.confidenceLabelLow }}
-                              </span>
-                            }
-                            @if (last && question.confidenceLabelHigh) {
-                              <span
-                                class="quiz-edit-question__rating-label quiz-edit-question__rating-label--max"
-                              >
-                                {{ question.confidenceLabelHigh }}
-                                <mat-icon
-                                  class="quiz-edit-question__rating-label-icon"
-                                  aria-hidden="true"
-                                  >last_page</mat-icon
-                                >
-                              </span>
-                            }
-                          </div>
-                        }
+                          }
+                        </div>
                       </div>
                     }
 

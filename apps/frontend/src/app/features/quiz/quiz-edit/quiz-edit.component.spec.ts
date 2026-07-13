@@ -860,12 +860,18 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
     expect(fixture.nativeElement.querySelector('.quiz-edit-form__confidence-preview')).toBeNull();
 
     component.form.controls.confidenceEnabled.setValue(true);
+    component.onConfidenceEnabledChanged();
     fixture.detectChanges();
+
+    expect(component.form.controls.confidenceLabelLow.value).toBe('sehr unsicher');
+    expect(component.form.controls.confidenceLabelHigh.value).toBe('absolut sicher');
 
     const preview = fixture.nativeElement.querySelector(
       '.quiz-edit-form__confidence-preview-scale',
     ) as HTMLElement | null;
     expect(preview).not.toBeNull();
+    expect(preview?.textContent).toContain('sehr unsicher');
+    expect(preview?.textContent).toContain('absolut sicher');
     expect(preview?.querySelectorAll('.quiz-edit-question__rating-step').length).toBe(5);
   });
 
