@@ -4,7 +4,9 @@
 > kann z. B. über GitHub Pages mit Custom Domain (z. B. `arsnova.eu` oder
 > Subdomain) ausgeliefert werden.
 
-Marketing- und Informationsseite für arsnova.eu. Astro + Tailwind, SEO-optimiert, für GitHub Pages oder beliebigen Static Host.
+Marketing- und Informationsseite für arsnova.eu. Astro 6 + Tailwind 3 (PostCSS), SEO-optimiert, für GitHub Pages oder beliebigen Static Host.
+
+**Node.js:** Landing-Build und `dev:landing` benötigen **Node ≥ 22.12** (Astro 6). CI nutzt bereits Node 22.
 
 ## Entwicklung
 

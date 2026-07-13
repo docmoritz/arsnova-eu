@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "export PUBLIC_GITHUB_REPO=${PUBLIC_GITHUB_REPO:-$(node scripts/get-github-repo.mjs 2>/dev/null || echo 'kqc-real/arsnova.eu')} && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/tailwind": "^5.1.5",
     "boxen": "^8.0.1",
     "html-escaper": "^3.0.3",
     "prompts": "^2.4.2",
@@ -18,7 +20,8 @@
     "yaml": "^2.4.2"
   },
   "devDependencies": {
-    "astro": "^5.18.2",
+    "astro": "^6.4.8",
+    "autoprefixer": "^10.4.0",
     "typescript": "~5.9.0"
   }
 }
