@@ -4303,60 +4303,6 @@ button.session-host__btn-discussion {
   }
 }
 
-.session-host__confidence-distribution {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
-.session-host__confidence-bar {
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.session-host__confidence-bar-label {
-  font: var(--mat-sys-label-large);
-  color: var(--mat-sys-on-surface);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.session-host__confidence-bar-track {
-  height: 1.2rem;
-  border-radius: 0.6rem;
-  overflow: hidden;
-  background: var(--mat-sys-surface-container);
-}
-
-.session-host__confidence-bar-fill {
-  height: 100%;
-  min-width: 0;
-  border-radius: 0.6rem;
-  background: var(--mat-sys-primary);
-  transition: width 300ms ease;
-}
-
-.session-host__confidence-bar-meta {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  min-width: 4.5rem;
-  justify-content: flex-end;
-  font-variant-numeric: tabular-nums;
-}
-
-.session-host__confidence-bar-count {
-  font: var(--mat-sys-label-large);
-  color: var(--mat-sys-on-surface);
-}
-
-.session-host__confidence-bar-pct {
-  font: var(--mat-sys-label-medium);
-  color: var(--mat-sys-on-surface-variant);
-}
-
 .session-host__confidence-crosstab {
   display: grid;
   gap: 0.35rem;
@@ -4393,16 +4339,59 @@ button.session-host__btn-discussion {
   padding: 0.35rem 0.45rem;
   border-radius: var(--mat-sys-corner-small);
   background: var(--mat-sys-surface-container-low);
+  border: 1px solid transparent;
   font: var(--mat-sys-title-small);
   font-variant-numeric: tabular-nums;
   color: var(--mat-sys-on-surface);
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
-.session-host__confidence-crosstab-cell--alert,
-.session-host__confidence-crosstab-row--alert .session-host__confidence-crosstab-cell:last-child {
-  background: color-mix(in srgb, var(--mat-sys-error-container) 88%, var(--mat-sys-surface));
+$confidence-heat-tones: (
+  risk: var(--mat-sys-error-container),
+  caution: var(--mat-sys-tertiary-container),
+  success: var(--mat-sys-primary-container),
+  neutral: var(--mat-sys-surface-container-high),
+);
+
+@each $tone, $color in $confidence-heat-tones {
+  @for $level from 1 through 3 {
+    $mix: 26% + ($level - 1) * 24%;
+
+    .session-host__confidence-crosstab-cell--heat-#{$tone}-#{$level} {
+      background: color-mix(in srgb, #{$color} $mix, var(--mat-sys-surface-container-low));
+    }
+  }
+}
+
+.session-host__confidence-crosstab-cell--heat-risk-2,
+.session-host__confidence-crosstab-cell--heat-risk-3 {
   color: var(--mat-sys-on-error-container);
   font-weight: 700;
+}
+
+.session-host__confidence-crosstab-cell--heat-caution-2,
+.session-host__confidence-crosstab-cell--heat-caution-3 {
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.session-host__confidence-crosstab-cell--heat-success-2,
+.session-host__confidence-crosstab-cell--heat-success-3 {
+  color: var(--mat-sys-on-primary-container);
+  font-weight: 600;
+}
+
+.session-host__confidence-crosstab-cell--heat-focus {
+  border-color: color-mix(in srgb, var(--mat-sys-error) 42%, var(--mat-sys-outline-variant));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mat-sys-error) 18%, transparent);
+}
+
+.session-host__confidence-crosstab-cell--empty {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+  font-weight: 400;
 }
 
 .session-host__confidence-wrong-options-title {
@@ -4445,10 +4434,6 @@ button.session-host__btn-discussion {
 }
 
 @media (max-width: 599px) {
-  .session-host__confidence-bar-meta {
-    min-width: 3.75rem;
-  }
-
   .session-host__confidence-crosstab {
     gap: 0.6rem;
   }

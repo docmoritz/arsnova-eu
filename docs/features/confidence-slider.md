@@ -31,8 +31,7 @@ Während `ACTIVE` erhalten Teilnehmende **keine** aggregierten Confidence-Daten 
 
 In der Host-Ansicht bei `RESULTS`:
 
-- **Verteilung** der Stufen 1–5 (Balken, beamer-tauglich)
-- **Kreuztabelle** Korrektheit × Sicherheit (niedrig / mittel / hoch)
+- **Matrix** Korrektheit × Sicherheit (niedrig / mitte / hoch) mit semantischer Heatmap
 - Hervorhebung **selbstsicher falsch** (`incorrectHigh`)
 - Bei Auswahlfragen: Aufschlüsselung falscher Optionen mit hoher Sicherheit
 
@@ -45,6 +44,10 @@ Im Session-CSV-Export enthält die Spalte „Details“ bei aktiviertem Sicherhe
 - Hinweis auf selbstsicher falsche Antworten
 - Optional falsche Optionen mit Häufigkeit
 
+## Import aus arsnova.click
+
+`sessionConfig.confidenceSliderEnabled: true` wird beim Quiz-Import auf alle **bewertbaren** Fragen gemappt (`confidenceEnabled: true`). Optionale Session-Labels (`confidenceLabelLow` / `confidenceLabelHigh`) werden übernommen. Details und Grenzen: [`docs/examples/quiz-import/arsnova-click-compat.md`](../examples/quiz-import/arsnova-click-compat.md).
+
 ## Technische Verankerung
 
 | Bereich                  | Ort                                                  |
@@ -56,3 +59,4 @@ Im Session-CSV-Export enthält die Spalte „Details“ bei aktiviertem Sicherhe
 | Editor                   | `apps/frontend/.../quiz-edit/`                       |
 | Teilnehmende             | `apps/frontend/.../session-vote/`                    |
 | Host                     | `apps/frontend/.../session-host/`                    |
+| Click-Import             | `apps/frontend/.../quiz-import-normalizer.ts`        |

@@ -3134,6 +3134,10 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
     expect(host.querySelector('.session-host__confidence-alert')?.textContent).toContain(
       'selbstsicher falsch',
     );
+    expect(host.querySelector('.session-host__confidence-crosstab-cell--heat-risk')).not.toBeNull();
+    expect(
+      host.querySelector('.session-host__confidence-crosstab-cell--heat-focus'),
+    ).not.toBeNull();
     expect(host.querySelector('.session-host__confidence-wrong-options-list')).not.toBeNull();
     fixture.destroy();
   });

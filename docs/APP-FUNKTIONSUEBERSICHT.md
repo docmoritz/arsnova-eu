@@ -225,7 +225,7 @@ Die Sammlung unterstützt:
 
 - JSON-Export eines Quiz
 - JSON-Import eines Quiz
-- arsnova.click-Import inkl. Mapping von `RangedQuestion` auf `NUMERIC_ESTIMATE`
+- arsnova.click-Import inkl. Mapping von `RangedQuestion` auf `NUMERIC_ESTIMATE` und `confidenceSliderEnabled` auf bewertbare Fragen
 - Importnormalisierung mit **Warnungen**, falls eingehende Daten angepasst werden mussten
 - Export im definierten Quiz-Importformat
 

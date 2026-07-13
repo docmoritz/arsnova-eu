@@ -1594,7 +1594,34 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   confidenceTierMidHeading(): string {
-    return $localize`:@@sessionHost.confidenceTierMid:Mittel (3)`;
+    return $localize`:@@sessionHost.confidenceTierMid:Mitte (3)`;
+  }
+
+  confidenceCrossTabTierOrder(): Array<'low' | 'mid' | 'high'> {
+    return ['low', 'mid', 'high'];
+  }
+
+  confidenceCrossTabTierHeading(tier: 'low' | 'mid' | 'high', q: HostCurrentQuestionDTO): string {
+    if (tier === 'low') {
+      return this.confidenceTierLowHeading(q);
+    }
+    if (tier === 'mid') {
+      return this.confidenceTierMidHeading();
+    }
+    return this.confidenceTierHighHeading(q);
+  }
+
+  confidenceCrossTabTierCount(
+    row: { low: number; mid: number; high: number },
+    tier: 'low' | 'mid' | 'high',
+  ): number {
+    if (tier === 'low') {
+      return row.low;
+    }
+    if (tier === 'mid') {
+      return row.mid;
+    }
+    return row.high;
   }
 
   confidenceTierHighHeading(q: HostCurrentQuestionDTO): string {
@@ -1604,29 +1631,97 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   }
 
   confidenceCrossTabRows(result: ConfidenceResultDTO): Array<{
+    correctness: 'correct' | 'incorrect';
     label: string;
     low: number;
     mid: number;
     high: number;
-    highlightHigh: boolean;
   }> {
     const crossTab = result.crossTab;
     return [
       {
+        correctness: 'correct',
         label: $localize`:@@sessionHost.confidenceCrossTabCorrect:Richtig`,
         low: crossTab.correctLow,
         mid: crossTab.correctMid,
         high: crossTab.correctHigh,
-        highlightHigh: false,
       },
       {
+        correctness: 'incorrect',
         label: $localize`:@@sessionHost.confidenceCrossTabIncorrect:Falsch`,
         low: crossTab.incorrectLow,
         mid: crossTab.incorrectMid,
         high: crossTab.incorrectHigh,
-        highlightHigh: crossTab.incorrectHigh > 0,
       },
     ];
+  }
+
+  confidenceCrossTabTotal(result: ConfidenceResultDTO): number {
+    const crossTab = result.crossTab;
+    return (
+      crossTab.correctLow +
+      crossTab.correctMid +
+      crossTab.correctHigh +
+      crossTab.incorrectLow +
+      crossTab.incorrectMid +
+      crossTab.incorrectHigh
+    );
+  }
+
+  confidenceCrossTabCellIntensity(count: number, total: number): 0 | 1 | 2 | 3 {
+    if (count <= 0 || total <= 0) {
+      return 0;
+    }
+    const share = count / total;
+    if (share >= 0.34) {
+      return 3;
+    }
+    if (share >= 0.14) {
+      return 2;
+    }
+    return 1;
+  }
+
+  confidenceCrossTabCellTone(
+    correctness: 'correct' | 'incorrect',
+    tier: 'low' | 'mid' | 'high',
+  ): 'neutral' | 'success' | 'caution' | 'risk' {
+    if (correctness === 'incorrect' && tier === 'high') {
+      return 'risk';
+    }
+    if (correctness === 'incorrect') {
+      return 'caution';
+    }
+    if (correctness === 'correct' && tier === 'high') {
+      return 'success';
+    }
+    return 'neutral';
+  }
+
+  confidenceCrossTabCellHeatClass(
+    count: number,
+    result: ConfidenceResultDTO,
+    correctness: 'correct' | 'incorrect',
+    tier: 'low' | 'mid' | 'high',
+  ): string {
+    const total = this.confidenceCrossTabTotal(result);
+    const intensity = this.confidenceCrossTabCellIntensity(count, total);
+    const tone = this.confidenceCrossTabCellTone(correctness, tier);
+    const classes = ['session-host__confidence-crosstab-cell'];
+    if (intensity > 0) {
+      classes.push(`session-host__confidence-crosstab-cell--heat-${tone}`);
+      classes.push(`session-host__confidence-crosstab-cell--heat-${tone}-${intensity}`);
+    } else {
+      classes.push('session-host__confidence-crosstab-cell--empty');
+    }
+    if (correctness === 'incorrect' && tier === 'high' && count > 0) {
+      classes.push('session-host__confidence-crosstab-cell--heat-focus');
+    }
+    return classes.join(' ');
+  }
+
+  confidenceCrossTabCellAriaLabel(rowLabel: string, tierLabel: string, count: number): string {
+    return $localize`:@@sessionHost.confidenceCrossTabCellAria:${rowLabel}:row: · ${tierLabel}:tier: · ${count}:count:`;
   }
 
   confidenceMisconceptionLabel(count: number): string {

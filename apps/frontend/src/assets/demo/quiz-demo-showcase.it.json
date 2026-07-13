@@ -1,9 +1,9 @@
 {
-  "exportVersion": 26,
-  "exportedAt": "2026-05-24T10:00:00.000Z",
+  "exportVersion": 27,
+  "exportedAt": "2026-07-13T13:00:00.000Z",
   "quiz": {
     "name": "Showcase didattico: demo a squadre",
-    "description": "![Showcase didattico](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase didattico\n\nQuesta demo è pensata per un **uso reale in classe**. Non vuole essere il quiz disciplinare perfetto dall’inizio alla fine. Il suo obiettivo è un altro: mostrare a docenti, formatori e facilitatori come arsnova.eu possa rendere una sessione dal vivo più varia, più visiva e più coinvolgente.\n\nUsala come una **demo breve a squadre, in stile Kahoot, per lezioni dal vivo** per mostrare come puoi:\n- iniziare con un check-in emotivo o sociale\n- usare immagini invece di sole domande testuali\n- inserire formule e notazione scientifica nelle materie STEM\n- provare domande di stima numerica con valore di riferimento, fascia di tolleranza e due turni\n- raccogliere risposte brevi in testo libero che poi riappaiono come nuvola di parole\n- usare bene domande a scelta multipla e scale di valutazione rapide\n- aggiungere energia con timer, squadre, classifica e codici bonus\n- mostrare frammenti di codice in informatica o in corsi tecnici\n\nLe domande sono volutamente varie. L’idea è offrirti spunti pratici per attività rompighiaccio, verifiche rapide della comprensione, reset dell’attenzione e brevi momenti interattivi da riutilizzare in classe.\n\n**Suggerimento per la demo:** Entra nella sessione anche da un secondo dispositivo, idealmente scansionando il QR code con il telefono. Così puoi provare in modo realistico il passaggio tra la vista host e l’esperienza del partecipante.\n\n**Un altro suggerimento:** Poi apri il quiz in modalità modifica per vedere come le domande sono realizzate con Markdown e KaTeX.\n\n**E ancora una cosa:** Se ti servono altri tipi di domanda o funzionalità, puoi richiederli senza problemi. Trovi i contatti nelle note legali.",
+    "description": "![Showcase didattico](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase didattico\n\nQuesta demo è pensata per un **uso reale in classe**. Non vuole essere il quiz disciplinare perfetto dall’inizio alla fine. Il suo obiettivo è un altro: mostrare a docenti, formatori e facilitatori come arsnova.eu possa rendere una sessione dal vivo più varia, più visiva e più coinvolgente.\n\nUsala come una **demo breve a squadre, in stile Kahoot, per lezioni dal vivo** per mostrare come puoi:\n- iniziare con un check-in emotivo o sociale\n- usare immagini invece di sole domande testuali\n- inserire formule e notazione scientifica nelle materie STEM\n- provare domande di stima numerica con valore di riferimento, fascia di tolleranza e due turni\n- raccogliere risposte brevi in testo libero che poi riappaiono come nuvola di parole\n- usare bene domande a scelta multipla e scale di valutazione rapide\n- chiedere il **grado di sicurezza** (1–5) dopo risposte valutabili e individuare risposte **sbagliate ma molto sicure** nella vista host\n- aggiungere energia con timer, squadre, classifica e codici bonus\n- mostrare frammenti di codice in informatica o in corsi tecnici\n\nLe domande sono volutamente varie. L’idea è offrirti spunti pratici per attività rompighiaccio, verifiche rapide della comprensione, reset dell’attenzione e brevi momenti interattivi da riutilizzare in classe.\n\n**Suggerimento per la demo:** Entra nella sessione anche da un secondo dispositivo, idealmente scansionando il QR code con il telefono. Così puoi provare in modo realistico il passaggio tra la vista host e l’esperienza del partecipante.\n\n**Un altro suggerimento:** Poi apri il quiz in modalità modifica per vedere come le domande sono realizzate con Markdown e KaTeX.\n\n**E ancora una cosa:** Se ti servono altri tipi di domanda o funzionalità, puoi richiederli senza problemi. Trovi i contatti nelle note legali.",
     "motifImageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg",
     "showLeaderboard": true,
     "allowCustomNicknames": false,
@@ -65,7 +65,10 @@
         "numericDecimalPlaces": 2,
         "numericMin": 3,
         "numericMax": 3.5,
-        "numericTwoRounds": false
+        "numericTwoRounds": false,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A caso",
+        "confidenceLabelHigh": "Molto sicuro"
       },
       {
         "text": "### Immagine generata dall’IA o foto reale?\n\n> **Uso didattico:** Usalo come avvio visivo, reset dell’attenzione o spunto di discussione a bassa soglia.\n\n![Scena sul tetto](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -108,7 +111,10 @@
             "text": "Usarlo solo per verifiche valutate alla fine di un’unità",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A caso",
+        "confidenceLabelHigh": "Molto sicuro"
       },
       {
         "text": "### Quanti pezzi visibili ha il classico Cubo di Rubik?\n\n> **Uso didattico:** Usalo per creare un momento in stile quiz televisivo, con ritmo, suspense e competizione visibile tra squadre.\n\nLa domanda si riferisce al classico Cubo di Rubik progettato da Ernő Rubik.\n\nSpunto facoltativo: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (in tedesco)](https://www.youtube.com/watch?v=EoINieyz6gE).",
@@ -133,7 +139,10 @@
             "text": "22",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A caso",
+        "confidenceLabelHigh": "Molto sicuro"
       },
       {
         "text": "### In quale linguaggio è scritto questo codice?\n\n> **Uso didattico:** Usalo come rapido prompt di riconoscimento in informatica, nelle attività maker o nelle materie STEM.\n\n```java\nfloat angle = 0;\n\nvoid setup() {\n  size(130, 130, OPENGL);\n}\n\nvoid draw() {\n  background(100);\n\n  translate(60, 40, 0);\n  rotateY(angle);\n  angle += .01;\n\n  beginShape(TRIANGLES);\n  vertex(0, 40, 0);\n  vertex(40, 40, 0);\n  vertex(20, 0, -20);\n\n  vertex(0, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n\n  vertex(40, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n  endShape();\n}\n```",
@@ -190,7 +199,10 @@
         "shortTextToleranceLevel": "medium",
         "shortTextAllowPartialCredit": true,
         "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
+        "shortTextNormalizeWhitespace": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A caso",
+        "confidenceLabelHigh": "Molto sicuro"
       },
       {
         "text": "### In quale anno iniziò la Rivoluzione francese?\n\n> **Uso didattico:** Usalo come domanda di stima in due turni: prima raccogli stime spontanee, poi discutete brevemente e confrontate il secondo turno con valore di riferimento, fascia di tolleranza e punteggio.\n\nCerchiamo l’anno comunemente indicato come inizio della Rivoluzione francese.",
@@ -206,7 +218,10 @@
         "numericInputType": "INTEGER",
         "numericMin": 1500,
         "numericMax": 2000,
-        "numericTwoRounds": true
+        "numericTwoRounds": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A caso",
+        "confidenceLabelHigh": "Molto sicuro"
       },
       {
         "text": "### Quanto è probabile che tu provi presto un quiz live come questo in una tua lezione?\n\n> **Uso didattico:** Usalo come rapido polso della situazione, exit ticket o autovalutazione di fiducia.",

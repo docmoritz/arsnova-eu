@@ -782,6 +782,73 @@ describe('QuizStoreService', () => {
     ).toBe(false);
   });
 
+  it('uebernimmt arsnova.click-Sicherheitsgrad fuer bewertbare Fragen', () => {
+    const service = TestBed.inject(QuizStoreService);
+
+    const imported = service.importQuiz({
+      name: 'Click Confidence',
+      sessionConfig: {
+        confidenceSliderEnabled: true,
+        confidenceLabelLow: 'Geraten',
+        confidenceLabelHigh: 'Sehr sicher',
+      },
+      questionList: [
+        {
+          TYPE: 'SingleChoiceQuestion',
+          questionText: 'Single Choice',
+          answerOptionList: [
+            { answerText: 'A', isCorrect: false },
+            { answerText: 'B', isCorrect: true },
+          ],
+        },
+        {
+          TYPE: 'SurveyQuestion',
+          questionText: 'Umfrage',
+          answerOptionList: [{ answerText: 'Ja' }, { answerText: 'Nein' }],
+        },
+        {
+          TYPE: 'FreeTextQuestion',
+          questionText: 'Kurzantwort',
+          answerOptionList: [{ answerText: 'Paris' }],
+        },
+        {
+          TYPE: 'RangedQuestion',
+          questionText: 'Schaetzfrage',
+          answerOptionList: [],
+          rangeMin: 0,
+          rangeMax: 10,
+          correctValue: 5,
+        },
+      ],
+    });
+
+    expect(imported.quiz.questions[0]).toMatchObject({
+      type: 'SINGLE_CHOICE',
+      confidenceEnabled: true,
+      confidenceLabelLow: 'Geraten',
+      confidenceLabelHigh: 'Sehr sicher',
+    });
+    expect(imported.quiz.questions[1]).toMatchObject({ type: 'SURVEY' });
+    expect(imported.quiz.questions[1]?.confidenceEnabled).not.toBe(true);
+    expect(imported.quiz.questions[2]).toMatchObject({
+      type: 'SHORT_TEXT',
+      confidenceEnabled: true,
+      confidenceLabelLow: 'Geraten',
+      confidenceLabelHigh: 'Sehr sicher',
+    });
+    expect(imported.quiz.questions[3]).toMatchObject({
+      type: 'NUMERIC_ESTIMATE',
+      confidenceEnabled: true,
+      confidenceLabelLow: 'Geraten',
+      confidenceLabelHigh: 'Sehr sicher',
+    });
+    expect(
+      imported.warnings.some((warning) =>
+        warning.message.includes('Sicherheitsgrad wurde für bewertbare Fragen übernommen'),
+      ),
+    ).toBe(true);
+  });
+
   it('importiert arsnova.click-Kurzantworten best effort mit praezisen Warnungen', () => {
     const service = TestBed.inject(QuizStoreService);
 

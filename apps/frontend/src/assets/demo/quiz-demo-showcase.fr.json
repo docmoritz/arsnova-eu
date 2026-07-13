@@ -1,9 +1,9 @@
 {
-  "exportVersion": 26,
-  "exportedAt": "2026-05-24T10:00:00.000Z",
+  "exportVersion": 27,
+  "exportedAt": "2026-07-13T13:00:00.000Z",
   "quiz": {
     "name": "Showcase pédagogique : démo en équipe",
-    "description": "![Showcase pédagogique](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase pédagogique\n\nCette démo est pensée pour un **usage réel en classe**. Elle n’essaie pas d’être un quiz disciplinaire parfait du début à la fin. Son rôle est ailleurs : montrer aux enseignant·es, formateur·rices et animateur·rices comment arsnova.eu peut rendre une séance en direct plus variée, plus visuelle et plus ludique.\n\nUtilise-la comme une courte **démo en équipe, façon Kahoot, pour les cours en direct** afin de montrer comment tu peux :\n- démarrer avec un rapide tour d’humeur ou un check-in social\n- utiliser des images plutôt que des consignes purement textuelles\n- intégrer des formules et de la notation scientifique en STEM\n- tester des questions d’estimation numérique avec valeur de référence, bande de tolérance et deux tours\n- recueillir de courtes réponses en texte libre qui réapparaîtront ensuite sous forme de nuage de mots\n- utiliser à bon escient les choix multiples et les échelles d’évaluation\n- ajouter de l’énergie avec des chronos, des équipes, un classement et des codes bonus\n- afficher des extraits de code en informatique ou dans des cours techniques\n\nLes questions sont volontairement variées. L’idée est de te donner des pistes concrètes pour les échauffements, les vérifications de compréhension, les relances d’attention et les petits moments interactifs réutilisables en classe.\n\n**Conseil pour la démo :** Rejoins la session sur un deuxième appareil, idéalement en scannant le QR code avec ton téléphone. Tu pourras ainsi rejouer de façon réaliste l’aller-retour entre la vue hôte et l’expérience participante.\n\n**Autre conseil :** Ouvre ensuite le quiz en mode édition pour voir comment les questions sont construites avec Markdown et KaTeX.\n\n**Et encore une chose :** Si tu souhaites d’autres formats de questions ou fonctionnalités, n’hésite pas à les demander. Les coordonnées figurent dans les mentions légales.",
+    "description": "![Showcase pédagogique](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase pédagogique\n\nCette démo est pensée pour un **usage réel en classe**. Elle n’essaie pas d’être un quiz disciplinaire parfait du début à la fin. Son rôle est ailleurs : montrer aux enseignant·es, formateur·rices et animateur·rices comment arsnova.eu peut rendre une séance en direct plus variée, plus visuelle et plus ludique.\n\nUtilise-la comme une courte **démo en équipe, façon Kahoot, pour les cours en direct** afin de montrer comment tu peux :\n- démarrer avec un rapide tour d’humeur ou un check-in social\n- utiliser des images plutôt que des consignes purement textuelles\n- intégrer des formules et de la notation scientifique en STEM\n- tester des questions d’estimation numérique avec valeur de référence, bande de tolérance et deux tours\n- recueillir de courtes réponses en texte libre qui réapparaîtront ensuite sous forme de nuage de mots\n- utiliser à bon escient les choix multiples et les échelles d’évaluation\n- demander le **niveau de confiance** (1–5) après les réponses notées et repérer les réponses **fausses mais très sûres** dans la vue hôte\n- ajouter de l’énergie avec des chronos, des équipes, un classement et des codes bonus\n- afficher des extraits de code en informatique ou dans des cours techniques\n\nLes questions sont volontairement variées. L’idée est de te donner des pistes concrètes pour les échauffements, les vérifications de compréhension, les relances d’attention et les petits moments interactifs réutilisables en classe.\n\n**Conseil pour la démo :** Rejoins la session sur un deuxième appareil, idéalement en scannant le QR code avec ton téléphone. Tu pourras ainsi rejouer de façon réaliste l’aller-retour entre la vue hôte et l’expérience participante.\n\n**Autre conseil :** Ouvre ensuite le quiz en mode édition pour voir comment les questions sont construites avec Markdown et KaTeX.\n\n**Et encore une chose :** Si tu souhaites d’autres formats de questions ou fonctionnalités, n’hésite pas à les demander. Les coordonnées figurent dans les mentions légales.",
     "motifImageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg",
     "showLeaderboard": true,
     "allowCustomNicknames": false,
@@ -65,7 +65,10 @@
         "numericDecimalPlaces": 2,
         "numericMin": 3,
         "numericMax": 3.5,
-        "numericTwoRounds": false
+        "numericTwoRounds": false,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### Image IA ou photo réelle ?\n\n> **Usage pédagogique :** Utilise cela comme échauffement visuel, relance d’attention ou amorce de discussion à faible seuil.\n\n![Scène de toit](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -108,7 +111,10 @@
             "text": "L’utiliser uniquement pour des évaluations notées en fin de séquence",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### Combien de pièces visibles possède le Rubik’s Cube classique ?\n\n> **Usage pédagogique :** Utilise cela pour créer un moment façon jeu télévisé, avec rythme, suspense et compétition visible entre équipes.\n\nIl s’agit du Rubik’s Cube classique conçu par Ernő Rubik.\n\nImpulsion facultative : [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst (en allemand)](https://www.youtube.com/watch?v=EoINieyz6gE).",
@@ -133,7 +139,10 @@
             "text": "22",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### Dans quel langage ce code est-il écrit ?\n\n> **Usage pédagogique :** Utilise cela comme question de reconnaissance rapide en informatique, dans des activités maker ou en STEM.\n\n```java\nfloat angle = 0;\n\nvoid setup() {\n  size(130, 130, OPENGL);\n}\n\nvoid draw() {\n  background(100);\n\n  translate(60, 40, 0);\n  rotateY(angle);\n  angle += .01;\n\n  beginShape(TRIANGLES);\n  vertex(0, 40, 0);\n  vertex(40, 40, 0);\n  vertex(20, 0, -20);\n\n  vertex(0, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n\n  vertex(40, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n  endShape();\n}\n```",
@@ -190,7 +199,10 @@
         "shortTextToleranceLevel": "medium",
         "shortTextAllowPartialCredit": true,
         "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
+        "shortTextNormalizeWhitespace": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### En quelle année la Révolution française a-t-elle commencé ?\n\n> **Usage pédagogique :** Utilise cela comme question d’estimation en deux tours : d’abord une estimation spontanée, puis une brève discussion et une comparaison du second tour avec la valeur de référence, la bande de tolérance et le score.\n\nOn cherche l’année généralement retenue comme début de la Révolution française.",
@@ -206,7 +218,10 @@
         "numericInputType": "INTEGER",
         "numericMin": 1500,
         "numericMax": 2000,
-        "numericTwoRounds": true
+        "numericTwoRounds": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### Quelle est la probabilité que tu essaies bientôt un quiz en direct comme celui-ci dans l’un de tes cours ?\n\n> **Usage pédagogique :** Utilise cela comme prise de température, ticket de sortie ou auto-évaluation rapide.",

@@ -16,12 +16,7 @@ import compactFeedbackQuiz from '../../../../../../../docs/examples/quiz-import/
 import arsnovaClickMaximalExport from '../../../../../../../docs/examples/quiz-import/arsnova-click-maximal-export.json';
 
 type QuestionType =
-  | 'SINGLE_CHOICE'
-  | 'MULTIPLE_CHOICE'
-  | 'SURVEY'
-  | 'FREETEXT'
-  | 'RATING'
-  | 'NUMERIC_ESTIMATE';
+  'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | 'SURVEY' | 'FREETEXT' | 'RATING' | 'NUMERIC_ESTIMATE';
 
 interface FixtureExpectation {
   payload: QuizExport;
@@ -186,9 +181,16 @@ describe('Quiz example imports (all formats)', () => {
     expect(imported.name).toBe('Maximal Export Quiz');
     expect(imported.questions).toHaveLength(8);
     expect(imported.questions.map((question) => question.type)).toContain('NUMERIC_ESTIMATE');
+    expect(
+      imported.questions.find((question) => question.text === 'Single Choice')?.confidenceEnabled,
+    ).toBe(true);
+    expect(
+      imported.questions.find((question) => question.text === 'ABCD')?.confidenceEnabled,
+    ).not.toBe(true);
     expect(estimateQuestion).toMatchObject({
       type: 'NUMERIC_ESTIMATE',
       timer: 60,
+      confidenceEnabled: true,
       numericToleranceMode: 'ABSOLUTE_INTERVAL',
       numericReferenceValue: 420,
       numericIntervalLeft: 0,

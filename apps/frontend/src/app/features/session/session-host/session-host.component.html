@@ -2274,13 +2274,14 @@
                                   id="session-host-confidence-heading"
                                   i18n="@@sessionHost.confidenceSectionTitle"
                                 >
-                                  Sicherheitsgrad
+                                  Sicherheit der Antworten
                                 </h3>
                                 <p
                                   class="session-host__confidence-lead"
                                   i18n="@@sessionHost.confidenceSectionLead"
                                 >
-                                  Wie sicher waren Teilnehmende bei ihrer Antwort?
+                                  Richtig oder falsch — und wie sicher? Besonders wichtig: falsch
+                                  trotz hoher Sicherheit.
                                 </p>
                               </div>
                             </div>
@@ -2299,39 +2300,10 @@
                             }
 
                             <div
-                              class="session-host__confidence-distribution"
-                              role="img"
-                              i18n-aria-label="@@sessionHost.confidenceDistributionAria"
-                              aria-label="Verteilung der Sicherheitsstufen"
-                            >
-                              @for (step of confidenceBarRange(); track step) {
-                                @let count = confidenceDistributionCount(confidence, step);
-                                @let pct = confidenceDistributionPercent(confidence, step);
-                                <div class="session-host__confidence-bar">
-                                  <span class="session-host__confidence-bar-label">{{ step }}</span>
-                                  <div class="session-host__confidence-bar-track">
-                                    <div
-                                      class="session-host__confidence-bar-fill"
-                                      [style.width.%]="pct"
-                                    ></div>
-                                  </div>
-                                  <span class="session-host__confidence-bar-meta">
-                                    <span class="session-host__confidence-bar-count">{{
-                                      formatCount(count)
-                                    }}</span>
-                                    <span class="session-host__confidence-bar-pct"
-                                      >{{ pct }}&nbsp;%</span
-                                    >
-                                  </span>
-                                </div>
-                              }
-                            </div>
-
-                            <div
                               class="session-host__confidence-crosstab"
                               role="table"
                               i18n-aria-label="@@sessionHost.confidenceCrossTabAria"
-                              aria-label="Kreuztabelle Korrektheit und Sicherheit"
+                              aria-label="Korrektheit und Sicherheit"
                             >
                               <div
                                 class="session-host__confidence-crosstab-row session-host__confidence-crosstab-row--head"
@@ -2346,39 +2318,36 @@
                                 <span role="columnheader">{{ confidenceTierHighHeading(q) }}</span>
                               </div>
                               @for (row of confidenceCrossTabRows(confidence); track row.label) {
-                                <div
-                                  class="session-host__confidence-crosstab-row"
-                                  role="row"
-                                  [class.session-host__confidence-crosstab-row--alert]="
-                                    row.highlightHigh
-                                  "
-                                >
+                                <div class="session-host__confidence-crosstab-row" role="row">
                                   <span
                                     class="session-host__confidence-crosstab-row-label"
                                     role="rowheader"
                                     >{{ row.label }}</span
                                   >
-                                  <span
-                                    class="session-host__confidence-crosstab-cell"
-                                    role="cell"
-                                    [attr.data-tier]="confidenceTierLowHeading(q)"
-                                    >{{ formatCount(row.low) }}</span
-                                  >
-                                  <span
-                                    class="session-host__confidence-crosstab-cell"
-                                    role="cell"
-                                    [attr.data-tier]="confidenceTierMidHeading()"
-                                    >{{ formatCount(row.mid) }}</span
-                                  >
-                                  <span
-                                    class="session-host__confidence-crosstab-cell"
-                                    role="cell"
-                                    [attr.data-tier]="confidenceTierHighHeading(q)"
-                                    [class.session-host__confidence-crosstab-cell--alert]="
-                                      row.highlightHigh
-                                    "
-                                    >{{ formatCount(row.high) }}</span
-                                  >
+                                  @for (tier of confidenceCrossTabTierOrder(); track tier) {
+                                    @let tierCount = confidenceCrossTabTierCount(row, tier);
+                                    @let tierHeading = confidenceCrossTabTierHeading(tier, q);
+                                    <span
+                                      [class]="
+                                        confidenceCrossTabCellHeatClass(
+                                          tierCount,
+                                          confidence,
+                                          row.correctness,
+                                          tier
+                                        )
+                                      "
+                                      role="cell"
+                                      [attr.data-tier]="tierHeading"
+                                      [attr.aria-label]="
+                                        confidenceCrossTabCellAriaLabel(
+                                          row.label,
+                                          tierHeading,
+                                          tierCount
+                                        )
+                                      "
+                                      >{{ formatCount(tierCount) }}</span
+                                    >
+                                  }
                                 </div>
                               }
                             </div>
