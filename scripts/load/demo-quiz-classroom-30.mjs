@@ -142,16 +142,18 @@ function buildVoteInput(participant, question, round, participantIndex) {
     round,
   };
 
+  let vote;
   switch (question.type) {
     case 'SURVEY':
     case 'SINGLE_CHOICE':
       if (!question.answers?.length) {
         throw new Error(`Frage ${question.order} (${question.type}) hat keine Antwortoptionen.`);
       }
-      return {
+      vote = {
         ...base,
         answerIds: [question.answers[participantIndex % question.answers.length].id],
       };
+      break;
     case 'MULTIPLE_CHOICE': {
       if (!question.answers?.length) {
         throw new Error(`Frage ${question.order} (MULTIPLE_CHOICE) hat keine Antwortoptionen.`);
@@ -160,20 +162,30 @@ function buildVoteInput(participant, question, round, participantIndex) {
         question.answers.length > 1
           ? question.answers.slice(0, -1).map((answer) => answer.id)
           : [question.answers[0].id];
-      return { ...base, answerIds };
+      vote = { ...base, answerIds };
+      break;
     }
     case 'NUMERIC_ESTIMATE':
-      return {
+      vote = {
         ...base,
         numericValue: question.order === 1 ? 3.14 : 1789 + (participantIndex % 5) - 2,
       };
+      break;
     case 'SHORT_TEXT':
-      return { ...base, freeText: 'Peer Instruction' };
+      vote = { ...base, freeText: 'Peer Instruction' };
+      break;
     case 'RATING':
-      return { ...base, ratingValue: 3 + (participantIndex % 3) };
+      vote = { ...base, ratingValue: 3 + (participantIndex % 3) };
+      break;
     default:
       throw new Error(`Unbekannter Fragentyp: ${question.type}`);
   }
+
+  if (question.confidenceEnabled) {
+    vote.confidenceValue = 2 + (participantIndex % 4);
+  }
+
+  return vote;
 }
 
 async function submitVotes(publicTrpc, participants, question, round) {
