@@ -5864,8 +5864,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
             details += ` (Ø ${q.ratingAverage})`;
         } else if (q.numericStats) {
           details = this.numericExportDetails(q.numericStats, q.numericRoundComparison);
-        } else if (q.confidenceResult) {
-          details = this.confidenceExportDetails(q.confidenceResult);
+        }
+
+        if (q.confidenceResult) {
+          const confidenceDetails = this.confidenceExportDetails(q.confidenceResult);
+          details = details ? `${details} | ${confidenceDetails}` : confidenceDetails;
         }
 
         rows.push(

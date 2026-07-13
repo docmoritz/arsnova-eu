@@ -60,7 +60,10 @@ for (const locale of Object.keys(DESCRIPTION_PATCH)) {
     if (!data.quiz.description.includes(patch.anchor)) {
       throw new Error(`Anchor not found in ${locale}: ${patch.anchor}`);
     }
-    data.quiz.description = data.quiz.description.replace(patch.anchor, patch.anchor + patch.insert);
+    data.quiz.description = data.quiz.description.replace(
+      patch.anchor,
+      patch.anchor + patch.insert,
+    );
   }
 
   data.exportVersion = EXPORT_VERSION;

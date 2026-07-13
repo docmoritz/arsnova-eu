@@ -8112,6 +8112,106 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
       });
     });
 
+    it('haengt Sicherheitsgrad-Details an bestehende Antwortverteilung im Ergebnis-CSV an', async () => {
+      let exportedCsv = '';
+      const createObjectURLMock = vi.fn(() => 'blob:test-export');
+      const revokeObjectURLMock = vi.fn();
+      const anchorClickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+      const originalBlob = Blob;
+      class CaptureBlob extends Blob {
+        constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+          super(parts, options);
+          exportedCsv = parts
+            .map((part) => (typeof part === 'string' ? part : String(part)))
+            .join('');
+        }
+      }
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: createObjectURLMock,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: revokeObjectURLMock,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: CaptureBlob,
+      });
+      getExportDataQueryMock.mockResolvedValueOnce({
+        sessionId: defaultSession.id,
+        sessionCode: 'ABC123',
+        quizName: 'Demo Quiz',
+        finishedAt: '2026-03-24T12:30:00.000Z',
+        participantCount: 2,
+        teamMode: false,
+        questions: [
+          {
+            questionOrder: 0,
+            questionTextShort: 'Hauptstadt?',
+            type: 'SINGLE_CHOICE',
+            participantCount: 2,
+            averageScore: 50,
+            optionDistribution: [
+              { text: 'Paris', count: 1, percentage: 50, isCorrect: true },
+              { text: 'London', count: 1, percentage: 50, isCorrect: false },
+            ],
+            confidenceResult: {
+              distribution: { '1': 0, '2': 0, '3': 0, '4': 1, '5': 1 },
+              crossTab: {
+                correctHigh: 1,
+                correctMid: 0,
+                correctLow: 0,
+                incorrectHigh: 1,
+                incorrectMid: 0,
+                incorrectLow: 0,
+              },
+              highConfidenceWrongCount: 1,
+              highConfidenceWrongOptions: [
+                { answerId: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'London', count: 1 },
+              ],
+            },
+          },
+        ],
+        teamLeaderboard: [],
+        bonusTokens: [],
+      });
+
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await fixture.componentInstance.exportSessionResultsCsv();
+      fixture.detectChanges();
+
+      expect(exportedCsv).toContain('Paris: 1 (50%) ✓');
+      expect(exportedCsv).toContain('selbstsicher falsch');
+
+      fixture.destroy();
+      anchorClickSpy.mockRestore();
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalCreateObjectURL,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalRevokeObjectURL,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: originalBlob,
+      });
+    });
+
     it('verwendet für den Ergebnis-Export einen einheitlichen englischen Dateinamen', async () => {
       const createObjectURLMock = vi.fn(() => 'blob:test-export');
       const revokeObjectURLMock = vi.fn();
