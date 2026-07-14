@@ -85,7 +85,10 @@
             "text": "Real photo",
             "isCorrect": true
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Guessing",
+        "confidenceLabelHigh": "Very confident"
       },
       {
         "text": "### Which of these are strong use cases for a quick live check?\n\n> **Teaching move:** Use this to demonstrate multiple choice with more than one correct answer.\n\n_Select all that apply._",

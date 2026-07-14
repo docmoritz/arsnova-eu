@@ -18,6 +18,7 @@ import type {
 import { formatLocaleCount } from '../../../core/locale-number.util';
 import { trpc } from '../../../core/trpc.client';
 import { renderMarkdownWithKatex } from '../../../shared/markdown-katex.util';
+import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-lightbox/markdown-image-lightbox.directive';
 
 export interface LastSessionFeedbackDialogData {
   serverQuizId: string;
@@ -37,6 +38,7 @@ export interface LastSessionFeedbackDialogData {
     MatProgressSpinner,
     DecimalPipe,
     DatePipe,
+    MarkdownImageLightboxDirective,
   ],
   templateUrl: './last-session-feedback-dialog.component.html',
   styleUrls: [

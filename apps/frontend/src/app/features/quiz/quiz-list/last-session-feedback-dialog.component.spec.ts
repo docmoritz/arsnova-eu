@@ -122,6 +122,67 @@ describe('LastSessionFeedbackDialogComponent', () => {
     ).toContain('Hinweis:');
   });
 
+  it('zeigt Markdown-Bilder in der Confidence-Auswertung nach dem Laden', async () => {
+    getLastSessionAnalysisQueryMock.mockResolvedValue({
+      endedAt: '2026-04-15T11:00:00.000Z',
+      participantCount: 5,
+      confidenceSummary: {
+        responseCount: 5,
+        includedQuestionCount: 1,
+        suppressedQuestionCount: 0,
+        priorityQuestionCount: 1,
+        distribution: { '1': 0, '2': 1, '3': 0, '4': 2, '5': 2 },
+        crossTab: {
+          correctHigh: 2,
+          correctMid: 0,
+          correctLow: 1,
+          incorrectHigh: 2,
+          incorrectMid: 0,
+          incorrectLow: 0,
+        },
+        highConfidenceWrongCount: 2,
+        questions: [
+          {
+            questionOrder: 0,
+            questionTextShort:
+              '### KI-Bild oder echtes Foto?\n\n![Beispiel](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)',
+            questionType: 'SINGLE_CHOICE',
+            responseCount: 5,
+            result: {
+              distribution: { '1': 0, '2': 1, '3': 0, '4': 2, '5': 2 },
+              crossTab: {
+                correctHigh: 2,
+                correctMid: 0,
+                correctLow: 1,
+                incorrectHigh: 2,
+                incorrectMid: 0,
+                incorrectLow: 0,
+              },
+              highConfidenceWrongCount: 2,
+            },
+          },
+        ],
+      },
+      feedbackSummary: null,
+    });
+    const fixture = TestBed.createComponent(LastSessionFeedbackDialogComponent);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const image = fixture.nativeElement.querySelector(
+      '.last-session-feedback-dialog__confidence-question-markdown img',
+    ) as HTMLImageElement | null;
+    expect(image).not.toBeNull();
+    expect(image!.dataset.markdownImageLightbox).toBe('true');
+    expect(
+      fixture.nativeElement.querySelector(
+        '.last-session-feedback-dialog__body.markdown-lightbox-enabled',
+      ),
+    ).not.toBeNull();
+  });
+
   it('zeigt den Empty-State wenn kein Feedback vorhanden ist', async () => {
     getLastSessionAnalysisQueryMock.mockResolvedValue(null);
     const fixture = TestBed.createComponent(LastSessionFeedbackDialogComponent);

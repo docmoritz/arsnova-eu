@@ -85,7 +85,10 @@
             "text": "Echtes Foto",
             "isCorrect": true
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### Welche dieser Einsätze eignen sich gut für einen kurzen Live-Check?\n\n> **Unterrichtsidee:** Nutze das, um Multiple Choice mit mehreren richtigen Antworten zu zeigen.\n\n_Mehrere Antworten möglich._",

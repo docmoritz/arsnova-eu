@@ -1385,6 +1385,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
+      if (this.effectiveStatus() === 'FINISHED') {
+        void this.loadFinishedConfidenceSummary();
+      }
+    });
+    effect(() => {
       this.hostDisplayMode.setHostSessionActive(
         this.isRunningSession() || this.isQuizLobbyImmersive(),
       );
@@ -2415,7 +2420,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return false;
     }
     try {
-      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
+      const data = await trpc.session.getSessionExportData.query({ code: this.code.toUpperCase() });
       return this.hasExportableSessionResults(data);
     } catch {
       const participantCount = this.participantsPayload()?.participantCount ?? 0;
@@ -5856,16 +5861,17 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.leaderboardLoading.set(false);
     }
     if (this.effectiveStatus() === 'FINISHED') {
-      this.loadFeedbackSummary();
-      this.loadFinishedConfidenceSummary();
+      void this.loadFeedbackSummary();
     }
   }
 
   async loadFinishedConfidenceSummary(): Promise<void> {
     if (!this.code) return;
     try {
-      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
-      this.finishedConfidenceSummary.set(data.confidenceSummary ?? null);
+      const summary = await trpc.session.getSessionConfidenceSummary.query({
+        code: this.code.toUpperCase(),
+      });
+      this.finishedConfidenceSummary.set(summary);
     } catch {
       this.finishedConfidenceSummary.set(null);
     }
@@ -5890,7 +5896,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
+      const data = await trpc.session.getSessionExportData.query({ code: this.code.toUpperCase() });
       const rows: string[] = [
         $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Konfidenz n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details`,
       ];

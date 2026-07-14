@@ -85,7 +85,10 @@
             "text": "Foto real",
             "isCorrect": true
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "A ojo",
+        "confidenceLabelHigh": "Muy seguro"
       },
       {
         "text": "### ¿Cuáles de estos usos encajan bien con una comprobación rápida en directo?\n\n> **Uso didáctico:** Úsalo para mostrar una pregunta de respuesta múltiple con varias opciones correctas.\n\n_Puede haber varias respuestas correctas._",

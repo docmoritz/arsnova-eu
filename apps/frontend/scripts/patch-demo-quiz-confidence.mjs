@@ -12,7 +12,7 @@ const demoDir = path.join(__dirname, '../src/assets/demo');
 const EXPORT_VERSION = 27;
 const EXPORTED_AT = '2026-07-13T13:00:00.000Z';
 
-const CONFIDENCE_ORDERS = new Set([1, 3, 4, 6, 7]);
+const CONFIDENCE_ORDERS = new Set([1, 2, 3, 4, 6, 7]);
 
 const DESCRIPTION_PATCH = {
   de: {

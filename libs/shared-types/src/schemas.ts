@@ -2213,6 +2213,12 @@ export const SessionConfidenceSummaryDTOSchema = z.object({
 });
 export type SessionConfidenceSummaryDTO = z.infer<typeof SessionConfidenceSummaryDTOSchema>;
 
+/** Aggregierte Confidence-Auswertung einer beendeten Quiz-Session (Story 1.2i). */
+export const GetSessionConfidenceSummaryOutputSchema = SessionConfidenceSummaryDTOSchema.nullable();
+export type GetSessionConfidenceSummaryOutput = z.infer<
+  typeof GetSessionConfidenceSummaryOutputSchema
+>;
+
 /** DTO: Aktuelle Frage für Host-Ansicht (Story 2.3, 3.5) – Text + Antwortoptionen inkl. isCorrect + Timer. */
 export const HostCurrentQuestionDTOSchema = z.object({
   questionId: z.string().uuid(),

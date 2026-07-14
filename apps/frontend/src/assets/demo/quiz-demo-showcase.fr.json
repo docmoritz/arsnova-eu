@@ -85,7 +85,10 @@
             "text": "Photo réelle",
             "isCorrect": true
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Au hasard",
+        "confidenceLabelHigh": "Très sûr"
       },
       {
         "text": "### Lesquels de ces usages conviennent bien à un rapide check en direct ?\n\n> **Usage pédagogique :** Utilise cela pour montrer un choix multiple avec plusieurs bonnes réponses.\n\n_Plusieurs réponses possibles._",

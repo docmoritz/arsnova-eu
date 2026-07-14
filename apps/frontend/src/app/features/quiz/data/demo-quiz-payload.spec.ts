@@ -197,7 +197,7 @@ describe('getDemoQuizSeedFingerprint', () => {
   });
 
   it('aktiviert den Sicherheitsgrad an ausgewählten bewertbaren Showcase-Fragen', () => {
-    const confidenceOrders = new Set([1, 3, 4, 6, 7]);
+    const confidenceOrders = new Set([1, 2, 3, 4, 6, 7]);
 
     for (const locale of ['de', 'en', 'es', 'fr', 'it'] as const) {
       const payload = getDemoQuizPayload(locale) as {

@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { waitForBackend } from './lib/wait-for-backend.mjs';
 import { writeScenarioReport } from './lib/reporting.mjs';
+import { kindergartenNickname } from './lib/kindergarten-nicknames.mjs';
 
 let trpcClientModule;
 try {
@@ -297,7 +298,7 @@ async function run() {
   const participants = await mapLimit(indexes, JOIN_CONCURRENCY, async (index) =>
     publicTrpc.session.join.mutate({
       code,
-      nickname: `Klasse ${String(index + 1).padStart(2, '0')}`,
+      nickname: kindergartenNickname(index),
     }),
   );
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * E2E: Demo-Quiz mit 30 Teilnehmenden und reproduzierbar zufälligen
- * Confidence-Abstimmungen gegen die laufende Dev-Umgebung.
+ * E2E: Demo-Quiz mit 30 Teilnehmenden (Pseudonym-Set Kindergarten) und reproduzierbar
+ * zufälligen Confidence-Abstimmungen gegen die laufende Dev-Umgebung.
  *
  * Run:
  *   npm run e2e:confidence-summary-demo -w @arsnova/frontend
@@ -11,6 +11,10 @@
  *   PRIORITY_QUESTION_COUNT=4 \
  *   E2E_ARTIFACT_DIR=/tmp/arsnova-confidence-e2e \
  *   npm run e2e:confidence-summary-demo -w @arsnova/frontend
+ *
+ * Bestehende Session (Host-Token aus Browser-LocalStorage oder Backend minten):
+ *   SESSION_CODE=XFNHXE HOST_TOKEN=... BASE_URL=http://localhost:4200 PARTICIPANTS=30 \
+ *   npm run e2e:confidence-summary-demo -w @arsnova/frontend
  */
 import { mkdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -18,12 +22,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import { chromium, webkit } from 'playwright';
+import { kindergartenNickname } from '../../../scripts/load/lib/kindergarten-nicknames.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DEMO_QUIZ_JSON = join(__dirname, '../src/assets/demo/quiz-demo-showcase.de.json');
 const DEMO_QUIZ_HISTORY_SCOPE_ID = 'de500000-0000-4000-a000-000000000001';
 const BASE_URL = String(process.env.BASE_URL || 'http://localhost:4200').replace(/\/+$/, '');
 const TRPC_URL = String(process.env.TRPC_URL || `${BASE_URL}/trpc`);
+const SESSION_CODE = String(process.env.SESSION_CODE || '')
+  .trim()
+  .toUpperCase();
+const HOST_TOKEN = String(process.env.HOST_TOKEN || '').trim();
 const PARTICIPANT_COUNT = Math.max(5, Number(process.env.PARTICIPANTS || 30));
 const CONFIDENCE_SEED = Number(process.env.CONFIDENCE_SEED || 20260713) >>> 0;
 const CONFIGURED_PRIORITY_QUESTION_COUNT = process.env.PRIORITY_QUESTION_COUNT
@@ -147,7 +156,7 @@ async function loadDemoQuizUploadPayload() {
     teamAssignment: quiz.teamAssignment ?? 'AUTO',
     teamNames: quiz.teamNames ?? [],
     backgroundMusic: null,
-    nicknameTheme: quiz.nicknameTheme,
+    nicknameTheme: 'KINDERGARTEN',
     bonusTokenCount: quiz.bonusTokenCount ?? null,
     readingPhaseEnabled: quiz.readingPhaseEnabled ?? true,
     preset: 'PLAYFUL',
@@ -537,13 +546,32 @@ async function run() {
   }
   const publicTrpc = createTrpcClient();
   await waitForTrpc(publicTrpc);
-  const { quizId } = await publicTrpc.quiz.upload.mutate(uploadPayload);
-  const { code, hostToken } = await publicTrpc.session.create.mutate({
-    quizId,
-    type: 'QUIZ',
-    qaEnabled: false,
-    quickFeedbackEnabled: false,
-  });
+  let code;
+  let hostToken;
+  let quizId;
+  if (SESSION_CODE) {
+    if (!/^[A-Z0-9]{6}$/.test(SESSION_CODE)) {
+      throw new Error('SESSION_CODE muss genau 6 alphanumerische Zeichen haben.');
+    }
+    if (!HOST_TOKEN) {
+      throw new Error('Für SESSION_CODE ist HOST_TOKEN erforderlich.');
+    }
+    code = SESSION_CODE;
+    hostToken = HOST_TOKEN;
+    const sessionInfo = await publicTrpc.session.getInfo.query({ code });
+    if (sessionInfo.status === 'FINISHED') {
+      throw new Error(`Session ${code} ist bereits abgeschlossen (FINISHED).`);
+    }
+    quizId = null;
+  } else {
+    ({ quizId } = await publicTrpc.quiz.upload.mutate(uploadPayload));
+    ({ code, hostToken } = await publicTrpc.session.create.mutate({
+      quizId,
+      type: 'QUIZ',
+      qaEnabled: false,
+      quickFeedbackEnabled: false,
+    }));
+  }
   const hostTrpc = createTrpcClient(hostToken);
 
   const participants = await mapLimit(
@@ -552,7 +580,7 @@ async function run() {
     (_, index) =>
       publicTrpc.session.join.mutate({
         code,
-        nickname: `Confidence ${String(index + 1).padStart(2, '0')}`,
+        nickname: kindergartenNickname(index),
       }),
   );
 
@@ -586,20 +614,25 @@ async function run() {
     expectedPriorityQuestions,
   );
 
-  const history = await publicTrpc.session.getLastSessionAnalysisForQuiz.query({
-    quizId,
-    accessProof: DEMO_QUIZ_HISTORY_SCOPE_ID,
-  });
-  if (!history) {
-    throw new Error('Letzte Auswertung ist über die Quiz-Historie nicht abrufbar.');
+  const history =
+    quizId === null
+      ? null
+      : await publicTrpc.session.getLastSessionAnalysisForQuiz.query({
+          quizId,
+          accessProof: DEMO_QUIZ_HISTORY_SCOPE_ID,
+        });
+  if (quizId !== null) {
+    if (!history) {
+      throw new Error('Letzte Auswertung ist über die Quiz-Historie nicht abrufbar.');
+    }
+    assertEqual(history.participantCount, PARTICIPANT_COUNT, 'Teilnehmende in der Historie');
+    validateSummary(
+      history.confidenceSummary,
+      expectedConfidenceQuestions,
+      expectedPriorityQuestions,
+    );
+    validateFeedbackSummary(history.feedbackSummary);
   }
-  assertEqual(history.participantCount, PARTICIPANT_COUNT, 'Teilnehmende in der Historie');
-  validateSummary(
-    history.confidenceSummary,
-    expectedConfidenceQuestions,
-    expectedPriorityQuestions,
-  );
-  validateFeedbackSummary(history.feedbackSummary);
 
   const expectedResponses = expectedConfidenceQuestions * PARTICIPANT_COUNT;
   await verifyHostUiAndCsv(code, hostToken, expectedResponses, expectedPriorityQuestions);

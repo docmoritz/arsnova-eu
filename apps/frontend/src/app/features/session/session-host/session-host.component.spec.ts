@@ -27,6 +27,7 @@ const {
   getLeaderboardQueryMock,
   getTeamLeaderboardQueryMock,
   getExportDataQueryMock,
+  getSessionConfidenceSummaryQueryMock,
   wordCloudAnalyzeQueryMock,
   qaListQueryMock,
   qaModerateMutateMock,
@@ -67,6 +68,7 @@ const {
   getLeaderboardQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
   getExportDataQueryMock: vi.fn(),
+  getSessionConfidenceSummaryQueryMock: vi.fn(),
   wordCloudAnalyzeQueryMock: vi.fn(),
   qaListQueryMock: vi.fn(),
   qaModerateMutateMock: vi.fn(),
@@ -113,6 +115,8 @@ vi.mock('../../../core/trpc.client', () => ({
       getLeaderboard: { query: getLeaderboardQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
       getExportData: { query: getExportDataQueryMock },
+      getSessionExportData: { query: getExportDataQueryMock },
+      getSessionConfidenceSummary: { query: getSessionConfidenceSummaryQueryMock },
       nextQuestion: { mutate: nextQuestionMutateMock },
       revealAnswers: { mutate: revealAnswersMutateMock },
       revealResults: { mutate: revealResultsMutateMock },
@@ -472,6 +476,7 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
       teamLeaderboard: [],
       bonusTokens: [],
     });
+    getSessionConfidenceSummaryQueryMock.mockResolvedValue(null);
   });
 
   const setup = (extraProviders: Provider[] = []) => {
