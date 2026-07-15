@@ -18,6 +18,12 @@ const steps = [
     description:
       'Teilnehmende stimmen ab, stellen Fragen und priorisieren gemeinsam. Host und Presenter zeigen Quiz, Q&A-Fragenwand, Wortwolke, Lesephase, Countdown, zweite Runde und Ergebnisansicht in einem Flow.',
   },
+  {
+    number: '04',
+    title: 'Nachbereiten und exportieren',
+    description:
+      'Nach Session-Ende steht der Ergebnisbericht (PDF) bereit — mit Lernstand, Selbsteinschätzung und vollständigen Fragentexten. In der Quiz-Sammlung findest du Nachbesprechung und PDF für den letzten Durchlauf; CSV für Excel unter „Mehr“.',
+  },
 ];
 ---
 
@@ -33,7 +39,7 @@ const steps = [
       </p>
     </div>
 
-    <ol class="mt-12 grid gap-6 lg:grid-cols-3">
+    <ol class="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
       {steps.map((step) => (
         <li class="rounded-3xl border border-slate-700 bg-slate-900/70 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.28)]">
           <div class="flex items-center justify-between gap-4">
