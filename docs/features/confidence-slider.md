@@ -56,15 +56,29 @@ Frage-Aggregate zusammen:
 - Runde 2 ersetzt bei Peer Instruction Runde 1; sonst wird Runde 1 verwendet
 
 Fragen mit weniger als fünf gültigen Selbsteinschätzungs-Antworten werden in der Abschlussauswertung und
-im Export nicht einzeln ausgewiesen. Die Quiz-Sammlung bietet auf der Quizkarte über
-**„Letzte Auswertung“** den letzten beendeten Durchlauf an. Der bestehende Quiz-Historien-
-Besitznachweis schützt diesen Zugriff; Session-ID und Session-Code werden dort nicht ausgeliefert.
+im Export nicht einzeln ausgewiesen. Die Quiz-Sammlung bietet auf der Quizkarte für den letzten
+beendeten Durchlauf **Nachbesprechung** (kompakter Dialog) und **Ergebnisbericht (PDF)**. Der
+bestehende Quiz-Historien-Besitznachweis schützt diesen Zugriff; Session-ID und Session-Code werden
+dort nicht ausgeliefert.
 
 ## Export (Story 4.7)
 
-Bei **Peer Instruction** und **Zwei-Runden-Schätzfragen** gilt die **Effective-Vote-Regel** (ADR-0028): Existieren Runde-2-Votes, fließen in Export und Abschlussauswertung nur diese ein; sonst Runde 1. Der Session-Export liefert pro Frage `aggregationRound` sowie optional `round1ParticipantCount` und `round2ParticipantCount`, wenn Runde 2 verwendet wird. Das CSV enthält die Spalte **Aggregationsrunde** und einen Kontext in **Details** (z. B. „Runde 1: 28 Stimmen · Aggregiert: Runde 2 mit 25 Stimmen“, wenn nicht alle erneut abstimmen).
+Bei **Peer Instruction** und **Zwei-Runden-Schätzfragen** gilt die **Effective-Vote-Regel** (ADR-0028): Existieren Runde-2-Votes, fließen in Export und Abschlussauswertung nur diese ein; sonst Runde 1. Der Session-Export liefert pro Frage `aggregationRound` sowie optional `round1ParticipantCount` und `round2ParticipantCount`, wenn Runde 2 verwendet wird.
 
-Im Session-CSV-Export enthält die Spalte „Details“ bei aktivierter Selbsteinschätzung weiterhin:
+### Ergebnisbericht (PDF) — primär
+
+Der **Ergebnisbericht (PDF)** ist das empfohlene Format für Nachbereitung und Archivierung. Er enthält
+den Block **„Lernstand und Selbsteinschätzung“** mit Heatmap, Verteilungsbalken und priorisierten
+Fragen für die Nachbesprechung. Details zur Pipeline und UI: [`session-export-pdf.md`](session-export-pdf.md).
+
+- **Host-Abschlussansicht:** primärer Button **Ergebnisbericht (PDF)**; CSV unter **Mehr → Für Excel exportieren**
+- **Quiz-Sammlung:** **Ergebnisbericht (PDF)** neben **Nachbesprechung** auf der Quizkarte
+
+### CSV — sekundär (Excel)
+
+Im Session-CSV-Export enthält die Spalte **Aggregationsrunde** und ein Kontextfeld in **Details**
+(z. B. „Runde 1: 28 Stimmen · Aggregiert: Runde 2 mit 25 Stimmen“, wenn nicht alle erneut abstimmen).
+Bei aktivierter Selbsteinschätzung enthält **Details** weiterhin:
 
 - Verteilung `1:… 2:… …`
 - Kreuzwerte richtig/hoch und falsch/hoch

@@ -126,7 +126,7 @@ Da beide Dateien als Living Documentation dienen, sollte architecture-overview.m
 - Cleanup (4.2) – Redis-Cleanup in Dozent-Sequenz ✓
 - Ergebnis-Visualisierung (4.4) – ResultChartComponent, WordcloudComponent, RatingHistogramComponent, NumericEstimateHistogram/Stats ✓
 - Bonus-Token (4.6) – BonusTokenListComponent, BonusTokenDisplay, Token-Generierung in Sequenzdiagramm ✓
-- Ergebnis-Export für Dozenten (4.7) – optional in Dozent-Sequenz (diagrams.md §4.3) als `session.getExportData` / SessionExportDTO abgebildet ✓
+- Ergebnis-Export für Dozenten (4.7) – optional in Dozent-Sequenz (diagrams.md §4.3) als `session.getExportData` / `getSessionExportPdf` / SessionExportDTO sowie Quiz-Sammlung via `getLastSessionExportPdfForQuiz` abgebildet ✓
 
 ### Epic 5: Gamification
 

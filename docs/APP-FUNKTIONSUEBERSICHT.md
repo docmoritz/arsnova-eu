@@ -643,7 +643,8 @@ Unterstützt werden:
 
 Die App unterstützt mehrere Exportarten:
 
-- CSV-Export der Sessionergebnisse
+- **Ergebnisbericht (PDF)** der Sessionergebnisse (primär; inkl. Lernstand/Selbsteinschätzung, Fragentexte, Diagramme)
+- CSV-Export der Sessionergebnisse (sekundär; tabellarische Rohdaten für Excel)
 - aggregierter, hostseitiger Session-Export mit anonymisierten bzw. zusammengefassten Ergebnissen
 - Bonuscode-Export
 - Admin-Export als Behörden-PDF oder JSON

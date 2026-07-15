@@ -89,7 +89,8 @@ describe('HelpComponent', () => {
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Selbsteinschätzung bei bewertbaren Fragen');
     expect(text).toContain('selbstsicher falsch');
-    expect(text).toContain('Lernstand und Selbsteinschätzung');
+    expect(text).toContain('Ergebnisbericht (PDF)');
+    expect(text).toContain('Nachbesprechung');
     expect(text).toContain('Progressive Disclosure');
   });
 });

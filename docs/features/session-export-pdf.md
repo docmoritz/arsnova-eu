@@ -2,9 +2,16 @@
 
 Phase-1- und Phase-2-Export für Lehrende nach Session-Ende (`FINISHED`).
 
+> **Siehe auch:** [Selbsteinschätzung](confidence-slider.md) (Lernstand, Heatmap, Prioritäten im Bericht)
+
 ## Datenquelle
 
-Der PDF-Bericht nutzt **`SessionExportDTO`** via `getExportData` (Host-Token) — dieselbe Quelle wie der CSV-Export, kein CSV-Parsing.
+Der PDF-Bericht nutzt **`SessionExportDTO`** — dieselbe aggregierte Quelle wie der CSV-Export, kein CSV-Parsing.
+
+| Kontext                           | tRPC                                                                | Berechtigung                 |
+| --------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
+| Host direkt nach Session-Ende     | `getExportData`, `getSessionExportPdf`                              | Host-Token (`x-host-token`)  |
+| Quiz-Sammlung (letzter Durchlauf) | `getLastSessionExportDataForQuiz`, `getLastSessionExportPdfForQuiz` | Quiz-Historien-`accessProof` |
 
 Phase 2 ergänzt:
 
@@ -13,12 +20,22 @@ Phase 2 ergänzt:
 
 ## UI
 
-In der Host-Abschlussansicht: **Ergebnis als PDF** neben **Ergebnis als CSV**.
+### Host-Abschlussansicht (`FINISHED`)
 
-1. **Primär:** Server-PDF via `getSessionExportPdf` (PDFKit) — direkter Download
-2. **Fallback:** Druckoptimiertes HTML im Browser (Print-Dialog → „Als PDF speichern“)
+- **Primär:** **Ergebnisbericht (PDF)** — Server-PDF via `getSessionExportPdf` (Playwright)
+- **Sekundär:** **Vorschau** — druckoptimiertes HTML im Browser (Print-Dialog → „Als PDF speichern“)
+- **Unter „Mehr“:** **Für Excel exportieren** — CSV mit tabellarischen Rohdaten (weniger Kontext als der PDF-Bericht)
 
-## Struktur
+### Quiz-Sammlung (Quizkarte)
+
+Nach mindestens einem beendeten Live-Durchlauf:
+
+- **Nachbesprechung** — kompakter Dialog mit Lernstand, Prioritäten und Teilnehmer-Feedback
+- **Ergebnisbericht (PDF)** — derselbe Bericht wie in der Host-Ansicht, aus der Session-Historie
+
+Beide Aktionen nutzen dasselbe Berechtigungsmodell wie Bonus-Codes (Besitznachweis über `accessProof`); Session-ID und Session-Code werden in der Sammlung nicht angezeigt.
+
+## Berichtsstruktur
 
 1. Deckblatt (Quiz, Code, Datum, Teilnehmende, Datenschutzhinweis)
 2. Feedback der Teilnehmenden (falls vorhanden)
@@ -27,20 +44,22 @@ In der Host-Abschlussansicht: **Ergebnis als PDF** neben **Ergebnis als CSV**.
    - MC/SC-Balkendiagrammen (korrekte Option grün)
    - NUMERIC-Histogrammen inkl. R1/R2-Vergleich
    - Confidence-Heatmap und Selbsteinschätzungs-Balken
-   - PI-Rundenkontext
+   - PI-Rundenkontext (`aggregationRound`, Stimmenzahlen)
 5. Optional: Team-Wertung, Bonus-Codes
 
 ## Technik
 
-| Schicht                                 | Datei                                                       |
-| --------------------------------------- | ----------------------------------------------------------- |
-| HTML-Builder                            | `apps/frontend/src/app/core/session-results-report.util.ts` |
-| Charts (Heatmap, Histogramm, Sterne)    | `session-results-report-charts.util.ts`                     |
-| Print-CSS (A4, Seitenumbruch pro Frage) | `session-results-report-styles.ts`                          |
-| Server-PDF (Playwright/HTML)            | `apps/backend/src/lib/session-results-report-pdf.ts`        |
-| Shared Report-Builder                   | `libs/session-export-report/`                               |
-| tRPC                                    | `session.getSessionExportPdf`, `session.getExportData`      |
-| i18n-Labels                             | `session-results-report-labels.ts`                          |
+Pipeline: `SessionExportDTO` → `buildSessionResultsReportHtml()` → Playwright `page.pdf()`. Frontend-Vorschau und Backend-PDF teilen sich die Lib `@arsnova/session-export-report`.
+
+| Schicht                                                | Ort                                                                                                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared Report-Builder (HTML, Charts, Print-CSS)        | `libs/session-export-report/`                                                                                                               |
+| Frontend-Labels (Angular `$localize`)                  | `apps/frontend/src/app/core/session-results-report-labels.ts`                                                                               |
+| Frontend-Export-Service (Download, Vorschau, Fallback) | `apps/frontend/src/app/core/session-results-export.service.ts`                                                                              |
+| Server-PDF (Playwright-Wrapper)                        | `apps/backend/src/lib/session-results-report-pdf.ts`                                                                                        |
+| tRPC                                                   | `session.getSessionExportPdf`, `session.getExportData`, `session.getLastSessionExportPdfForQuiz`, `session.getLastSessionExportDataForQuiz` |
+
+Vor Tests und Backend-Build muss `@arsnova/session-export-report` gebaut sein (`npm run build:libs`).
 
 ## Demo-PDF erzeugen
 
@@ -56,7 +75,6 @@ Optional mit bestehender Session:
 SESSION_CODE=ABC123 npm run generate:session-pdf-demo -w @arsnova/frontend
 ```
 
-Für relative Demo-Bilder (`/assets/…`) werden Bilder beim PDF-Export als Data-URLs eingebettet
-(lokal aus `apps/frontend/src/assets` bzw. per HTTPS-Fetch).
+Für relative Demo-Bilder (`/assets/…`) werden Bilder beim PDF-Export als Data-URLs eingebettet (lokal aus `apps/frontend/src/assets` bzw. per HTTPS-Fetch).
 
 Siehe Issue #76.

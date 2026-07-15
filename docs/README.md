@@ -54,5 +54,6 @@ Zentrale **Landkarte** für alles unter `docs/`. Für Setup und erste Schritte z
 - **Projektglossar:** [GLOSSAR.md](GLOSSAR.md)
 - **Screenshot-Übersicht:** [screenshots/README.md](screenshots/README.md)
 - **Selbsteinschätzung (Story 1.2i):** [features/confidence-slider.md](features/confidence-slider.md)
+- **Session-Ergebnisbericht (PDF, Story 4.7):** [features/session-export-pdf.md](features/session-export-pdf.md)
 
-**Stand dieser Landkarte:** 2026-07-13 — abgeglichen mit Root-[README](../README.md), [Backlog.md](../Backlog.md), Architektur-Handbuch, Glossar, Onboarding, lokalem Gesamt-/QA-Nachlauf und den aktuellen Praktikumsdokumenten.
+**Stand dieser Landkarte:** 2026-07-15 — abgeglichen mit Root-[README](../README.md), [Backlog.md](../Backlog.md), Architektur-Handbuch, Glossar, Onboarding, lokalem Gesamt-/QA-Nachlauf und den aktuellen Praktikumsdokumenten.
