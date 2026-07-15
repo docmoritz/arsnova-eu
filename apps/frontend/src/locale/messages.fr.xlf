@@ -14177,7 +14177,7 @@
       </trans-unit>
       <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
         <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details</source>
-        <target>N° question;Texte;Type;Participants;Ø points;Autoévaluation n;Consolidé;Risque de fausse conception;Fragile;Lacune détectée;Indécis;Signal le plus fort;Détails</target>
+        <target>N° question;Texte;Type;Participants;Cycle d&apos;agrégation;Ø points;Autoévaluation n;Consolidé;Risque de fausse conception;Fragile;Lacune détectée;Indécis;Signal le plus fort;Détails</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">5939</context>
