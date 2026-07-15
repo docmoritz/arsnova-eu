@@ -4,7 +4,7 @@ import { getDemoQuizPayload, getDemoQuizSeedFingerprint } from './demo-quiz-payl
 describe('getDemoQuizSeedFingerprint', () => {
   it('ändert sich mit exportVersion, Motiv-URL und komplettem Payload (Demo-Reseed)', () => {
     const de = getDemoQuizSeedFingerprint('de');
-    expect(de).toMatch(/^de\|26\|/);
+    expect(de).toMatch(/^de\|27\|/);
     expect(de).toContain(
       'https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg',
     );
@@ -60,7 +60,7 @@ describe('getDemoQuizSeedFingerprint', () => {
         (question) => question.type === 'NUMERIC_ESTIMATE' && question.text?.includes(headline),
       );
 
-      expect(payload.exportVersion).toBe(26);
+      expect(payload.exportVersion).toBe(27);
       expect(payload.quiz?.questions).toHaveLength(9);
       expect(estimateQuestion?.text).toContain(headline);
       expect(estimateQuestion).toMatchObject({
@@ -194,6 +194,44 @@ describe('getDemoQuizSeedFingerprint', () => {
         expect.objectContaining({ text: 'Mazur Methode', isCorrect: true }),
       ]),
     );
+  });
+
+  it('aktiviert den Sicherheitsgrad an ausgewählten bewertbaren Showcase-Fragen', () => {
+    const confidenceOrders = new Set([1, 2, 3, 4, 6, 7]);
+
+    for (const locale of ['de', 'en', 'es', 'fr', 'it'] as const) {
+      const payload = getDemoQuizPayload(locale) as {
+        quiz?: {
+          questions?: Array<{
+            order?: number;
+            type?: string;
+            confidenceEnabled?: boolean;
+            confidenceLabelLow?: string;
+            confidenceLabelHigh?: string;
+          }>;
+        };
+      };
+
+      for (const question of payload.quiz?.questions ?? []) {
+        if (confidenceOrders.has(question.order ?? -1)) {
+          expect(question.confidenceEnabled).toBe(true);
+          expect(question.confidenceLabelLow?.length).toBeGreaterThan(0);
+          expect(question.confidenceLabelHigh?.length).toBeGreaterThan(0);
+        } else if (
+          question.type === 'SINGLE_CHOICE' ||
+          question.type === 'MULTIPLE_CHOICE' ||
+          question.type === 'SHORT_TEXT' ||
+          question.type === 'NUMERIC_ESTIMATE'
+        ) {
+          expect(question.confidenceEnabled).not.toBe(true);
+        }
+      }
+    }
+
+    const deDescription = (getDemoQuizPayload('de') as { quiz?: { description?: string } }).quiz
+      ?.description;
+    expect(deDescription).toContain('Selbsteinschätzung');
+    expect(deDescription).toContain('selbstsicher falsche');
   });
 
   it('enthält keine Schallgeschwindigkeits-Frage mehr', () => {

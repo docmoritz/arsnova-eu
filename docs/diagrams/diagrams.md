@@ -671,10 +671,17 @@ sequenceDiagram
     FE->>BE: session.getBonusTokens
     BE-->>FE: BonusTokenListDTO
     FE->>D: Token-Tabelle, optional CSV-Export
-    opt Story 4.7: Ergebnis-Export
-        FE->>BE: session.getExportData (oder clientseitig aus gecachten Daten)
+    opt Story 4.7: Ergebnis-Export (Host)
+        FE->>BE: session.getExportData (Host-Token)
         BE-->>FE: SessionExportDTO (aggregiert, anonym)
-        FE->>D: CSV/PDF-Download
+        FE->>BE: session.getSessionExportPdf (Playwright)
+        BE-->>FE: PDF base64
+        FE->>D: Ergebnisbericht (PDF), optional Vorschau/CSV unter Mehr
+    end
+    opt Quiz-Sammlung: letzter Durchlauf
+        FE->>BE: getLastSessionExportPdfForQuiz (accessProof)
+        BE-->>FE: PDF base64 oder SessionExportDTO
+        FE->>D: Nachbesprechung-Dialog / Ergebnisbericht (PDF)
     end
 ```
 

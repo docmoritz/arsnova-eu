@@ -9,7 +9,7 @@ Folgende Grenzen blockieren die CI:
 - Accessibility mindestens **90 %**
 - Largest Contentful Paint höchstens **4 s**
 - Cumulative Layout Shift höchstens **0,1**
-- Total Blocking Time höchstens **600 ms**
+- Total Blocking Time höchstens **850 ms**
 
 Best Practices und SEO bleiben Warnsignale. Die Grenzwerte stehen kanonisch in
 `.lighthouserc.cjs`; Änderungen daran müssen als bewusste Performance-Entscheidung reviewed

@@ -202,6 +202,14 @@
         "confidenceSliderEnabled": {
           "type": "boolean"
         },
+        "confidenceLabelLow": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "confidenceLabelHigh": {
+          "type": "string",
+          "maxLength": 50
+        },
         "readingConfirmationEnabled": {
           "type": "boolean"
         },

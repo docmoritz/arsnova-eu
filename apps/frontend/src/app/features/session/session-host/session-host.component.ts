@@ -76,10 +76,14 @@ import {
   createQuizHistoryAccessProof,
   resolveNumericEstimateToleranceMode,
   resolveNumericTolerance,
+  CONFIDENCE_SCALE_MAX,
+  CONFIDENCE_SCALE_MIN,
 } from '@arsnova/shared-types';
 import type {
   AnalyzeWordCloudInput,
   AnalyzeWordCloudOutput,
+  ConfidenceResultDTO,
+  ConfidenceQuestionSummaryDTO,
   HostCurrentQuestionDTO,
   HostVoteProgressDTO,
   LeaderboardEntryDTO,
@@ -91,6 +95,7 @@ import type {
   QuickFeedbackResult,
   SessionChannelsDTO,
   SessionFeedbackSummary,
+  SessionConfidenceSummaryDTO,
   SessionInfoDTO,
   SessionParticipantsPayload,
   TeamAssignment,
@@ -123,6 +128,14 @@ import {
   buildQaQuestionsCsvFilename,
   buildSessionResultsCsvFilename,
 } from '../../../core/export-filename.util';
+import { stripMarkdownToPlainText } from '../../../core/markdown-plain-text.util';
+import {
+  printSessionResultsReport,
+  openSessionResultsReportPreview,
+} from '../../../core/session-results-report-print.util';
+import { getSessionResultsReportLabels } from '../../../core/session-results-report-labels';
+import { buildSessionResultsReportHtml } from '../../../core/session-results-report.util';
+import { inlineExportImagesInHtml } from '@arsnova/session-export-report';
 import {
   replaceEmojiShortcodes,
   edgeEmojiMarkerPosition,
@@ -523,6 +536,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
   };
   readonly feedbackSummary = signal<SessionFeedbackSummary | null>(null);
+  readonly finishedConfidenceSummary = signal<SessionConfidenceSummaryDTO | null>(null);
   /** Aktuelle Frage für Host (Text + Antwortoptionen), null wenn keine Frage aktiv. */
   readonly currentQuestionForHost = signal<HostCurrentQuestionDTO | null>(null);
   readonly hostVoteProgress = signal<HostVoteProgressDTO | null>(null);
@@ -1379,6 +1393,11 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
     });
     effect(() => {
+      if (this.effectiveStatus() === 'FINISHED') {
+        void this.loadFinishedConfidenceSummary();
+      }
+    });
+    effect(() => {
       this.hostDisplayMode.setHostSessionActive(
         this.isRunningSession() || this.isQuizLobbyImmersive(),
       );
@@ -1556,6 +1575,265 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const range: number[] = [];
     for (let i = min; i <= max; i++) range.push(i);
     return range;
+  }
+
+  confidenceBarRange(): number[] {
+    const range: number[] = [];
+    for (let value = CONFIDENCE_SCALE_MIN; value <= CONFIDENCE_SCALE_MAX; value += 1) {
+      range.push(value);
+    }
+    return range;
+  }
+
+  confidenceDistributionTotal(result: ConfidenceResultDTO): number {
+    return Object.values(result.distribution).reduce((sum, count) => sum + count, 0);
+  }
+
+  confidenceDistributionPercent(result: ConfidenceResultDTO, step: number): number {
+    const total = this.confidenceDistributionTotal(result);
+    if (total <= 0) {
+      return 0;
+    }
+    const key = String(step) as keyof ConfidenceResultDTO['distribution'];
+    return Math.round((result.distribution[key] / total) * 100);
+  }
+
+  confidenceDistributionCount(result: ConfidenceResultDTO, step: number): number {
+    const key = String(step) as keyof ConfidenceResultDTO['distribution'];
+    return result.distribution[key];
+  }
+
+  confidenceTierLowHeading(q: HostCurrentQuestionDTO): string {
+    return q.confidenceLabelLow
+      ? $localize`:@@sessionHost.confidenceTierLowWithLabel:Niedrig · ${q.confidenceLabelLow}:label:`
+      : $localize`:@@sessionHost.confidenceTierLow:Niedrig (1–2)`;
+  }
+
+  confidenceTierMidHeading(): string {
+    return $localize`:@@sessionHost.confidenceTierMid:Mitte (3)`;
+  }
+
+  confidenceCrossTabTierOrder(): Array<'low' | 'mid' | 'high'> {
+    return ['low', 'mid', 'high'];
+  }
+
+  confidenceCrossTabTierHeading(tier: 'low' | 'mid' | 'high', q: HostCurrentQuestionDTO): string {
+    if (tier === 'low') {
+      return this.confidenceTierLowHeading(q);
+    }
+    if (tier === 'mid') {
+      return this.confidenceTierMidHeading();
+    }
+    return this.confidenceTierHighHeading(q);
+  }
+
+  confidenceCrossTabTierCount(
+    row: { low: number; mid: number; high: number },
+    tier: 'low' | 'mid' | 'high',
+  ): number {
+    if (tier === 'low') {
+      return row.low;
+    }
+    if (tier === 'mid') {
+      return row.mid;
+    }
+    return row.high;
+  }
+
+  confidenceTierHighHeading(q: HostCurrentQuestionDTO): string {
+    return q.confidenceLabelHigh
+      ? $localize`:@@sessionHost.confidenceTierHighWithLabel:Hoch · ${q.confidenceLabelHigh}:label:`
+      : $localize`:@@sessionHost.confidenceTierHigh:Hoch (4–5)`;
+  }
+
+  confidenceCrossTabRows(result: ConfidenceResultDTO): Array<{
+    correctness: 'correct' | 'incorrect';
+    label: string;
+    low: number;
+    mid: number;
+    high: number;
+  }> {
+    const crossTab = result.crossTab;
+    return [
+      {
+        correctness: 'correct',
+        label: $localize`:@@sessionHost.confidenceCrossTabCorrect:Richtig`,
+        low: crossTab.correctLow,
+        mid: crossTab.correctMid,
+        high: crossTab.correctHigh,
+      },
+      {
+        correctness: 'incorrect',
+        label: $localize`:@@sessionHost.confidenceCrossTabIncorrect:Falsch`,
+        low: crossTab.incorrectLow,
+        mid: crossTab.incorrectMid,
+        high: crossTab.incorrectHigh,
+      },
+    ];
+  }
+
+  confidenceCrossTabTotal(result: ConfidenceResultDTO): number {
+    const crossTab = result.crossTab;
+    return (
+      crossTab.correctLow +
+      crossTab.correctMid +
+      crossTab.correctHigh +
+      crossTab.incorrectLow +
+      crossTab.incorrectMid +
+      crossTab.incorrectHigh
+    );
+  }
+
+  finishedConfidencePercent(count: number, total: number): number {
+    return total > 0 ? Math.round((count / total) * 100) : 0;
+  }
+
+  finishedConfidenceIncorrectCount(question: ConfidenceQuestionSummaryDTO): number {
+    const crossTab = question.result.crossTab;
+    return crossTab.incorrectHigh + crossTab.incorrectMid + crossTab.incorrectLow;
+  }
+
+  finishedConfidenceTopWrongOption(question: ConfidenceQuestionSummaryDTO): string | null {
+    return question.result.highConfidenceWrongOptions?.[0]?.text ?? null;
+  }
+
+  confidenceCrossTabCellIntensity(count: number, total: number): 0 | 1 | 2 | 3 {
+    if (count <= 0 || total <= 0) {
+      return 0;
+    }
+    const share = count / total;
+    if (share >= 0.34) {
+      return 3;
+    }
+    if (share >= 0.14) {
+      return 2;
+    }
+    return 1;
+  }
+
+  confidenceCrossTabCellTone(
+    correctness: 'correct' | 'incorrect',
+    tier: 'low' | 'mid' | 'high',
+  ): 'neutral' | 'success' | 'caution' | 'risk' {
+    if (correctness === 'incorrect' && tier === 'high') {
+      return 'risk';
+    }
+    if (correctness === 'incorrect') {
+      return 'caution';
+    }
+    if (correctness === 'correct' && tier === 'high') {
+      return 'success';
+    }
+    return 'neutral';
+  }
+
+  confidenceCrossTabCellHeatClass(
+    count: number,
+    result: ConfidenceResultDTO,
+    correctness: 'correct' | 'incorrect',
+    tier: 'low' | 'mid' | 'high',
+  ): string {
+    const total = this.confidenceCrossTabTotal(result);
+    const intensity = this.confidenceCrossTabCellIntensity(count, total);
+    const tone = this.confidenceCrossTabCellTone(correctness, tier);
+    const classes = ['session-host__confidence-crosstab-cell'];
+    if (intensity > 0) {
+      classes.push(`session-host__confidence-crosstab-cell--heat-${tone}`);
+      classes.push(`session-host__confidence-crosstab-cell--heat-${tone}-${intensity}`);
+    } else {
+      classes.push('session-host__confidence-crosstab-cell--empty');
+    }
+    if (correctness === 'incorrect' && tier === 'high' && count > 0) {
+      classes.push('session-host__confidence-crosstab-cell--heat-focus');
+    }
+    return classes.join(' ');
+  }
+
+  confidenceCrossTabCellAriaLabel(rowLabel: string, tierLabel: string, count: number): string {
+    return $localize`:@@sessionHost.confidenceCrossTabCellAria:${rowLabel}:row: · ${tierLabel}:tier: · ${count}:count:`;
+  }
+
+  confidenceMisconceptionLabel(count: number): string {
+    return count === 1
+      ? $localize`:@@sessionHost.confidenceMisconceptionSingular:1 selbstsicher falsche Antwort – mögliches Fehlkonzept`
+      : $localize`:@@sessionHost.confidenceMisconceptionPlural:${count}:count: selbstsicher falsche Antworten – mögliche Fehlkonzepte`;
+  }
+
+  private confidenceExportDetails(result: ConfidenceResultDTO): string {
+    const distribution = this.confidenceBarRange()
+      .map((step) => {
+        const key = String(step) as keyof ConfidenceResultDTO['distribution'];
+        return `${step}:${result.distribution[key]}`;
+      })
+      .join(' ');
+    const crossTab = result.crossTab;
+    const cross = $localize`:@@sessionHost.exportConfidenceCrossTab:Kreuz richtig/hoch ${crossTab.correctHigh}:correctHigh: · falsch/hoch ${crossTab.incorrectHigh}:incorrectHigh:`;
+    const misconception =
+      result.highConfidenceWrongCount > 0
+        ? ` · ${this.confidenceMisconceptionLabel(result.highConfidenceWrongCount)}`
+        : '';
+    const wrongOptions =
+      result.highConfidenceWrongOptions && result.highConfidenceWrongOptions.length > 0
+        ? ` · ${result.highConfidenceWrongOptions
+            .map((entry) => `${stripMarkdownToPlainText(entry.text)}: ${entry.count}`)
+            .join(' | ')}`
+        : '';
+    return `${distribution} | ${cross}${misconception}${wrongOptions}`;
+  }
+
+  private confidenceExportMetric(count: number, total: number): string {
+    return `${count} (${this.finishedConfidencePercent(count, total)} %)`;
+  }
+
+  private exportAggregationRoundLabel(q: { aggregationRound?: 1 | 2 }): string {
+    if (q.aggregationRound === 2) {
+      return $localize`:@@sessionHost.exportAggregationRound2Label:2 (Peer Instruction)`;
+    }
+    if (q.aggregationRound === 1) {
+      return '1';
+    }
+    return '';
+  }
+
+  private exportRoundContextDetails(q: {
+    aggregationRound?: 1 | 2;
+    round1ParticipantCount?: number;
+    round2ParticipantCount?: number;
+    participantCount: number;
+  }): string | null {
+    if (q.aggregationRound === 2) {
+      const round1Count = q.round1ParticipantCount ?? 0;
+      const round2Count = q.round2ParticipantCount ?? q.participantCount;
+      if (round1Count > round2Count) {
+        return $localize`:@@sessionHost.exportRoundParticipationGap:Runde 1: ${round1Count}:r1: Stimmen · Aggregiert: Runde 2 mit ${round2Count}:r2: Stimmen`;
+      }
+      return $localize`:@@sessionHost.exportAggregationRound2Context:Aggregationsrunde 2 (Peer Instruction)`;
+    }
+    if (q.aggregationRound === 1) {
+      return $localize`:@@sessionHost.exportAggregationRound1Context:Aggregationsrunde 1`;
+    }
+    return null;
+  }
+
+  private confidenceExportColumns(result: ConfidenceResultDTO | undefined): string[] {
+    if (!result) {
+      return ['', '', '', '', '', '', ''];
+    }
+    const total = this.confidenceDistributionTotal(result);
+    const crossTab = result.crossTab;
+    const middle = crossTab.correctMid + crossTab.incorrectMid;
+    const topWrongOption = result.highConfidenceWrongOptions?.[0];
+    return [
+      String(total),
+      this.confidenceExportMetric(crossTab.correctHigh, total),
+      this.confidenceExportMetric(crossTab.incorrectHigh, total),
+      this.confidenceExportMetric(crossTab.correctLow, total),
+      this.confidenceExportMetric(crossTab.incorrectLow, total),
+      this.confidenceExportMetric(middle, total),
+      topWrongOption
+        ? `${stripMarkdownToPlainText(topWrongOption.text)} (${topWrongOption.count})`
+        : '',
+    ];
   }
 
   /** Verteilung der Sterne als lesbare Zeile (z. B. "1× 4 ★ · 2× 5 ★"). */
@@ -3380,7 +3658,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       (left.numericDecimalPlaces ?? null) === (right.numericDecimalPlaces ?? null) &&
       (left.numericMin ?? null) === (right.numericMin ?? null) &&
       (left.numericMax ?? null) === (right.numericMax ?? null) &&
-      (left.numericTwoRounds ?? false) === (right.numericTwoRounds ?? false)
+      (left.numericTwoRounds ?? false) === (right.numericTwoRounds ?? false) &&
+      JSON.stringify(left.confidenceResult ?? null) ===
+        JSON.stringify(right.confidenceResult ?? null)
     );
   }
 
@@ -5619,7 +5899,19 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.leaderboardLoading.set(false);
     }
     if (this.effectiveStatus() === 'FINISHED') {
-      this.loadFeedbackSummary();
+      void this.loadFeedbackSummary();
+    }
+  }
+
+  async loadFinishedConfidenceSummary(): Promise<void> {
+    if (!this.code) return;
+    try {
+      const summary = await trpc.session.getSessionConfidenceSummary.query({
+        code: this.code.toUpperCase(),
+      });
+      this.finishedConfidenceSummary.set(summary);
+    } catch {
+      this.finishedConfidenceSummary.set(null);
     }
   }
 
@@ -5644,7 +5936,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     try {
       const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
       const rows: string[] = [
-        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details`,
+        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details`,
       ];
 
       for (const q of data.questions) {
@@ -5670,15 +5962,53 @@ export class SessionHostComponent implements OnInit, OnDestroy {
           details = this.numericExportDetails(q.numericStats, q.numericRoundComparison);
         }
 
+        if (q.confidenceResult) {
+          const confidenceDetails = this.confidenceExportDetails(q.confidenceResult);
+          details = details ? `${details} | ${confidenceDetails}` : confidenceDetails;
+        }
+
+        const roundContext = this.exportRoundContextDetails(q);
+        if (roundContext) {
+          details = details ? `${roundContext} | ${details}` : roundContext;
+        }
+
         rows.push(
           [
             q.questionOrder + 1,
             escapeCsv(stripMarkdownToPlainText(q.questionTextShort)),
             q.type,
             q.participantCount,
+            escapeCsv(this.exportAggregationRoundLabel(q)),
             q.averageScore ?? '',
+            ...this.confidenceExportColumns(q.confidenceResult).map(escapeCsv),
             escapeCsv(details),
           ].join(';'),
+        );
+      }
+
+      if (data.confidenceSummary) {
+        const summary = data.confidenceSummary;
+        rows.push('');
+        rows.push(
+          $localize`:@@sessionHost.exportConfidenceSummaryTitle:Lernstand und Selbsteinschätzung`,
+        );
+        rows.push(
+          $localize`:@@sessionHost.exportConfidenceSummaryHeader:Gültige Antworten;Ausgewertete Fragen;Aus Datenschutz ausgeblendete Fragen;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden`,
+        );
+        const middle = summary.crossTab.correctMid + summary.crossTab.incorrectMid;
+        rows.push(
+          [
+            summary.responseCount,
+            summary.includedQuestionCount,
+            summary.suppressedQuestionCount,
+            this.confidenceExportMetric(summary.crossTab.correctHigh, summary.responseCount),
+            this.confidenceExportMetric(summary.crossTab.incorrectHigh, summary.responseCount),
+            this.confidenceExportMetric(summary.crossTab.correctLow, summary.responseCount),
+            this.confidenceExportMetric(summary.crossTab.incorrectLow, summary.responseCount),
+            this.confidenceExportMetric(middle, summary.responseCount),
+          ]
+            .map((value) => escapeCsv(String(value)))
+            .join(';'),
         );
       }
 
@@ -5714,10 +6044,98 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       }
 
       this.downloadCsvExport(rows, buildSessionResultsCsvFilename(data.quizName, data.sessionCode));
-      this.exportStatus.set($localize`Ergebnis-CSV exportiert.`);
+      this.exportStatus.set($localize`:@@sessionHost.exportCsvDone:Ergebnis-CSV exportiert.`);
       this.dismissHostSteeringCallout();
     } catch {
       this.openHostSteeringCalloutForExportFailure(() => void this.exportSessionResultsCsv());
+    } finally {
+      this.exportExporting.set(false);
+    }
+  }
+
+  async exportSessionResultsPdf(): Promise<void> {
+    if (!this.code || this.exportExporting()) return;
+    this.exportStatus.set(null);
+    this.exportExporting.set(true);
+    try {
+      const exportData = await trpc.session.getExportData.query({
+        code: this.code.toUpperCase(),
+      });
+      if (exportData.questions.length >= 15) {
+        this.exportStatus.set(
+          $localize`:@@sessionHost.exportPdfGeneratingLarge:PDF wird erstellt (${exportData.questions.length} Fragen)…`,
+        );
+      }
+      try {
+        const pdf = await trpc.session.getSessionExportPdf.query({
+          code: this.code.toUpperCase(),
+          localeId: this.localeId,
+        });
+        this.downloadBase64Export(pdf.contentBase64, pdf.fileName, pdf.mimeType);
+        this.exportStatus.set(
+          $localize`:@@sessionHost.exportPdfDownloadDone:Ergebnis-PDF heruntergeladen.`,
+        );
+        this.dismissHostSteeringCallout();
+        return;
+      } catch {
+        // Fallback: druckoptimiertes HTML im Browser
+      }
+
+      const labels = getSessionResultsReportLabels();
+      const assetBaseUrl = window.location.origin;
+      let html = buildSessionResultsReportHtml(exportData, labels, {
+        localeId: this.localeId,
+        assetBaseUrl,
+        pageNumbersViaCss: true,
+      });
+      html = await inlineExportImagesInHtml(html, { fetchExternal: true, maxImageBytes: 400_000 });
+      const documentTitle = `${labels.documentTitle} — ${exportData.quizName}`;
+      const opened = printSessionResultsReport(html, documentTitle);
+      if (!opened) {
+        throw new Error('print window blocked');
+      }
+      this.exportStatus.set(
+        $localize`:@@sessionHost.exportPdfPrintDone:Ergebnis-PDF zum Speichern geöffnet.`,
+      );
+      this.dismissHostSteeringCallout();
+    } catch {
+      this.openHostSteeringCalloutForExportFailure(() => void this.exportSessionResultsPdf());
+    } finally {
+      this.exportExporting.set(false);
+    }
+  }
+
+  async previewSessionResultsReport(): Promise<void> {
+    if (!this.code || this.exportExporting()) return;
+    this.exportStatus.set(null);
+    this.exportExporting.set(true);
+    try {
+      const exportData = await trpc.session.getExportData.query({
+        code: this.code.toUpperCase(),
+      });
+      const labels = getSessionResultsReportLabels();
+      const assetBaseUrl = window.location.origin;
+      let html = buildSessionResultsReportHtml(exportData, labels, {
+        localeId: this.localeId,
+        assetBaseUrl,
+        pageNumbersViaCss: true,
+      });
+      html = await inlineExportImagesInHtml(html, { fetchExternal: true, maxImageBytes: 400_000 });
+      const documentTitle = `${labels.documentTitle} — ${exportData.quizName}`;
+      const opened = openSessionResultsReportPreview(
+        html,
+        documentTitle,
+        $localize`:@@sessionHost.exportPdfPreviewPrint:Als PDF drucken`,
+      );
+      if (!opened) {
+        throw new Error('preview window blocked');
+      }
+      this.exportStatus.set(
+        $localize`:@@sessionHost.exportPdfPreviewDone:Berichtsvorschau geöffnet.`,
+      );
+      this.dismissHostSteeringCallout();
+    } catch {
+      this.openHostSteeringCalloutForExportFailure(() => void this.previewSessionResultsReport());
     } finally {
       this.exportExporting.set(false);
     }
@@ -5785,6 +6203,21 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     a.href = url;
     a.download = fileName;
     a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private downloadBase64Export(contentBase64: string, fileName: string, mimeType: string): void {
+    const binary = atob(contentBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    const blob = new Blob([bytes], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = this.document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
     URL.revokeObjectURL(url);
   }
 
@@ -5945,26 +6378,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       this.wordCloudInfo.set($localize`Live-Freitextdaten konnten nicht geladen werden.`);
     }
   }
-}
-
-/** Markdown/KaTeX für CSV-Export in lesbaren Fließtext umwandeln. */
-function stripMarkdownToPlainText(s: string): string {
-  const t = s
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/\*(.+?)\*/g, '$1')
-    .replace(/_(.+?)_/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
-    .replace(/\$[^$\n]+\$/g, ' ')
-    .replace(/\\\[[\s\S]*?\\\]/g, ' ')
-    .replace(/\\\([\s\S]*?\\\)/g, ' ')
-    .replace(/^#+\s*/gm, '')
-    .replace(/\n+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return t;
 }
 
 function escapeCsv(value: string): string {

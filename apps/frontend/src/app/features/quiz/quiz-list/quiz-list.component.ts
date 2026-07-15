@@ -72,6 +72,7 @@ import { MarkdownImageLightboxDirective } from '../../../shared/markdown-image-l
 import { localizeKnownServerError } from '../../../core/localize-known-server-message';
 import { tryRequestDocumentFullscreen } from '../../../core/document-fullscreen.util';
 import { buildQuizExportJsonFilename } from '../../../core/export-filename.util';
+import { SessionResultsExportService } from '../../../core/session-results-export.service';
 
 const QUIZ_HISTORY_SCOPE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -113,6 +114,7 @@ export class QuizListComponent implements OnInit {
   private readonly themePreset = inject(ThemePresetService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly sessionResultsExport = inject(SessionResultsExportService);
   private readonly sanitizer = inject(DomSanitizer);
   readonly quizzes = this.quizStore.quizzes;
   readonly sortedQuizzes = computed(() =>
@@ -152,10 +154,23 @@ export class QuizListComponent implements OnInit {
   readonly syncPeerInfos = this.quizStore.syncPeerInfos;
   readonly actionInfo = signal<string | null>(null);
   readonly actionInfoWarnings = signal<QuizImportWarning[]>([]);
+  readonly importSkippedWarnings = computed(() =>
+    this.actionInfoWarnings().filter((warning) => warning.kind === 'skipped_question'),
+  );
+  readonly importMappedWarnings = computed(() =>
+    this.actionInfoWarnings().filter((warning) => warning.kind === 'mapped_question'),
+  );
   readonly actionError = signal<string | null>(null);
   readonly activeLiveQuizParticipants = signal<Map<string, number>>(new Map());
   readonly quizHistoryAvailability = signal<
-    Map<string, { hasBonusTokens: boolean; hasLastSessionFeedback: boolean }>
+    Map<
+      string,
+      {
+        hasBonusTokens: boolean;
+        hasLastSessionFeedback: boolean;
+        hasLastSessionAnalysis: boolean;
+      }
+    >
   >(new Map());
   readonly showAiImport = signal(false);
   /** Volltext der KI-Systemvorlage im Panel (Schritt 1). */
@@ -182,9 +197,12 @@ export class QuizListComponent implements OnInit {
   });
   readonly startLiveShortcutMode = signal(false);
   readonly bonusCodesAfterLiveTooltip = $localize`:@@quizList.bonusCodesAfterLive:Erst nach einem Live-Start dieses Quiz hier abrufbar.`;
-  readonly lastFeedbackAfterLiveTooltip = $localize`:@@quizList.lastFeedbackAfterLive:Erst nach einem Live-Start dieses Quiz hier abrufbar.`;
+  readonly lastFeedbackAfterLiveTooltip = $localize`:@@quizList.lastFeedbackAfterLive:Erst nach einem beendeten Live-Durchlauf dieses Quiz hier abrufbar.`;
   readonly bonusCodesEmptyTooltip = $localize`:@@quizList.bonusCodesEmpty:Noch keine Bonus-Codes vorhanden.`;
-  readonly lastFeedbackEmptyTooltip = $localize`:@@quizList.lastFeedbackEmpty:Noch kein Feedback vorhanden.`;
+  readonly lastFeedbackEmptyTooltip = $localize`:@@quizList.lastFeedbackEmpty:Noch keine abgeschlossene Auswertung vorhanden.`;
+  readonly lastSessionDebriefEnabledTooltip = $localize`:@@quizList.lastSessionDebriefTooltip:Lernstand, Prioritäten für die Nachbesprechung und Teilnehmer-Feedback – kompakt im Dialog.`;
+  readonly lastSessionReportPdfEnabledTooltip = $localize`:@@quizList.lastSessionReportPdfTooltip:Alle Fragen mit Diagrammen und Details – zum Speichern, Drucken oder Teilen.`;
+  readonly sessionPdfExportQuizId = signal<string | null>(null);
   private readonly descriptionMarkdownCache = new Map<string, SafeHtml>();
   private lastQuizHistoryAvailabilityKey = '';
   private quizHistoryAvailabilityRequestId = 0;
@@ -379,6 +397,10 @@ export class QuizListComponent implements OnInit {
     return this.quizHistoryAvailability().get(quiz.id)?.hasLastSessionFeedback === true;
   }
 
+  hasAvailableLastSessionAnalysis(quiz: QuizSummary): boolean {
+    return this.quizHistoryAvailability().get(quiz.id)?.hasLastSessionAnalysis === true;
+  }
+
   bonusCodesTooltip(quiz: QuizSummary): string | null {
     if (!quiz.lastServerQuizId) {
       return this.bonusCodesAfterLiveTooltip;
@@ -389,14 +411,22 @@ export class QuizListComponent implements OnInit {
     return null;
   }
 
-  lastSessionFeedbackTooltip(quiz: QuizSummary): string | null {
+  private lastSessionAnalysisDisabledTooltip(quiz: QuizSummary): string | null {
     if (!quiz.lastServerQuizId) {
       return this.lastFeedbackAfterLiveTooltip;
     }
-    if (!this.hasAvailableLastSessionFeedback(quiz)) {
+    if (!this.hasAvailableLastSessionAnalysis(quiz)) {
       return this.lastFeedbackEmptyTooltip;
     }
     return null;
+  }
+
+  lastSessionDebriefTooltip(quiz: QuizSummary): string {
+    return this.lastSessionAnalysisDisabledTooltip(quiz) ?? this.lastSessionDebriefEnabledTooltip;
+  }
+
+  lastSessionReportPdfTooltip(quiz: QuizSummary): string {
+    return this.lastSessionAnalysisDisabledTooltip(quiz) ?? this.lastSessionReportPdfEnabledTooltip;
   }
 
   toggleAiImport(): void {
@@ -802,18 +832,62 @@ export class QuizListComponent implements OnInit {
   }
 
   async openLastSessionFeedbackDialog(quiz: QuizSummary): Promise<void> {
-    if (!this.hasAvailableLastSessionFeedback(quiz)) return;
+    return this.openLastSessionAnalysisDialog(quiz);
+  }
+
+  async openLastSessionAnalysisDialog(quiz: QuizSummary): Promise<void> {
+    if (!this.hasAvailableLastSessionAnalysis(quiz)) return;
     const sid = quiz.lastServerQuizId;
     if (!sid) return;
     const accessProof = await this.resolveQuizHistoryAccessProof(quiz);
     if (!accessProof) return;
     this.dialog.open(LastSessionFeedbackDialogComponent, {
-      width: 'min(35rem, calc(100vw - 1.5rem))',
+      width: 'min(52rem, calc(100vw - 1.5rem))',
       maxWidth: '100vw',
       maxHeight: 'min(90dvh, calc(100vh - 2rem))',
       autoFocus: false,
       data: { serverQuizId: sid, accessProof, quizName: quiz.name },
     });
+  }
+
+  isSessionPdfExportPending(quizId: string): boolean {
+    return this.sessionPdfExportQuizId() === quizId;
+  }
+
+  async exportLastSessionPdf(quiz: QuizSummary): Promise<void> {
+    if (!this.hasAvailableLastSessionAnalysis(quiz)) return;
+    const sid = quiz.lastServerQuizId;
+    if (!sid) return;
+    if (this.sessionPdfExportQuizId()) return;
+
+    const accessProof = await this.resolveQuizHistoryAccessProof(quiz);
+    if (!accessProof) return;
+
+    this.sessionPdfExportQuizId.set(quiz.id);
+    try {
+      const result = await this.sessionResultsExport.exportPdfFromQuizHistory(sid, accessProof);
+      const message =
+        result === 'pdf-download'
+          ? $localize`:@@quizList.exportLastSessionPdfDone:Ergebnis-PDF heruntergeladen.`
+          : $localize`:@@quizList.exportLastSessionPdfPrintDone:Ergebnis-PDF zum Speichern geöffnet.`;
+      this.snackBar.open(message, '', {
+        duration: 5000,
+        verticalPosition: 'top',
+        horizontalPosition: 'center',
+      });
+    } catch {
+      this.snackBar.open(
+        $localize`:@@quizList.exportLastSessionPdfError:Ergebnis-PDF konnte nicht erstellt werden.`,
+        '',
+        {
+          duration: 7000,
+          verticalPosition: 'top',
+          horizontalPosition: 'center',
+        },
+      );
+    } finally {
+      this.sessionPdfExportQuizId.set(null);
+    }
   }
 
   private async activateLiveStartShortcutIfRequested(): Promise<void> {
@@ -923,13 +997,21 @@ export class QuizListComponent implements OnInit {
         return;
       }
 
-      const next = new Map<string, { hasBonusTokens: boolean; hasLastSessionFeedback: boolean }>();
+      const next = new Map<
+        string,
+        {
+          hasBonusTokens: boolean;
+          hasLastSessionFeedback: boolean;
+          hasLastSessionAnalysis: boolean;
+        }
+      >();
       for (const [index, availability] of result.entries()) {
         const localQuizId = resolvedEntries[index]?.localQuizId;
         if (!localQuizId) continue;
         next.set(localQuizId, {
           hasBonusTokens: availability.hasBonusTokens,
           hasLastSessionFeedback: availability.hasLastSessionFeedback,
+          hasLastSessionAnalysis: availability.hasLastSessionAnalysis,
         });
       }
       this.quizHistoryAvailability.set(next);
@@ -980,8 +1062,11 @@ export class QuizListComponent implements OnInit {
   }
 
   private buildImportInfoMessage(result: QuizImportResult): string {
-    const skipped = result.warnings.filter((warning) => warning.kind === 'skipped_question');
-    this.actionInfoWarnings.set(skipped);
+    this.actionInfoWarnings.set(
+      result.warnings.filter(
+        (warning) => warning.kind === 'skipped_question' || warning.kind === 'mapped_question',
+      ),
+    );
     return `„${result.quiz.name}“ wurde importiert.`;
   }
 

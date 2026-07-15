@@ -314,6 +314,9 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       difficulty: 'MEDIUM',
       timer: null,
       skipReadingPhase: false,
+      confidenceEnabled: true,
+      confidenceLabelLow: 'sehr unsicher',
+      confidenceLabelHigh: 'absolut sicher',
       answers: [
         { text: 'Antwort A', isCorrect: false },
         { text: 'Antwort B', isCorrect: true },
@@ -732,6 +735,9 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       difficulty: 'MEDIUM',
       timer: null,
       skipReadingPhase: false,
+      confidenceEnabled: true,
+      confidenceLabelLow: 'sehr unsicher',
+      confidenceLabelHigh: 'absolut sicher',
       answers: [
         { text: 'Paris', isCorrect: true },
         { text: 'PARIS', isCorrect: true },
@@ -796,6 +802,81 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
         skipReadingPhase: true,
       }),
     );
+  });
+
+  it('speichert Sicherheitsgrad-Einstellungen für bewertbare Fragen', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.text.setValue('Wie sicher bist du?');
+    component.form.controls.confidenceEnabled.setValue(true);
+    component.form.controls.confidenceLabelLow.setValue('Geraten');
+    component.form.controls.confidenceLabelHigh.setValue('Sehr sicher');
+    component.answersArray.at(0).controls.text.setValue('A');
+    component.answersArray.at(1).controls.text.setValue('B');
+    component.setSingleCorrect(0);
+
+    component.saveAll();
+
+    expect(mockStore.addQuestion).toHaveBeenCalledWith(
+      QUIZ_ID,
+      expect.objectContaining({
+        confidenceEnabled: true,
+        confidenceLabelLow: 'Geraten',
+        confidenceLabelHigh: 'Sehr sicher',
+      }),
+    );
+  });
+
+  it('blendet Sicherheitsgrad-Konfiguration bei Umfragen aus', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.type.setValue('SURVEY');
+    component.onTypeChanged();
+    fixture.detectChanges();
+
+    expect(component.hasConfidenceConfig()).toBe(false);
+    expect(fixture.nativeElement.querySelector('[formcontrolname="confidenceEnabled"]')).toBeNull();
+  });
+
+  it('setzt Sicherheitsgrad beim Fragetypwechsel zurück', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+
+    component.form.controls.confidenceEnabled.setValue(true);
+    component.form.controls.confidenceLabelLow.setValue('Geraten');
+    component.form.controls.confidenceLabelHigh.setValue('Sicher');
+    component.form.controls.type.setValue('FREETEXT');
+    component.onTypeChanged();
+
+    expect(component.form.controls.confidenceEnabled.value).toBe(false);
+    expect(component.form.controls.confidenceLabelLow.value).toBe('');
+    expect(component.form.controls.confidenceLabelHigh.value).toBe('');
+  });
+
+  it('zeigt die Selbsteinschätzungs-Vorschau standardmäßig im Editor', () => {
+    const fixture = TestBed.createComponent(QuizEditComponent);
+    const component = fixture.componentInstance;
+    component.questionFormPanelOpen.set(true);
+    fixture.detectChanges();
+
+    expect(component.form.controls.confidenceEnabled.value).toBe(true);
+    expect(component.form.controls.confidenceLabelLow.value).toBe('sehr unsicher');
+    expect(component.form.controls.confidenceLabelHigh.value).toBe('absolut sicher');
+
+    const preview = fixture.nativeElement.querySelector(
+      '.quiz-edit-form__confidence-preview-scale',
+    ) as HTMLElement | null;
+    expect(preview).not.toBeNull();
+    expect(preview?.textContent).toContain('sehr unsicher');
+    expect(preview?.textContent).toContain('absolut sicher');
+    expect(preview?.querySelectorAll('.quiz-edit-question__rating-step').length).toBe(5);
+
+    component.form.controls.confidenceEnabled.setValue(false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.quiz-edit-form__confidence-preview')).toBeNull();
   });
 
   it('speichert eine SURVEY-Frage ohne korrekte Antworten', () => {
@@ -894,6 +975,7 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       difficulty: 'EASY',
       timer: null,
       skipReadingPhase: false,
+      confidenceEnabled: false,
       answers: [
         { text: 'Neu A', isCorrect: false },
         { text: 'Neu B', isCorrect: true },
@@ -1301,6 +1383,9 @@ describe('QuizEditComponent', { timeout: 30_000 }, () => {
       difficulty: 'MEDIUM',
       timer: null,
       skipReadingPhase: false,
+      confidenceEnabled: true,
+      confidenceLabelLow: 'sehr unsicher',
+      confidenceLabelHigh: 'absolut sicher',
       answers: [
         { text: 'A', isCorrect: true },
         { text: 'B', isCorrect: false },

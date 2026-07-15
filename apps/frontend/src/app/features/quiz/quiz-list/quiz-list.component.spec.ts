@@ -488,7 +488,7 @@ describe('QuizListComponent', () => {
     ).toBe(7);
   });
 
-  it('graut Bonus-Codes und Letztes Feedback aus, wenn noch keine Inhalte vorhanden sind', async () => {
+  it('graut Bonus-Codes und Letzte Auswertung aus, wenn noch keine Inhalte vorhanden sind', async () => {
     quizzesSignal.set([
       {
         id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
@@ -508,6 +508,7 @@ describe('QuizListComponent', () => {
         quizId: '11111111-1111-4111-8111-111111111111',
         hasBonusTokens: false,
         hasLastSessionFeedback: false,
+        hasLastSessionAnalysis: false,
       },
     ]);
 
@@ -524,8 +525,9 @@ describe('QuizListComponent', () => {
     ) as HTMLButtonElement[];
     const bonusButton = buttons.find((button) => button.textContent?.includes('Bonus-Codes'));
     const feedbackButton = buttons.find((button) =>
-      button.textContent?.includes('Letztes Feedback'),
+      button.textContent?.includes('Nachbesprechung'),
     );
+    const pdfButton = buttons.find((button) => button.textContent?.includes('Ergebnisbericht'));
 
     expect(getQuizCollectionHistoryAvailabilityQueryMock).toHaveBeenCalledWith([
       {
@@ -535,9 +537,10 @@ describe('QuizListComponent', () => {
     ]);
     expect(bonusButton?.disabled).toBe(true);
     expect(feedbackButton?.disabled).toBe(true);
+    expect(pdfButton?.disabled).toBe(true);
   });
 
-  it('aktiviert Bonus-Codes und Letztes Feedback nur bei vorhandenen Inhalten', async () => {
+  it('aktiviert Bonus-Codes und Letzte Auswertung nur bei vorhandenen Inhalten', async () => {
     quizzesSignal.set([
       {
         id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
@@ -557,7 +560,11 @@ describe('QuizListComponent', () => {
       new Map([
         [
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          { hasBonusTokens: true, hasLastSessionFeedback: true },
+          {
+            hasBonusTokens: true,
+            hasLastSessionFeedback: true,
+            hasLastSessionAnalysis: true,
+          },
         ],
       ]),
     );
@@ -569,11 +576,13 @@ describe('QuizListComponent', () => {
     ) as HTMLButtonElement[];
     const bonusButton = buttons.find((button) => button.textContent?.includes('Bonus-Codes'));
     const feedbackButton = buttons.find((button) =>
-      button.textContent?.includes('Letztes Feedback'),
+      button.textContent?.includes('Nachbesprechung'),
     );
+    const pdfButton = buttons.find((button) => button.textContent?.includes('Ergebnisbericht'));
 
     expect(bonusButton?.disabled).toBe(false);
     expect(feedbackButton?.disabled).toBe(false);
+    expect(pdfButton?.disabled).toBe(false);
   });
 
   it('fragt Historie auch ohne gespeicherten Zugriffsnachweis ab und migriert Legacy-Scopes', async () => {
@@ -600,6 +609,7 @@ describe('QuizListComponent', () => {
         quizId: '11111111-1111-4111-8111-111111111111',
         hasBonusTokens: true,
         hasLastSessionFeedback: true,
+        hasLastSessionAnalysis: true,
       },
     ]);
 
@@ -632,6 +642,7 @@ describe('QuizListComponent', () => {
     ).toEqual({
       hasBonusTokens: true,
       hasLastSessionFeedback: true,
+      hasLastSessionAnalysis: true,
     });
   });
 
@@ -909,6 +920,75 @@ Viel Erfolg beim Import.`);
     expect(fixture.nativeElement.textContent).toContain('Datei Import');
   });
 
+  it('zeigt beim Import angepasste Hinweise wie Selbsteinschaetzung', async () => {
+    const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance;
+    mockStore.importQuiz.mockImplementation(() => {
+      quizzesSignal.set([
+        {
+          id: 'caece014-f7cd-4d26-a101-bd494379f95f',
+          name: 'Click Import',
+          description: 'Neu importiert',
+          createdAt: '2026-05-18T12:00:00.000Z',
+          updatedAt: '2026-05-18T12:00:00.000Z',
+          questionCount: 1,
+          teamMode: false,
+          hasBonus: false,
+          lastServerQuizId: null,
+          lastServerQuizAccessProof: null,
+        },
+      ]);
+      return {
+        quiz: {
+          id: 'caece014-f7cd-4d26-a101-bd494379f95f',
+          name: 'Click Import',
+        },
+        warnings: [
+          {
+            kind: 'mapped_question',
+            message: 'Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.',
+          },
+        ],
+      };
+    });
+
+    const file = {
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          name: 'Click Import',
+          questionList: [
+            {
+              TYPE: 'SingleChoiceQuestion',
+              questionText: 'Eine Frage',
+              answerOptionList: [
+                { answerText: 'A', isCorrect: false },
+                { answerText: 'B', isCorrect: true },
+              ],
+            },
+          ],
+        }),
+      ),
+    } as unknown as File;
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    await component.onImportFileSelected({ target: input } as Event);
+    fixture.detectChanges();
+    await flushAsyncEffects();
+    fixture.detectChanges();
+
+    expect(component.actionInfoWarnings()).toHaveLength(1);
+    const infoText = fixture.nativeElement.querySelector('.quiz-list__info')?.textContent as string;
+    expect(infoText).toContain('Beim Import angepasst:');
+    expect(infoText).toContain(
+      'Quiz: Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.',
+    );
+    expect(component.actionError()).toBeNull();
+  });
+
   it('zeigt direkten Start-CTA bei startLive-Shortcut', async () => {
     quizzesSignal.set([
       {
@@ -1001,7 +1081,11 @@ Viel Erfolg beim Import.`);
       new Map([
         [
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          { hasBonusTokens: true, hasLastSessionFeedback: false },
+          {
+            hasBonusTokens: true,
+            hasLastSessionFeedback: false,
+            hasLastSessionAnalysis: false,
+          },
         ],
       ]),
     );
@@ -1044,7 +1128,11 @@ Viel Erfolg beim Import.`);
       new Map([
         [
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          { hasBonusTokens: true, hasLastSessionFeedback: false },
+          {
+            hasBonusTokens: true,
+            hasLastSessionFeedback: false,
+            hasLastSessionAnalysis: false,
+          },
         ],
       ]),
     );
@@ -1083,7 +1171,7 @@ Viel Erfolg beim Import.`);
     );
   });
 
-  it('oeffnet das Letzte-Feedback-Dialogfenster nur bei vorhandenem Feedback', async () => {
+  it('oeffnet die Letzte Auswertung nur bei vorhandenem Durchlauf', async () => {
     const fixture = TestBed.createComponent(QuizListComponent);
     const component = fixture.componentInstance;
     const dialogOpenSpy = vi.spyOn(component['dialog'], 'open').mockReturnValue({} as never);
@@ -1107,7 +1195,11 @@ Viel Erfolg beim Import.`);
       new Map([
         [
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          { hasBonusTokens: false, hasLastSessionFeedback: true },
+          {
+            hasBonusTokens: false,
+            hasLastSessionFeedback: true,
+            hasLastSessionAnalysis: true,
+          },
         ],
       ]),
     );

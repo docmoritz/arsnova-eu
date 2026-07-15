@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  CONFIDENCE_SCALE_MAX,
+  CONFIDENCE_SCALE_MIN,
+  questionSupportsConfidence,
+} from './confidence';
 
 // ---------------------------------------------------------------------------
 // Enums – müssen mit Prisma-Schema synchron bleiben
@@ -1292,8 +1297,25 @@ export const AddQuestionInputSchema = z
     numericMin: z.number().optional(),
     numericMax: z.number().optional(),
     numericTwoRounds: z.boolean().optional(),
+    // Story 1.2i: Optionaler Sicherheitsgrad für bewertbare Fragetypen
+    confidenceEnabled: z.boolean().optional(),
+    confidenceLabelLow: z.string().max(50).optional(),
+    confidenceLabelHigh: z.string().max(50).optional(),
   })
   .superRefine((value, ctx) => {
+    const hasConfidenceConfig =
+      value.confidenceEnabled === true ||
+      value.confidenceLabelLow !== undefined ||
+      value.confidenceLabelHigh !== undefined;
+
+    if (!questionSupportsConfidence(value.type) && hasConfidenceConfig) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confidenceEnabled'],
+        message: 'Selbsteinschätzung ist nur für bewertbare Fragetypen erlaubt.',
+      });
+    }
+
     const hasShortTextConfig =
       value.shortTextEvaluationKind !== undefined ||
       value.shortTextMaxLength !== undefined ||
@@ -1711,6 +1733,9 @@ type QuizHistoryAccessMaterial = {
     numericMin: number | null;
     numericMax: number | null;
     numericTwoRounds: boolean;
+    confidenceEnabled: boolean;
+    confidenceLabelLow: string | null;
+    confidenceLabelHigh: string | null;
     answers: Array<{
       text: string;
       isCorrect: boolean;
@@ -1827,6 +1852,16 @@ function buildQuizHistoryAccessMaterial(input: QuizUploadInput): QuizHistoryAcce
         numericMax: question.type === 'NUMERIC_ESTIMATE' ? (question.numericMax ?? null) : null,
         numericTwoRounds:
           question.type === 'NUMERIC_ESTIMATE' ? (question.numericTwoRounds ?? false) : false,
+        confidenceEnabled:
+          questionSupportsConfidence(question.type) && (question.confidenceEnabled ?? false),
+        confidenceLabelLow:
+          questionSupportsConfidence(question.type) && (question.confidenceEnabled ?? false)
+            ? (question.confidenceLabelLow ?? null)
+            : null,
+        confidenceLabelHigh:
+          questionSupportsConfidence(question.type) && (question.confidenceEnabled ?? false)
+            ? (question.confidenceLabelHigh ?? null)
+            : null,
         answers: [...question.answers]
           .map((answer) => ({ text: answer.text, isCorrect: answer.isCorrect }))
           .sort(
@@ -2118,6 +2153,72 @@ export const NumericRoundComparisonDTOSchema = z.object({
 });
 export type NumericRoundComparisonDTO = z.infer<typeof NumericRoundComparisonDTOSchema>;
 
+// ---------------------------------------------------------------------------
+// Confidence-Ergebnis (Story 1.2i)
+// ---------------------------------------------------------------------------
+
+export const ConfidenceDistributionSchema = z.object({
+  '1': z.number().int().min(0),
+  '2': z.number().int().min(0),
+  '3': z.number().int().min(0),
+  '4': z.number().int().min(0),
+  '5': z.number().int().min(0),
+});
+export type ConfidenceDistributionDTO = z.infer<typeof ConfidenceDistributionSchema>;
+
+export const ConfidenceCrossTabSchema = z.object({
+  correctHigh: z.number().int().min(0),
+  correctMid: z.number().int().min(0),
+  correctLow: z.number().int().min(0),
+  incorrectHigh: z.number().int().min(0),
+  incorrectMid: z.number().int().min(0),
+  incorrectLow: z.number().int().min(0),
+});
+export type ConfidenceCrossTabDTO = z.infer<typeof ConfidenceCrossTabSchema>;
+
+export const ConfidenceWrongOptionCountSchema = z.object({
+  answerId: z.uuid(),
+  text: z.string(),
+  count: z.number().int().min(1),
+});
+export type ConfidenceWrongOptionCountDTO = z.infer<typeof ConfidenceWrongOptionCountSchema>;
+
+/** DTO: Aggregierte Sicherheitsgrad-Auswertung nach Ergebnisfreigabe */
+export const ConfidenceResultDTOSchema = z.object({
+  distribution: ConfidenceDistributionSchema,
+  crossTab: ConfidenceCrossTabSchema,
+  highConfidenceWrongCount: z.number().int().min(0),
+  highConfidenceWrongOptions: z.array(ConfidenceWrongOptionCountSchema).optional(),
+});
+export type ConfidenceResultDTO = z.infer<typeof ConfidenceResultDTOSchema>;
+
+export const ConfidenceQuestionSummaryDTOSchema = z.object({
+  questionOrder: z.number().int().min(0),
+  questionTextShort: z.string(),
+  questionType: QuestionTypeEnum,
+  responseCount: z.number().int().min(1),
+  result: ConfidenceResultDTOSchema,
+});
+export type ConfidenceQuestionSummaryDTO = z.infer<typeof ConfidenceQuestionSummaryDTOSchema>;
+
+export const SessionConfidenceSummaryDTOSchema = z.object({
+  responseCount: z.number().int().min(1),
+  includedQuestionCount: z.number().int().min(1),
+  suppressedQuestionCount: z.number().int().min(0),
+  priorityQuestionCount: z.number().int().min(0),
+  distribution: ConfidenceDistributionSchema,
+  crossTab: ConfidenceCrossTabSchema,
+  highConfidenceWrongCount: z.number().int().min(0),
+  questions: z.array(ConfidenceQuestionSummaryDTOSchema),
+});
+export type SessionConfidenceSummaryDTO = z.infer<typeof SessionConfidenceSummaryDTOSchema>;
+
+/** Aggregierte Confidence-Auswertung einer beendeten Quiz-Session (Story 1.2i). */
+export const GetSessionConfidenceSummaryOutputSchema = SessionConfidenceSummaryDTOSchema.nullable();
+export type GetSessionConfidenceSummaryOutput = z.infer<
+  typeof GetSessionConfidenceSummaryOutputSchema
+>;
+
 /** DTO: Aktuelle Frage für Host-Ansicht (Story 2.3, 3.5) – Text + Antwortoptionen inkl. isCorrect + Timer. */
 export const HostCurrentQuestionDTOSchema = z.object({
   questionId: z.string().uuid(),
@@ -2161,6 +2262,9 @@ export const HostCurrentQuestionDTOSchema = z.object({
   numericUnitFamily: NumericUnitFamilyEnum.optional(),
   numericRequireUnit: z.boolean().optional(),
   numericAcceptEquivalentUnits: z.boolean().optional(),
+  confidenceEnabled: z.boolean().optional(),
+  confidenceLabelLow: z.string().nullable().optional(),
+  confidenceLabelHigh: z.string().nullable().optional(),
   ratingAvg: z.number().nullable().optional(),
   ratingCount: z.number().int().optional(),
   ratingDistribution: z.record(z.string(), z.number()).optional(),
@@ -2197,6 +2301,7 @@ export const HostCurrentQuestionDTOSchema = z.object({
   numericHistogram: z.array(NumericHistogramBinSchema).optional(),
   numericStats: NumericStatsDTOSchema.optional(),
   numericRoundComparison: NumericRoundComparisonDTOSchema.optional(),
+  confidenceResult: ConfidenceResultDTOSchema.optional(),
 });
 export type HostCurrentQuestionDTO = z.infer<typeof HostCurrentQuestionDTOSchema>;
 
@@ -2236,6 +2341,7 @@ export const SubmitVoteInputSchema = z.object({
   numericValue: z.number().optional(), // Story 1.2d: Numerische Schätzfrage
   responseTimeMs: z.number().int().min(0).optional(), // Antwortzeit in ms
   round: z.number().int().min(1).max(2).optional().default(1), // Story 2.7: Peer Instruction Runde
+  confidenceValue: z.number().int().min(CONFIDENCE_SCALE_MIN).max(CONFIDENCE_SCALE_MAX).optional(), // Story 1.2i
 });
 export type SubmitVoteInput = z.infer<typeof SubmitVoteInputSchema>;
 
@@ -2323,6 +2429,10 @@ export const QuestionRevealedDTOSchema = z.object({
   currentRound: z.number().int().min(1).max(2).optional(),
   numericStats: NumericStatsDTOSchema.optional(),
   numericHistogram: z.array(NumericHistogramBinSchema).optional(),
+  confidenceEnabled: z.boolean().optional(),
+  confidenceLabelLow: z.string().nullable().optional(),
+  confidenceLabelHigh: z.string().nullable().optional(),
+  confidenceResult: ConfidenceResultDTOSchema.optional(),
 });
 export type QuestionRevealedDTO = z.infer<typeof QuestionRevealedDTOSchema>;
 
@@ -2373,6 +2483,9 @@ export const QuestionStudentDTOSchema = z.object({
   numericMin: z.number().nullable().optional(),
   numericMax: z.number().nullable().optional(),
   numericTwoRounds: z.boolean().optional(),
+  confidenceEnabled: z.boolean().optional(),
+  confidenceLabelLow: z.string().nullable().optional(),
+  confidenceLabelHigh: z.string().nullable().optional(),
 });
 export type QuestionStudentDTO = z.infer<typeof QuestionStudentDTOSchema>;
 
@@ -2421,6 +2534,9 @@ export const QuestionPreviewDTOSchema = z.object({
   numericDecimalPlaces: z.number().int().nullable().optional(),
   numericMin: z.number().nullable().optional(),
   numericMax: z.number().nullable().optional(),
+  confidenceEnabled: z.boolean().optional(),
+  confidenceLabelLow: z.string().nullable().optional(),
+  confidenceLabelHigh: z.string().nullable().optional(),
 });
 export type QuestionPreviewDTO = z.infer<typeof QuestionPreviewDTOSchema>;
 
@@ -2851,6 +2967,9 @@ const ExportedQuestionSchema = z.object({
   numericMin: z.number().nullable().optional(),
   numericMax: z.number().nullable().optional(),
   numericTwoRounds: z.boolean().optional(),
+  confidenceEnabled: z.boolean().optional(),
+  confidenceLabelLow: z.string().nullable().optional(),
+  confidenceLabelHigh: z.string().nullable().optional(),
   /** false = in lokaler Bibliothek behalten, aber nicht in Live/Vorschau */
   enabled: z.boolean().optional().default(true),
 });
@@ -2969,6 +3088,7 @@ export const QuizCollectionHistoryAvailabilityDTOSchema = z.object({
   quizId: z.string().uuid(),
   hasBonusTokens: z.boolean(),
   hasLastSessionFeedback: z.boolean(),
+  hasLastSessionAnalysis: z.boolean(),
 });
 export type QuizCollectionHistoryAvailabilityDTO = z.infer<
   typeof QuizCollectionHistoryAvailabilityDTOSchema
@@ -3039,6 +3159,12 @@ export const GetExportDataInputSchema = z.object({
 });
 export type GetExportDataInput = z.infer<typeof GetExportDataInputSchema>;
 
+/** Input: Session-Ergebnisbericht als PDF (optional mit UI-Locale). */
+export const GetSessionExportPdfInputSchema = GetExportDataInputSchema.extend({
+  localeId: z.string().min(2).max(10).optional(),
+});
+export type GetSessionExportPdfInput = z.infer<typeof GetSessionExportPdfInputSchema>;
+
 /** Verteilung einer Antwortoption (MC/SC) für Export */
 export const OptionDistributionEntrySchema = z.object({
   text: z.string(),
@@ -3076,6 +3202,8 @@ export type FreetextSessionExportDTO = z.infer<typeof FreetextSessionExportDTOSc
 export const QuestionExportEntrySchema = z.object({
   questionOrder: z.number(),
   questionTextShort: z.string(), // z. B. erste 100 Zeichen des Fragenstamms
+  /** Vollständiger Fragentext (Markdown) für PDF/Report. */
+  questionTextFull: z.string().optional(),
   type: QuestionTypeEnum,
   participantCount: z.number(), // Anzahl abgegebener Votes für diese Frage
   optionDistribution: z.array(OptionDistributionEntrySchema).optional(), // MC/SC
@@ -3090,9 +3218,50 @@ export const QuestionExportEntrySchema = z.object({
   numericStats: NumericStatsDTOSchema.optional(),
   numericHistogram: z.array(NumericHistogramBinSchema).optional(),
   numericRoundComparison: NumericRoundComparisonDTOSchema.optional(),
+  numericReferenceValue: z.number().nullable().optional(),
+  numericTolerancePercent: z.number().nullable().optional(),
+  numericIntervalLeft: z.number().nullable().optional(),
+  numericIntervalRight: z.number().nullable().optional(),
+  numericToleranceMode: z.string().nullable().optional(),
+  numericInputType: z.enum(['INTEGER', 'DECIMAL']).nullable().optional(),
+  numericDecimalPlaces: z.number().int().nullable().optional(),
+  confidenceResult: ConfidenceResultDTOSchema.optional(),
+  /** Aggregationsrunde für Verteilung, Selbsteinschätzung und Punkte (Effective-Vote-Regel). */
+  aggregationRound: z.union([z.literal(1), z.literal(2)]).optional(),
+  /** Stimmen in Runde 1; gesetzt, wenn Runde-2-Votes existieren. */
+  round1ParticipantCount: z.number().int().optional(),
+  /** Stimmen in Runde 2; gesetzt, wenn Runde-2-Votes existieren. */
+  round2ParticipantCount: z.number().int().optional(),
+  /** MC/SC-Verteilung Runde 1 (Peer Instruction), wenn Runde-2-Votes existieren. */
+  round1OptionDistribution: z.array(OptionDistributionEntrySchema).optional(),
   averageScore: z.number().optional(), // Durchschnittspunkte (wenn gescored)
 });
 export type QuestionExportEntry = z.infer<typeof QuestionExportEntrySchema>;
+
+/** Aggregierte Q&A-Frage für Session-Export (ohne Nicknames). */
+export const QaExportEntrySchema = z.object({
+  order: z.number().int(),
+  text: z.string(),
+  status: QaQuestionStatusEnum,
+  upvoteCount: z.number().int(),
+  positiveVoteCount: z.number().int().optional(),
+  negativeVoteCount: z.number().int().optional(),
+  voteCount: z.number().int().optional(),
+  isControversial: z.boolean().optional(),
+});
+export type QaExportEntry = z.infer<typeof QaExportEntrySchema>;
+
+/** Aggregierte Session-Bewertung (Story 4.8) — für Export und Host-Abschluss. */
+export const SessionFeedbackSummarySchema = z.object({
+  totalResponses: z.number(),
+  overallAverage: z.number(),
+  overallDistribution: z.record(z.string(), z.number()),
+  questionQualityAverage: z.number().nullable(),
+  questionQualityDistribution: z.record(z.string(), z.number()).nullable(),
+  wouldRepeatYes: z.number(),
+  wouldRepeatNo: z.number(),
+});
+export type SessionFeedbackSummary = z.infer<typeof SessionFeedbackSummarySchema>;
 
 /** DTO: Vollständiger Session-Export für Dozenten (CSV/PDF-Generierung) – DSGVO-konform, nur aggregiert */
 export const SessionExportDTOSchema = z.object({
@@ -3103,10 +3272,21 @@ export const SessionExportDTOSchema = z.object({
   participantCount: z.number(),
   teamMode: z.boolean(),
   questions: z.array(QuestionExportEntrySchema),
+  confidenceSummary: SessionConfidenceSummaryDTOSchema.optional(),
+  feedbackSummary: SessionFeedbackSummarySchema.optional(),
   teamLeaderboard: z.array(TeamLeaderboardEntryDTOSchema).optional(),
   bonusTokens: z.array(BonusTokenEntryDTOSchema).optional(), // optional einbeziehen (Pseudonyme)
+  qaQuestions: z.array(QaExportEntrySchema).optional(),
 });
 export type SessionExportDTO = z.infer<typeof SessionExportDTOSchema>;
+
+/** Output: Session-Ergebnisbericht als PDF (Base64 für Download). */
+export const SessionExportPdfOutputSchema = z.object({
+  fileName: z.string(),
+  mimeType: z.literal('application/pdf'),
+  contentBase64: z.string(),
+});
+export type SessionExportPdfOutput = z.infer<typeof SessionExportPdfOutputSchema>;
 
 // ---------------------------------------------------------------------------
 // Admin (Epic 9)
@@ -3608,17 +3788,6 @@ export const SubmitSessionFeedbackInputSchema = z.object({
 });
 export type SubmitSessionFeedbackInput = z.infer<typeof SubmitSessionFeedbackInputSchema>;
 
-export const SessionFeedbackSummarySchema = z.object({
-  totalResponses: z.number(),
-  overallAverage: z.number(),
-  overallDistribution: z.record(z.string(), z.number()),
-  questionQualityAverage: z.number().nullable(),
-  questionQualityDistribution: z.record(z.string(), z.number()).nullable(),
-  wouldRepeatYes: z.number(),
-  wouldRepeatNo: z.number(),
-});
-export type SessionFeedbackSummary = z.infer<typeof SessionFeedbackSummarySchema>;
-
 /** Letztes Session-Feedback zu einer Server-Quiz-ID (Quiz-Sammlung; gleicher Scope wie getBonusTokensForQuiz). */
 export const GetLastSessionFeedbackForQuizInputSchema = GetBonusTokensForQuizInputSchema;
 export type GetLastSessionFeedbackForQuizInput = z.infer<
@@ -3635,6 +3804,40 @@ export const LastSessionFeedbackForQuizOutputSchema =
   LastSessionFeedbackForQuizDTOSchema.nullable();
 export type LastSessionFeedbackForQuizOutput = z.infer<
   typeof LastSessionFeedbackForQuizOutputSchema
+>;
+
+/** Letzte beendete Session eines Quizzes: aggregierte didaktische Auswertung ohne Session-Kennung. */
+export const GetLastSessionAnalysisForQuizInputSchema = GetBonusTokensForQuizInputSchema;
+export type GetLastSessionAnalysisForQuizInput = z.infer<
+  typeof GetLastSessionAnalysisForQuizInputSchema
+>;
+
+export const LastSessionAnalysisForQuizDTOSchema = z.object({
+  endedAt: z.string().nullable(),
+  participantCount: z.number().int().min(0),
+  confidenceSummary: SessionConfidenceSummaryDTOSchema.nullable(),
+  feedbackSummary: SessionFeedbackSummarySchema.nullable(),
+});
+export type LastSessionAnalysisForQuizDTO = z.infer<typeof LastSessionAnalysisForQuizDTOSchema>;
+
+export const LastSessionAnalysisForQuizOutputSchema =
+  LastSessionAnalysisForQuizDTOSchema.nullable();
+export type LastSessionAnalysisForQuizOutput = z.infer<
+  typeof LastSessionAnalysisForQuizOutputSchema
+>;
+
+/** Input: Export-Daten der zuletzt beendeten Session eines Quizzes (Quiz-Sammlung). */
+export const GetLastSessionExportDataForQuizInputSchema = GetBonusTokensForQuizInputSchema;
+export type GetLastSessionExportDataForQuizInput = z.infer<
+  typeof GetLastSessionExportDataForQuizInputSchema
+>;
+
+/** Input: PDF-Export der zuletzt beendeten Session eines Quizzes (Quiz-Sammlung). */
+export const GetLastSessionExportPdfForQuizInputSchema = GetBonusTokensForQuizInputSchema.extend({
+  localeId: z.string().min(2).max(10).optional(),
+});
+export type GetLastSessionExportPdfForQuizInput = z.infer<
+  typeof GetLastSessionExportPdfForQuizInputSchema
 >;
 
 // ─── MOTD / Plattform-Kommunikation (Epic 10) ───────────────────────────────

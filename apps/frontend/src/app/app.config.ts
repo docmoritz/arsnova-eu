@@ -22,8 +22,8 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      /** Sofort registrieren — sonst feuern frühe `checkForUpdate()`-Aufrufe oft vor dem ngsw (Banner bleibt aus). */
-      registrationStrategy: 'registerImmediately',
+      /** Nach App-Stabilisierung registrieren — weniger Main-Thread-Last beim Erstload (Lighthouse TBT). */
+      registrationStrategy: 'registerWhenStable:5000',
     }),
     provideClientHydration(withEventReplay(), withI18nSupport()),
     {

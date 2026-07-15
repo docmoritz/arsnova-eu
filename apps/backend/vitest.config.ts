@@ -22,6 +22,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@arsnova/shared-types': path.resolve(__dirname, '../../libs/shared-types/src/index.ts'),
+      '@arsnova/session-export-report': path.resolve(
+        __dirname,
+        '../../libs/session-export-report/src/index.ts',
+      ),
       '@arsnova/api': path.resolve(__dirname, './src/routers/index.ts'),
     },
   },

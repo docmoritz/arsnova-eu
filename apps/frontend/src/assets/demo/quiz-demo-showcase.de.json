@@ -1,9 +1,9 @@
 {
-  "exportVersion": 26,
-  "exportedAt": "2026-05-24T10:00:00.000Z",
+  "exportVersion": 27,
+  "exportedAt": "2026-07-13T13:00:00.000Z",
   "quiz": {
     "name": "Praxis-Showcase: Team-Quiz",
-    "description": "![Praxis-Showcase](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Praxis-Showcase für den Unterricht\n\nDiese Demo ist für den **echten Unterrichtseinsatz** gedacht. Sie will kein perfekt durchkomponiertes Fachquiz von Anfang bis Ende sein. Ihr Zweck ist ein anderer: Sie soll Lehrkräften, Dozierenden und Trainer:innen zeigen, wie arsnova.eu eine Live-Session abwechslungsreicher, visueller und spielerischer machen kann.\n\nNutze sie als kurze, **Kahoot-artige Team-Demo für den Live-Unterricht**, um zu zeigen, wie du:\n- mit einem kurzen emotionalen oder sozialen Check-in startest\n- Bilder statt reiner Textfragen einsetzt\n- Formeln und wissenschaftliche Notation in MINT-Fächern einbindest\n- numerische Schätzfragen mit Referenzwert, Toleranzband und zwei Runden ausprobierst\n- kurze Freitextantworten aus dem Raum sammelst, die später als Wortwolke sichtbar werden\n- Multiple-Choice- und Rating-Fragen sinnvoll einsetzt\n- mit Timer, Teams, Rangliste und Bonus-Codes mehr Energie aufbaust\n- Codebeispiele im Informatik- oder Technikunterricht einsetzt\n\nDie Fragen sind bewusst gemischt. Ziel ist es, dir konkrete Ideen für Einstiege, Verständnischecks, Aufmerksamkeitssignale und kurze interaktive Momente im Unterricht zu geben.\n\n**Tipp für die Demo:** Tritt der Session auf einem zweiten Gerät bei, am besten per QR-Code auf dem Smartphone. So kannst du den Wechsel zwischen Host-Ansicht und Teilnehmenden-Perspektive realistisch durchspielen.\n\n**Noch ein Tipp:** Öffne danach den Bearbeitungsmodus des Quiz und schau dir an, wie die Fragen mit Markdown und KaTeX umgesetzt sind.\n\n**Und noch etwas:** Weitere Frageformate oder Features kannst du gern anfragen. Die Kontaktdaten findest du im Impressum.",
+    "description": "![Praxis-Showcase](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Praxis-Showcase für den Unterricht\n\nDiese Demo ist für den **echten Unterrichtseinsatz** gedacht. Sie will kein perfekt durchkomponiertes Fachquiz von Anfang bis Ende sein. Ihr Zweck ist ein anderer: Sie soll Lehrkräften, Dozierenden und Trainer:innen zeigen, wie arsnova.eu eine Live-Session abwechslungsreicher, visueller und spielerischer machen kann.\n\nNutze sie als kurze, **Kahoot-artige Team-Demo für den Live-Unterricht**, um zu zeigen, wie du:\n- mit einem kurzen emotionalen oder sozialen Check-in startest\n- Bilder statt reiner Textfragen einsetzt\n- Formeln und wissenschaftliche Notation in MINT-Fächern einbindest\n- numerische Schätzfragen mit Referenzwert, Toleranzband und zwei Runden ausprobierst\n- kurze Freitextantworten aus dem Raum sammelst, die später als Wortwolke sichtbar werden\n- Multiple-Choice- und Rating-Fragen sinnvoll einsetzt\n- nach bewertbaren Antworten die **Selbsteinschätzung** (1–5) abfragen und **selbstsicher falsche** Antworten in der Host-Auswertung erkennen\n- mit Timer, Teams, Rangliste und Bonus-Codes mehr Energie aufbaust\n- Codebeispiele im Informatik- oder Technikunterricht einsetzt\n\nDie Fragen sind bewusst gemischt. Ziel ist es, dir konkrete Ideen für Einstiege, Verständnischecks, Aufmerksamkeitssignale und kurze interaktive Momente im Unterricht zu geben.\n\n**Tipp für die Demo:** Tritt der Session auf einem zweiten Gerät bei, am besten per QR-Code auf dem Smartphone. So kannst du den Wechsel zwischen Host-Ansicht und Teilnehmenden-Perspektive realistisch durchspielen.\n\n**Noch ein Tipp:** Öffne danach den Bearbeitungsmodus des Quiz und schau dir an, wie die Fragen mit Markdown und KaTeX umgesetzt sind.\n\n**Und noch etwas:** Weitere Frageformate oder Features kannst du gern anfragen. Die Kontaktdaten findest du im Impressum.",
     "motifImageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg",
     "showLeaderboard": true,
     "allowCustomNicknames": false,
@@ -65,7 +65,10 @@
         "numericDecimalPlaces": 2,
         "numericMin": 3,
         "numericMax": 3.5,
-        "numericTwoRounds": false
+        "numericTwoRounds": false,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### KI-Bild oder echtes Foto?\n\n> **Unterrichtsidee:** Nutze das als visuellen Einstieg, als Aufmerksamkeitssignal oder als niedrigschwelligen Gesprächseinstieg.\n\n![Dachszene](/assets/demo/Bettgestell%20auf%20der%20Dachspitze.png)",
@@ -82,7 +85,10 @@
             "text": "Echtes Foto",
             "isCorrect": true
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### Welche dieser Einsätze eignen sich gut für einen kurzen Live-Check?\n\n> **Unterrichtsidee:** Nutze das, um Multiple Choice mit mehreren richtigen Antworten zu zeigen.\n\n_Mehrere Antworten möglich._",
@@ -108,7 +114,10 @@
             "text": "Nur benotete Abschlusstests am Ende einer Einheit durchführen",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### Wie viele sichtbare Teile hat der klassische Zauberwürfel?\n\n> **Unterrichtsidee:** Nutze das für einen spielshowartigen Moment mit Tempo, Spannung und sichtbarem Teamwettbewerb.\n\nGemeint ist der klassische Rubik’s Cube von Ernő Rubik.\n\nOptionaler Impuls: [Wie man einen 3×3 Zauberwürfel ohne Erfahrung löst](https://www.youtube.com/watch?v=EoINieyz6gE).",
@@ -133,7 +142,10 @@
             "text": "22",
             "isCorrect": false
           }
-        ]
+        ],
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### In welcher Sprache ist dieser Code geschrieben?\n\n> **Unterrichtsidee:** Nutze das als schnellen Erkennungsimpuls für Informatik, Maker-Projekte oder technische Einführungen.\n\n```java\nfloat angle = 0;\n\nvoid setup() {\n  size(130, 130, OPENGL);\n}\n\nvoid draw() {\n  background(100);\n\n  translate(60, 40, 0);\n  rotateY(angle);\n  angle += .01;\n\n  beginShape(TRIANGLES);\n  vertex(0, 40, 0);\n  vertex(40, 40, 0);\n  vertex(20, 0, -20);\n\n  vertex(0, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n\n  vertex(40, 40, 0);\n  vertex(20, 40, -40);\n  vertex(20, 0, -20);\n  endShape();\n}\n```",
@@ -190,7 +202,10 @@
         "shortTextToleranceLevel": "medium",
         "shortTextAllowPartialCredit": true,
         "shortTextTrimWhitespace": true,
-        "shortTextNormalizeWhitespace": true
+        "shortTextNormalizeWhitespace": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### In welchem Jahr begann die Französische Revolution?\n\n> **Unterrichtsidee:** Nutze das als Schätzfrage mit zwei Runden: erst spontan schätzen, dann kurz diskutieren und die zweite Runde mit Referenzwert, Toleranzband und Score vergleichen.\n\nGesucht ist das Jahr, das historisch üblicherweise als Beginn der Französischen Revolution gilt.",
@@ -206,7 +221,10 @@
         "numericInputType": "INTEGER",
         "numericMin": 1500,
         "numericMax": 2000,
-        "numericTwoRounds": true
+        "numericTwoRounds": true,
+        "confidenceEnabled": true,
+        "confidenceLabelLow": "Geraten",
+        "confidenceLabelHigh": "Sehr sicher"
       },
       {
         "text": "### Wie wahrscheinlich ist es, dass du so ein Live-Quiz bald selbst einsetzt?\n\n> **Unterrichtsidee:** Nutze das als schnelles Meinungsbild, Exit-Ticket oder Confidence-Check.",

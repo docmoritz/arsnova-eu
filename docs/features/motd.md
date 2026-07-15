@@ -128,7 +128,7 @@ Synergie: [`docs/didaktik/zweiter-kurs-und-agentische-ki.md`](../didaktik/zweite
 ## 9. Betrieb: zweite MOTD sichtbar, Migrationen
 
 - **Reihenfolge im Overlay:** Es gilt nur **eine** aktive Karte. Eine zweite (z. B. „Making of“ mit niedrigerer Priorität) erscheint **erst**, nachdem die erste (z. B. Willkommen) mit **„Alles klar!“**, **Schließen** oder **Swipe** bestätigt wurde. Technisch: Client sendet `overlayDismissedUpTo` an `motd.getCurrent` / `getHeaderState`.
-- **Datenbank:** Produktiv per **`prisma migrate deploy`**. Lokal: **`npm run dev`** wendet nach `ensure-schema` zusätzlich die SQL-Dateien der kuratierten MOTDs an (`prisma db execute`), damit Meldungsketten auch ohne manuelles Migrate existieren. Manuell: **`npm run seed:motd-making-of`**, **`npm run seed:motd-tempo-feedback`**, **`npm run seed:motd-numeric-estimate`** und **`npm run seed:motd-ai-quiz-generation`**.
+- **Datenbank:** Produktiv per **`prisma migrate deploy`**. Lokal: **`npm run dev`** wendet nach `ensure-schema` zusätzlich die SQL-Dateien der kuratierten MOTDs an (`prisma db execute`), damit Meldungsketten auch ohne manuelles Migrate existieren. Manuell: **`npm run seed:motd-making-of`**, **`npm run seed:motd-tempo-feedback`**, **`npm run seed:motd-numeric-estimate`**, **`npm run seed:motd-ai-quiz-generation`** und **`npm run seed:motd-confidence-slider`**.
 - **Zeitfenster:** `startsAt` / `endsAt` sind **UTC**. Liegt `startsAt` in der Zukunft, liefert die API die MOTD nicht (Filter in `motd.ts`). Mehrere aktive MOTDs müssen sich zeitlich mit der Willkommens-MOTD **überlappen**, wenn sie nacheinander nach Dismiss kommen sollen (gleiches frühes `startsAt` wie die erste Meldung).
 
 ## 10. Changelog dieses Dokuments

@@ -27,6 +27,7 @@ const {
   getLeaderboardQueryMock,
   getTeamLeaderboardQueryMock,
   getExportDataQueryMock,
+  getSessionConfidenceSummaryQueryMock,
   wordCloudAnalyzeQueryMock,
   qaListQueryMock,
   qaModerateMutateMock,
@@ -67,6 +68,7 @@ const {
   getLeaderboardQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
   getExportDataQueryMock: vi.fn(),
+  getSessionConfidenceSummaryQueryMock: vi.fn(),
   wordCloudAnalyzeQueryMock: vi.fn(),
   qaListQueryMock: vi.fn(),
   qaModerateMutateMock: vi.fn(),
@@ -113,6 +115,7 @@ vi.mock('../../../core/trpc.client', () => ({
       getLeaderboard: { query: getLeaderboardQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
       getExportData: { query: getExportDataQueryMock },
+      getSessionConfidenceSummary: { query: getSessionConfidenceSummaryQueryMock },
       nextQuestion: { mutate: nextQuestionMutateMock },
       revealAnswers: { mutate: revealAnswersMutateMock },
       revealResults: { mutate: revealResultsMutateMock },
@@ -472,6 +475,7 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
       teamLeaderboard: [],
       bonusTokens: [],
     });
+    getSessionConfidenceSummaryQueryMock.mockResolvedValue(null);
   });
 
   const setup = (extraProviders: Provider[] = []) => {
@@ -3060,6 +3064,85 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
     const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('Single Choice');
     expect(text).toContain('Schwer');
+    fixture.destroy();
+  });
+
+  it('zeigt bei RESULTS die Sicherheitsgrad-Auswertung mit Fehlkonzept-Hinweis', async () => {
+    getInfoQueryMock.mockResolvedValue({ ...defaultSession, status: 'RESULTS' });
+    onStatusChangedSubscribeMock.mockImplementation(
+      (_input: unknown, opts: { onData: (d: unknown) => void }) => {
+        opts.onData({ status: 'RESULTS', currentQuestion: 0 });
+        return { unsubscribe: unsubscribeMock };
+      },
+    );
+    getCurrentQuestionForHostQueryMock.mockResolvedValue({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      order: 0,
+      totalQuestions: 1,
+      text: 'Was ist 2+2?',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      currentRound: 1,
+      answers: [
+        { id: 'aaaaaaaa-1111-4111-8111-111111111111', text: '5', isCorrect: false },
+        { id: 'bbbbbbbb-2222-4222-8222-222222222222', text: '4', isCorrect: true },
+      ],
+      voteDistribution: [
+        {
+          id: 'aaaaaaaa-1111-4111-8111-111111111111',
+          text: '5',
+          isCorrect: false,
+          voteCount: 1,
+          votePercentage: 50,
+        },
+        {
+          id: 'bbbbbbbb-2222-4222-8222-222222222222',
+          text: '4',
+          isCorrect: true,
+          voteCount: 1,
+          votePercentage: 50,
+        },
+      ],
+      totalVotes: 2,
+      correctVoterCount: 1,
+      confidenceEnabled: true,
+      confidenceLabelLow: 'Geraten',
+      confidenceLabelHigh: 'Sehr sicher',
+      confidenceResult: {
+        distribution: { '1': 1, '2': 0, '3': 0, '4': 0, '5': 1 },
+        crossTab: {
+          correctHigh: 0,
+          correctMid: 0,
+          correctLow: 1,
+          incorrectHigh: 1,
+          incorrectMid: 0,
+          incorrectLow: 0,
+        },
+        highConfidenceWrongCount: 1,
+        highConfidenceWrongOptions: [
+          { answerId: 'aaaaaaaa-1111-4111-8111-111111111111', text: '5', count: 1 },
+        ],
+      },
+    });
+
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await vi.waitUntil(
+      () => fixture.nativeElement.querySelector('.session-host__confidence') !== null,
+      { timeout: 5000, interval: 25 },
+    );
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.session-host__confidence-alert')?.textContent).toContain(
+      'selbstsicher falsch',
+    );
+    expect(host.querySelector('.session-host__confidence-crosstab-cell--heat-risk')).not.toBeNull();
+    expect(
+      host.querySelector('.session-host__confidence-crosstab-cell--heat-focus'),
+    ).not.toBeNull();
+    expect(host.querySelector('.session-host__confidence-wrong-options-list')).not.toBeNull();
     fixture.destroy();
   });
 
@@ -6113,6 +6196,69 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
     fixture.destroy();
   });
 
+  it('zeigt die didaktische Confidence-Zusammenfassung im Abschluss', async () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.statusUpdate.set({
+      status: 'FINISHED',
+      currentQuestion: null,
+    });
+    fixture.componentInstance.finishedConfidenceSummary.set({
+      responseCount: 5,
+      includedQuestionCount: 1,
+      suppressedQuestionCount: 0,
+      priorityQuestionCount: 1,
+      distribution: { '1': 1, '2': 0, '3': 0, '4': 2, '5': 2 },
+      crossTab: {
+        correctHigh: 2,
+        correctMid: 0,
+        correctLow: 1,
+        incorrectHigh: 2,
+        incorrectMid: 0,
+        incorrectLow: 0,
+      },
+      highConfidenceWrongCount: 2,
+      questions: [
+        {
+          questionOrder: 0,
+          questionTextShort:
+            '### Welche Aussage stimmt?\n\n> **Unterrichtsidee:** Nutze die Nachbesprechung.',
+          questionType: 'SINGLE_CHOICE',
+          responseCount: 5,
+          result: {
+            distribution: { '1': 1, '2': 0, '3': 0, '4': 2, '5': 2 },
+            crossTab: {
+              correctHigh: 2,
+              correctMid: 0,
+              correctLow: 1,
+              incorrectHigh: 2,
+              incorrectMid: 0,
+              incorrectLow: 0,
+            },
+            highConfidenceWrongCount: 2,
+          },
+        },
+      ],
+    });
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Lernstand und Selbsteinschätzung');
+    expect(text).toContain('Fehlkonzept-Risiko');
+    expect(text).toContain('Welche Aussage stimmt?');
+    expect(
+      fixture.nativeElement.querySelector('.session-host__finished-confidence-question-markdown h3')
+        ?.textContent,
+    ).toContain('Welche Aussage stimmt?');
+    expect(
+      fixture.nativeElement.querySelector(
+        '.session-host__finished-confidence-question-markdown blockquote strong',
+      )?.textContent,
+    ).toContain('Unterrichtsidee:');
+    fixture.destroy();
+  });
+
   it('zeigt im Host-Zwischenleaderboard Titles, Labels und den Gleichstandhinweis', async () => {
     getInfoQueryMock.mockResolvedValue({
       ...defaultSession,
@@ -7969,16 +8115,45 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
         questions: [
           {
             questionOrder: 0,
-            questionTextShort: 'Wie zufrieden bist du?',
-            type: 'RATING',
-            participantCount: 3,
+            questionTextShort: 'Was ist 2+2?',
+            type: 'SINGLE_CHOICE',
+            participantCount: 2,
+            aggregationRound: 1,
             averageScore: null,
-            optionDistribution: null,
-            freetextAggregates: null,
-            ratingDistribution: { '1': 1, '3': 2 },
-            ratingAverage: 2.3,
+            confidenceResult: {
+              distribution: { '1': 1, '2': 0, '3': 0, '4': 0, '5': 1 },
+              crossTab: {
+                correctHigh: 0,
+                correctMid: 0,
+                correctLow: 1,
+                incorrectHigh: 1,
+                incorrectMid: 0,
+                incorrectLow: 0,
+              },
+              highConfidenceWrongCount: 1,
+              highConfidenceWrongOptions: [
+                { answerId: 'aaaaaaaa-1111-4111-8111-111111111111', text: '5', count: 1 },
+              ],
+            },
           },
         ],
+        confidenceSummary: {
+          responseCount: 5,
+          includedQuestionCount: 1,
+          suppressedQuestionCount: 0,
+          priorityQuestionCount: 1,
+          distribution: { '1': 1, '2': 0, '3': 0, '4': 2, '5': 2 },
+          crossTab: {
+            correctHigh: 2,
+            correctMid: 0,
+            correctLow: 1,
+            incorrectHigh: 2,
+            incorrectMid: 0,
+            incorrectLow: 0,
+          },
+          highConfidenceWrongCount: 2,
+          questions: [],
+        },
         teamLeaderboard: [],
         bonusTokens: [
           {
@@ -7997,10 +8172,214 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
       await fixture.componentInstance.exportSessionResultsCsv();
       fixture.detectChanges();
 
-      expect(exportedCsv).toContain('Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Details');
+      expect(exportedCsv).toContain(
+        'Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko',
+      );
+      expect(exportedCsv).toContain(';2;"1";');
+      expect(exportedCsv).toContain('selbstsicher falsch');
+      expect(exportedCsv).toContain('Lernstand und Selbsteinschätzung');
+      expect(exportedCsv).toContain('Gültige Antworten;Ausgewertete Fragen');
       expect(exportedCsv).toContain('Bonus-Codes');
       expect(exportedCsv).toContain('Rang;Nickname;Code;Punkte;Generiert am');
       expect(exportedCsv).toContain('1;Ada;BONUS-123;220;2026-03-24T12:31:00.000Z');
+
+      fixture.destroy();
+      anchorClickSpy.mockRestore();
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalCreateObjectURL,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalRevokeObjectURL,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: originalBlob,
+      });
+    });
+
+    it('haengt Sicherheitsgrad-Details an bestehende Antwortverteilung im Ergebnis-CSV an', async () => {
+      let exportedCsv = '';
+      const createObjectURLMock = vi.fn(() => 'blob:test-export');
+      const revokeObjectURLMock = vi.fn();
+      const anchorClickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+      const originalBlob = Blob;
+      class CaptureBlob extends Blob {
+        constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+          super(parts, options);
+          exportedCsv = parts
+            .map((part) => (typeof part === 'string' ? part : String(part)))
+            .join('');
+        }
+      }
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: createObjectURLMock,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: revokeObjectURLMock,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: CaptureBlob,
+      });
+      getExportDataQueryMock.mockResolvedValueOnce({
+        sessionId: defaultSession.id,
+        sessionCode: 'ABC123',
+        quizName: 'Demo Quiz',
+        finishedAt: '2026-03-24T12:30:00.000Z',
+        participantCount: 2,
+        teamMode: false,
+        questions: [
+          {
+            questionOrder: 0,
+            questionTextShort: 'Hauptstadt?',
+            type: 'SINGLE_CHOICE',
+            participantCount: 2,
+            aggregationRound: 1,
+            averageScore: 50,
+            optionDistribution: [
+              { text: 'Paris', count: 1, percentage: 50, isCorrect: true },
+              { text: 'London', count: 1, percentage: 50, isCorrect: false },
+            ],
+            confidenceResult: {
+              distribution: { '1': 0, '2': 0, '3': 0, '4': 1, '5': 1 },
+              crossTab: {
+                correctHigh: 1,
+                correctMid: 0,
+                correctLow: 0,
+                incorrectHigh: 1,
+                incorrectMid: 0,
+                incorrectLow: 0,
+              },
+              highConfidenceWrongCount: 1,
+              highConfidenceWrongOptions: [
+                { answerId: 'aaaaaaaa-1111-4111-8111-111111111111', text: 'London', count: 1 },
+              ],
+            },
+          },
+        ],
+        teamLeaderboard: [],
+        bonusTokens: [],
+      });
+
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await fixture.componentInstance.exportSessionResultsCsv();
+      fixture.detectChanges();
+
+      expect(exportedCsv).toContain('Paris: 1 (50%) ✓');
+      expect(exportedCsv).toContain('Aggregationsrunde 1');
+      expect(exportedCsv).toContain('selbstsicher falsch');
+
+      fixture.destroy();
+      anchorClickSpy.mockRestore();
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalCreateObjectURL,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: originalRevokeObjectURL,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: originalBlob,
+      });
+    });
+
+    it('kennzeichnet Peer-Instruction-Runde 2 und Teilnahme-Lücken im Ergebnis-CSV', async () => {
+      let exportedCsv = '';
+      const createObjectURLMock = vi.fn(() => 'blob:test-export');
+      const revokeObjectURLMock = vi.fn();
+      const anchorClickSpy = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      const originalCreateObjectURL = URL.createObjectURL;
+      const originalRevokeObjectURL = URL.revokeObjectURL;
+      const originalBlob = Blob;
+      class CaptureBlob extends Blob {
+        constructor(parts: BlobPart[], options?: BlobPropertyBag) {
+          super(parts, options);
+          exportedCsv = parts
+            .map((part) => (typeof part === 'string' ? part : String(part)))
+            .join('');
+        }
+      }
+      Object.defineProperty(URL, 'createObjectURL', {
+        configurable: true,
+        writable: true,
+        value: createObjectURLMock,
+      });
+      Object.defineProperty(URL, 'revokeObjectURL', {
+        configurable: true,
+        writable: true,
+        value: revokeObjectURLMock,
+      });
+      Object.defineProperty(globalThis, 'Blob', {
+        configurable: true,
+        writable: true,
+        value: CaptureBlob,
+      });
+      getExportDataQueryMock.mockResolvedValueOnce({
+        sessionId: defaultSession.id,
+        sessionCode: 'ABC123',
+        quizName: 'Demo Quiz',
+        finishedAt: '2026-03-24T12:30:00.000Z',
+        participantCount: 3,
+        teamMode: false,
+        questions: [
+          {
+            questionOrder: 0,
+            questionTextShort: 'PI-Frage',
+            type: 'SINGLE_CHOICE',
+            participantCount: 2,
+            aggregationRound: 2,
+            round1ParticipantCount: 3,
+            round2ParticipantCount: 2,
+            averageScore: null,
+            confidenceResult: {
+              distribution: { '1': 0, '2': 1, '3': 1, '4': 0, '5': 0 },
+              crossTab: {
+                correctHigh: 0,
+                correctMid: 2,
+                correctLow: 0,
+                incorrectHigh: 0,
+                incorrectMid: 0,
+                incorrectLow: 0,
+              },
+              highConfidenceWrongCount: 0,
+            },
+          },
+        ],
+        teamLeaderboard: [],
+        bonusTokens: [],
+      });
+
+      const fixture = setup();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await fixture.componentInstance.exportSessionResultsCsv();
+      fixture.detectChanges();
+
+      expect(exportedCsv).toContain('2 (Peer Instruction)');
+      expect(exportedCsv).toContain('Runde 1: 3 Stimmen · Aggregiert: Runde 2 mit 2 Stimmen');
 
       fixture.destroy();
       anchorClickSpy.mockRestore();

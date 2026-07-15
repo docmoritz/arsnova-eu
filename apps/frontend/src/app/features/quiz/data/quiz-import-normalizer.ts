@@ -3,6 +3,7 @@ import {
   SHORT_TEXT_DEFAULT_MAX_LENGTH,
   SHORT_TEXT_MAX_LENGTH_LIMIT,
   normalizeShortTextValue,
+  questionSupportsConfidence,
   type Difficulty,
   type QuizExport,
 } from '@arsnova/shared-types';
@@ -12,10 +13,7 @@ type ImportedQuiz = QuizExport['quiz'];
 type ImportedQuestion = ImportedQuiz['questions'][number];
 type ImportedAnswer = ImportedQuestion['answers'][number];
 type ClickFreeTextFlagKey =
-  | 'configCaseSensitive'
-  | 'configTrimWhitespaces'
-  | 'configUseKeywords'
-  | 'configUsePunctuation';
+  'configCaseSensitive' | 'configTrimWhitespaces' | 'configUseKeywords' | 'configUsePunctuation';
 
 const CLICK_TEAM_NAME_LIMIT = 8;
 const NUMERIC_ESTIMATE_MAX_DECIMAL_PLACES = 10;
@@ -39,10 +37,7 @@ interface ResolvedClickBooleanSetting {
 }
 
 export type QuizImportWarningKind =
-  | 'skipped_question'
-  | 'mapped_question'
-  | 'simplified_question'
-  | 'ignored_quiz_options';
+  'skipped_question' | 'mapped_question' | 'simplified_question' | 'ignored_quiz_options';
 
 export interface QuizImportWarning {
   kind: QuizImportWarningKind;
@@ -82,6 +77,7 @@ function convertArsnovaClickExport(source: JsonRecord): NormalizedQuizImportPayl
   const teamSettings = mapTeamSettings(sessionConfig);
   const allowCustomNicknames = mapAllowCustomNicknames(sessionConfig);
   const readingPhaseEnabled = readBoolean(sessionConfig?.['readingConfirmationEnabled']) ?? true;
+  const confidenceSliderEnabled = readBoolean(sessionConfig?.['confidenceSliderEnabled']) === true;
   const questionsRaw = source['questionList'];
 
   if (!Array.isArray(questionsRaw)) {
@@ -120,6 +116,8 @@ function convertArsnovaClickExport(source: JsonRecord): NormalizedQuizImportPayl
       });
     }
   }
+
+  applyClickConfidenceSettings(questions, confidenceSliderEnabled, sessionConfig, warnings);
 
   const sourceQuiz: ImportedQuiz = {
     name,
@@ -169,7 +167,6 @@ function collectIgnoredQuizOptionLabels(source: JsonRecord): string[] {
   addIfPresent(source, ignored, 'sentQuestionIndex');
   addIfPresent(source, ignored, 'readingConfirmationRequested');
   addIfPresent(source, ignored, 'questionCount');
-  addIfPresent(sessionConfig, ignored, 'sessionConfig.confidenceSliderEnabled');
   addIfPresent(sessionConfig, ignored, 'sessionConfig.showResponseProgress');
   addIfPresent(sessionConfig, ignored, 'sessionConfig.theme');
   addIfPresent(sessionConfig, ignored, 'sessionConfig.leaderboardAlgorithm');
@@ -203,6 +200,77 @@ function mapAllowCustomNicknames(sessionConfig: JsonRecord | null): boolean {
   const nicks = isRecord(sessionConfig?.['nicks']) ? sessionConfig['nicks'] : null;
   const blockIllegalNicks = readBoolean(nicks?.['blockIllegalNicks']);
   return blockIllegalNicks === undefined ? false : !blockIllegalNicks;
+}
+
+function applyClickConfidenceSettings(
+  questions: ImportedQuestion[],
+  confidenceSliderEnabled: boolean,
+  sessionConfig: JsonRecord | null,
+  warnings: QuizImportWarning[],
+): void {
+  if (!confidenceSliderEnabled) {
+    return;
+  }
+
+  const labelLow =
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceLabelLow']) ??
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceLowLabel']) ??
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceSliderLabelLow']);
+  const labelHigh =
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceLabelHigh']) ??
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceHighLabel']) ??
+    readOptionalConfidenceLabel(sessionConfig?.['confidenceSliderLabelHigh']);
+
+  let enabledCount = 0;
+  for (let index = 0; index < questions.length; index += 1) {
+    const question = questions[index];
+    if (!question || !questionSupportsConfidence(question.type)) {
+      continue;
+    }
+    questions[index] = {
+      ...question,
+      confidenceEnabled: true,
+      ...(labelLow ? { confidenceLabelLow: labelLow } : {}),
+      ...(labelHigh ? { confidenceLabelHigh: labelHigh } : {}),
+    };
+    enabledCount += 1;
+  }
+
+  if (enabledCount > 0) {
+    warnings.push({
+      kind: 'mapped_question',
+      message: $localize`:@@quizImport.confidenceMappedMessage:Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.`,
+      detail: buildConfidenceImportMappedDetail(enabledCount, labelLow, labelHigh),
+    });
+  }
+}
+
+function buildConfidenceImportMappedDetail(
+  count: number,
+  labelLow?: string,
+  labelHigh?: string,
+): string {
+  if (labelLow && labelHigh) {
+    return $localize`:@@quizImport.confidenceMappedDetailBoth:Aktiviert für ${count}:count: Frage(n) · niedrig: ${labelLow}:low: · hoch: ${labelHigh}:high:`;
+  }
+  if (labelLow) {
+    return $localize`:@@quizImport.confidenceMappedDetailLow:Aktiviert für ${count}:count: Frage(n) · niedrig: ${labelLow}:low:`;
+  }
+  if (labelHigh) {
+    return $localize`:@@quizImport.confidenceMappedDetailHigh:Aktiviert für ${count}:count: Frage(n) · hoch: ${labelHigh}:high:`;
+  }
+  return $localize`:@@quizImport.confidenceMappedDetail:Aktiviert für ${count}:count: Frage(n)`;
+}
+
+function readOptionalConfidenceLabel(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 50) {
+    return undefined;
+  }
+  return trimmed;
 }
 
 function mapQuestion(value: unknown, index: number): MappedQuestionResult {

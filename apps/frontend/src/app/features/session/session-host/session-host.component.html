@@ -654,6 +654,179 @@
           <div class="session-host__run l-page">
             @if (effectiveStatus() === 'FINISHED') {
               <div class="session-host__results">
+                @if (finishedConfidenceSummary(); as confidenceSummary) {
+                  <section
+                    class="session-host__finished-confidence"
+                    aria-labelledby="finished-confidence-heading"
+                  >
+                    <header class="session-host__finished-confidence-header">
+                      <mat-icon aria-hidden="true">psychology</mat-icon>
+                      <div>
+                        <h2
+                          id="finished-confidence-heading"
+                          i18n="@@sessionHost.finishedConfidenceTitle"
+                        >
+                          Lernstand und Selbsteinschätzung
+                        </h2>
+                        <p i18n="@@sessionHost.finishedConfidenceLead">
+                          Die Verbindung aus Korrektheit und Selbsteinschätzung zeigt gefestigtes
+                          Wissen, Wissenslücken und mögliche Fehlkonzepte.
+                        </p>
+                      </div>
+                    </header>
+
+                    @if (confidenceSummary.priorityQuestionCount > 0) {
+                      <div class="session-host__finished-confidence-alert" role="status">
+                        <mat-icon aria-hidden="true">priority_high</mat-icon>
+                        <span>
+                          <span i18n="@@sessionHost.finishedConfidencePriority">
+                            Nachbesprechung empfohlen:
+                          </span>
+                          {{ confidenceSummary.priorityQuestionCount }}
+                        </span>
+                      </div>
+                    }
+
+                    <div class="session-host__finished-confidence-metrics">
+                      <div class="session-host__finished-confidence-metric">
+                        <strong
+                          >{{
+                            finishedConfidencePercent(
+                              confidenceSummary.crossTab.correctHigh,
+                              confidenceSummary.responseCount
+                            )
+                          }}
+                          %</strong
+                        >
+                        <span i18n="@@sessionHost.finishedConfidenceMastery"
+                          >Gefestigtes Wissen</span
+                        >
+                      </div>
+                      <div
+                        class="session-host__finished-confidence-metric session-host__finished-confidence-metric--risk"
+                      >
+                        <strong
+                          >{{
+                            finishedConfidencePercent(
+                              confidenceSummary.crossTab.incorrectHigh,
+                              confidenceSummary.responseCount
+                            )
+                          }}
+                          %</strong
+                        >
+                        <span i18n="@@sessionHost.finishedConfidenceRisk">Fehlkonzept-Risiko</span>
+                      </div>
+                      <div class="session-host__finished-confidence-metric">
+                        <strong
+                          >{{
+                            finishedConfidencePercent(
+                              confidenceSummary.crossTab.correctLow,
+                              confidenceSummary.responseCount
+                            )
+                          }}
+                          %</strong
+                        >
+                        <span i18n="@@sessionHost.finishedConfidenceFragile">Fragiles Wissen</span>
+                      </div>
+                    </div>
+
+                    <p class="session-host__finished-confidence-coverage">
+                      <span i18n="@@sessionHost.finishedConfidenceValidResponses"
+                        >Antworten mit Selbsteinschätzung:</span
+                      >
+                      {{ formatCount(confidenceSummary.responseCount) }}
+                      ·
+                      <span i18n="@@sessionHost.finishedConfidenceIncludedQuestions"
+                        >Ausgewertete Fragen:</span
+                      >
+                      {{ formatCount(confidenceSummary.includedQuestionCount) }}
+                    </p>
+
+                    @if (confidenceSummary.questions.length > 0) {
+                      <h3 i18n="@@sessionHost.finishedConfidencePriorities">
+                        Priorität für die Nachbesprechung
+                      </h3>
+                      <ol class="session-host__finished-confidence-list">
+                        @for (
+                          question of confidenceSummary.questions.slice(0, 3);
+                          track question.questionOrder
+                        ) {
+                          <li>
+                            <article class="session-host__finished-confidence-question">
+                              <header class="session-host__finished-confidence-question-title">
+                                <strong
+                                  class="session-host__finished-confidence-question-number"
+                                  aria-hidden="true"
+                                  >{{ question.questionOrder + 1 }}</strong
+                                >
+                                <div
+                                  class="session-host__finished-confidence-question-markdown markdown-body"
+                                  [innerHTML]="renderMarkdown(question.questionTextShort)"
+                                ></div>
+                              </header>
+                              <div class="session-host__finished-confidence-question-metrics">
+                                <span
+                                  class="session-host__finished-confidence-question-metric session-host__finished-confidence-question-metric--risk"
+                                >
+                                  <strong>
+                                    {{ question.result.crossTab.incorrectHigh }}/{{
+                                      question.responseCount
+                                    }}
+                                    ·
+                                    {{
+                                      finishedConfidencePercent(
+                                        question.result.crossTab.incorrectHigh,
+                                        question.responseCount
+                                      )
+                                    }}
+                                    %
+                                  </strong>
+                                  <span i18n="@@sessionHost.finishedConfidenceWrongHigh"
+                                    >falsch + hohe Antwortsicherheit</span
+                                  >
+                                </span>
+                                <span class="session-host__finished-confidence-question-metric">
+                                  <strong>
+                                    {{
+                                      finishedConfidencePercent(
+                                        finishedConfidenceIncorrectCount(question),
+                                        question.responseCount
+                                      )
+                                    }}
+                                    %
+                                  </strong>
+                                  <span i18n="@@sessionHost.finishedConfidenceIncorrectOverall"
+                                    >insgesamt falsch</span
+                                  >
+                                </span>
+                              </div>
+                              @if (finishedConfidenceTopWrongOption(question); as option) {
+                                <p class="session-host__finished-confidence-signal">
+                                  <span i18n="@@sessionHost.finishedConfidenceTopSignal"
+                                    >Stärkstes Signal:</span
+                                  >
+                                  <strong>{{ option }}</strong>
+                                </p>
+                              }
+                            </article>
+                          </li>
+                        }
+                      </ol>
+                    }
+
+                    @if (confidenceSummary.suppressedQuestionCount > 0) {
+                      <p class="session-host__finished-confidence-privacy">
+                        <mat-icon aria-hidden="true">privacy_tip</mat-icon>
+                        <span>
+                          <span i18n="@@sessionHost.finishedConfidenceSuppressed">
+                            Aus Datenschutz ausgeblendete Fragen:
+                          </span>
+                          {{ confidenceSummary.suppressedQuestionCount }}
+                        </span>
+                      </p>
+                    }
+                  </section>
+                }
                 @if (leaderboard().length > 0) {
                   <section
                     class="session-host__leaderboard-card"
@@ -982,17 +1155,56 @@
                       <span i18n>Zur Startseite</span>
                     </a>
                     <button
-                      matButton="tonal"
+                      matButton="filled"
                       type="button"
-                      (click)="exportSessionResultsCsv()"
+                      (click)="exportSessionResultsPdf()"
                       [disabled]="exportExporting()"
                       [attr.aria-busy]="exportExporting()"
-                      i18n-aria-label
-                      aria-label="Ergebnis als CSV exportieren"
+                      i18n-aria-label="@@sessionHost.exportPdfButtonAria"
+                      aria-label="Ergebnisbericht als PDF exportieren"
                     >
-                      <mat-icon>download</mat-icon>
-                      <span i18n>Ergebnis exportieren</span>
+                      <mat-icon aria-hidden="true">download</mat-icon>
+                      <span i18n="@@sessionHost.exportPdfButton">Ergebnisbericht (PDF)</span>
                     </button>
+                    <button
+                      matButton="tonal"
+                      type="button"
+                      (click)="previewSessionResultsReport()"
+                      [disabled]="exportExporting()"
+                      i18n-aria-label="@@sessionHost.exportPdfPreviewButtonAria"
+                      aria-label="Ergebnisbericht in Vorschau anzeigen"
+                    >
+                      <mat-icon>visibility</mat-icon>
+                      <span i18n="@@sessionHost.exportPdfPreviewButton">Vorschau</span>
+                    </button>
+                    <button
+                      matButton="tonal"
+                      type="button"
+                      [matMenuTriggerFor]="sessionExportMoreMenu"
+                      [disabled]="exportExporting()"
+                      i18n-aria-label="@@sessionHost.exportMoreButtonAria"
+                      aria-label="Weitere Exportoptionen"
+                    >
+                      <mat-icon aria-hidden="true">more_vert</mat-icon>
+                      <span i18n="@@sessionHost.exportMoreButton">Mehr</span>
+                    </button>
+                    <mat-menu #sessionExportMoreMenu="matMenu">
+                      <button
+                        mat-menu-item
+                        type="button"
+                        (click)="exportSessionResultsCsv()"
+                        [disabled]="exportExporting()"
+                        [attr.aria-busy]="exportExporting()"
+                        i18n-matTooltip="@@sessionHost.exportCsvExcelTooltip"
+                        matTooltip="Tabellarische Rohdaten für Tabellenkalkulation – weniger Details als der PDF-Bericht."
+                        matTooltipPosition="left"
+                      >
+                        <mat-icon aria-hidden="true">grid_on</mat-icon>
+                        <span i18n="@@sessionHost.exportCsvExcelMenuItem"
+                          >Für Excel exportieren</span
+                        >
+                      </button>
+                    </mat-menu>
                     @if (exportExporting()) {
                       <p class="session-host__export-hint" role="status" i18n>Wird exportiert…</p>
                     }
@@ -2257,6 +2469,128 @@
                               </li>
                             }
                           </ul>
+                        }
+
+                        @if (effectiveStatus() === 'RESULTS' && q.confidenceResult; as confidence) {
+                          <section
+                            class="session-host__confidence"
+                            aria-labelledby="session-host-confidence-heading"
+                          >
+                            <div class="session-host__confidence-header">
+                              <mat-icon class="session-host__confidence-icon" aria-hidden="true"
+                                >psychology</mat-icon
+                              >
+                              <div class="session-host__confidence-heading-copy">
+                                <h3
+                                  class="session-host__confidence-heading"
+                                  id="session-host-confidence-heading"
+                                  i18n="@@sessionHost.confidenceSectionTitle"
+                                >
+                                  Selbsteinschätzung
+                                </h3>
+                                <p
+                                  class="session-host__confidence-lead"
+                                  i18n="@@sessionHost.confidenceSectionLead"
+                                >
+                                  Richtig oder falsch — und wie sicher? Besonders wichtig: falsch
+                                  trotz hoher Antwortsicherheit.
+                                </p>
+                              </div>
+                            </div>
+
+                            @if (confidence.highConfidenceWrongCount > 0) {
+                              <div
+                                class="session-host__confidence-alert"
+                                role="status"
+                                aria-live="polite"
+                              >
+                                <mat-icon aria-hidden="true">priority_high</mat-icon>
+                                <span>{{
+                                  confidenceMisconceptionLabel(confidence.highConfidenceWrongCount)
+                                }}</span>
+                              </div>
+                            }
+
+                            <div
+                              class="session-host__confidence-crosstab"
+                              role="table"
+                              i18n-aria-label="@@sessionHost.confidenceCrossTabAria"
+                              aria-label="Korrektheit und Selbsteinschätzung"
+                            >
+                              <div
+                                class="session-host__confidence-crosstab-row session-host__confidence-crosstab-row--head"
+                                role="row"
+                              >
+                                <span
+                                  class="session-host__confidence-crosstab-corner"
+                                  role="columnheader"
+                                ></span>
+                                <span role="columnheader">{{ confidenceTierLowHeading(q) }}</span>
+                                <span role="columnheader">{{ confidenceTierMidHeading() }}</span>
+                                <span role="columnheader">{{ confidenceTierHighHeading(q) }}</span>
+                              </div>
+                              @for (row of confidenceCrossTabRows(confidence); track row.label) {
+                                <div class="session-host__confidence-crosstab-row" role="row">
+                                  <span
+                                    class="session-host__confidence-crosstab-row-label"
+                                    role="rowheader"
+                                    >{{ row.label }}</span
+                                  >
+                                  @for (tier of confidenceCrossTabTierOrder(); track tier) {
+                                    @let tierCount = confidenceCrossTabTierCount(row, tier);
+                                    @let tierHeading = confidenceCrossTabTierHeading(tier, q);
+                                    <span
+                                      [class]="
+                                        confidenceCrossTabCellHeatClass(
+                                          tierCount,
+                                          confidence,
+                                          row.correctness,
+                                          tier
+                                        )
+                                      "
+                                      role="cell"
+                                      [attr.data-tier]="tierHeading"
+                                      [attr.aria-label]="
+                                        confidenceCrossTabCellAriaLabel(
+                                          row.label,
+                                          tierHeading,
+                                          tierCount
+                                        )
+                                      "
+                                      >{{ formatCount(tierCount) }}</span
+                                    >
+                                  }
+                                </div>
+                              }
+                            </div>
+
+                            @if (confidence.highConfidenceWrongOptions?.length) {
+                              <div class="session-host__confidence-wrong-options">
+                                <p
+                                  class="session-host__confidence-wrong-options-title"
+                                  i18n="@@sessionHost.confidenceWrongOptionsTitle"
+                                >
+                                  Häufig falsch mit hoher Antwortsicherheit
+                                </p>
+                                <ul class="session-host__confidence-wrong-options-list" role="list">
+                                  @for (
+                                    option of confidence.highConfidenceWrongOptions;
+                                    track option.answerId
+                                  ) {
+                                    <li>
+                                      <span
+                                        class="session-host__confidence-wrong-option-text markdown-body"
+                                        [innerHTML]="renderMarkdown(option.text)"
+                                      ></span>
+                                      <span class="session-host__confidence-wrong-option-count">{{
+                                        formatCount(option.count)
+                                      }}</span>
+                                    </li>
+                                  }
+                                </ul>
+                              </div>
+                            }
+                          </section>
                         }
                       </mat-card-content>
                     </mat-card>

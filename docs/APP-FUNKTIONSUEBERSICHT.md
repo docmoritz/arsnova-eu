@@ -225,7 +225,7 @@ Die Sammlung unterstützt:
 
 - JSON-Export eines Quiz
 - JSON-Import eines Quiz
-- arsnova.click-Import inkl. Mapping von `RangedQuestion` auf `NUMERIC_ESTIMATE`
+- arsnova.click-Import inkl. Mapping von `RangedQuestion` auf `NUMERIC_ESTIMATE` und `confidenceSliderEnabled` auf bewertbare Fragen
 - Importnormalisierung mit **Warnungen**, falls eingehende Daten angepasst werden mussten
 - Export im definierten Quiz-Importformat
 
@@ -643,7 +643,8 @@ Unterstützt werden:
 
 Die App unterstützt mehrere Exportarten:
 
-- CSV-Export der Sessionergebnisse
+- **Ergebnisbericht (PDF)** der Sessionergebnisse (primär; inkl. Lernstand/Selbsteinschätzung, Fragentexte, Diagramme)
+- CSV-Export der Sessionergebnisse (sekundär; tabellarische Rohdaten für Excel)
 - aggregierter, hostseitiger Session-Export mit anonymisierten bzw. zusammengefassten Ergebnissen
 - Bonuscode-Export
 - Admin-Export als Behörden-PDF oder JSON

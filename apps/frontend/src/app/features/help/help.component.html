@@ -161,13 +161,76 @@
           </p>
         </section>
 
+        <section class="help-section--confidence" aria-labelledby="help-confidence-title">
+          <h2 id="help-confidence-title" i18n="@@help.confidenceTitle">
+            Selbsteinschätzung bei bewertbaren Fragen
+          </h2>
+          <p class="help-section-lead" i18n="@@help.confidenceLead">
+            Die Selbsteinschätzung ist kein eigener Fragetyp, sondern eine optionale Zusatzabfrage
+            nach Single Choice, Multiple Choice, Kurzantwort und numerischer Schätzfrage:
+            Teilnehmende geben an, wie sicher sie bei ihrer Antwort sind (Skala 1–5). Das
+            beeinflusst keine Punkte – hilft dir aber, Lernstand und Fehlkonzepte zu erkennen.
+          </p>
+          <ul
+            class="help-qa-feature-list"
+            i18n-aria-label="@@help.confidenceListAria"
+            aria-label="Didaktische Funktionen der Selbsteinschätzung"
+          >
+            <li class="help-qa-feature">
+              <mat-icon class="help-qa-feature__icon" aria-hidden="true">touch_app</mat-icon>
+              <div class="help-qa-feature__body">
+                <h3 i18n="@@help.confidenceAfterAnswerTitle">Nach der Antwort abfragen</h3>
+                <p i18n="@@help.confidenceAfterAnswerBody">
+                  Progressive Disclosure: Erst Antwort wählen oder eingeben, dann die
+                  Selbsteinschätzung. Während der Abstimmung sieht niemand aggregierte Werte anderer
+                  Personen.
+                </p>
+              </div>
+            </li>
+            <li class="help-qa-feature">
+              <mat-icon class="help-qa-feature__icon" aria-hidden="true">tune</mat-icon>
+              <div class="help-qa-feature__body">
+                <h3 i18n="@@help.confidenceEditorTitle">Im Editor konfigurieren</h3>
+                <p i18n="@@help.confidenceEditorBody">
+                  Toggle pro Frage, optionale Labels für niedrige und hohe Antwortsicherheit und
+                  eine Live-Vorschau der Skala. Für neue bewertbare Fragen ist die
+                  Selbsteinschätzung standardmäßig aktiv.
+                </p>
+              </div>
+            </li>
+            <li class="help-qa-feature">
+              <mat-icon class="help-qa-feature__icon" aria-hidden="true">grid_on</mat-icon>
+              <div class="help-qa-feature__body">
+                <h3 i18n="@@help.confidenceHostTitle">Host-Auswertung nach Freigabe</h3>
+                <p i18n="@@help.confidenceHostBody">
+                  Matrix aus Korrektheit und Antwortsicherheit mit Hervorhebung
+                  <strong>selbstsicher falsch</strong>. Bei Auswahlfragen siehst du, welche falschen
+                  Optionen mit hoher Antwortsicherheit gewählt wurden.
+                </p>
+              </div>
+            </li>
+            <li class="help-qa-feature">
+              <mat-icon class="help-qa-feature__icon" aria-hidden="true">summarize</mat-icon>
+              <div class="help-qa-feature__body">
+                <h3 i18n="@@help.confidenceExportTitle">Abschluss und Export</h3>
+                <p i18n="@@help.confidenceExportBody">
+                  Nach Session-Ende fasst die Auswertung gefestigtes Wissen, Fehlkonzept-Risiko und
+                  fragiles Wissen zusammen. Der Ergebnisbericht (PDF) ist das empfohlene Format; CSV
+                  steht unter „Mehr“ für Excel zur Verfügung. In der Quiz-Sammlung findest du
+                  Nachbesprechung und Ergebnisbericht (PDF) auf der Quizkarte.
+                </p>
+              </div>
+            </li>
+          </ul>
+        </section>
+
         <section class="help-section--demo">
           <h2 i18n="@@help.demoTitle">Demo-Quiz</h2>
           <p i18n="@@help.demoCardHint">
             Ein vorinstalliertes Beispiel-Quiz zeigt die Frageformate in konkreten
             Unterrichtsmomenten: Wissenscheck, Wortwolke, Kurzantwort, Schätzfrage, Bewertungsskala,
-            Formeln und Markdown. Du findest es in deiner Quiz-Sammlung und kannst es dort in der
-            Vorschau öffnen.
+            Selbsteinschätzung, Formeln und Markdown. Du findest es in deiner Quiz-Sammlung und
+            kannst es dort in der Vorschau öffnen.
           </p>
           <p i18n="@@help.demoTip">
             <strong>Tipp:</strong> Öffne die Vorschau vor der ersten Live-Session einmal auf einem
@@ -372,7 +435,8 @@
             </li>
             <li i18n="@@help.participantsVote">
               <strong>Abstimmung:</strong> Frage erscheint auf dem Gerät, Antwort wählen und
-              absenden. Bei Zeitlimit läuft ein Countdown.
+              absenden. Bei aktivierter Selbsteinschätzung folgt danach die Skala 1–5. Bei Zeitlimit
+              läuft ein Countdown.
             </li>
           </ul>
         </section>
@@ -387,8 +451,8 @@
             </li>
             <li i18n="@@help.collectionTypes">
               <strong>Fragetypen:</strong> Single Choice, Multiple Choice, Kurzantwort, Freitext,
-              Umfrage, Bewertungsskala und numerische Schätzfrage – pro Frage optional mit Timer und
-              Schwierigkeitsgrad.
+              Umfrage, Bewertungsskala und numerische Schätzfrage – pro Frage optional mit Timer,
+              Schwierigkeitsgrad und Selbsteinschätzung.
             </li>
             <li i18n="@@help.collectionImport">
               <strong>Import / Export:</strong> Quiz als JSON importieren oder exportieren. Mit der

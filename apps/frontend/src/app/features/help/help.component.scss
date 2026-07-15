@@ -155,14 +155,16 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-.legal-article .help-section--qa-wall {
+.legal-article .help-section--qa-wall,
+.legal-article .help-section--confidence {
   margin: 2rem -1.25rem 0;
   padding: 1.25rem;
   border-block: 1px solid var(--mat-sys-outline-variant);
   background: color-mix(in srgb, var(--mat-sys-tertiary-container) 26%, var(--mat-sys-surface));
 }
 
-.legal-article .help-section--qa-wall h2 {
+.legal-article .help-section--qa-wall h2,
+.legal-article .help-section--confidence h2 {
   margin-top: 0;
 }
 
@@ -223,7 +225,8 @@
 }
 
 @media (min-width: 600px) {
-  .legal-article .help-section--qa-wall {
+  .legal-article .help-section--qa-wall,
+  .legal-article .help-section--confidence {
     margin-inline: -2rem;
     padding-inline: 2rem;
   }
@@ -235,7 +238,8 @@
 }
 
 @media (min-width: 840px) {
-  .legal-article .help-section--qa-wall {
+  .legal-article .help-section--qa-wall,
+  .legal-article .help-section--confidence {
     margin-inline: -2.5rem;
     padding-inline: 2.5rem;
   }

@@ -6,6 +6,16 @@ const features = [
     icon: 'single',
   },
   {
+    title: 'Selbsteinschätzung im Live-Quiz',
+    description: 'Teilnehmende geben nach der Antwort an, wie sicher sie sind. Du erkennst selbstsicher falsche Antworten, priorisierst die Nachbesprechung und exportierst den Lernstand im Ergebnisbericht (PDF).',
+    icon: 'confidence',
+  },
+  {
+    title: 'Ergebnisbericht für die Nachbereitung',
+    description: 'Nach Session-Ende exportierst du einen druckfertigen PDF-Bericht mit Diagrammen, Fragentexten und Selbsteinschätzung. CSV für Excel bleibt optional unter „Mehr“.',
+    icon: 'export',
+  },
+  {
     title: 'Didaktische Schätzfragen',
     description: 'Jahreszahlen, Größenordnungen und Messwerte lassen sich mit Referenzwert, Toleranzband, Statistik und optionaler zweiter Runde schätzen.',
     icon: 'estimate',
@@ -63,6 +73,8 @@ const features = [
             {f.icon === 'book' && '📚'}
             {f.icon === 'tools' && '🧭'}
             {f.icon === 'estimate' && '≈'}
+            {f.icon === 'confidence' && '🎯'}
+            {f.icon === 'export' && '📄'}
             {f.icon === 'qa' && '❓'}
             {f.icon === 'cloud' && '☁️'}
           </div>
