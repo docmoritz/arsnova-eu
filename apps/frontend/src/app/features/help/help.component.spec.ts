@@ -80,4 +80,16 @@ describe('HelpComponent', () => {
     expect(text).toContain('Moderationskompass');
     expect(text).toContain('asynchrone Q&A-NLP-Signale');
   });
+
+  it('beschreibt die Selbsteinschätzung didaktisch', async () => {
+    const fixture = TestBed.createComponent(HelpComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Selbsteinschätzung bei bewertbaren Fragen');
+    expect(text).toContain('selbstsicher falsch');
+    expect(text).toContain('Lernstand und Selbsteinschätzung');
+    expect(text).toContain('Progressive Disclosure');
+  });
 });

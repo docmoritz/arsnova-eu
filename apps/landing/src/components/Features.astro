@@ -6,6 +6,11 @@ const features = [
     icon: 'single',
   },
   {
+    title: 'Selbsteinschätzung im Live-Quiz',
+    description: 'Teilnehmende geben nach der Antwort an, wie sicher sie sind. Du erkennst selbstsicher falsche Antworten und priorisierst die Nachbesprechung.',
+    icon: 'confidence',
+  },
+  {
     title: 'Didaktische Schätzfragen',
     description: 'Jahreszahlen, Größenordnungen und Messwerte lassen sich mit Referenzwert, Toleranzband, Statistik und optionaler zweiter Runde schätzen.',
     icon: 'estimate',
@@ -63,6 +68,7 @@ const features = [
             {f.icon === 'book' && '📚'}
             {f.icon === 'tools' && '🧭'}
             {f.icon === 'estimate' && '≈'}
+            {f.icon === 'confidence' && '🎯'}
             {f.icon === 'qa' && '❓'}
             {f.icon === 'cloud' && '☁️'}
           </div>
