@@ -4,7 +4,7 @@ Phase-1- und Phase-2-Export für Lehrende nach Session-Ende (`FINISHED`).
 
 ## Datenquelle
 
-Der PDF-Bericht nutzt **`SessionExportDTO`** via `getSessionExportData` — dieselbe Quelle wie der CSV-Export, kein CSV-Parsing.
+Der PDF-Bericht nutzt **`SessionExportDTO`** via `getExportData` (Host-Token) — dieselbe Quelle wie der CSV-Export, kein CSV-Parsing.
 
 Phase 2 ergänzt:
 
@@ -32,15 +32,15 @@ In der Host-Abschlussansicht: **Ergebnis als PDF** neben **Ergebnis als CSV**.
 
 ## Technik
 
-| Schicht                                 | Datei                                                         |
-| --------------------------------------- | ------------------------------------------------------------- |
-| HTML-Builder                            | `apps/frontend/src/app/core/session-results-report.util.ts`   |
-| Charts (Heatmap, Histogramm, Sterne)    | `session-results-report-charts.util.ts`                       |
-| Print-CSS (A4, Seitenumbruch pro Frage) | `session-results-report-styles.ts`                            |
-| Server-PDF (Playwright/HTML)            | `apps/backend/src/lib/session-results-report-pdf.ts`          |
-| Shared Report-Builder                   | `libs/session-export-report/`                                 |
-| tRPC                                    | `session.getSessionExportPdf`, `session.getSessionExportData` |
-| i18n-Labels                             | `session-results-report-labels.ts`                            |
+| Schicht                                 | Datei                                                       |
+| --------------------------------------- | ----------------------------------------------------------- |
+| HTML-Builder                            | `apps/frontend/src/app/core/session-results-report.util.ts` |
+| Charts (Heatmap, Histogramm, Sterne)    | `session-results-report-charts.util.ts`                     |
+| Print-CSS (A4, Seitenumbruch pro Frage) | `session-results-report-styles.ts`                          |
+| Server-PDF (Playwright/HTML)            | `apps/backend/src/lib/session-results-report-pdf.ts`        |
+| Shared Report-Builder                   | `libs/session-export-report/`                               |
+| tRPC                                    | `session.getSessionExportPdf`, `session.getExportData`      |
+| i18n-Labels                             | `session-results-report-labels.ts`                          |
 
 ## Demo-PDF erzeugen
 

@@ -56,10 +56,45 @@ const OUTPUT = resolve(
   process.env.OUTPUT || join(REPO_ROOT, 'output/pdf/demo-session-results-30.pdf'),
 );
 
-function createTrpcClient() {
+function createTrpcClient(hostToken?: string) {
   return createTRPCProxyClient({
-    links: [httpLink({ url: TRPC_URL })],
+    links: [
+      httpLink({
+        url: TRPC_URL,
+        headers: hostToken ? () => ({ 'x-host-token': hostToken }) : undefined,
+      }),
+    ],
   });
+}
+
+async function mintHostToken(sessionCode: string): Promise<string> {
+  const hostTokenEnv = String(process.env.HOST_TOKEN || '').trim();
+  if (hostTokenEnv) {
+    return hostTokenEnv;
+  }
+
+  const backendDir = join(REPO_ROOT, 'apps/backend');
+  const script = `
+    import { createHostSessionToken } from './src/lib/hostAuth.ts';
+    createHostSessionToken(${JSON.stringify(sessionCode)})
+      .then((token) => {
+        console.log(token);
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error(error);
+        process.exit(1);
+      });
+  `;
+  const { stdout } = await execFileAsync('npx', ['tsx', '-e', script], {
+    cwd: backendDir,
+    encoding: 'utf8',
+  });
+  const token = stdout.trim();
+  if (!token) {
+    throw new Error(`Host-Token für Session ${sessionCode} konnte nicht erzeugt werden.`);
+  }
+  return token;
 }
 
 async function waitForTrpc(client: ReturnType<typeof createTrpcClient>, attempts = 40) {
@@ -97,11 +132,14 @@ async function runDemoClassroomScenario(): Promise<string> {
 }
 
 async function run() {
-  const client = createTrpcClient();
-  await waitForTrpc(client);
+  const bootstrapClient = createTrpcClient();
+  await waitForTrpc(bootstrapClient);
 
   const code = SESSION_CODE || (await runDemoClassroomScenario());
-  const exportData = await client.session.getSessionExportData.query({ code });
+  const hostToken = await mintHostToken(code);
+  const client = createTrpcClient(hostToken);
+
+  const exportData = await client.session.getExportData.query({ code });
   const labels = getDefaultSessionResultsReportLabelsDe();
   let html = buildSessionResultsReportHtml(exportData, labels, {
     localeId: 'de',

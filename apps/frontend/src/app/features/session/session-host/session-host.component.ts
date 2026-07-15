@@ -2458,7 +2458,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       return false;
     }
     try {
-      const data = await trpc.session.getSessionExportData.query({ code: this.code.toUpperCase() });
+      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
       return this.hasExportableSessionResults(data);
     } catch {
       const participantCount = this.participantsPayload()?.participantCount ?? 0;
@@ -5934,7 +5934,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const data = await trpc.session.getSessionExportData.query({ code: this.code.toUpperCase() });
+      const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
       const rows: string[] = [
         $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details`,
       ];
@@ -6058,7 +6058,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const exportData = await trpc.session.getSessionExportData.query({
+      const exportData = await trpc.session.getExportData.query({
         code: this.code.toUpperCase(),
       });
       if (exportData.questions.length >= 15) {
@@ -6110,7 +6110,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const exportData = await trpc.session.getSessionExportData.query({
+      const exportData = await trpc.session.getExportData.query({
         code: this.code.toUpperCase(),
       });
       const labels = getSessionResultsReportLabels();

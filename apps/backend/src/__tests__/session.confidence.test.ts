@@ -637,7 +637,7 @@ describe('Confidence-Auswertung (Story 1.2i)', () => {
     expect(hostAuthMocks.isHostSessionTokenValidMock).not.toHaveBeenCalled();
   });
 
-  it('liefert getSessionExportData ohne Host-Token für beendete Quiz-Sessions', async () => {
+  it('liefert getExportData mit Host-Token für beendete Quiz-Sessions', async () => {
     prismaMock.session.findUnique.mockResolvedValue({
       id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
       code: CODE,
@@ -723,13 +723,13 @@ describe('Confidence-Auswertung (Story 1.2i)', () => {
       participants: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }, { id: 'p5' }],
     });
 
-    const result = await caller.getSessionExportData({ code: CODE });
+    const result = await hostCaller.getExportData({ code: CODE });
 
     expect(result.confidenceSummary).toMatchObject({
       responseCount: 5,
       includedQuestionCount: 1,
     });
-    expect(hostAuthMocks.isHostSessionTokenValidMock).not.toHaveBeenCalled();
+    expect(hostAuthMocks.isHostSessionTokenValidMock).toHaveBeenCalled();
   });
 
   it('behält confidenceResult im Export auch wenn die Frage nicht in der Session-Summary enthalten ist', async () => {
@@ -805,7 +805,7 @@ describe('Confidence-Auswertung (Story 1.2i)', () => {
       participants: [{ id: 'p1' }, { id: 'p2' }, { id: 'p3' }, { id: 'p4' }],
     });
 
-    const result = await caller.getSessionExportData({ code: CODE });
+    const result = await hostCaller.getExportData({ code: CODE });
 
     expect(result.questions[0]?.type).toBe('MULTIPLE_CHOICE');
     expect(result.questions[0]?.confidenceResult).toMatchObject({

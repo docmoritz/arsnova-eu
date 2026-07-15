@@ -20,7 +20,7 @@ export class SessionResultsExportService {
     code: string,
     options?: { onLargeReportHint?: (questionCount: number) => void },
   ): Promise<SessionResultsPdfExportResult> {
-    const exportData = await trpc.session.getSessionExportData.query({
+    const exportData = await trpc.session.getExportData.query({
       code: code.toUpperCase(),
     });
     return this.exportPdfFromExportData(exportData, options);

@@ -115,7 +115,6 @@ vi.mock('../../../core/trpc.client', () => ({
       getLeaderboard: { query: getLeaderboardQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
       getExportData: { query: getExportDataQueryMock },
-      getSessionExportData: { query: getExportDataQueryMock },
       getSessionConfidenceSummary: { query: getSessionConfidenceSummaryQueryMock },
       nextQuestion: { mutate: nextQuestionMutateMock },
       revealAnswers: { mutate: revealAnswersMutateMock },

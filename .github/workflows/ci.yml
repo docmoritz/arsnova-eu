@@ -623,9 +623,9 @@ jobs:
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
           npx prisma migrate deploy --schema prisma/schema.prisma
 
-      - name: Build shared types
+      - name: Build libs
         if: needs.changes.outputs.docs_only != 'true'
-        run: npm run build -w @arsnova/shared-types
+        run: npm run build:libs
 
       - name: Download frontend production build
         if: needs.changes.outputs.docs_only != 'true'
@@ -788,9 +788,9 @@ jobs:
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
           npx prisma migrate deploy --schema prisma/schema.prisma
 
-      - name: Build shared types
+      - name: Build libs
         if: needs.changes.outputs.docs_only != 'true'
-        run: npm run build -w @arsnova/shared-types
+        run: npm run build:libs
 
       - name: Run classroom scenario smokes
         if: needs.changes.outputs.docs_only != 'true'
@@ -913,8 +913,8 @@ jobs:
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
           npx prisma migrate deploy --schema prisma/schema.prisma
 
-      - name: Build shared types
-        run: npm run build -w @arsnova/shared-types
+      - name: Build libs
+        run: npm run build:libs
 
       - name: Run Artillery live session and heavy vote smokes
         run: |
@@ -1040,8 +1040,8 @@ jobs:
           export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
           npx prisma migrate deploy --schema prisma/schema.prisma
 
-      - name: Build shared types
-        run: npm run build -w @arsnova/shared-types
+      - name: Build libs
+        run: npm run build:libs
 
       - name: Run Artillery 500 reconnect wave
         run: |

@@ -46,6 +46,10 @@ export default defineConfig({
         projectRoot,
         '../../libs/shared-types/src/index.workspace.ts',
       ),
+      '@arsnova/session-export-report': path.resolve(
+        projectRoot,
+        '../../libs/session-export-report/src/index.ts',
+      ),
     },
   },
   optimizeDeps: {

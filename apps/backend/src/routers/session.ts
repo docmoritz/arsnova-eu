@@ -6802,15 +6802,9 @@ export const sessionRouter = router({
     .query(async ({ input }) => loadFinishedQuizSessionExportData(input.code)),
 
   /**
-   * Aggregierter Session-Export ohne Host-Token (nur FINISHED, DSGVO-konform aggregiert).
+   * Session-Ergebnisbericht als PDF (HTML-Render via Playwright). Host-only.
    */
-  getSessionExportData: publicProcedure
-    .input(GetExportDataInputSchema)
-    .output(SessionExportDTOSchema)
-    .query(async ({ input }) => loadFinishedQuizSessionExportData(input.code)),
-
-  /** Session-Ergebnisbericht als PDF (HTML-Render via Playwright). */
-  getSessionExportPdf: publicProcedure
+  getSessionExportPdf: hostProcedure
     .input(GetSessionExportPdfInputSchema)
     .output(SessionExportPdfOutputSchema)
     .query(async ({ input }) => {
