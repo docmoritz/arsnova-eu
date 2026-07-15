@@ -29,9 +29,11 @@ COPY prisma/ prisma/
 RUN npx prisma generate
 
 # Build shared-types + backend (tsc -b handles project references).
-# Postbuild: Node ESM in production requires explicit .js extensions in dist/.
+# Postbuild: Node ESM in production requires explicit .js extensions in dist/
+# for every ESM workspace emitted by tsc -b (shared-types + session-export-report).
+COPY scripts/fix-esm-imports.mjs scripts/fix-esm-imports.mjs
 RUN npx tsc -b apps/backend/tsconfig.json \
-    && node libs/shared-types/scripts/fix-esm-imports.mjs
+    && node scripts/fix-esm-imports.mjs
 
 # Build frontend localized (de/en) including root redirect index
 RUN npm run build:localize -w @arsnova/frontend
