@@ -3,7 +3,7 @@
   "exportedAt": "2026-07-13T13:00:00.000Z",
   "quiz": {
     "name": "Showcase docente: demo por equipos",
-    "description": "![Showcase docente](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase docente\n\nEsta demo está pensada para el **uso real en el aula**. No pretende ser el quiz perfecto de principio a fin. Su objetivo es otro: mostrar a docentes, formadores y facilitadores cómo arsnova.eu puede hacer que una sesión en vivo sea más variada, más visual y más lúdica.\n\nÚsala como una **demo breve por equipos, al estilo Kahoot, para clases en vivo** para mostrar cómo puedes:\n- arrancar con un check-in emocional o social\n- usar imágenes en lugar de preguntas solo de texto\n- incorporar fórmulas y notación científica en STEM\n- probar preguntas de estimación numérica con valor de referencia, banda de tolerancia y dos rondas\n- recoger respuestas breves en texto libre que después reaparecen como nube de palabras\n- usar bien preguntas de respuesta múltiple y escalas de valoración\n- preguntar el **grado de confianza** (1–5) tras respuestas evaluables y detectar respuestas **incorrectas con mucha seguridad** en la vista del anfitrión\n- añadir energía con temporizadores, equipos, clasificación y códigos de bonificación\n- mostrar fragmentos de código en informática o en materias técnicas\n\nLas preguntas están mezcladas a propósito. La idea es darte ejemplos concretos para rompehielos, comprobaciones de comprensión, reinicios de atención y momentos interactivos breves que puedas reutilizar en clase.\n\n**Consejo para la demo:** Únete también a la sesión desde un segundo dispositivo, idealmente escaneando el código QR con el móvil. Así podrás ensayar de forma realista el cambio entre la vista del anfitrión y la experiencia del participante.\n\n**Otro consejo:** Después abre el cuestionario en modo de edición para ver cómo están hechas las preguntas con Markdown y KaTeX.\n\n**Y una cosa más:** Si echas en falta otros tipos de pregunta o funciones, puedes pedirlos sin problema. Encontrarás los datos de contacto en el aviso legal.",
+    "description": "![Showcase docente](https://upload.wikimedia.org/wikipedia/commons/2/2a/Pi-unrolled-720.gif)\n\n# Showcase docente\n\nEsta demo está pensada para el **uso real en el aula**. No pretende ser el quiz perfecto de principio a fin. Su objetivo es otro: mostrar a docentes, formadores y facilitadores cómo arsnova.eu puede hacer que una sesión en vivo sea más variada, más visual y más lúdica.\n\nÚsala como una **demo breve por equipos, al estilo Kahoot, para clases en vivo** para mostrar cómo puedes:\n- arrancar con un check-in emocional o social\n- usar imágenes en lugar de preguntas solo de texto\n- incorporar fórmulas y notación científica en STEM\n- probar preguntas de estimación numérica con valor de referencia, banda de tolerancia y dos rondas\n- recoger respuestas breves en texto libre que después reaparecen como nube de palabras\n- usar bien preguntas de respuesta múltiple y escalas de valoración\n- preguntar la **autoevaluación** (1–5) tras respuestas evaluables y detectar respuestas **incorrectas con alta seguridad de respuesta** en la vista del anfitrión\n- añadir energía con temporizadores, equipos, clasificación y códigos de bonificación\n- mostrar fragmentos de código en informática o en materias técnicas\n\nLas preguntas están mezcladas a propósito. La idea es darte ejemplos concretos para rompehielos, comprobaciones de comprensión, reinicios de atención y momentos interactivos breves que puedas reutilizar en clase.\n\n**Consejo para la demo:** Únete también a la sesión desde un segundo dispositivo, idealmente escaneando el código QR con el móvil. Así podrás ensayar de forma realista el cambio entre la vista del anfitrión y la experiencia del participante.\n\n**Otro consejo:** Después abre el cuestionario en modo de edición para ver cómo están hechas las preguntas con Markdown y KaTeX.\n\n**Y una cosa más:** Si echas en falta otros tipos de pregunta o funciones, puedes pedirlos sin problema. Encontrarás los datos de contacto en el aviso legal.",
     "motifImageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Sixteen_faces_expressing_the_human_passions._Wellcome_L0068375_%28cropped%29.jpg",
     "showLeaderboard": true,
     "allowCustomNicknames": false,
@@ -107,7 +107,7 @@
             "isCorrect": true
           },
           {
-            "text": "Medir de forma anónima la confianza antes de repasar para un examen",
+            "text": "Medir de forma anónima la autoevaluación antes de repasar para un examen",
             "isCorrect": true
           },
           {
@@ -227,7 +227,7 @@
         "confidenceLabelHigh": "Muy seguro"
       },
       {
-        "text": "### ¿Qué probabilidad hay de que pruebes pronto un quiz en vivo como este en una de tus clases?\n\n> **Uso didáctico:** Úsalo como pulso rápido, exit ticket o valoración breve de confianza.",
+        "text": "### ¿Qué probabilidad hay de que pruebes pronto un quiz en vivo como este en una de tus clases?\n\n> **Uso didáctico:** Úsalo como pulso rápido, exit ticket o breve autoevaluación.",
         "type": "RATING",
         "timer": null,
         "difficulty": "EASY",

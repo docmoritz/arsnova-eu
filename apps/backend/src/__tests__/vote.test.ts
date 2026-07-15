@@ -1192,7 +1192,7 @@ describe('vote.submit', () => {
         }),
       ).rejects.toMatchObject({
         code: 'BAD_REQUEST',
-        message: 'Für diese Frage ist ein Sicherheitsgrad erforderlich.',
+        message: 'Für diese Frage ist eine Selbsteinschätzung erforderlich.',
       });
     });
 
@@ -1212,7 +1212,7 @@ describe('vote.submit', () => {
         }),
       ).rejects.toMatchObject({
         code: 'BAD_REQUEST',
-        message: 'confidenceValue ist nur erlaubt, wenn die Frage den Sicherheitsgrad abfragt.',
+        message: 'Selbsteinschätzung ist nur erlaubt, wenn die Frage sie abfragt.',
       });
     });
 

@@ -87,7 +87,7 @@ describe('normalizeQuizImportPayload – arsnova.click Sicherheitsgrad', () => {
     });
     expect(
       result.warnings.some((warning) =>
-        warning.message.includes('Sicherheitsgrad wurde für bewertbare Fragen übernommen'),
+        warning.message.includes('Selbsteinschätzung wurde für bewertbare Fragen übernommen'),
       ),
     ).toBe(true);
   });
@@ -101,7 +101,7 @@ describe('normalizeQuizImportPayload – arsnova.click Sicherheitsgrad', () => {
     for (const question of questions) {
       expect(question.confidenceEnabled).not.toBe(true);
     }
-    expect(result.warnings.some((warning) => warning.message.includes('Sicherheitsgrad'))).toBe(
+    expect(result.warnings.some((warning) => warning.message.includes('Selbsteinschätzung'))).toBe(
       false,
     );
   });

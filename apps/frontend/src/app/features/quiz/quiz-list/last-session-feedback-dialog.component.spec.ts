@@ -109,7 +109,7 @@ describe('LastSessionFeedbackDialogComponent', () => {
     expect(fixture.componentInstance.payload()).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Gesamtbewertung');
     expect(fixture.nativeElement.textContent).toContain('Feedback der Teilnehmenden');
-    expect(fixture.nativeElement.textContent).toContain('Lernstand und Sicherheit');
+    expect(fixture.nativeElement.textContent).toContain('Lernstand und Selbsteinschätzung');
     expect(
       fixture.nativeElement.querySelector(
         '.last-session-feedback-dialog__confidence-question-markdown h3',

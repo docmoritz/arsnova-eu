@@ -916,6 +916,75 @@ Viel Erfolg beim Import.`);
     expect(fixture.nativeElement.textContent).toContain('Datei Import');
   });
 
+  it('zeigt beim Import angepasste Hinweise wie Selbsteinschaetzung', async () => {
+    const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance;
+    mockStore.importQuiz.mockImplementation(() => {
+      quizzesSignal.set([
+        {
+          id: 'caece014-f7cd-4d26-a101-bd494379f95f',
+          name: 'Click Import',
+          description: 'Neu importiert',
+          createdAt: '2026-05-18T12:00:00.000Z',
+          updatedAt: '2026-05-18T12:00:00.000Z',
+          questionCount: 1,
+          teamMode: false,
+          hasBonus: false,
+          lastServerQuizId: null,
+          lastServerQuizAccessProof: null,
+        },
+      ]);
+      return {
+        quiz: {
+          id: 'caece014-f7cd-4d26-a101-bd494379f95f',
+          name: 'Click Import',
+        },
+        warnings: [
+          {
+            kind: 'mapped_question',
+            message: 'Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.',
+          },
+        ],
+      };
+    });
+
+    const file = {
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          name: 'Click Import',
+          questionList: [
+            {
+              TYPE: 'SingleChoiceQuestion',
+              questionText: 'Eine Frage',
+              answerOptionList: [
+                { answerText: 'A', isCorrect: false },
+                { answerText: 'B', isCorrect: true },
+              ],
+            },
+          ],
+        }),
+      ),
+    } as unknown as File;
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', {
+      configurable: true,
+      value: [file],
+    });
+
+    await component.onImportFileSelected({ target: input } as Event);
+    fixture.detectChanges();
+    await flushAsyncEffects();
+    fixture.detectChanges();
+
+    expect(component.actionInfoWarnings()).toHaveLength(1);
+    const infoText = fixture.nativeElement.querySelector('.quiz-list__info')?.textContent as string;
+    expect(infoText).toContain('Beim Import angepasst:');
+    expect(infoText).toContain(
+      'Quiz: Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.',
+    );
+    expect(component.actionError()).toBeNull();
+  });
+
   it('zeigt direkten Start-CTA bei startLive-Shortcut', async () => {
     quizzesSignal.set([
       {

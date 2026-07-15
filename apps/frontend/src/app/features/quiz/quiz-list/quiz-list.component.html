@@ -59,10 +59,30 @@
   @if (actionInfo()) {
     <div class="quiz-list__info" role="status">
       <p class="quiz-list__info-text">{{ actionInfo() }}</p>
-      @if (actionInfoWarnings().length > 0) {
-        <p class="quiz-list__info-list-title">Nicht übernommen:</p>
+      @if (importSkippedWarnings().length > 0) {
+        <p class="quiz-list__info-list-title" i18n="@@quizList.importSkippedWarningsTitle">
+          Nicht übernommen:
+        </p>
         <ul class="quiz-list__info-list">
-          @for (warning of actionInfoWarnings(); track $index) {
+          @for (warning of importSkippedWarnings(); track $index) {
+            <li class="quiz-list__info-item">
+              <p class="quiz-list__info-item-title">{{ formatImportWarning(warning) }}</p>
+              @if (warning.questionText) {
+                <div
+                  class="quiz-list__info-question"
+                  [innerHTML]="renderImportWarningQuestion(warning.questionText)"
+                ></div>
+              }
+            </li>
+          }
+        </ul>
+      }
+      @if (importMappedWarnings().length > 0) {
+        <p class="quiz-list__info-list-title" i18n="@@quizList.importMappedWarningsTitle">
+          Beim Import angepasst:
+        </p>
+        <ul class="quiz-list__info-list">
+          @for (warning of importMappedWarnings(); track $index) {
             <li class="quiz-list__info-item">
               <p class="quiz-list__info-item-title">{{ formatImportWarning(warning) }}</p>
               @if (warning.questionText) {

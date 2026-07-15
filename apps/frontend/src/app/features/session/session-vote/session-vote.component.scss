@@ -53,11 +53,18 @@
   bottom: calc(var(--vote-bottom-actions-bottom) + var(--app-footer-visible-offset, 0px));
   transform: translateX(-50%);
   z-index: 40;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: stretch;
   background: color-mix(in srgb, var(--mat-sys-surface) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 72%, transparent);
   box-shadow: var(--mat-sys-level3);
   backdrop-filter: blur(14px);
+}
+
+.vote-page__bottom-actions--floating .vote-page__bottom-action {
+  width: 100%;
+  max-width: none;
 }
 
 .vote-page__bottom-actions--session-end {
@@ -331,8 +338,6 @@
     transform: none;
     width: auto;
     max-width: none;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .vote-page__bottom-action {

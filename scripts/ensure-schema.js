@@ -54,6 +54,8 @@ function getMotdFeatureSeedFiles() {
     'prisma/migrations/20260713160000_motd_confidence_slider/migration.sql',
     'prisma/migrations/20260713203000_motd_confidence_didactic_summary/migration.sql',
     'prisma/migrations/20260714040000_motd_confidence_copy_v7/migration.sql',
+    'prisma/migrations/20260715071600_motd_confidence_copy_v8/migration.sql',
+    'prisma/migrations/20260715075500_motd_confidence_copy_v9/migration.sql',
   ];
 }
 

@@ -844,7 +844,7 @@ describe('QuizStoreService', () => {
     });
     expect(
       imported.warnings.some((warning) =>
-        warning.message.includes('Sicherheitsgrad wurde für bewertbare Fragen übernommen'),
+        warning.message.includes('Selbsteinschätzung wurde für bewertbare Fragen übernommen'),
       ),
     ).toBe(true);
   });

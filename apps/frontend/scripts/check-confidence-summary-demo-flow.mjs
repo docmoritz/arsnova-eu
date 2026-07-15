@@ -420,13 +420,13 @@ async function verifyHostUiAndCsv(code, hostToken, expectedResponses, expectedPr
     });
     const bodyText = await waitForBodyText(
       page,
-      /Lernstand und Sicherheit[\s\S]*Fehlkonzept-Risiko/,
+      /Lernstand und Selbsteinschätzung[\s\S]*Fehlkonzept-Risiko/,
     );
     if (!bodyText.includes('Session beendet')) {
       throw new Error('Host-UI zeigt den FINISHED-Abschluss nicht an.');
     }
-    if (!bodyText.includes(`Antworten mit Sicherheitsgrad: ${expectedResponses}`)) {
-      throw new Error(`Host-UI zeigt nicht ${expectedResponses} Antworten mit Sicherheitsgrad an.`);
+    if (!bodyText.includes(`Antworten mit Selbsteinschätzung: ${expectedResponses}`)) {
+      throw new Error(`Host-UI zeigt nicht ${expectedResponses} Antworten mit Selbsteinschätzung an.`);
     }
     if (!bodyText.includes('Priorität für die Nachbesprechung')) {
       throw new Error('Host-UI zeigt keine priorisierten Fragen an.');
@@ -508,10 +508,10 @@ async function verifyHostUiAndCsv(code, hostToken, expectedResponses, expectedPr
     }
     const csv = await readFile(downloadPath, 'utf8');
     for (const expected of [
-      'Konfidenz n',
+      'Selbsteinschätzung n',
       'Fehlkonzept-Risiko',
       'Stärkstes Signal',
-      'Lernstand und Sicherheit',
+      'Lernstand und Selbsteinschätzung',
       'Gültige Antworten;Ausgewertete Fragen',
     ]) {
       if (!csv.includes(expected)) {

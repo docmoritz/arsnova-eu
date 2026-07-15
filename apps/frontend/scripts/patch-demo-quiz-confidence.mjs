@@ -18,27 +18,27 @@ const DESCRIPTION_PATCH = {
   de: {
     anchor: '- Multiple-Choice- und Rating-Fragen sinnvoll einsetzt\n',
     insert:
-      '- nach bewertbaren Antworten den **Sicherheitsgrad** (1–5) abfragen und **selbstsicher falsche** Antworten in der Host-Auswertung erkennen\n',
+      '- nach bewertbaren Antworten die **Selbsteinschätzung** (1–5) abfragen und **selbstsicher falsche** Antworten in der Host-Auswertung erkennen\n',
   },
   en: {
     anchor: '- use multiple-choice and quick rating prompts well\n',
     insert:
-      '- ask for **confidence** (1–5) after gradable answers and spot **high-confidence wrong** answers in the host view\n',
+      '- ask for **self-assessment** (1–5) after gradable answers and spot **wrong answers with high answer confidence** in the host view\n',
   },
   fr: {
     anchor: '- utiliser à bon escient les choix multiples et les échelles d’évaluation\n',
     insert:
-      '- demander le **niveau de confiance** (1–5) après les réponses notées et repérer les réponses **fausses mais très sûres** dans la vue hôte\n',
+      "- demander l'**autoévaluation** (1–5) après les réponses notées et repérer les réponses **fausses avec forte certitude de réponse** dans la vue hôte\n",
   },
   es: {
     anchor: '- usar bien preguntas de respuesta múltiple y escalas de valoración\n',
     insert:
-      '- preguntar el **grado de confianza** (1–5) tras respuestas evaluables y detectar respuestas **incorrectas con mucha seguridad** en la vista del anfitrión\n',
+      '- preguntar la **autoevaluación** (1–5) tras respuestas evaluables y detectar respuestas **incorrectas con alta seguridad de respuesta** en la vista del anfitrión\n',
   },
   it: {
     anchor: '- usare bene domande a scelta multipla e scale di valutazione rapide\n',
     insert:
-      '- chiedere il **grado di sicurezza** (1–5) dopo risposte valutabili e individuare risposte **sbagliate ma molto sicure** nella vista host\n',
+      "- chiedere l'**autovalutazione** (1–5) dopo risposte valutabili e individuare risposte **sbagliate con alta sicurezza di risposta** nella vista host\n",
   },
 };
 

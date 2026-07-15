@@ -6245,7 +6245,7 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Lernstand und Sicherheit');
+    expect(text).toContain('Lernstand und Selbsteinschätzung');
     expect(text).toContain('Fehlkonzept-Risiko');
     expect(text).toContain('Welche Aussage stimmt?');
     expect(
@@ -8173,10 +8173,10 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
       fixture.detectChanges();
 
       expect(exportedCsv).toContain(
-        'Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Konfidenz n;Gefestigt;Fehlkonzept-Risiko',
+        'Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko',
       );
       expect(exportedCsv).toContain('selbstsicher falsch');
-      expect(exportedCsv).toContain('Lernstand und Sicherheit');
+      expect(exportedCsv).toContain('Lernstand und Selbsteinschätzung');
       expect(exportedCsv).toContain('Gültige Antworten;Ausgewertete Fragen');
       expect(exportedCsv).toContain('Bonus-Codes');
       expect(exportedCsv).toContain('Rang;Nickname;Code;Punkte;Generiert am');

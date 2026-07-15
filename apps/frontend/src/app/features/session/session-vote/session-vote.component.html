@@ -1335,7 +1335,7 @@
           ) {
             <div class="vote-confidence vote-confidence--result" role="status">
               <p class="vote-confidence__result-label">
-                <span i18n="@@sessionVote.confidenceResultPrefix">Dein Sicherheitsgrad:</span>
+                <span i18n="@@sessionVote.confidenceResultPrefix">Deine Selbsteinschätzung:</span>
                 <strong>{{ confidenceResultSummary() }}</strong>
               </p>
             </div>
@@ -1350,7 +1350,7 @@
                   <span class="vote-sent__hint">{{ vpc.voteSentHint(isPlayfulPreset()) }}</span>
                   @if (isConfidenceEnabled() && confidenceValue() !== null) {
                     <span class="vote-sent__confidence">
-                      <span i18n="@@sessionVote.confidenceSentPrefix">Sicherheitsgrad:</span>
+                      <span i18n="@@sessionVote.confidenceSentPrefix">Selbsteinschätzung:</span>
                       <strong>{{ confidenceResultSummary() }}</strong>
                     </span>
                   }

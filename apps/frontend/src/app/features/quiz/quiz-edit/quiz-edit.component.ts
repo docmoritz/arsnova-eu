@@ -361,6 +361,7 @@ export class QuizEditComponent implements OnDestroy {
   readonly questionAddedFeedback = signal(false);
   private previewTimer: ReturnType<typeof setTimeout> | null = null;
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastQuestionTypeForConfidence: SupportedQuestionType = 'SINGLE_CHOICE';
   @ViewChild('metadataFormElement') private metadataFormElement?: ElementRef<HTMLFormElement>;
   @ViewChild('settingsFormElement') private settingsFormElement?: ElementRef<HTMLFormElement>;
   @ViewChild('questionFormElement') private questionFormElement?: ElementRef<HTMLFormElement>;
@@ -592,11 +593,11 @@ export class QuizEditComponent implements OnDestroy {
     numericMin: this.formBuilder.control<number | null>(null),
     numericMax: this.formBuilder.control<number | null>(null),
     numericTwoRounds: this.formBuilder.control<boolean>(false),
-    confidenceEnabled: this.formBuilder.control(false),
-    confidenceLabelLow: this.formBuilder.control('', {
+    confidenceEnabled: this.formBuilder.control(true),
+    confidenceLabelLow: this.formBuilder.control(confidenceDefaultLabelLow(), {
       validators: [Validators.maxLength(50)],
     }),
-    confidenceLabelHigh: this.formBuilder.control('', {
+    confidenceLabelHigh: this.formBuilder.control(confidenceDefaultLabelHigh(), {
       validators: [Validators.maxLength(50)],
     }),
   });
@@ -1892,7 +1893,11 @@ export class QuizEditComponent implements OnDestroy {
       this.form.controls.confidenceEnabled.setValue(false);
       this.form.controls.confidenceLabelLow.setValue('');
       this.form.controls.confidenceLabelHigh.setValue('');
+    } else if (!questionSupportsConfidence(this.lastQuestionTypeForConfidence)) {
+      this.form.controls.confidenceEnabled.setValue(true);
+      this.applyConfidenceLabelDefaultsIfEmpty();
     }
+    this.lastQuestionTypeForConfidence = this.typeControl.value;
     this.ensureAnswerArrayForType();
     this.normalizeCorrectSelectionForType();
     this.scheduleLivePreview();
@@ -2913,6 +2918,7 @@ export class QuizEditComponent implements OnDestroy {
       this.form.controls.confidenceLabelLow.setValue(question.confidenceLabelLow ?? '');
       this.form.controls.confidenceLabelHigh.setValue(question.confidenceLabelHigh ?? '');
     }
+    this.lastQuestionTypeForConfidence = question.type;
   }
 
   private mergeQuestionWithDraft(
@@ -3008,9 +3014,15 @@ export class QuizEditComponent implements OnDestroy {
     this.form.controls.numericMin.reset(null);
     this.form.controls.numericMax.reset(null);
     this.form.controls.numericTwoRounds.reset(false);
-    this.form.controls.confidenceEnabled.reset(false);
-    this.form.controls.confidenceLabelLow.reset('');
-    this.form.controls.confidenceLabelHigh.reset('');
+    const confidenceEnabled = questionSupportsConfidence(type);
+    this.form.controls.confidenceEnabled.reset(confidenceEnabled);
+    if (confidenceEnabled) {
+      this.applyConfidenceLabelDefaultsIfEmpty();
+    } else {
+      this.form.controls.confidenceLabelLow.reset('');
+      this.form.controls.confidenceLabelHigh.reset('');
+    }
+    this.lastQuestionTypeForConfidence = type;
 
     this.submitError.set(null);
     this.form.markAsPristine();

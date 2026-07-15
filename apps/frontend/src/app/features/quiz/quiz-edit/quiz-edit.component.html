@@ -601,7 +601,7 @@
         @if (hasConfidenceConfig()) {
           <fieldset class="quiz-edit-form__fieldset">
             <legend class="quiz-edit-form__legend" i18n="@@quizEdit.confidenceConfigLegend">
-              Sicherheitsgrad
+              Selbsteinschätzung
             </legend>
             <p class="quiz-edit-form__fieldset-hint" i18n="@@quizEdit.confidenceConfigHint">
               Teilnehmende geben nach ihrer Antwort an, wie sicher sie sind. Beeinflusst nicht die
@@ -612,7 +612,7 @@
               (change)="onConfidenceEnabledChanged()"
               i18n="@@quizEdit.confidenceEnabledToggle"
             >
-              Sicherheitsgrad abfragen
+              Selbsteinschätzung
             </mat-slide-toggle>
             @if (form.controls.confidenceEnabled.value) {
               <div class="quiz-edit-form__grid">
@@ -623,7 +623,7 @@
                   >
                     <mat-icon aria-hidden="true">first_page</mat-icon>
                     <span i18n="@@quizEdit.confidenceLabelLowField"
-                      >Niedrige Sicherheit (optional)</span
+                      >Niedrige Antwortsicherheit</span
                     >
                   </label>
                   <mat-form-field appearance="outline" subscriptSizing="dynamic">
@@ -643,9 +643,7 @@
                     class="quiz-edit-form__confidence-field-label"
                     for="quiz-edit-confidence-label-high"
                   >
-                    <span i18n="@@quizEdit.confidenceLabelHighField"
-                      >Hohe Sicherheit (optional)</span
-                    >
+                    <span i18n="@@quizEdit.confidenceLabelHighField">Hohe Antwortsicherheit</span>
                     <mat-icon aria-hidden="true">last_page</mat-icon>
                   </label>
                   <mat-form-field appearance="outline" subscriptSizing="dynamic">
@@ -1676,7 +1674,7 @@
                         class="quiz-edit-question__text quiz-edit-question__text--hint"
                         i18n="@@quizEdit.confidenceQuestionListHint"
                       >
-                        Sicherheitsgrad wird nach der Antwort abgefragt
+                        Selbsteinschätzung wird nach der Antwort abgefragt
                       </p>
                       <div
                         class="quiz-edit-question__confidence-scale quiz-edit-question__rating--confidence"

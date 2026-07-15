@@ -152,6 +152,12 @@ export class QuizListComponent implements OnInit {
   readonly syncPeerInfos = this.quizStore.syncPeerInfos;
   readonly actionInfo = signal<string | null>(null);
   readonly actionInfoWarnings = signal<QuizImportWarning[]>([]);
+  readonly importSkippedWarnings = computed(() =>
+    this.actionInfoWarnings().filter((warning) => warning.kind === 'skipped_question'),
+  );
+  readonly importMappedWarnings = computed(() =>
+    this.actionInfoWarnings().filter((warning) => warning.kind === 'mapped_question'),
+  );
   readonly actionError = signal<string | null>(null);
   readonly activeLiveQuizParticipants = signal<Map<string, number>>(new Map());
   readonly quizHistoryAvailability = signal<
@@ -1013,8 +1019,11 @@ export class QuizListComponent implements OnInit {
   }
 
   private buildImportInfoMessage(result: QuizImportResult): string {
-    const skipped = result.warnings.filter((warning) => warning.kind === 'skipped_question');
-    this.actionInfoWarnings.set(skipped);
+    this.actionInfoWarnings.set(
+      result.warnings.filter(
+        (warning) => warning.kind === 'skipped_question' || warning.kind === 'mapped_question',
+      ),
+    );
     return `„${result.quiz.name}“ wurde importiert.`;
   }
 

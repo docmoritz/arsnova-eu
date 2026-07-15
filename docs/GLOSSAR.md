@@ -2,7 +2,7 @@
 
 # Glossar: arsnova.eu
 
-**Stand:** 2026-07-13
+**Stand:** 2026-07-15
 
 **Zweck:** Einheitliche **produktnahe Begriffe** (Workflows, UI, Rollen) plus eine **kurze Brücke** zu Prisma-Modellnamen. Vollständiges Schema nur in `schema.prisma` / Handbuch — hier keine Spalten- oder Enum-Listen.
 
@@ -48,13 +48,13 @@
 - **Quick-Feedback:** Technischer Name des tRPC-Routers **`quickFeedback`**, der Redis-Keys `qf:*` und des Live-Kanals `quickFeedback` — fachlich = Blitzlicht. Aktuelle Typen: `MOOD`, `YESNO`, `YESNO_BINARY`, `TRUEFALSE_UNKNOWN`, `STARS`, `ABCD`, `TEMPO`. Klassische Typen bleiben Einmal-Votes; `TEMPO` hat bewusst mutable Semantik. Vertiefung: [blitzlicht-quickfeedback-api](features/blitzlicht-quickfeedback-api.md).
 - **Referenzwert:** Zielwert der numerischen Schätzfrage; dient als Mittelpunkt für relatives Toleranzband und Nähe-Scoring. Vertiefung: Story 1.2d, `docs/features/numeric-estimate.md`.
 - **Scorecard:** Persönliche Auswertung (Punkte, Streak, Rang) für Teilnehmende; nutzt nur bewertbare Fragen und die Effective-Vote-Regel. Vorkommen: Nach Fragen / Ende. Vertiefung: Story 5.6, ADR-0028.
-- **Selbstsicher falsch:** Didaktischer Begriff in der Host-Auswertung für falsche Antworten mit hohem Sicherheitsgrad (Stufen 4–5). Hilft, Misskonzepte zu erkennen, die nicht nur zufällig falsch geraten wurden. Vorkommen: Host bei `RESULTS`, Session-CSV-Export. Vertiefung: Story 1.2i, [confidence-slider](features/confidence-slider.md).
+- **Selbstsicher falsch:** Didaktischer Begriff in der Host-Auswertung für falsche Antworten mit hoher Antwortsicherheit (Stufen 4–5). Hilft, Misskonzepte zu erkennen, die nicht nur zufällig falsch geraten wurden. Vorkommen: Host bei `RESULTS`, Session-CSV-Export. Vertiefung: Story 1.2i, [confidence-slider](features/confidence-slider.md).
 - **Service-Status:** SLO-naher Betriebsstatus im Footer: `stable`, `limited`, `critical`. Wird aus Last und Live-Telemetrie abgeleitet. Vertiefung: ADR-0021.
 - **Session / Live-Session:** Laufende Veranstaltung unter einem **Session-Code**; bündelt die Live-Kanäle Quiz, Q&A und Blitzlicht. Vorkommen: Host, Teilnehmer, Beamer, Join. Vertiefung: ADR-0009, `Session` (Prisma).
 - **Session-Bewertung / Session-Feedback:** Stern- bzw. Rückmeldefunktion am Ende einer Session; Teilnehmende bewerten die Veranstaltung, gespeichert als `SessionFeedback`. Vertiefung: Story 4.8.
 - **Session-Code:** Sechs Zeichen (ohne verwechselbare Zeichen), Zugang für Teilnehmende. Vorkommen: Startseite, Join, QR. Vertiefung: Story 2.1a, ADR-0006.
 - **Session-Tagesrekord / Daily Highscore:** Größte einzelne Session pro UTC-Tag, als 30-Tage-Verlauf im Server-Status-Hilfedialog. Prisma-Modell: `DailyStatistic`. Vertiefung: ADR-0024.
-- **Sicherheitsgrad / Confidence:** Optionale Zusatzabfrage bei bewertbaren Fragen (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `SHORT_TEXT`, `NUMERIC_ESTIMATE`): Teilnehmende geben nach ihrer Antwort an, wie sicher sie sind (Skala 1–5). Beeinflusst **keine** Punkte; Host sieht nach Ergebnisfreigabe Verteilung, Kreuztabelle Korrektheit × Sicherheit und Hervorhebung **selbstsicher falsch**. Vorkommen: Quiz-Editor, Vote, Host, Export. Vertiefung: Story 1.2i, [confidence-slider](features/confidence-slider.md).
+- **Selbsteinschätzung:** Optionale Zusatzabfrage bei bewertbaren Fragen (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `SHORT_TEXT`, `NUMERIC_ESTIMATE`): Teilnehmende geben nach ihrer Antwort an, wie sicher sie bei dieser Antwort sind (Skala 1–5). Beeinflusst **keine** Punkte; Host sieht nach Ergebnisfreigabe Verteilung, Kreuztabelle Korrektheit × Antwortsicherheit und Hervorhebung **selbstsicher falsch**. Editor-Feldlabels: **Niedrige/Hohe Antwortsicherheit**. Vorkommen: Quiz-Editor, Vote, Host, Export. Technische Feldnamen: `confidence*`. Vertiefung: Story 1.2i, [confidence-slider](features/confidence-slider.md).
 - **Server-Status:** Footer- und Hilfe-Status für Plattformzustand, Last und Kennzahlen. Der Footer lädt gebündelt über `health.footerBundle`; Detailwerte und Verlauf kommen aus `health.stats`. Vorkommen: App-Footer, Hilfe-Dialog. Vertiefung: ADR-0021, ADR-0024, [server-status-widget](features/server-status-widget.md).
 - **Sync-Link / Sync-Code:** Zugang zum gleichen Quiz-Dokument auf anderem Gerät des Dozenten. Vorkommen: Quiz-Sync. Vertiefung: Story 1.6a.
 - **Team-Modus:** Teilnehmende in 2–8 Teams; Auto- oder Manual-Zuweisung beim Join. Teamwertung und Team-Leaderboard folgen derselben Scoring- und Effective-Vote-Regel wie die Einzelwertung. Vorkommen: Quiz-Settings, Join, Ergebnis. Vertiefung: [team-mode](features/team-mode.md), ADR-0028.

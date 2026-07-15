@@ -230,7 +230,7 @@ describe('getDemoQuizSeedFingerprint', () => {
 
     const deDescription = (getDemoQuizPayload('de') as { quiz?: { description?: string } }).quiz
       ?.description;
-    expect(deDescription).toContain('Sicherheitsgrad');
+    expect(deDescription).toContain('Selbsteinschätzung');
     expect(deDescription).toContain('selbstsicher falsche');
   });
 

@@ -598,7 +598,7 @@ function getLocalQuestionValidationIssues(
   if (!questionSupportsConfidence(value.type) && hasConfidenceConfig) {
     issues.push({
       path: ['confidenceEnabled'],
-      message: $localize`:@@quizEdit.confidenceConfigTypeError:Sicherheitsgrad ist nur für bewertbare Fragen erlaubt.`,
+      message: $localize`:@@quizEdit.confidenceConfigTypeError:Selbsteinschätzung ist nur für bewertbare Fragen erlaubt.`,
     });
   }
 

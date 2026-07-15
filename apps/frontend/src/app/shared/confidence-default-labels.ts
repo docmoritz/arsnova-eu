@@ -1,4 +1,4 @@
-/** Story 1.2i: Standard-Ecklabels für die 5-Stufen-Sicherheitsskala (i18n). */
+/** Story 1.2i: Standard-Ecklabels für die 5-Stufen-Selbsteinschätzungs-Skala (i18n). */
 export function confidenceDefaultLabelLow(): string {
   return $localize`:@@confidence.defaultLabelLow:sehr unsicher`;
 }

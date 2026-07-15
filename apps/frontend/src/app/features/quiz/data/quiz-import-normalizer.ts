@@ -239,13 +239,27 @@ function applyClickConfidenceSettings(
   if (enabledCount > 0) {
     warnings.push({
       kind: 'mapped_question',
-      message: 'Der Sicherheitsgrad wurde für bewertbare Fragen übernommen.',
-      detail:
-        labelLow || labelHigh
-          ? `Aktiviert für ${enabledCount} Frage(n)${labelLow ? ` · niedrig: ${labelLow}` : ''}${labelHigh ? ` · hoch: ${labelHigh}` : ''}`
-          : `Aktiviert für ${enabledCount} Frage(n)`,
+      message: $localize`:@@quizImport.confidenceMappedMessage:Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.`,
+      detail: buildConfidenceImportMappedDetail(enabledCount, labelLow, labelHigh),
     });
   }
+}
+
+function buildConfidenceImportMappedDetail(
+  count: number,
+  labelLow?: string,
+  labelHigh?: string,
+): string {
+  if (labelLow && labelHigh) {
+    return $localize`:@@quizImport.confidenceMappedDetailBoth:Aktiviert für ${count}:count: Frage(n) · niedrig: ${labelLow}:low: · hoch: ${labelHigh}:high:`;
+  }
+  if (labelLow) {
+    return $localize`:@@quizImport.confidenceMappedDetailLow:Aktiviert für ${count}:count: Frage(n) · niedrig: ${labelLow}:low:`;
+  }
+  if (labelHigh) {
+    return $localize`:@@quizImport.confidenceMappedDetailHigh:Aktiviert für ${count}:count: Frage(n) · hoch: ${labelHigh}:high:`;
+  }
+  return $localize`:@@quizImport.confidenceMappedDetail:Aktiviert für ${count}:count: Frage(n)`;
 }
 
 function readOptionalConfidenceLabel(value: unknown): string | undefined {

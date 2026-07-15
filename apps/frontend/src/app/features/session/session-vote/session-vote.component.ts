@@ -2417,19 +2417,19 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     const low = this.confidenceLabelLow();
     const high = this.confidenceLabelHigh();
     if (low && high) {
-      return $localize`:@@sessionVote.confidenceAriaWithLabels:Sicherheitsgrad von 1 bis 5, niedrig: ${low}:low:, hoch: ${high}:high:`;
+      return $localize`:@@sessionVote.confidenceAriaWithLabels:Selbsteinschätzung von 1 bis 5, niedrig: ${low}:low:, hoch: ${high}:high:`;
     }
     if (low) {
-      return $localize`:@@sessionVote.confidenceAriaWithLow:Sicherheitsgrad von 1 bis 5, niedrig: ${low}:low:`;
+      return $localize`:@@sessionVote.confidenceAriaWithLow:Selbsteinschätzung von 1 bis 5, niedrig: ${low}:low:`;
     }
     if (high) {
-      return $localize`:@@sessionVote.confidenceAriaWithHigh:Sicherheitsgrad von 1 bis 5, hoch: ${high}:high:`;
+      return $localize`:@@sessionVote.confidenceAriaWithHigh:Selbsteinschätzung von 1 bis 5, hoch: ${high}:high:`;
     }
-    return $localize`:@@sessionVote.confidenceAria:Sicherheitsgrad von 1 bis 5`;
+    return $localize`:@@sessionVote.confidenceAria:Selbsteinschätzung von 1 bis 5`;
   }
 
   confidenceValueAriaLabel(value: number): string {
-    return $localize`:@@sessionVote.confidenceValueAria:Sicherheitsgrad ${value}:value:`;
+    return $localize`:@@sessionVote.confidenceValueAria:Selbsteinschätzung ${value}:value:`;
   }
 
   confidenceResultSummary(): string {
@@ -3847,7 +3847,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
 
     if (this.isConfidenceEnabled() && confidence === undefined) {
       this.voteError.set(
-        $localize`:@@sessionVote.confidenceRequired:Gib deinen Sicherheitsgrad an, bevor du absendest.`,
+        $localize`:@@sessionVote.confidenceRequired:Gib deine Selbsteinschätzung an, bevor du absendest.`,
       );
       return;
     }

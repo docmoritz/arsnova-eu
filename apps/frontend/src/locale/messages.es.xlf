@@ -5082,8 +5082,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceConfigTypeError" datatype="html">
-        <source>Sicherheitsgrad ist nur für bewertbare Fragen erlaubt.</source>
-        <target>El nivel de certeza solo se permite para preguntas evaluables.</target>
+        <source>Selbsteinschätzung ist nur für bewertbare Fragen erlaubt.</source>
+        <target>La autoevaluación solo está permitida para preguntas evaluables.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/data/quiz-store.service.ts</context>
           <context context-type="linenumber">601</context>
@@ -6262,8 +6262,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceConfigLegend" datatype="html">
-        <source> Sicherheitsgrad</source>
-        <target>Nivel de seguridad</target>
+        <source> Selbsteinschätzung</source>
+        <target>Autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.html</context>
           <context context-type="linenumber">603,605</context>
@@ -6278,24 +6278,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceEnabledToggle" datatype="html">
-        <source> Sicherheitsgrad abfragen</source>
-        <target>Nivel de seguridad de consulta</target>
+        <source> Selbsteinschätzung</source>
+        <target>Autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.html</context>
           <context context-type="linenumber">614,616</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceLabelLowField" datatype="html">
-        <source>Niedrige Sicherheit (optional)</source>
-        <target>Baja seguridad (opcional)</target>
+        <source>Niedrige Antwortsicherheit</source>
+        <target>Baja seguridad de respuesta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.html</context>
           <context context-type="linenumber">626</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceLabelHighField" datatype="html">
-        <source>Hohe Sicherheit (optional)</source>
-        <target>Alta seguridad (opcional)</target>
+        <source>Hohe Antwortsicherheit</source>
+        <target>Alta seguridad de respuesta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.html</context>
           <context context-type="linenumber">647</context>
@@ -6958,8 +6958,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizEdit.confidenceQuestionListHint" datatype="html">
-        <source> Sicherheitsgrad wird nach der Antwort abgefragt</source>
-        <target>Se solicita el nivel de seguridad para la respuesta.</target>
+        <source> Selbsteinschätzung wird nach der Antwort abgefragt</source>
+        <target>La autoevaluación se solicita tras la respuesta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.html</context>
           <context context-type="linenumber">1678,1680</context>
@@ -7643,7 +7643,7 @@
       </trans-unit>
       <trans-unit id="quizEdit.confidencePreviewAriaWithLow" datatype="html">
         <source>Fünfstufige Skala von 1 bis 5, niedrig: <x id="low" equiv-text="low"/></source>
-        <target>Escala de cinco puntos del 1 al 5, bajo: <x id="low" equiv-text="low"/></target>
+        <target>Escala de cinco niveles de 1 a 5, baja: <x id="low" equiv-text="low"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.ts</context>
           <context context-type="linenumber">937</context>
@@ -7659,7 +7659,7 @@
       </trans-unit>
       <trans-unit id="quizEdit.confidencePreviewAria" datatype="html">
         <source>Fünfstufige Skala von 1 bis 5</source>
-        <target>Escala de cinco puntos del 1 al 5</target>
+        <target>Escala de cinco niveles de 1 a 5</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-edit/quiz-edit.component.ts</context>
           <context context-type="linenumber">942</context>
@@ -8383,7 +8383,7 @@
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogHeading" datatype="html">
         <source>Letzte Auswertung</source>
-        <target>Último análisis</target>
+        <target>Última evaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">7</context>
@@ -8398,8 +8398,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogHint" datatype="html">
-        <source> Aggregierte Auswertung des zuletzt beendeten Live-Durchlaufs. Einzelne Konfidenzwerte und Nicknames werden nicht angezeigt.</source>
-        <target>Análisis agregado de la última sesión en directo finalizada. No se muestran niveles de confianza individuales ni apodos.</target>
+        <source> Aggregierte Auswertung des zuletzt beendeten Live-Durchlaufs. Einzelne Selbsteinschätzungen und Nicknames werden nicht angezeigt.</source>
+        <target> Análisis agregado de la última sesión en directo finalizada. No se muestran autoevaluaciones individuales ni apodos. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">33,36</context>
@@ -8422,8 +8422,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisConfidence" datatype="html">
-        <source>Lernstand und Sicherheit</source>
-        <target>Aprendizaje y confianza</target>
+        <source>Lernstand und Selbsteinschätzung</source>
+        <target>Nivel de aprendizaje y autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">60</context>
@@ -8462,8 +8462,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisValidResponses" datatype="html">
-        <source>Antworten mit Sicherheitsgrad:</source>
-        <target>Respuestas con nivel de confianza:</target>
+        <source>Antworten mit Selbsteinschätzung:</source>
+        <target>Respuestas con autoevaluación:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">98</context>
@@ -8478,8 +8478,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisWrongHigh" datatype="html">
-        <source>falsch + hohe Sicherheit</source>
-        <target>incorrecto + confianza alta</target>
+        <source>falsch + hohe Antwortsicherheit</source>
+        <target>incorrecto + alta seguridad de respuesta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">120</context>
@@ -8487,7 +8487,7 @@
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisIncorrect" datatype="html">
         <source>insgesamt falsch</source>
-        <target>en general mal</target>
+        <target>incorrecto en total</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">125</context>
@@ -8510,8 +8510,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisNoConfidence" datatype="html">
-        <source> Für diesen Durchlauf liegt keine auswertbare Sicherheitsgrad-Zusammenfassung vor.</source>
-        <target>No hay un resumen de confianza evaluable para esta sesión.</target>
+        <source> Für diesen Durchlauf liegt keine auswertbare Selbsteinschätzungs-Zusammenfassung vor.</source>
+        <target>No hay un resumen de autoevaluación evaluable para esta sesión.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
           <context context-type="linenumber">148,150</context>
@@ -9007,7 +9007,7 @@
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedback" datatype="html">
         <source>Letzte Auswertung</source>
-        <target>Último análisis</target>
+        <target>Última evaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/quiz-list.component.html</context>
           <context context-type="linenumber">547</context>
@@ -9363,6 +9363,62 @@
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/quiz-list.component.ts</context>
           <context context-type="linenumber">779</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizList.importSkippedWarningsTitle" datatype="html">
+        <source>Nicht übernommen:</source>
+        <target>No importado:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/quiz-list/quiz-list.component.html</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizList.importMappedWarningsTitle" datatype="html">
+        <source>Beim Import angepasst:</source>
+        <target>Ajustado durante la importación:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/quiz-list/quiz-list.component.html</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizImport.confidenceMappedMessage" datatype="html">
+        <source>Die Selbsteinschätzung wurde für bewertbare Fragen übernommen.</source>
+        <target>La autoevaluación se aplicó a las preguntas evaluables.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/data/quiz-import-normalizer.ts</context>
+          <context context-type="linenumber">242</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizImport.confidenceMappedDetail" datatype="html">
+        <source>Aktiviert für <x id="count" equiv-text="count"/> Frage(n)</source>
+        <target>Activado para <x id="count" equiv-text="count"/> pregunta(s)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/data/quiz-import-normalizer.ts</context>
+          <context context-type="linenumber">262</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizImport.confidenceMappedDetailLow" datatype="html">
+        <source>Aktiviert für <x id="count" equiv-text="count"/> Frage(n) · niedrig: <x id="low" equiv-text="labelLow"/></source>
+        <target>Activado para <x id="count" equiv-text="count"/> pregunta(s) · baja: <x id="low" equiv-text="labelLow"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/data/quiz-import-normalizer.ts</context>
+          <context context-type="linenumber">257</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizImport.confidenceMappedDetailHigh" datatype="html">
+        <source>Aktiviert für <x id="count" equiv-text="count"/> Frage(n) · hoch: <x id="high" equiv-text="labelHigh"/></source>
+        <target>Activado para <x id="count" equiv-text="count"/> pregunta(s) · alta: <x id="high" equiv-text="labelHigh"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/data/quiz-import-normalizer.ts</context>
+          <context context-type="linenumber">260</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="quizImport.confidenceMappedDetailBoth" datatype="html">
+        <source>Aktiviert für <x id="count" equiv-text="count"/> Frage(n) · niedrig: <x id="low" equiv-text="labelLow"/> · hoch: <x id="high" equiv-text="labelHigh"/></source>
+        <target>Activado para <x id="count" equiv-text="count"/> pregunta(s) · baja: <x id="low" equiv-text="labelLow"/> · alta: <x id="high" equiv-text="labelHigh"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/quiz/data/quiz-import-normalizer.ts</context>
+          <context context-type="linenumber">254</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.syncImportedSuccess" datatype="html">
@@ -10254,16 +10310,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceTitle" datatype="html">
-        <source> Lernstand und Sicherheit</source>
-        <target>Aprendizaje y confianza</target>
+        <source> Lernstand und Selbsteinschätzung</source>
+        <target>Nivel de aprendizaje y autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">665,667</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceLead" datatype="html">
-        <source> Die Verbindung aus Korrektheit und Sicherheit zeigt gefestigtes Wissen, Wissenslücken und mögliche Fehlkonzepte.</source>
-        <target>Combinar corrección y confianza muestra conocimientos sólidos, lagunas y posibles conceptos erróneos.</target>
+        <source> Die Verbindung aus Korrektheit und Selbsteinschätzung zeigt gefestigtes Wissen, Wissenslücken und mögliche Fehlkonzepte.</source>
+        <target>La relación entre corrección y autoevaluación muestra conocimiento consolidado, lagunas y posibles conceptos erróneos.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">668,671</context>
@@ -10302,8 +10358,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceValidResponses" datatype="html">
-        <source>Antworten mit Sicherheitsgrad:</source>
-        <target>Respuestas con nivel de confianza:</target>
+        <source>Antworten mit Selbsteinschätzung:</source>
+        <target>Respuestas con autoevaluación:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">725</context>
@@ -10326,8 +10382,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceWrongHigh" datatype="html">
-        <source>falsch + hohe Sicherheit</source>
-        <target>incorrecto + confianza alta</target>
+        <source>falsch + hohe Antwortsicherheit</source>
+        <target>incorrecto + alta seguridad de respuesta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">760</context>
@@ -10335,7 +10391,7 @@
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceIncorrectOverall" datatype="html">
         <source>insgesamt falsch</source>
-        <target>en general mal</target>
+        <target>incorrecto en total</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">772</context>
@@ -10830,32 +10886,32 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceSectionTitle" datatype="html">
-        <source> Sicherheit der Antworten</source>
-        <target>Nivel de seguridad</target>
+        <source> Selbsteinschätzung</source>
+        <target>Autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">2421,2423</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceSectionLead" datatype="html">
-        <source> Richtig oder falsch — und wie sicher? Besonders wichtig: falsch trotz hoher Sicherheit.</source>
-        <target>¿Qué tan seguros estaban los participantes en su respuesta?</target>
+        <source> Richtig oder falsch — und wie sicher? Besonders wichtig: falsch trotz hoher Antwortsicherheit. </source>
+        <target> ¿Correcto o incorrecto — y con qué seguridad? Especialmente importante: incorrecto pese a alta seguridad de respuesta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">2427,2430</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabAria" datatype="html">
-        <source>Korrektheit und Sicherheit</source>
-        <target>Corrección y seguridad de la tabla cruzada</target>
+        <source>Korrektheit und Selbsteinschätzung</source>
+        <target>Corrección y autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">2451</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceWrongOptionsTitle" datatype="html">
-        <source> Häufig falsch mit hoher Sicherheit</source>
-        <target>A menudo se equivoca con un alto grado de certeza.</target>
+        <source> Häufig falsch mit hoher Antwortsicherheit </source>
+        <target> A menudo incorrecto con alta seguridad de respuesta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">2505,2507</context>
@@ -11595,7 +11651,7 @@
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierLowWithLabel" datatype="html">
         <source>Niedrig · <x id="label" equiv-text="q.confidenceLabelLow"/></source>
-        <target>Bajo <x id="label" equiv-text="q.confidenceLabelLow"/></target>
+        <target>Bajo · <x id="label" equiv-text="q.confidenceLabelLow"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">1595</context>
@@ -11643,7 +11699,7 @@
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabIncorrect" datatype="html">
         <source>Falsch</source>
-        <target>Falso</target>
+        <target>Incorrecto</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">1654</context>
@@ -11675,7 +11731,7 @@
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceCrossTab" datatype="html">
         <source>Kreuz richtig/hoch <x id="correctHigh" equiv-text="crossTab.correctHigh"/> · falsch/hoch <x id="incorrectHigh" equiv-text="crossTab.incorrectHigh"/></source>
-        <target>Cruzar a la derecha/alto <x id="correctHigh" equiv-text="crossTab.correctHigh"/> incorrecto/alto <x id="incorrectHigh" equiv-text="crossTab.incorrectHigh"/></target>
+        <target>Correcto+alto <x id="correctHigh" equiv-text="crossTab.correctHigh"/> · Incorrecto+alto <x id="incorrectHigh" equiv-text="crossTab.incorrectHigh"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">1761</context>
@@ -12956,16 +13012,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
-        <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Konfidenz n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details</source>
-        <target>N.º de pregunta;Texto de la pregunta;Tipo;Participantes;Puntos medios;Detalles</target>
+        <source>Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details</source>
+        <target>N.º pregunta;Texto;Tipo;Participantes;Ø puntos;Autoevaluación n;Consolidado;Riesgo de concepto erróneo;Frágil;Laguna detectada;Indeciso;Señal más fuerte;Detalles</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">5899</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceSummaryTitle" datatype="html">
-        <source>Lernstand und Sicherheit</source>
-        <target>Nivel de aprendizaje y seguridad.</target>
+        <source>Lernstand und Selbsteinschätzung</source>
+        <target>Nivel de aprendizaje y autoevaluación</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">5946</context>
@@ -14948,16 +15004,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceResultPrefix" datatype="html">
-        <source>Dein Sicherheitsgrad:</source>
-        <target>Su nivel de seguridad:</target>
+        <source>Deine Selbsteinschätzung:</source>
+        <target>Tu autoevaluación:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.html</context>
           <context context-type="linenumber">1338</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceSentPrefix" datatype="html">
-        <source>Sicherheitsgrad:</source>
-        <target>Nivel de seguridad:</target>
+        <source>Selbsteinschätzung:</source>
+        <target>Autoevaluación:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.html</context>
           <context context-type="linenumber">1353</context>
@@ -16084,40 +16140,40 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceAriaWithLabels" datatype="html">
-        <source>Sicherheitsgrad von 1 bis 5, niedrig: <x id="low" equiv-text="low"/>, hoch: <x id="high" equiv-text="high"/></source>
-        <target>Nivel de seguridad del 1 al 5, bajo: <x id="low" equiv-text="low"/>, alto: <x id="high" equiv-text="high"/></target>
+        <source>Selbsteinschätzung von 1 bis 5, niedrig: <x id="low" equiv-text="low"/>, hoch: <x id="high" equiv-text="high"/></source>
+        <target>Autoevaluación de 1 a 5, baja: <x id="low" equiv-text="low"/>, alta: <x id="high" equiv-text="high"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">2420</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceAriaWithLow" datatype="html">
-        <source>Sicherheitsgrad von 1 bis 5, niedrig: <x id="low" equiv-text="low"/></source>
-        <target>Nivel de seguridad del 1 al 5, bajo: <x id="low" equiv-text="low"/></target>
+        <source>Selbsteinschätzung von 1 bis 5, niedrig: <x id="low" equiv-text="low"/></source>
+        <target>Autoevaluación de 1 a 5, baja: <x id="low" equiv-text="low"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">2423</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceAriaWithHigh" datatype="html">
-        <source>Sicherheitsgrad von 1 bis 5, hoch: <x id="high" equiv-text="high"/></source>
-        <target>Nivel de seguridad del 1 al 5, alto: <x id="high" equiv-text="high"/></target>
+        <source>Selbsteinschätzung von 1 bis 5, hoch: <x id="high" equiv-text="high"/></source>
+        <target>Autoevaluación de 1 a 5, alta: <x id="high" equiv-text="high"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">2426</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceAria" datatype="html">
-        <source>Sicherheitsgrad von 1 bis 5</source>
-        <target>Nivel de seguridad del 1 al 5</target>
+        <source>Selbsteinschätzung von 1 bis 5</source>
+        <target>Autoevaluación de 1 a 5</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">2428</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceValueAria" datatype="html">
-        <source>Sicherheitsgrad <x id="value" equiv-text="value"/></source>
-        <target>Nivel de seguridad <x id="value" equiv-text="value"/></target>
+        <source>Selbsteinschätzung <x id="value" equiv-text="value"/></source>
+        <target>Autoevaluación <x id="value" equiv-text="value"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">2432</context>
@@ -16240,8 +16296,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionVote.confidenceRequired" datatype="html">
-        <source>Gib deinen Sicherheitsgrad an, bevor du absendest.</source>
-        <target>Indique su nivel de seguridad antes de enviar.</target>
+        <source>Gib deine Selbsteinschätzung an, bevor du absendest.</source>
+        <target>Indica tu autoevaluación antes de enviar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
           <context context-type="linenumber">3850</context>

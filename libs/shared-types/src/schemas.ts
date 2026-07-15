@@ -1312,7 +1312,7 @@ export const AddQuestionInputSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['confidenceEnabled'],
-        message: 'Sicherheitsgrad ist nur für bewertbare Fragetypen erlaubt.',
+        message: 'Selbsteinschätzung ist nur für bewertbare Fragetypen erlaubt.',
       });
     }
 

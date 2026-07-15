@@ -31,8 +31,8 @@
       role="note"
       i18n="@@quizList.lastSessionFeedbackDialogHint"
     >
-      Aggregierte Auswertung des zuletzt beendeten Live-Durchlaufs. Einzelne Konfidenzwerte und
-      Nicknames werden nicht angezeigt.
+      Aggregierte Auswertung des zuletzt beendeten Live-Durchlaufs. Einzelne Selbsteinschätzungen
+      und Nicknames werden nicht angezeigt.
     </div>
 
     <p class="last-session-feedback-dialog__session-meta">
@@ -60,7 +60,9 @@
           id="last-confidence-section-heading"
         >
           <mat-icon aria-hidden="true">psychology</mat-icon>
-          <span i18n="@@quizList.lastSessionAnalysisConfidence">Lernstand und Sicherheit</span>
+          <span i18n="@@quizList.lastSessionAnalysisConfidence"
+            >Lernstand und Selbsteinschätzung</span
+          >
         </h3>
 
         @if (confidence.priorityQuestionCount > 0) {
@@ -105,7 +107,7 @@
 
         <p class="last-session-feedback-dialog__distribution">
           <span i18n="@@quizList.lastSessionAnalysisValidResponses"
-            >Antworten mit Sicherheitsgrad:</span
+            >Antworten mit Selbsteinschätzung:</span
           >
           {{ formatCount(confidence.responseCount) }}
         </p>
@@ -127,7 +129,9 @@
                   confidencePercent(question.result.crossTab.incorrectHigh, question.responseCount)
                 }}
                 %
-                <span i18n="@@quizList.lastSessionAnalysisWrongHigh">falsch + hohe Sicherheit</span>
+                <span i18n="@@quizList.lastSessionAnalysisWrongHigh"
+                  >falsch + hohe Antwortsicherheit</span
+                >
               </span>
               <span>
                 {{ confidencePercent(incorrectCount(question), question.responseCount) }} %
@@ -155,7 +159,7 @@
     } @else {
       <div class="last-session-feedback-dialog__empty-box">
         <span i18n="@@quizList.lastSessionAnalysisNoConfidence">
-          Für diesen Durchlauf liegt keine auswertbare Sicherheitsgrad-Zusammenfassung vor.
+          Für diesen Durchlauf liegt keine auswertbare Selbsteinschätzungs-Zusammenfassung vor.
         </span>
       </div>
     }

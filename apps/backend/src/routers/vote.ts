@@ -479,19 +479,19 @@ export const voteRouter = router({
         if (input.confidenceValue === undefined || input.confidenceValue === null) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Für diese Frage ist ein Sicherheitsgrad erforderlich.',
+            message: 'Für diese Frage ist eine Selbsteinschätzung erforderlich.',
           });
         }
         if (!isConfidenceScaleValue(input.confidenceValue)) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: 'Sicherheitsgrad muss zwischen 1 und 5 liegen.',
+            message: 'Selbsteinschätzung muss zwischen 1 und 5 liegen.',
           });
         }
       } else if (input.confidenceValue !== undefined) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'confidenceValue ist nur erlaubt, wenn die Frage den Sicherheitsgrad abfragt.',
+          message: 'Selbsteinschätzung ist nur erlaubt, wenn die Frage sie abfragt.',
         });
       }
 

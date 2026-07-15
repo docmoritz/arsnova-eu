@@ -5898,7 +5898,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     try {
       const data = await trpc.session.getSessionExportData.query({ code: this.code.toUpperCase() });
       const rows: string[] = [
-        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Konfidenz n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details`,
+        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Stärkstes Signal;Details`,
       ];
 
       for (const q of data.questions) {
@@ -5945,7 +5945,9 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       if (data.confidenceSummary) {
         const summary = data.confidenceSummary;
         rows.push('');
-        rows.push($localize`:@@sessionHost.exportConfidenceSummaryTitle:Lernstand und Sicherheit`);
+        rows.push(
+          $localize`:@@sessionHost.exportConfidenceSummaryTitle:Lernstand und Selbsteinschätzung`,
+        );
         rows.push(
           $localize`:@@sessionHost.exportConfidenceSummaryHeader:Gültige Antworten;Ausgewertete Fragen;Aus Datenschutz ausgeblendete Fragen;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden`,
         );

@@ -666,11 +666,11 @@
                           id="finished-confidence-heading"
                           i18n="@@sessionHost.finishedConfidenceTitle"
                         >
-                          Lernstand und Sicherheit
+                          Lernstand und Selbsteinschätzung
                         </h2>
                         <p i18n="@@sessionHost.finishedConfidenceLead">
-                          Die Verbindung aus Korrektheit und Sicherheit zeigt gefestigtes Wissen,
-                          Wissenslücken und mögliche Fehlkonzepte.
+                          Die Verbindung aus Korrektheit und Selbsteinschätzung zeigt gefestigtes
+                          Wissen, Wissenslücken und mögliche Fehlkonzepte.
                         </p>
                       </div>
                     </header>
@@ -732,7 +732,7 @@
 
                     <p class="session-host__finished-confidence-coverage">
                       <span i18n="@@sessionHost.finishedConfidenceValidResponses"
-                        >Antworten mit Sicherheitsgrad:</span
+                        >Antworten mit Selbsteinschätzung:</span
                       >
                       {{ formatCount(confidenceSummary.responseCount) }}
                       ·
@@ -782,7 +782,7 @@
                                     %
                                   </strong>
                                   <span i18n="@@sessionHost.finishedConfidenceWrongHigh"
-                                    >falsch + hohe Sicherheit</span
+                                    >falsch + hohe Antwortsicherheit</span
                                   >
                                 </span>
                                 <span class="session-host__finished-confidence-question-metric">
@@ -2447,14 +2447,14 @@
                                   id="session-host-confidence-heading"
                                   i18n="@@sessionHost.confidenceSectionTitle"
                                 >
-                                  Sicherheit der Antworten
+                                  Selbsteinschätzung
                                 </h3>
                                 <p
                                   class="session-host__confidence-lead"
                                   i18n="@@sessionHost.confidenceSectionLead"
                                 >
                                   Richtig oder falsch — und wie sicher? Besonders wichtig: falsch
-                                  trotz hoher Sicherheit.
+                                  trotz hoher Antwortsicherheit.
                                 </p>
                               </div>
                             </div>
@@ -2476,7 +2476,7 @@
                               class="session-host__confidence-crosstab"
                               role="table"
                               i18n-aria-label="@@sessionHost.confidenceCrossTabAria"
-                              aria-label="Korrektheit und Sicherheit"
+                              aria-label="Korrektheit und Selbsteinschätzung"
                             >
                               <div
                                 class="session-host__confidence-crosstab-row session-host__confidence-crosstab-row--head"
@@ -2531,7 +2531,7 @@
                                   class="session-host__confidence-wrong-options-title"
                                   i18n="@@sessionHost.confidenceWrongOptionsTitle"
                                 >
-                                  Häufig falsch mit hoher Sicherheit
+                                  Häufig falsch mit hoher Antwortsicherheit
                                 </p>
                                 <ul class="session-host__confidence-wrong-options-list" role="list">
                                   @for (

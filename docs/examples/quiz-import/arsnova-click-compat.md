@@ -29,16 +29,16 @@ wie `arsnova.eu` es derzeit importiert.
 | `FreeTextQuestion`              | `SHORT_TEXT`       | importiert | Musterloesungen, Gross-/Kleinschreibung und Trim werden best effort uebernommen |
 | `RangedQuestion`                | `NUMERIC_ESTIMATE` | importiert | `rangeMin/rangeMax` als absolutes Toleranzband, `correctValue` als Referenzwert |
 
-## Sicherheitsgrad (Confidence Slider)
+## Selbsteinschätzung (Confidence Slider)
 
-In `arsnova.click` ist der Sicherheitsgrad eine **Quiz-weite Session-Option** (`sessionConfig.confidenceSliderEnabled`), nicht ein Feld pro Frage.
+In `arsnova.click` ist die Selbsteinschätzung eine **Quiz-weite Session-Option** (`sessionConfig.confidenceSliderEnabled`), nicht ein Feld pro Frage.
 
 Beim Import nach `arsnova.eu` gilt:
 
 1. Ist `confidenceSliderEnabled: true`, wird `confidenceEnabled: true` für alle bewertbaren Fragen gesetzt (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `SHORT_TEXT`, `NUMERIC_ESTIMATE`).
-2. Umfragen (`SURVEY`), offener Freitext (`FREETEXT`) und andere nicht bewertbare Typen bleiben ohne Sicherheitsgrad.
+2. Umfragen (`SURVEY`), offener Freitext (`FREETEXT`) und andere nicht bewertbare Typen bleiben ohne Selbsteinschätzung.
 3. Optionale Labels aus `sessionConfig.confidenceLabelLow` / `confidenceLabelHigh` werden übernommen (Fallback-Feldnamen: `confidenceLowLabel`, `confidenceHighLabel`, `confidenceSliderLabelLow`, `confidenceSliderLabelHigh`).
-4. Der Import meldet einen Hinweis: _Der Sicherheitsgrad wurde für bewertbare Fragen übernommen._
+4. Der Import meldet einen Hinweis: _Die Selbsteinschätzung wurde für bewertbare Fragen übernommen._
 
 Tests: `apps/frontend/src/app/features/quiz/data/quiz-import-normalizer.spec.ts`
 
