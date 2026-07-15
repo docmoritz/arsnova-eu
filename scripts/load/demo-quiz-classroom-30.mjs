@@ -37,6 +37,8 @@ const DEMO_QUIZ_JSON = join(
 const DEMO_QUIZ_HISTORY_SCOPE_ID = 'de500000-0000-4000-a000-000000000001';
 
 const TRPC_URL = String(process.env.TRPC_URL || 'http://127.0.0.1:3000/trpc').trim();
+const SESSION_CODE = String(process.env.SESSION_CODE || '').trim().toUpperCase();
+const HOST_TOKEN_ENV = String(process.env.HOST_TOKEN || '').trim();
 const PARTICIPANTS = Math.max(1, Number(process.env.PARTICIPANTS || 30));
 const JOIN_CONCURRENCY = Math.max(1, Number(process.env.JOIN_CONCURRENCY || 15));
 const EXPECTED_QUESTIONS = Math.max(1, Number(process.env.EXPECTED_QUESTIONS || 9));
@@ -273,6 +275,38 @@ function questionMetaFromUpload(questions) {
   }));
 }
 
+async function mintHostToken(sessionCode) {
+  if (HOST_TOKEN_ENV) {
+    return HOST_TOKEN_ENV;
+  }
+
+  const { execFile } = await import('node:child_process');
+  const { promisify } = await import('node:util');
+  const execFileAsync = promisify(execFile);
+  const backendDir = join(__dirname, '../../apps/backend');
+  const script = `
+    import { createHostSessionToken } from './src/lib/hostAuth.ts';
+    createHostSessionToken(${JSON.stringify(sessionCode)})
+      .then((token) => {
+        console.log(token);
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error(error);
+        process.exit(1);
+      });
+  `;
+  const { stdout } = await execFileAsync('npx', ['tsx', '-e', script], {
+    cwd: backendDir,
+    encoding: 'utf8',
+  });
+  const token = stdout.trim();
+  if (!token) {
+    throw new Error(`Host-Token für Session ${sessionCode} konnte nicht erzeugt werden.`);
+  }
+  return token;
+}
+
 async function run() {
   await waitForBackend(TRPC_URL);
   const uploadPayload = await loadDemoQuizUploadPayload();
@@ -285,13 +319,32 @@ async function run() {
   }
 
   const publicTrpc = createHttpClient();
-  const { quizId } = await publicTrpc.quiz.upload.mutate(uploadPayload);
-  const { code, hostToken } = await publicTrpc.session.create.mutate({
-    quizId,
-    type: 'QUIZ',
-    qaEnabled: false,
-    quickFeedbackEnabled: false,
-  });
+  let code;
+  let hostToken;
+  let quizId;
+
+  if (SESSION_CODE) {
+    const info = await publicTrpc.session.getInfo.query({ code: SESSION_CODE });
+    if (!info?.id) {
+      throw new Error(`Session ${SESSION_CODE} nicht gefunden.`);
+    }
+    code = SESSION_CODE;
+    quizId = info.id;
+    hostToken = await mintHostToken(code);
+    console.log(`Nutze bestehende Session ${code} (${info.quizName ?? 'Quiz'}).`);
+  } else {
+    const uploadResult = await publicTrpc.quiz.upload.mutate(uploadPayload);
+    quizId = uploadResult.quizId;
+    const created = await publicTrpc.session.create.mutate({
+      quizId,
+      type: 'QUIZ',
+      qaEnabled: false,
+      quickFeedbackEnabled: false,
+    });
+    code = created.code;
+    hostToken = created.hostToken;
+  }
+
   const hostTrpc = createHttpClient(hostToken);
 
   const indexes = Array.from({ length: PARTICIPANTS }, (_, index) => index);
