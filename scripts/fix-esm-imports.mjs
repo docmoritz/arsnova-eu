@@ -54,9 +54,7 @@ function patchDistDir(distDir) {
 }
 
 const distDirs =
-  process.argv.length > 2
-    ? process.argv.slice(2).map((arg) => path.resolve(arg))
-    : defaultDistDirs;
+  process.argv.length > 2 ? process.argv.slice(2).map((arg) => path.resolve(arg)) : defaultDistDirs;
 
 for (const distDir of distDirs) {
   patchDistDir(distDir);
