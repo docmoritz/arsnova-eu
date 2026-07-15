@@ -246,14 +246,27 @@ export class AppComponent implements OnInit, OnDestroy {
         'visibilitychange',
         this.onDocumentVisibilityForFooterStatusPolling,
       );
-      this.refreshFooterStatusPollingState({ immediate: true });
+      this.refreshFooterStatusPollingState();
       if (typeof requestIdleCallback !== 'undefined') {
         requestIdleCallback(() => void this.loadConnectionBanner(), { timeout: 2500 });
       } else {
         setTimeout(() => void this.loadConnectionBanner(), 0);
       }
-      this.checkForUpdates();
+      this.scheduleNonCriticalStartupWork();
       this.setupPwaInstallPrompt();
+    }
+  }
+
+  /** Footer-Health, MOTD-Header und PWA-Update-Checks nach dem kritischen Erstload. */
+  private scheduleNonCriticalStartupWork(): void {
+    const run = (): void => {
+      this.refreshFooterStatusPollingState({ immediate: true });
+      this.checkForUpdates();
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(run, { timeout: 4000 });
+    } else {
+      setTimeout(run, 100);
     }
   }
 

@@ -46,7 +46,7 @@ export class MotdHeaderStateService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      void this.refresh();
+      this.scheduleInitialRefresh();
       this.motdHeaderRefresh.requests.subscribe(() => void this.refresh());
       this.passiveRefresh$.pipe(debounceTime(500)).subscribe(() => void this.refresh());
       this.router.events
@@ -99,4 +99,15 @@ export class MotdHeaderStateService {
       this.passiveRefresh$.next();
     }
   };
+
+  private scheduleInitialRefresh(): void {
+    const run = (): void => {
+      void this.refresh();
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(run, { timeout: 3000 });
+    } else {
+      setTimeout(run, 100);
+    }
+  }
 }
