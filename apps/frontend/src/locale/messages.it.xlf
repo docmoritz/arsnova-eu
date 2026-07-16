@@ -67,7 +67,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">258</context>
+          <context context-type="linenumber">260</context>
         </context-group>
       </trans-unit>
       <trans-unit id="804017840391960536" datatype="html">
@@ -663,8 +663,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionReport.confidenceSuppressedQuestions" datatype="html">
-        <source>Aus Datenschutz ausgeblendete Fragen</source>
-        <target>Domande nascoste per motivi di privacy</target>
+        <source>Nicht aggregiert (&lt;5 Antworten mit Selbsteinschätzung)</source>
+        <target>Non aggregate (&lt;5 risposte con autovalutazione)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">29</context>
@@ -2904,7 +2904,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3470</context>
+          <context context-type="linenumber">3476</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.compareRoundStartAria" datatype="html">
@@ -4450,11 +4450,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="help.confidenceExportBody" datatype="html">
-        <source> Nach Session-Ende fasst die Auswertung gefestigtes Wissen, Fehlkonzept-Risiko und fragiles Wissen zusammen. Der Ergebnisbericht (PDF) ist das empfohlene Format; CSV steht unter „Mehr“ für Excel zur Verfügung. In der Quiz-Sammlung findest du Nachbesprechung und Ergebnisbericht (PDF) auf der Quizkarte.</source>
-        <target>Alla fine della sessione, la valutazione riassume la conoscenza consolidata, il rischio di malintesi e la conoscenza fragile. Il PDF dei risultati è il formato consigliato; il CSV è disponibile sotto « Di più » per Excel. Nella raccolta dei quiz troverai il debriefing e il PDF dei risultati sulla scheda del quiz.</target>
+        <source> Nach Session-Ende fasst die Auswertung gefestigtes Wissen, Fehlkonzept-Risiko und fragiles Wissen zusammen. Fragen mit weniger als 5 Antworten mit Selbsteinschätzung werden nicht aggregiert ausgewiesen. Der Ergebnisbericht (PDF) ist das empfohlene Format; CSV steht unter „Mehr“ für Excel zur Verfügung. In der Quiz-Sammlung findest du Nachbesprechung und Ergebnisbericht (PDF) auf der Quizkarte.</source>
+        <target>Alla fine della sessione, la valutazione riassume la conoscenza consolidata, il rischio di malintesi e la conoscenza fragile. Le domande con meno di 5 risposte con autovalutazione non vengono mostrate in forma aggregata. Il PDF dei risultati è il formato consigliato; il CSV è disponibile sotto « Di più » per Excel. Nella raccolta dei quiz troverai il debriefing e il PDF dei risultati sulla scheda del quiz.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">216,221</context>
+          <context context-type="linenumber">216,223</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoTitle" datatype="html">
@@ -4462,7 +4462,7 @@
         <target>Quiz dimostrativo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">228</context>
+          <context context-type="linenumber">230</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoCardHint" datatype="html">
@@ -4470,7 +4470,7 @@
         <target>Un quiz di esempio preinstallato mostra i formati di domanda in momenti didattici concreti: verifica rapida, nuvola di parole, risposta breve, stima, scala di valutazione, autovalutazione, formule e Markdown. Lo trovi nella tua raccolta quiz e puoi aprirlo in anteprima.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">229,234</context>
+          <context context-type="linenumber">231,236</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoTip" datatype="html">
@@ -4478,7 +4478,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Suggerimento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> apri una volta l’anteprima su un secondo dispositivo prima della prima sessione live. Vedrai subito come lavorano insieme vista host e schermo dei partecipanti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">236,239</context>
+          <context context-type="linenumber">238,241</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstartTitle" datatype="html">
@@ -4486,7 +4486,7 @@
         <target>Avvio rapido</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">243</context>
+          <context context-type="linenumber">245</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart1" datatype="html">
@@ -4494,7 +4494,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Crea quiz:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> scegli “Apri raccolta quiz”, crea un nuovo quiz e scegli il formato giusto per ogni domanda.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">246,248</context>
+          <context context-type="linenumber">248,250</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart2" datatype="html">
@@ -4502,7 +4502,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia evento:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> imposta stile, timer, team e classifica. Poi viene creato un codice a 6 caratteri, da condividere come testo o QR code.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">250,252</context>
+          <context context-type="linenumber">252,254</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickstart3" datatype="html">
@@ -4510,7 +4510,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Modera live:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> mostra la domanda, avvia la fase di risposta, pubblica o trattieni i risultati e aggiungi un secondo turno quando è utile.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">254,256</context>
+          <context context-type="linenumber">256,258</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostTitle" datatype="html">
@@ -4518,7 +4518,7 @@
         <target>Guida l&apos;evento</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">261</context>
+          <context context-type="linenumber">263</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostLead" datatype="html">
@@ -4526,7 +4526,7 @@
         <target>Nella vista host guidi la sessione come una piccola regia: fai entrare i partecipanti, pubblichi i contenuti, apri la discussione e rendi visibili i risultati.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">262,266</context>
+          <context context-type="linenumber">264,268</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostStartStep" datatype="html">
@@ -4534,7 +4534,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Avvia sessione:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> dalla tua raccolta quiz avvia un evento e scegli se iniziare con quiz o Q&amp;A. A quel punto viene creato il codice di accesso.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">269,271</context>
+          <context context-type="linenumber">271,273</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostLobby" datatype="html">
@@ -4542,7 +4542,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Lobby:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Vedi chi si è iscritto; verrà visualizzato un codice QR per partecipare.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">273,275</context>
+          <context context-type="linenumber">275,277</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostBeamer" datatype="html">
@@ -4550,7 +4550,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Vista proiettore e presentatore:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> domanda, risposte, conto alla rovescia e risultati sono abbastanza grandi per proiezione, streaming o secondo schermo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">277,279</context>
+          <context context-type="linenumber">279,281</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostSteuerung" datatype="html">
@@ -4558,7 +4558,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Controlli:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> usa “Domanda successiva” per portare il contenuto sullo schermo. Puoi iniziare con una fase di lettura, poi aprire la fase di risposta e decidere quando mostrare il risultato.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">281,284</context>
+          <context context-type="linenumber">283,286</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostPeer" datatype="html">
@@ -4566,7 +4566,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (doppi turni):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> per domande quiz adatte, domande di stima e sondaggi rapidi: prima si vota, poi si discute, quindi si vota di nuovo. Il confronto prima/dopo rende visibile il progresso di apprendimento.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">286,289</context>
+          <context context-type="linenumber">288,291</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.hostSettings" datatype="html">
@@ -4574,7 +4574,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Impostazioni:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> all’avvio scegli stile e opzioni: serio o giocoso, con o senza classifica, audio, fase di lettura, modalità team, nickname e timer.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">291,294</context>
+          <context context-type="linenumber">293,296</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallTitle" datatype="html">
@@ -4582,7 +4582,7 @@
         <target> Bacheca delle domande nel canale live Q&amp;A </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">299,301</context>
+          <context context-type="linenumber">301,303</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallLead" datatype="html">
@@ -4590,7 +4590,7 @@
         <target> Il Q&amp;A non deve perdersi in una chat laterale. La bacheca delle domande rende gli interventi visibili, prioritizzabili e moderabili: mantieni il filo della sessione mentre il gruppo segnala insieme quali punti hanno davvero bisogno di chiarimento. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">302,306</context>
+          <context context-type="linenumber">304,308</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallListAria" datatype="html">
@@ -4598,7 +4598,7 @@
         <target>Funzioni didattiche della bacheca Q&amp;A</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">310</context>
+          <context context-type="linenumber">312</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallModerationTitle" datatype="html">
@@ -4606,7 +4606,7 @@
         <target> Moderazione con ritmo didattico </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">315</context>
+          <context context-type="linenumber">317</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallModerationBody" datatype="html">
@@ -4614,7 +4614,7 @@
         <target> Se serve, le nuove domande attendono prima la tua approvazione. Puoi approvare, mettere in evidenza, archiviare o rimuovere i contributi e governare clima, rilevanza e tempi: rispondere subito, raccogliere per dopo o aprire una traccia di discussione. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">316,321</context>
+          <context context-type="linenumber">318,323</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallVotingTitle" datatype="html">
@@ -4622,7 +4622,7 @@
         <target> Upvote e downvote collettivi </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">327</context>
+          <context context-type="linenumber">329</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallVotingBody" datatype="html">
@@ -4630,7 +4630,7 @@
         <target> Partecipanti pesano insieme le domande. Voti positivi e negativi mostrano non solo popolarità, ma anche incertezza, dissenso e bisogno di chiarimento; ordinamenti come “più supportate”, “migliori domande” e “controverse” ti aiutano a usare il tempo live dove ha più senso didattico. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">328,333</context>
+          <context context-type="linenumber">330,335</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallWordCloudTitle" datatype="html">
@@ -4638,7 +4638,7 @@
         <target> Word cloud Q&amp;A a livello di temi </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">339</context>
+          <context context-type="linenumber">341</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallWordCloudBody" datatype="html">
@@ -4646,7 +4646,7 @@
         <target> La word cloud condensa le domande visibili in parole e frasi, pesate per supporto, consenso robusto o controversia. Può essere congelata, letta secondo la logica di ordinamento e mostrata nella vista presentatore: una lettura rapida dei cluster tematici, non una lista decorativa di parole. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">340,345</context>
+          <context context-type="linenumber">342,347</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallLlmTitle" datatype="html">
@@ -4654,7 +4654,7 @@
         <target>Prossimo passo: bussola di moderazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">351</context>
+          <context context-type="linenumber">353</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qaWallLlmBody" datatype="html">
@@ -4662,7 +4662,7 @@
         <target> Prima è prevista una bussola di moderazione deterministica. In seguito si potranno aggiungere in modo opzionale segnali Q&amp;A NLP asincroni e riepiloghi collegati alle fonti, come supporto alla moderazione attento ai dati invece di una valutazione black box. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">352,356</context>
+          <context context-type="linenumber">354,358</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.blitzTitle" datatype="html">
@@ -4670,7 +4670,7 @@
         <target>Sondaggio rapido</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">363</context>
+          <context context-type="linenumber">365</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackIntro" datatype="html">
@@ -4678,7 +4678,7 @@
         <target>Sondaggi rapidi su clima e comprensione, prima della pausa, in apertura o per una verifica al volo. Disponibili nell’area host della sessione live o direttamente dalla pagina iniziale.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">364,368</context>
+          <context context-type="linenumber">366,370</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfMood" datatype="html">
@@ -4686,7 +4686,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Immagine dell&apos;atmosfera<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (😊😐😟): Come stanno i partecipanti?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">371,372</context>
+          <context context-type="linenumber">373,374</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfYesNoMaybe" datatype="html">
@@ -4694,7 +4694,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Sì/No/Forse<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (👍👎🤷): richiesta rapida di consenso.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">374,375</context>
+          <context context-type="linenumber">376,377</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackYesNo" datatype="html">
@@ -4702,7 +4702,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Sì / No<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (👍👎): domanda binaria chiara, senza via di mezzo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">377,378</context>
+          <context context-type="linenumber">379,380</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackTrueFalseUnknown" datatype="html">
@@ -4710,7 +4710,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Vero / Falso / Non lo so<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (✓ / × / ?): per valutazioni rapide o brevi verifiche di conoscenza.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">380,382</context>
+          <context context-type="linenumber">382,384</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackLetterOptions" datatype="html">
@@ -4718,7 +4718,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Sondaggi rapidi in più fasi<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (A-D): tre o quattro opzioni fisse per la votazione spontanea, senza creare una domanda del quiz completa.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">384,386</context>
+          <context context-type="linenumber">386,388</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackTempo" datatype="html">
@@ -4726,7 +4726,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Feedback sul ritmo<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> (🙂🐇🐢🙈): con quattro icone il gruppo indica continuamente se riesce a seguire. Le persone partecipanti possono cambiare risposta; tu vedi solo la tendenza aggregata.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">388,391</context>
+          <context context-type="linenumber">390,393</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.quickFeedbackStartFlow" datatype="html">
@@ -4734,7 +4734,7 @@
         <target>Avvii il turno dalla vista host della tua sessione live oppure direttamente dalla scheda «Sondaggio rapido» («In diretta con un clic») nella pagina iniziale. Le persone partecipanti votano con un tocco e tu vedi i risultati in tempo reale come grafico a barre.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">393,397</context>
+          <context context-type="linenumber">395,399</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfPeer" datatype="html">
@@ -4742,7 +4742,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Peer Instruction (doppi turni):<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Primo turno - Non risolvere il risultato - Inizia la "fase di discussione" ("Discuti con il tuo vicino") - "Secondo voto". Il confronto prima/dopo mostra come cambia l’immagine dell’atmosfera grazie allo scambio.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">400,404</context>
+          <context context-type="linenumber">402,406</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfStop" datatype="html">
@@ -4750,7 +4750,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Interrompi:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Blocca la votazione: i partecipanti vedono &quot;La votazione è in pausa&quot; e non possono più votare finché non scegli &quot;Riprendi&quot;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">406,408</context>
+          <context context-type="linenumber">408,410</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfReset" datatype="html">
@@ -4758,7 +4758,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Reimposta:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Elimina tutti i voti e lascia che votino di nuovo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">410,411</context>
+          <context context-type="linenumber">412,413</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfNewRound" datatype="html">
@@ -4766,7 +4766,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Nuovo round:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Genera un nuovo codice e inizia un nuovo round.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">413,414</context>
+          <context context-type="linenumber">415,416</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.qfCopyLink" datatype="html">
@@ -4774,7 +4774,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Copia link:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Copia il link di unione negli appunti, ad es. per la condivisione tramite chat.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">416,418</context>
+          <context context-type="linenumber">418,420</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.participantsTitle" datatype="html">
@@ -4782,7 +4782,7 @@
         <target>Per i tuoi partecipanti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">423</context>
+          <context context-type="linenumber">425</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.participantsLead" datatype="html">
@@ -4790,7 +4790,7 @@
         <target>In breve: cosa puoi condividere durante il tuo evento:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">424,426</context>
+          <context context-type="linenumber">426,428</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.participantsJoin" datatype="html">
@@ -4798,7 +4798,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Entrare:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Inserisci il codice a 6 cifre su arsnova.eu e «Si parte» — vale per quiz, Q&amp;A e sondaggio rapido. Nessuna registrazione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">429,431</context>
+          <context context-type="linenumber">431,433</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.participantsNick" datatype="html">
@@ -4806,7 +4806,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Soprannomi:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> A seconda delle tue impostazioni, nomi predefiniti, il tuo nome o anonimo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">433,435</context>
+          <context context-type="linenumber">435,437</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.participantsVote" datatype="html">
@@ -4814,7 +4814,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Vota:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> La domanda appare sul dispositivo; scegli la risposta e invia. Se l'autovalutazione è attiva, segue la scala 1–5. Con limite di tempo, parte un conto alla rovescia.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">437,440</context>
+          <context context-type="linenumber">439,442</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionTitle" datatype="html">
@@ -4822,7 +4822,7 @@
         <target>La tua raccolta quiz</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">445</context>
+          <context context-type="linenumber">447</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionLead" datatype="html">
@@ -4830,7 +4830,7 @@
         <target>Qui crei e prepari i tuoi quiz.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">446</context>
+          <context context-type="linenumber">448</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionEditor" datatype="html">
@@ -4838,7 +4838,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Editor:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Ordina le domande utilizzando il trascinamento della selezione, espandi e comprimi, controlla l'anteprima.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">449,451</context>
+          <context context-type="linenumber">451,453</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionTypes" datatype="html">
@@ -4846,7 +4846,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Tipi di domanda:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Single choice, multiple choice, risposta breve, testo libero, sondaggio, scala di valutazione e domanda di stima numerica — ogni domanda può includere timer, difficoltà e autovalutazione opzionali.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">453,456</context>
+          <context context-type="linenumber">455,458</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionImport" datatype="html">
@@ -4854,7 +4854,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Import / esportazione:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Importa o esporta quiz come JSON. Con i modelli di generazione e verifica puoi creare quiz di qualità con il tuo strumento IA preferito, verificarli e importarli direttamente. Contenuti e presentazioni non vengono inviati ad arsnova.eu; usi il tuo strumento IA.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">458,462</context>
+          <context context-type="linenumber">460,464</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.collectionSync" datatype="html">
@@ -4862,7 +4862,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Sincronizzazione:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Usa il link sync per condividere la tua raccolta quiz o per continuare su altri dispositivi. Chiunque abbia il link può aprire la raccolta. I dati del dispositivo servono solo per orientarti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">464,467</context>
+          <context context-type="linenumber">466,469</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.demoQuizHint" datatype="html">
@@ -4870,7 +4870,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Quiz dimostrativo:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> un quiz preinstallato mostra tutti i formati con esempi, incluse formule KaTeX e Markdown. Aprilo in anteprima dalla raccolta quiz.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">469,472</context>
+          <context context-type="linenumber">471,474</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.stylesTitle" datatype="html">
@@ -4878,7 +4878,7 @@
         <target>Serio e giocoso</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">477</context>
+          <context context-type="linenumber">479</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.stylesLead" datatype="html">
@@ -4886,7 +4886,7 @@
         <target>Due stili per situazioni diverse: selezionabili sulla home page e all&apos;inizio della sessione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">478,481</context>
+          <context context-type="linenumber">480,483</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.styleSerious" datatype="html">
@@ -4894,7 +4894,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Serio:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Anonimo, senza classifiche - ideale per valutazioni formative, preparazione agli esami e argomenti delicati.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">484,486</context>
+          <context context-type="linenumber">486,488</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.stylePlayful" datatype="html">
@@ -4902,7 +4902,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Giocoso:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Con classifica, suoni e messaggi di incoraggiamento – ideale per alleggerire l’atmosfera, competizioni e quiz motivanti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">488,490</context>
+          <context context-type="linenumber">490,492</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.stylesOptions" datatype="html">
@@ -4910,7 +4910,7 @@
         <target>Tutte le opzioni (classifica, suono, fase di lettura, squadra, bonus) possono essere attivate e disattivate individualmente.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">492,495</context>
+          <context context-type="linenumber">494,497</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.moreTitle" datatype="html">
@@ -4918,7 +4918,7 @@
         <target>Più funzionalità</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">499</context>
+          <context context-type="linenumber">501</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.moreBonus" datatype="html">
@@ -4926,7 +4926,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Codici bonus:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> I primi classificati ricevono un codice riscattabile (ad esempio per punti bonus). Vedi l'elenco dei codici; I dati personali non vengono memorizzati.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">502,505</context>
+          <context context-type="linenumber">504,507</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.moreTeams" datatype="html">
@@ -4934,7 +4934,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Modalità squadra:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> I tuoi partecipanti giocano in squadre con la propria classifica di squadra, ad es. per le gare collettive nei seminari.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">507,509</context>
+          <context context-type="linenumber">509,511</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.moreGamification" datatype="html">
@@ -4942,7 +4942,7 @@
         <target><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Gamification:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Effetti sonori, effetti di ricompensa per i primi posti, messaggi motivazionali - in modalità giocosa.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">511,513</context>
+          <context context-type="linenumber">513,515</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.privacyTitle" datatype="html">
@@ -4950,7 +4950,7 @@
         <target>Protezione dei dati e tecnologia</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">518</context>
+          <context context-type="linenumber">520</context>
         </context-group>
       </trans-unit>
       <trans-unit id="help.privacyBody" datatype="html">
@@ -4958,7 +4958,7 @@
         <target>arsnova.eu è gratuito, open source e destinato all&apos;uso nelle scuole, nelle università e nell&apos;istruzione superiore, con particolare attenzione alla protezione dei dati (GDPR). Il contenuto del quiz viene salvato localmente nel browser. Non è necessaria alcuna registrazione, né per te né per i tuoi partecipanti. Può essere installato come app (PWA) – ad es. B. per un avvio più rapido sullo smartphone. Interfaccia in tedesco, inglese, francese, spagnolo e italiano.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/help/help.component.html</context>
-          <context context-type="linenumber">519,525</context>
+          <context context-type="linenumber">521,527</context>
         </context-group>
       </trans-unit>
       <trans-unit id="homeHero.channelQuiz" datatype="html">
@@ -9414,7 +9414,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">911</context>
+          <context context-type="linenumber">917</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8186013988289067040" datatype="html">
@@ -9434,7 +9434,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">912</context>
+          <context context-type="linenumber">918</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.html</context>
@@ -9578,19 +9578,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisPrivacy" datatype="html">
-        <source> Fragen mit weniger als fünf gültigen Antworten werden nicht einzeln ausgewiesen.</source>
-        <target>Le domande con meno di cinque risposte valide non verranno mostrate singolarmente.</target>
+        <source> Fragen mit weniger als 5 Antworten mit Selbsteinschätzung werden nicht aggregiert ausgewiesen.</source>
+        <target>Le domande con meno di 5 risposte con autovalutazione non vengono mostrate in forma aggregata.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">153,155</context>
+          <context context-type="linenumber">153,156</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionAnalysisNoConfidence" datatype="html">
-        <source> Für diesen Durchlauf liegt keine auswertbare Selbsteinschätzungs-Zusammenfassung vor.</source>
-        <target>Non è disponibile un riepilogo di autovalutazione valutabile per questa sessione.</target>
+        <source> Für diesen Durchlauf liegt keine auswertbare Selbsteinschätzungs-Zusammenfassung vor – oft weil keine Frage mindestens 5 Antworten mit Selbsteinschätzung hat.</source>
+        <target>Non è disponibile un riepilogo di autovalutazione valutabile per questa sessione — spesso perché nessuna domanda ha raggiunto almeno 5 risposte con autovalutazione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">161,163</context>
+          <context context-type="linenumber">162,165</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogParticipantSection" datatype="html">
@@ -9598,7 +9598,7 @@
         <target>Feedback dei partecipanti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">175</context>
+          <context context-type="linenumber">177</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogOverallLabel" datatype="html">
@@ -9606,7 +9606,7 @@
         <target>Valutazione complessiva</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">182</context>
+          <context context-type="linenumber">184</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogQuestionQuality" datatype="html">
@@ -9614,7 +9614,7 @@
         <target>Qualità delle domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">210</context>
+          <context context-type="linenumber">212</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogWouldRepeat" datatype="html">
@@ -9622,7 +9622,7 @@
         <target>Parteciperesti di nuovo?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">225</context>
+          <context context-type="linenumber">227</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialogEmpty" datatype="html">
@@ -9630,7 +9630,7 @@
         <target>Ancora nessun feedback: comparirà qui quando una sessione live terminata includa almeno una valutazione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/quiz/quiz-list/last-session-feedback-dialog.component.html</context>
-          <context context-type="linenumber">251,253</context>
+          <context context-type="linenumber">253,255</context>
         </context-group>
       </trans-unit>
       <trans-unit id="quizList.lastSessionFeedbackDialog.ratingSingular" datatype="html">
@@ -11118,7 +11118,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2894</context>
+          <context context-type="linenumber">2900</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.wordCloudAnalysisWords" datatype="html">
@@ -11130,7 +11130,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2897</context>
+          <context context-type="linenumber">2903</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.wordCloudAnalysisPhrases" datatype="html">
@@ -11142,7 +11142,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2902</context>
+          <context context-type="linenumber">2908</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.sortAria" datatype="html">
@@ -11154,7 +11154,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3092</context>
+          <context context-type="linenumber">3098</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.sortTop" datatype="html">
@@ -11166,7 +11166,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3096</context>
+          <context context-type="linenumber">3102</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.sortBest" datatype="html">
@@ -11178,7 +11178,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3099</context>
+          <context context-type="linenumber">3105</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.sortControversial" datatype="html">
@@ -11190,7 +11190,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3102</context>
+          <context context-type="linenumber">3108</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.wordCloudAnalysisAria" datatype="html">
@@ -11346,7 +11346,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2608</context>
+          <context context-type="linenumber">2614</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.startQa" datatype="html">
@@ -11374,7 +11374,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2865</context>
+          <context context-type="linenumber">2871</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.playfulLobbyTeamsLabel" datatype="html">
@@ -11490,11 +11490,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.finishedConfidenceSuppressed" datatype="html">
-        <source> Aus Datenschutz ausgeblendete Fragen:</source>
-        <target>Domande nascoste per motivi di privacy:</target>
+        <source> Fragen mit weniger als 5 Antworten mit Selbsteinschätzung werden nicht aggregiert ausgewiesen.</source>
+        <target>Le domande con meno di 5 risposte con autovalutazione non vengono mostrate in forma aggregata.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">821,823</context>
+          <context context-type="linenumber">821,824</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.finishedConfidenceSuppressedCount" datatype="html">
+        <source> Betroffene Fragen: <x id="INTERPOLATION" equiv-text="{{ confidenceSummary.suppressedQuestionCount }}"/></source>
+        <target>Domande interessate: <x id="INTERPOLATION" equiv-text="{{ confidenceSummary.suppressedQuestionCount }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
+          <context context-type="linenumber">828,830</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7139999409916594388" datatype="html">
@@ -11502,7 +11510,7 @@
         <target>Classifica</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">837</context>
+          <context context-type="linenumber">843</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaderboardWinnerLabel" datatype="html">
@@ -11510,7 +11518,7 @@
         <target>In testa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">843</context>
+          <context context-type="linenumber">849</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaderboardWinnerMeta" datatype="html">
@@ -11518,7 +11526,7 @@
         <target>Con <x id="INTERPOLATION" equiv-text="leader.totalScore | number"/> punti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">895,897</context>
+          <context context-type="linenumber">901,903</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaderboardTiebreakHint" datatype="html">
@@ -11526,7 +11534,7 @@
         <target>In caso di parità di punti, decide il tempo di risposta più rapido.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">903</context>
+          <context context-type="linenumber">909</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5635631035014464221" datatype="html">
@@ -11534,7 +11542,7 @@
         <target>Corretto</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">913</context>
+          <context context-type="linenumber">919</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9081167021850692567" datatype="html">
@@ -11542,7 +11550,7 @@
         <target>Classifica delle squadre</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1007</context>
+          <context context-type="linenumber">1013</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.teamLeaderboardTiebreakHint" datatype="html">
@@ -11550,11 +11558,11 @@
         <target>Parità: conta il tempo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1063</context>
+          <context context-type="linenumber">1069</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2835</context>
+          <context context-type="linenumber">2841</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5866404944747657974" datatype="html">
@@ -11562,7 +11570,7 @@
         <target>Feedback delle persone partecipanti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1074</context>
+          <context context-type="linenumber">1080</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1119356355830423969" datatype="html">
@@ -11570,7 +11578,7 @@
         <target>Valutazione complessiva</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1077</context>
+          <context context-type="linenumber">1083</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8001707316145308250" datatype="html">
@@ -11578,7 +11586,7 @@
         <target>Qualità delle domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1107</context>
+          <context context-type="linenumber">1113</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6449886389454380276" datatype="html">
@@ -11586,7 +11594,7 @@
         <target>Partecipare di nuovo?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1122</context>
+          <context context-type="linenumber">1128</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1763439054012467174" datatype="html">
@@ -11594,7 +11602,7 @@
         <target>La sessione è terminata</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1148,1150</context>
+          <context context-type="linenumber">1154,1156</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6631038497338763021" datatype="html">
@@ -11602,7 +11610,7 @@
         <target>Tutti i risultati vengono salvati.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1151</context>
+          <context context-type="linenumber">1157</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7070792224026857010" datatype="html">
@@ -11610,7 +11618,7 @@
         <target>Alla home page</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1155</context>
+          <context context-type="linenumber">1161</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfButtonAria" datatype="html">
@@ -11618,7 +11626,7 @@
         <target>Esporta il rapporto sui risultati come PDF</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1164</context>
+          <context context-type="linenumber">1170</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfButton" datatype="html">
@@ -11626,7 +11634,7 @@
         <target>Risultato come PDF</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1167</context>
+          <context context-type="linenumber">1173</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfPreviewButtonAria" datatype="html">
@@ -11634,7 +11642,7 @@
         <target>Anteprima del rapporto sui risultati</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1175</context>
+          <context context-type="linenumber">1181</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfPreviewButton" datatype="html">
@@ -11642,7 +11650,7 @@
         <target>anteprima</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1178</context>
+          <context context-type="linenumber">1184</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportMoreButtonAria" datatype="html">
@@ -11650,7 +11658,7 @@
         <target>Altre opzioni di esportazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1186</context>
+          <context context-type="linenumber">1192</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportMoreButton" datatype="html">
@@ -11658,7 +11666,7 @@
         <target>Di più</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1189</context>
+          <context context-type="linenumber">1195</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportCsvExcelTooltip" datatype="html">
@@ -11666,7 +11674,7 @@
         <target>Dati grezzi tabulari per fogli di calcolo: meno dettagli rispetto al report PDF.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1199</context>
+          <context context-type="linenumber">1205</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportCsvExcelMenuItem" datatype="html">
@@ -11674,7 +11682,7 @@
         <target>Esporta per Excel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1204</context>
+          <context context-type="linenumber">1210</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2074772447572482154" datatype="html">
@@ -11682,7 +11690,7 @@
         <target>Verrà esportato...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1209</context>
+          <context context-type="linenumber">1215</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4578537259986258154" datatype="html">
@@ -11690,7 +11698,7 @@
         <target>Fai una breve chiacchierata con il tuo vicino</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1230,1232</context>
+          <context context-type="linenumber">1236,1238</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1952538840507841358" datatype="html">
@@ -11698,7 +11706,7 @@
         <target>Stessa risposta? Grande. Opinione diversa? Convincetevi a vicenda.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1233,1235</context>
+          <context context-type="linenumber">1239,1241</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5596291527944555255" datatype="html">
@@ -11706,7 +11714,7 @@
         <target>La seconda votazione seguirà presto.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1236,1238</context>
+          <context context-type="linenumber">1242,1244</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.qaLiveLabel" datatype="html">
@@ -11714,7 +11722,7 @@
         <target>Il giro di domande è in corso</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1246,1248</context>
+          <context context-type="linenumber">1252,1254</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.qaLiveHint" datatype="html">
@@ -11722,7 +11730,7 @@
         <target>Le persone partecipanti possono ora entrare con il codice della sessione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1250,1252</context>
+          <context context-type="linenumber">1256,1258</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.questionCounter" datatype="html">
@@ -11730,7 +11738,7 @@
         <target>Domanda <x id="INTERPOLATION" equiv-text="{{ q.order + 1 }}"/> / <x id="INTERPOLATION_1" equiv-text="{{ q.totalQuestions }}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1265,1266</context>
+          <context context-type="linenumber">1271,1272</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.questionNumber" datatype="html">
@@ -11738,7 +11746,7 @@
         <target>Domanda <x id="INTERPOLATION" equiv-text="{{ q.order + 1 }}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1268,1269</context>
+          <context context-type="linenumber">1274,1275</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1017989655370592681" datatype="html">
@@ -11746,7 +11754,7 @@
         <target>Ultima domanda</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1271</context>
+          <context context-type="linenumber">1277</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7135032209126516357" datatype="html">
@@ -11754,7 +11762,7 @@
         <target>Tutti hanno votato</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1310</context>
+          <context context-type="linenumber">1316</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4209613400308596118" datatype="html">
@@ -11762,7 +11770,7 @@
         <target>Fase di lettura</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1354</context>
+          <context context-type="linenumber">1360</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6096095357858309629" datatype="html">
@@ -11770,7 +11778,7 @@
         <target>Le risposte arrivano tra un attimo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1355,1357</context>
+          <context context-type="linenumber">1361,1363</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.ratingScaleAria" datatype="html">
@@ -11778,7 +11786,7 @@
         <target>Scala di valutazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1413</context>
+          <context context-type="linenumber">1419</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.ratingDistributionAria" datatype="html">
@@ -11786,7 +11794,7 @@
         <target>Distribuzione delle valutazioni</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1441</context>
+          <context context-type="linenumber">1447</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericWaiting" datatype="html">
@@ -11794,7 +11802,7 @@
         <target>In attesa delle stime…</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1480,1482</context>
+          <context context-type="linenumber">1486,1488</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericVoteCount" datatype="html">
@@ -11802,7 +11810,7 @@
         <target><x id="INTERPOLATION"/> risposte ricevute</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1488,1490</context>
+          <context context-type="linenumber">1494,1496</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInsightsAria" datatype="html">
@@ -11810,11 +11818,11 @@
         <target>Riepilogo delle statistiche</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1500</context>
+          <context context-type="linenumber">1506</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1933</context>
+          <context context-type="linenumber">1939</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericRound2InsightLabel" datatype="html">
@@ -11822,7 +11830,7 @@
         <target>Round 2</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1505</context>
+          <context context-type="linenumber">1511</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInBandInsightKicker" datatype="html">
@@ -11830,11 +11838,11 @@
         <target>Accettata</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1523</context>
+          <context context-type="linenumber">1529</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1953</context>
+          <context context-type="linenumber">1959</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPairedInsightKicker" datatype="html">
@@ -11842,7 +11850,7 @@
         <target>Confronto circolare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1543</context>
+          <context context-type="linenumber">1549</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericDeltaInsightKicker" datatype="html">
@@ -11850,7 +11858,7 @@
         <target>spostare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1558</context>
+          <context context-type="linenumber">1564</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericRoundLabel1" datatype="html">
@@ -11858,7 +11866,7 @@
         <target>Round 1</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1579</context>
+          <context context-type="linenumber">1585</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericRoundLabel2" datatype="html">
@@ -11866,7 +11874,7 @@
         <target>Round 2</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1584</context>
+          <context context-type="linenumber">1590</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericDetailsSummary" datatype="html">
@@ -11874,11 +11882,11 @@
         <target>Mostra dettagli statistici</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1771</context>
+          <context context-type="linenumber">1777</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2070</context>
+          <context context-type="linenumber">2076</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericRoundDetail1" datatype="html">
@@ -11886,7 +11894,7 @@
         <target>Round 1</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1785,1787</context>
+          <context context-type="linenumber">1791,1793</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericRoundDetail2" datatype="html">
@@ -11894,7 +11902,7 @@
         <target>Round 2</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1813,1815</context>
+          <context context-type="linenumber">1819,1821</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPairedImproved" datatype="html">
@@ -11902,7 +11910,7 @@
         <target>Δ a coppie: <x id="INTERPOLATION"/> più vicino, <x id="INTERPOLATION_1"/> più lontano, <x id="INTERPOLATION_2"/> invariato (<x id="INTERPOLATION_3"/> coppie)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1844,1852</context>
+          <context context-type="linenumber">1850,1858</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericDeltaHistogramLabel" datatype="html">
@@ -11910,7 +11918,7 @@
         <target>Distribuzione Δx</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1862</context>
+          <context context-type="linenumber">1868</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericErrorInsightCaption" datatype="html">
@@ -11918,7 +11926,7 @@
         <target>più piccolo è più vicino</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">1976</context>
+          <context context-type="linenumber">1982</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericDetailCurrentRound" datatype="html">
@@ -11926,7 +11934,7 @@
         <target>Giro di risultati</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2083,2085</context>
+          <context context-type="linenumber">2089,2091</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericNoData" datatype="html">
@@ -11934,7 +11942,7 @@
         <target>Nessuna stima ricevuta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2110,2112</context>
+          <context context-type="linenumber">2116,2118</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonPeerInstructionAria" datatype="html">
@@ -11942,7 +11950,7 @@
         <target>Confronto prima e dopo per la Peer Instruction</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2122</context>
+          <context context-type="linenumber">2128</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonRound1VotesLabelOne" datatype="html">
@@ -11950,7 +11958,7 @@
         <target>Round 1 (<x id="INTERPOLATION" equiv-text="{{ round1Votes }}"/> voto)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2130</context>
+          <context context-type="linenumber">2136</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonRound1VotesLabelMany" datatype="html">
@@ -11958,7 +11966,7 @@
         <target>Round 1 (<x id="INTERPOLATION" equiv-text="{{ round1Votes }}"/> voti)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2136</context>
+          <context context-type="linenumber">2142</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonRound2VotesLabelOne" datatype="html">
@@ -11966,7 +11974,7 @@
         <target>Round 2 (<x id="INTERPOLATION" equiv-text="{{ round2Votes }}"/> voto)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2144</context>
+          <context context-type="linenumber">2150</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonRound2VotesLabelMany" datatype="html">
@@ -11974,7 +11982,7 @@
         <target>Round 2 (<x id="INTERPOLATION" equiv-text="{{ round2Votes }}"/> voti)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2150</context>
+          <context context-type="linenumber">2156</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.roundComparisonCorrectCounts" datatype="html">
@@ -11982,7 +11990,7 @@
         <target>Corrette: <x id="INTERPOLATION" equiv-text="{{ q.roundComparison.round1CorrectCount }}"/> nel round 1, poi <x id="INTERPOLATION_1" equiv-text="{{ q.roundComparison.round2CorrectCount }}"/> nel round 2</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2162,2166</context>
+          <context context-type="linenumber">2168,2172</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.peerSuggestionTitle" datatype="html">
@@ -11990,7 +11998,7 @@
         <target>Peer Instruction consigliata</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2409,2411</context>
+          <context context-type="linenumber">2415,2417</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.peerSuggestionLead" datatype="html">
@@ -11998,7 +12006,7 @@
         <target>35–70 % completamente corretti: secondo turno adatto.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2416,2418</context>
+          <context context-type="linenumber">2422,2424</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.peerSuggestionSub" datatype="html">
@@ -12006,7 +12014,7 @@
         <target>Primo turno ancora nascosto finché non procedi.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2423,2425</context>
+          <context context-type="linenumber">2429,2431</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.peerSuggestionNext" datatype="html">
@@ -12014,7 +12022,7 @@
         <target>Avvia discussione o mostra risultato.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2430,2432</context>
+          <context context-type="linenumber">2436,2438</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceSectionTitle" datatype="html">
@@ -12022,7 +12030,7 @@
         <target>Autovalutazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2488,2490</context>
+          <context context-type="linenumber">2494,2496</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceSectionLead" datatype="html">
@@ -12030,7 +12038,7 @@
         <target> Giusto o sbagliato — e quanto sei sicuro? Soprattutto: sbagliato nonostante alta sicurezza di risposta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2494,2497</context>
+          <context context-type="linenumber">2500,2503</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabAria" datatype="html">
@@ -12038,7 +12046,7 @@
         <target>Correttezza e autovalutazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2518</context>
+          <context context-type="linenumber">2524</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceWrongOptionsTitle" datatype="html">
@@ -12046,7 +12054,7 @@
         <target> Spesso sbagliato con alta sicurezza di risposta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2572,2574</context>
+          <context context-type="linenumber">2578,2580</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.questionDetailsPending" datatype="html">
@@ -12054,7 +12062,7 @@
         <target>Aggiornamento della domanda …</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2617,2619</context>
+          <context context-type="linenumber">2623,2625</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7435414614973406916" datatype="html">
@@ -12062,7 +12070,7 @@
         <target>Nessuna domanda attiva. Inizia con “Domanda successiva”.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2621,2623</context>
+          <context context-type="linenumber">2627,2629</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.emojiReactionsTitle" datatype="html">
@@ -12070,7 +12078,7 @@
         <target>Reazioni delle persone partecipanti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2641</context>
+          <context context-type="linenumber">2647</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.emojiReactionsRound2" datatype="html">
@@ -12078,7 +12086,7 @@
         <target>2ª tornata</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2647</context>
+          <context context-type="linenumber">2653</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.emojiBadgeNew" datatype="html">
@@ -12086,7 +12094,7 @@
         <target>nuovo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2655</context>
+          <context context-type="linenumber">2661</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4887698567767977129" datatype="html">
@@ -12094,7 +12102,7 @@
         <target>Nessuna reazione ancora.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2678</context>
+          <context context-type="linenumber">2684</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2528702424956729333" datatype="html">
@@ -12102,7 +12110,7 @@
         <target>Primi 5</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2691</context>
+          <context context-type="linenumber">2697</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8436638106328843877" datatype="html">
@@ -12110,7 +12118,7 @@
         <target><x id="INTERPOLATION" equiv-text="{{ entry.totalScore | number }}"/> punti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2755</context>
+          <context context-type="linenumber">2761</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.interimLeaderboardTiebreakHint" datatype="html">
@@ -12118,7 +12126,7 @@
         <target>Parità: conta il tempo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2764</context>
+          <context context-type="linenumber">2770</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6896435895128062952" datatype="html">
@@ -12126,7 +12134,7 @@
         <target>Punteggio delle squadre</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2782</context>
+          <context context-type="linenumber">2788</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.pointsAbbr" datatype="html">
@@ -12134,7 +12142,7 @@
         <target>punti.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2826</context>
+          <context context-type="linenumber">2832</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.replaceQuizBeforeStart" datatype="html">
@@ -12142,7 +12150,7 @@
         <target>Cambia quiz</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2855</context>
+          <context context-type="linenumber">2861</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.qaTitleEditAria" datatype="html">
@@ -12150,7 +12158,7 @@
         <target>Modifica titolo Q&amp;A</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2958</context>
+          <context context-type="linenumber">2964</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.qaTitleFieldLabel" datatype="html">
@@ -12158,7 +12166,7 @@
         <target>Titolo Q&amp;A</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2971</context>
+          <context context-type="linenumber">2977</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.qaTitleDefault" datatype="html">
@@ -12166,7 +12174,7 @@
         <target>Domande sull'evento...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2982</context>
+          <context context-type="linenumber">2988</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
@@ -12186,7 +12194,7 @@
         <target>Salva titolo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">2994</context>
+          <context context-type="linenumber">3000</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.qaTitleDiscardAria" datatype="html">
@@ -12194,7 +12202,7 @@
         <target>Annulla modifica</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3005</context>
+          <context context-type="linenumber">3011</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationToggleLabel" datatype="html">
@@ -12202,7 +12210,7 @@
         <target>Pre-moderazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3024,3026</context>
+          <context context-type="linenumber">3030,3032</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationModeHint" datatype="html">
@@ -12210,7 +12218,7 @@
         <target>La pre-moderazione è attiva. Le nuove domande aspettano prima la tua approvazione.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3028,3030</context>
+          <context context-type="linenumber">3034,3036</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.qaHostPlaceholder" datatype="html">
@@ -12218,7 +12226,7 @@
         <target>Ancora nessuna domanda.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3037,3039</context>
+          <context context-type="linenumber">3043,3045</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.summaryTotal" datatype="html">
@@ -12226,7 +12234,7 @@
         <target>Totale: <x id="INTERPOLATION" equiv-text="qaQuestions().length"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3049,3050</context>
+          <context context-type="linenumber">3055,3056</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.summaryPending" datatype="html">
@@ -12234,7 +12242,7 @@
         <target>In attesa di approvazione: <x id="INTERPOLATION" equiv-text="qaPendingCount()"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3058,3059</context>
+          <context context-type="linenumber">3064,3065</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.filterShowAllAria" datatype="html">
@@ -12242,7 +12250,7 @@
         <target>Mostra tutte le domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3111</context>
+          <context context-type="linenumber">3117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.filterShowAllLabel" datatype="html">
@@ -12250,7 +12258,7 @@
         <target>Mostra tutte</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3114</context>
+          <context context-type="linenumber">3120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.filterPinnedAria" datatype="html">
@@ -12258,7 +12266,7 @@
         <target>Mostra solo le domande fissate</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3122</context>
+          <context context-type="linenumber">3128</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.filterPinnedLabel" datatype="html">
@@ -12266,7 +12274,7 @@
         <target>Solo fissate</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3125</context>
+          <context context-type="linenumber">3131</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.newQuestionsAria" datatype="html">
@@ -12274,7 +12282,7 @@
         <target>Mostra nuove domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3137</context>
+          <context context-type="linenumber">3143</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.newQuestionsLabel" datatype="html">
@@ -12282,7 +12290,7 @@
         <target><x id="INTERPOLATION" equiv-text="{{ qaUnseenCount() }}"/> nuove domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3143</context>
+          <context context-type="linenumber">3149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.exportAria" datatype="html">
@@ -12290,7 +12298,7 @@
         <target>Esporta le domande come CSV</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3175</context>
+          <context context-type="linenumber">3181</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.exportLabel" datatype="html">
@@ -12298,7 +12306,7 @@
         <target>Esporta domande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3178</context>
+          <context context-type="linenumber">3184</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.exportLoading" datatype="html">
@@ -12306,7 +12314,7 @@
         <target>Esportazione in corso…</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3186,3188</context>
+          <context context-type="linenumber">3192,3194</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.badgeControversial" datatype="html">
@@ -12314,7 +12322,7 @@
         <target>Controversa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3255</context>
+          <context context-type="linenumber">3261</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.voteBreakdown" datatype="html">
@@ -12322,7 +12330,7 @@
         <target><x id="INTERPOLATION" equiv-text="question.positiveVoteCount"/> positivi · <x id="INTERPOLATION_1" equiv-text="question.negativeVoteCount"/> negativi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3283,3284</context>
+          <context context-type="linenumber">3289,3290</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.bestMetric" datatype="html">
@@ -12330,7 +12338,7 @@
         <target>Approvazione affidabile <x id="INTERPOLATION" equiv-text="formatQaPercent(question.bestScore)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3291,3292</context>
+          <context context-type="linenumber">3297,3298</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.controversyMetric" datatype="html">
@@ -12338,7 +12346,7 @@
         <target>Reazioni divise <x id="INTERPOLATION" equiv-text="formatQaPercent(question.controversyScore)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3301,3303</context>
+          <context context-type="linenumber">3307,3309</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.filterEmptyHint" datatype="html">
@@ -12346,7 +12354,7 @@
         <target>Vista fissate attiva – non ci sono ancora domande fissate.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3344,3346</context>
+          <context context-type="linenumber">3350,3352</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.revealAnswerOptions" datatype="html">
@@ -12354,7 +12362,7 @@
         <target>Mostra opzioni di risposta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3397</context>
+          <context context-type="linenumber">3403</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.startDiscussionPhaseAria" datatype="html">
@@ -12362,7 +12370,7 @@
         <target>Avvia la fase di discussione – confronto prima della seconda votazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3415</context>
+          <context context-type="linenumber">3421</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.discussionPhaseButton" datatype="html">
@@ -12370,7 +12378,7 @@
         <target>Fase di discussione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3418</context>
+          <context context-type="linenumber">3424</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.revealResultsDespiteSuggestion" datatype="html">
@@ -12378,7 +12386,7 @@
         <target>Mostra comunque il risultato</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3428</context>
+          <context context-type="linenumber">3434</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.revealResultsAnchor" datatype="html">
@@ -12386,7 +12394,7 @@
         <target>Mostra risultato</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3440,3442</context>
+          <context context-type="linenumber">3446,3448</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.nextQuestionAnchor" datatype="html">
@@ -12394,7 +12402,7 @@
         <target>Prossima domanda</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3456,3458</context>
+          <context context-type="linenumber">3462,3464</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.skipDiscussionNextQuestionAria" datatype="html">
@@ -12402,7 +12410,7 @@
         <target>Alla prossima domanda senza seconda votazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3479</context>
+          <context context-type="linenumber">3485</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.skipDiscussionNextQuestion" datatype="html">
@@ -12410,7 +12418,7 @@
         <target>Alla prossima domanda senza seconda votazione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3482</context>
+          <context context-type="linenumber">3488</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.prevQuestionTooltip" datatype="html">
@@ -12418,7 +12426,7 @@
         <target>Mostra di nuovo la domanda precedente con il risultato e la risposta corretta (senza una nuova votazione).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3499</context>
+          <context context-type="linenumber">3505</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.prevQuestionAnchor" datatype="html">
@@ -12426,7 +12434,7 @@
         <target>Mostra di nuovo il risultato precedente</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3501,3503</context>
+          <context context-type="linenumber">3507,3509</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.endSessionAnchor" datatype="html">
@@ -12434,7 +12442,7 @@
         <target>Termina sessione</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3511,3513</context>
+          <context context-type="linenumber">3517,3519</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5482759156748483613" datatype="html">
@@ -12442,7 +12450,7 @@
         <target>Vista host per lobby e controllo.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3519</context>
+          <context context-type="linenumber">3525</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicTrackLobbyWarm" datatype="html">
@@ -14192,8 +14200,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceSummaryHeader" datatype="html">
-        <source>Gültige Antworten;Ausgewertete Fragen;Aus Datenschutz ausgeblendete Fragen;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden</source>
-        <target>Risposte valide;Domande valutate;Domande nascoste per motivi di privacy;Solido;Rischio di idee errate;Fragile;Lacuna di conoscenza identificata;Indeciso</target>
+        <source>Gültige Antworten;Ausgewertete Fragen;Nicht aggregiert (&lt;5 Antworten mit Selbsteinschätzung);Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden</source>
+        <target>Risposte valide;Domande valutate;Non aggregate (&lt;5 risposte con autovalutazione);Solido;Rischio di idee errate;Fragile;Lacuna di conoscenza identificata;Indeciso</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
           <context context-type="linenumber">5996</context>
