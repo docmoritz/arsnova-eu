@@ -10,18 +10,19 @@
  * - Lokalisierter Proxy laeuft (`npm run serve:localize:api -w @arsnova/frontend`)
  *
  * Run:
- *   BASE_URL=http://localhost:4200 npm run smoke:quiz-sync -w @arsnova/frontend
+ *   BASE_URL=http://localhost:4200/de npm run smoke:quiz-sync -w @arsnova/frontend
  *
  * Optional:
- *   LOCALE=de|en|fr|it|es   (Default: en)
+ *   LOCALE=de|en|fr|it|es   nur wenn BASE_URL noch keine Locale enthaelt (Default: de)
  */
 import { chromium, webkit } from 'playwright';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:4200';
-const LOCALE = (process.env.LOCALE || 'en').trim().toLowerCase();
-const APP_URL = `${BASE_URL.replace(/\/+$/, '')}/${LOCALE}`;
+const BASE_URL = (process.env.BASE_URL || 'http://localhost:4200/de').replace(/\/+$/, '');
+const LOCALE = (process.env.LOCALE || 'de').trim().toLowerCase();
+const LOCALE_IN_BASE = /\/(de|en|fr|es|it)$/i.test(BASE_URL);
+/** CI setzt bereits `BASE_URL=…/de`; LOCALE nicht nochmals anhaengen (sonst `/de/en`). */
+const APP_URL = LOCALE_IN_BASE ? BASE_URL : `${BASE_URL}/${LOCALE}`;
 const DESKTOP = { width: 1440, height: 1000 };
-const SAVE_LABEL_RE = /^(save|speichern)$/i;
 
 async function waitForServer(url, maxAttempts = 30) {
   for (let index = 0; index < maxAttempts; index += 1) {
@@ -64,6 +65,7 @@ async function dismissMotdIfPresent(page) {
 
 async function createQuiz(page, quizName) {
   await page.goto(`${APP_URL}/quiz/new`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await dismissMotdIfPresent(page);
   await page.locator('input[formcontrolname="name"]').first().fill(quizName);
   await page.locator('button[type="submit"]').click();
   await page.waitForFunction(() => /\/quiz\/[^/]+$/.test(location.pathname), null, {
@@ -75,6 +77,7 @@ async function createQuiz(page, quizName) {
 
 async function openSyncPage(page) {
   await page.goto(`${APP_URL}/quiz`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await dismissMotdIfPresent(page);
   await page.waitForTimeout(1_200);
   await page.locator('a.quiz-list__sync-cta').click();
   await page.waitForFunction(() => /\/quiz\/sync\//.test(location.pathname), null, {
@@ -103,12 +106,13 @@ async function importSharedLibrary(page, syncUrl) {
 
 async function renameQuiz(page, editUrl, nextName) {
   await page.goto(editUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  await page.waitForTimeout(1_000);
+  await dismissMotdIfPresent(page);
   const nameInput = page.locator('input[formcontrolname="name"]').first();
+  await nameInput.waitFor({ state: 'visible', timeout: 30_000 });
   const saveButton = page.locator('button.quiz-edit__bottom-actions-save');
+  await saveButton.waitFor({ state: 'attached', timeout: 30_000 });
   await nameInput.fill(nextName);
   await nameInput.blur();
-  await saveButton.waitFor({ state: 'visible', timeout: 30_000 });
   await page.waitForFunction(
     () => {
       const button = document.querySelector('button.quiz-edit__bottom-actions-save');
@@ -173,7 +177,9 @@ async function main() {
     const localQuizGoneOnB = !importedTextB.includes(localOnlyQuizName);
     logStep(localQuizGoneOnB, 'Lokaler Stand von Geraet B bleibt aus Shared-Raum draussen');
     if (!localQuizGoneOnB) {
-      failures.push('Das lokale Quiz von Geraet B blieb nach dem Import sichtbar und wurde nicht aus dem Shared-Raum verdraengt.');
+      failures.push(
+        'Das lokale Quiz von Geraet B blieb nach dem Import sichtbar und wurde nicht aus dem Shared-Raum verdraengt.',
+      );
     }
 
     await pageA.goto(`${APP_URL}/quiz`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
@@ -182,7 +188,9 @@ async function main() {
     const localQuizLeakedToA = sharedTextA.includes(localOnlyQuizName);
     logStep(!localQuizLeakedToA, 'Geraet A sieht keinen Rueckfluss des lokalen Quiz von Geraet B');
     if (localQuizLeakedToA) {
-      failures.push('Das lokale Quiz von Geraet B wurde in den Shared-Raum zurueckgeschrieben und erschien auf Geraet A.');
+      failures.push(
+        'Das lokale Quiz von Geraet B wurde in den Shared-Raum zurueckgeschrieben und erschien auf Geraet A.',
+      );
     }
 
     await renameQuiz(pageA, editUrlA, sourceQuizRenamed);
