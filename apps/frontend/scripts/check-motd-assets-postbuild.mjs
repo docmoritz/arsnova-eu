@@ -24,7 +24,9 @@ const REQUIRED_ASSETS = [
 
 function main() {
   if (!fs.existsSync(browserRoot)) {
-    console.error(`check-motd-assets-postbuild: dist fehlt: ${browserRoot} (zuerst build:localize ausführen)`);
+    console.error(
+      `check-motd-assets-postbuild: dist fehlt: ${browserRoot} (zuerst build:localize ausführen)`,
+    );
     process.exit(1);
   }
 
