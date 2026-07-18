@@ -956,7 +956,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.questionsLead" datatype="html">
         <source>Die Fragentexte entsprechen der Anzeige für Teilnehmende (inkl. Bilder, Formeln und Zusatzkontext).</source>
-        <target>Les textes des questions correspondent à l&apos;affichage pour les participants (y compris les images, les formules et le contexte supplémentaire).</target>
+        <target>Les énoncés correspondent à ce que les participants ont vu en direct (images, formules et contexte inclus).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">66</context>
@@ -964,7 +964,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.backToOverview" datatype="html">
         <source>↑ Zur Übersicht</source>
-        <target>↑ Pour un aperçu</target>
+        <target>↑ Retour à l’aperçu</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">67</context>
@@ -972,7 +972,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.lowSuccessRateHintTemplate" datatype="html">
         <source>{0} richtig – ungewöhnlich schwierig; ein kurzer Rückblick könnte helfen.</source>
-        <target>{0} correct – particulièrement difficile ; un examen rapide pourrait aider.</target>
+        <target>{0} de bonnes réponses — difficulté inhabituelle ; un court rappel pourrait aider.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">68</context>
@@ -1936,7 +1936,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.coverSummaryRiskNote" datatype="html">
         <source>Eine Frage zählt dazu, wenn mindestens 2 Personen und mindestens 10 % falsch und sicher geantwortet haben.</source>
-        <target>Une question compte si au moins 2 personnes et au moins 10 % ont répondu de manière incorrecte et sûre.</target>
+        <target>Une question est comptée dès qu’au moins 2 personnes et au moins 10 % ont répondu incorrectement avec une autoévaluation élevée.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">184</context>

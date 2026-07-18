@@ -956,7 +956,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.questionsLead" datatype="html">
         <source>Die Fragentexte entsprechen der Anzeige für Teilnehmende (inkl. Bilder, Formeln und Zusatzkontext).</source>
-        <target>Los textos de las preguntas corresponden a la visualización para los participantes (incluidas imágenes, fórmulas y contexto adicional).</target>
+        <target>Los textos de las preguntas coinciden con lo que vieron los participantes en directo (incluidas imágenes, fórmulas y contexto adicional).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">66</context>
@@ -964,7 +964,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.backToOverview" datatype="html">
         <source>↑ Zur Übersicht</source>
-        <target>↑ Para una descripción general</target>
+        <target>↑ Volver al resumen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">67</context>
@@ -972,7 +972,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.lowSuccessRateHintTemplate" datatype="html">
         <source>{0} richtig – ungewöhnlich schwierig; ein kurzer Rückblick könnte helfen.</source>
-        <target>{0} correcto: inusualmente difícil; una revisión rápida podría ayudar.</target>
+        <target>{0} correctas — especialmente difícil; un breve repaso podría ayudar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">68</context>
@@ -1936,7 +1936,7 @@
       </trans-unit>
       <trans-unit id="sessionReport.coverSummaryRiskNote" datatype="html">
         <source>Eine Frage zählt dazu, wenn mindestens 2 Personen und mindestens 10 % falsch und sicher geantwortet haben.</source>
-        <target>Una pregunta cuenta si al menos 2 personas y al menos el 10% respondieron incorrectamente y con confianza.</target>
+        <target>Una pregunta cuenta cuando al menos 2 personas y al menos el 10 % respondieron incorrectamente con alta confianza.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/core/session-results-report-labels.ts</context>
           <context context-type="linenumber">184</context>

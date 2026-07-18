@@ -23,6 +23,23 @@ describe('labels-locale', () => {
     expect(getSessionResultsReportLabelsDe().coverTitle).toBe('Didaktische Quiz-Auswertung');
     expect(getSessionResultsReportLabelsEn().coverTitle).toBe('Quiz Insights for Teaching');
   });
+
+  it('lokalisiert neue Cover-/Fragen-Labels auch in FR/ES/IT', () => {
+    const de = getSessionResultsReportLabelsDe();
+    for (const labels of [
+      getSessionResultsReportLabelsFr(),
+      getSessionResultsReportLabelsEs(),
+      getSessionResultsReportLabelsIt(),
+    ]) {
+      expect(labels.questionsLead).not.toBe(de.questionsLead);
+      expect(labels.backToOverview).not.toBe(de.backToOverview);
+      expect(labels.lowSuccessRateHintTemplate).not.toBe(de.lowSuccessRateHintTemplate);
+      expect(labels.coverSummaryRiskNote).not.toBe(de.coverSummaryRiskNote);
+    }
+    expect(getSessionResultsReportLabelsFr().backToOverview).toBe('↑ Retour à l’aperçu');
+    expect(getSessionResultsReportLabelsEs().backToOverview).toBe('↑ Volver al resumen');
+    expect(getSessionResultsReportLabelsIt().backToOverview).toBe('↑ Torna alla panoramica');
+  });
 });
 
 describe('report-cover-logo', () => {

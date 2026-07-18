@@ -11,6 +11,8 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocBonus: 'Codes bonus',
   coverSummaryQuestions: 'Questions',
   coverSummaryRisk: 'Questions avec schéma d’idée fausse',
+  coverSummaryRiskNote:
+    'Une question est comptée dès qu’au moins 2 personnes et au moins 10 % ont répondu incorrectement avec une autoévaluation élevée.',
   coverSummaryFeedback: 'Retour des participants',
   coverSummaryParticipants: 'Participantes et participants',
   coverPrivacyIncluded:
@@ -111,6 +113,11 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Moyen',
   confidenceTierHigh: 'Haut',
   questionsTitle: 'Questions en détail',
+  questionsLead:
+    'Les énoncés correspondent à ce que les participants ont vu en direct (images, formules et contexte inclus).',
+  backToOverview: '↑ Retour à l’aperçu',
+  lowSuccessRateHintTemplate:
+    '{0} de bonnes réponses — difficulté inhabituelle ; un court rappel pourrait aider.',
   questionNumber: 'Demander',
   questionOfTotal: 'Question {0} de {1}',
   questionContinuationTemplate: 'Question {0} – Suite : {1}',
@@ -219,6 +226,8 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocBonus: 'Códigos bonus',
   coverSummaryQuestions: 'Preguntas',
   coverSummaryRisk: 'Preguntas con patrón de concepto erróneo',
+  coverSummaryRiskNote:
+    'Una pregunta cuenta cuando al menos 2 personas y al menos el 10 % respondieron incorrectamente con alta confianza.',
   coverSummaryFeedback: 'Valoración de las personas participantes',
   coverSummaryParticipants: 'Participantes',
   coverPrivacyIncluded:
@@ -318,6 +327,11 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Medio',
   confidenceTierHigh: 'Alto',
   questionsTitle: 'Preguntas en detalle',
+  questionsLead:
+    'Los textos de las preguntas coinciden con lo que vieron los participantes en directo (incluidas imágenes, fórmulas y contexto adicional).',
+  backToOverview: '↑ Volver al resumen',
+  lowSuccessRateHintTemplate:
+    '{0} correctas — especialmente difícil; un breve repaso podría ayudar.',
   questionNumber: 'Preguntar',
   questionOfTotal: 'Pregunta {0} de {1}',
   questionContinuationTemplate: 'Pregunta {0} – Continuación: {1}',
@@ -424,6 +438,8 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocBonus: 'Codici bonus',
   coverSummaryQuestions: 'Domande',
   coverSummaryRisk: 'Domande con schema di errore concettuale',
+  coverSummaryRiskNote:
+    'Una domanda conta se almeno 2 persone e almeno il 10 % hanno risposto in modo errato con alta sicurezza.',
   coverSummaryFeedback: 'Feedback dei partecipanti',
   coverSummaryParticipants: 'Partecipanti',
   coverPrivacyIncluded:
@@ -523,6 +539,11 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Medio',
   confidenceTierHigh: 'Alto',
   questionsTitle: 'Domande in dettaglio',
+  questionsLead:
+    'I testi delle domande corrispondono a ciò che i partecipanti hanno visto live (incluse immagini, formule e contesto aggiuntivo).',
+  backToOverview: '↑ Torna alla panoramica',
+  lowSuccessRateHintTemplate:
+    '{0} corrette — insolitamente difficile; un breve ripasso potrebbe aiutare.',
   questionNumber: 'Chiedere',
   questionOfTotal: 'Domanda {0} da {1}',
   questionContinuationTemplate: 'Domanda {0} – Continuazione: {1}',
