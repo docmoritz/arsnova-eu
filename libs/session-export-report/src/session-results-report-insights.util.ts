@@ -106,12 +106,13 @@ export function renderDebriefActionPlanHtml(
     .filter((row) => row.orders.length > 0)
     .map((row) => {
       const links = row.orders
-        .map(
-          (order) =>
-            `<a href="#${questionAnchorId(order)}">${escapeHtml(labels.questionNumber)} ${order + 1}</a>`,
-        )
+        .map((order) => {
+          const label = `${labels.questionNumber} ${order + 1}`;
+          return `<a href="#${questionAnchorId(order)}" title="${escapeHtml(label)}">${escapeHtml(label)}</a>`;
+        })
         .join(', ');
-      return `<li><strong>${escapeHtml(row.title)}:</strong> ${links}</li>`;
+      // Keine <ul>/<li> mit Links: Chromium mappt das zu LI→Link (PDF/UA 7.2/20).
+      return `<div class="report-action-plan-row"><span class="report-strong">${escapeHtml(row.title)}:</span> ${links}</div>`;
     })
     .join('');
   if (!blocks) return '';
@@ -122,13 +123,14 @@ export function renderDebriefActionPlanHtml(
           labels.actionPlanStartTemplate.replace('{0}', String(startOrder + 1)),
         )}</p>`
       : '';
+  const criteriaLabel = labels.actionPlanCriteriaLink;
   return `<section class="report-action-plan" id="report-action-plan">
     <h2>${escapeHtml(labels.actionPlanTitle)}</h2>
-    <ul>${blocks}</ul>
+    <div class="report-action-plan-list">${blocks}</div>
     ${startHtml}
     <p class="report-note report-action-plan-criteria">
       <span>${escapeHtml(labels.actionPlanCriteriaNote)}</span>
-      <a class="report-action-plan-criteria-link" href="#report-confidence">${escapeHtml(labels.actionPlanCriteriaLink)}</a>
+      <a class="report-action-plan-criteria-link" href="#report-confidence" title="${escapeHtml(criteriaLabel)}">${escapeHtml(criteriaLabel)}</a>
     </p>
   </section>`;
 }
@@ -168,17 +170,18 @@ export function renderHardestQuestionsHtml(
                 ),
             )}</span>`
           : '';
-      return `<li>
-        <a href="#${questionAnchorId(entry.questionOrder)}"><strong>${escapeHtml(labels.questionNumber)} ${entry.questionOrder + 1}</strong> — ${escapeHtml(title)}</a>
+      const jumpLabel = `${labels.questionNumber} ${entry.questionOrder + 1} — ${title}`;
+      return `<div class="report-hardest-item">
+        <a href="#${questionAnchorId(entry.questionOrder)}" title="${escapeHtml(jumpLabel)}"><span class="report-strong">${escapeHtml(labels.questionNumber)} ${entry.questionOrder + 1}</span> — ${escapeHtml(title)}</a>
         <span>${escapeHtml(rate)}</span>
         ${mismatch}
-      </li>`;
+      </div>`;
     })
     .join('');
   return `<section class="report-hardest-questions" id="report-hardest-questions">
     <h2>${escapeHtml(labels.hardestQuestionsTitle)}</h2>
     <p class="report-note">${escapeHtml(labels.hardestQuestionsLead)}</p>
-    <ol>${items}</ol>
+    <div class="report-hardest-list">${items}</div>
   </section>`;
 }
 
@@ -355,7 +358,7 @@ export function renderDistractorAnalysisHtml(
 
   if (!parts.length) return '';
   return `<aside class="report-distractor-analysis">
-    <h4>${escapeHtml(labels.distractorAnalysisTitle)}</h4>
+    <h3>${escapeHtml(labels.distractorAnalysisTitle)}</h3>
     ${parts.join('')}
   </aside>`;
 }
@@ -369,7 +372,7 @@ function renderPeerCeilingHtml(
 ): string {
   const template = inBand ? labels.piGainCeilingNumericTemplate : labels.piGainCeilingTemplate;
   return `<aside class="report-pi-gain">
-    <h4>${escapeHtml(labels.piGainTitle)}</h4>
+    <h3>${escapeHtml(labels.piGainTitle)}</h3>
     <p><strong>${escapeHtml(
       template
         .replace('{0}', formatLocaleCount(correctCount, localeId))
@@ -407,7 +410,7 @@ export function renderPeerInstructionGainHtml(
   const shift = comparison.opinionShift;
 
   return `<aside class="report-pi-gain">
-    <h4>${escapeHtml(labels.piGainTitle)}</h4>
+    <h3>${escapeHtml(labels.piGainTitle)}</h3>
     <p>${escapeHtml(
       labels.piGainCorrectTemplate
         .replace('{0}', formatLocaleCount(r1, localeId))
@@ -470,7 +473,7 @@ export function renderNumericPeerGainHtml(
           );
   const paired = comparison.pairedAnalysis;
   return `<aside class="report-pi-gain">
-    <h4>${escapeHtml(labels.piGainTitle)}</h4>
+    <h3>${escapeHtml(labels.piGainTitle)}</h3>
     <p>${escapeHtml(
       labels.numericPiGainInBandTemplate
         .replace('{0}', formatLocaleCount(r1, localeId))
@@ -552,7 +555,7 @@ export function renderResponseTimeHtml(
       ? `<p class="report-note">${escapeHtml(labels.responseTimePressureHint)}</p>`
       : '';
   return `<aside class="report-response-time">
-    <h4>${escapeHtml(title)}</h4>
+    <h3>${escapeHtml(title)}</h3>
     <p>${escapeHtml(medianText)}</p>
     <p>${escapeHtml(
       labels.responseTimeNearDeadlineTemplate

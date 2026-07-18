@@ -12,9 +12,9 @@ const questions = [
 ];
 
 describe('toWinAnsiSafe', () => {
-  it('bewahrt Gedankenstrich und markiert π für den Symbol-Font', () => {
+  it('bewahrt Gedankenstrich und schreibt π als ASCII pi', () => {
     expect(toWinAnsiSafe('Frage 2 – Fortsetzung: Runde π.')).toBe(
-      `Frage 2 \x96 Fortsetzung: Runde \u0001.`,
+      'Frage 2 \x96 Fortsetzung: Runde pi.',
     );
   });
 });

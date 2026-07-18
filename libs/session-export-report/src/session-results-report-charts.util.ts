@@ -113,7 +113,7 @@ export function renderConfidenceCategoryListHtml(
     },
   ];
   return `<div class="report-chart-block">
-    <h5>${escapeHtml(labels.legendToneTitle)}</h5>
+    <p class="report-chart-title">${escapeHtml(labels.legendToneTitle)}</p>
     <ul class="report-confidence-category-list">
       ${items
         .map(
@@ -153,7 +153,10 @@ export function renderConfidenceHeatmapHtml(
     { key: 'high', label: labels.tierHigh },
   ];
 
-  const head = tiers.map((tier) => `<th scope="col">${escapeHtml(tier.label)}</th>`).join('');
+  // Kein <table>: Chromium-PDF mappt Heatmaps inkonsistent (veraPDF 7.2/42 Spalten).
+  const head = `<div class="report-heatmap-head"><span></span>${tiers
+    .map((tier) => `<span>${escapeHtml(tier.label)}</span>`)
+    .join('')}</div>`;
   const body = rows
     .map((row) => {
       const cells = row.values
@@ -161,10 +164,13 @@ export function renderConfidenceHeatmapHtml(
           const tier = tiers[index]?.key ?? 'mid';
           const tone = cellTone(row.correctness, tier);
           const symbol = cellSymbol(row.correctness, tier);
-          return `<td class="report-heat report-heat--plain report-heat--${tone}"><span class="report-heat-cell"><span class="report-heat-symbol" aria-hidden="true">${symbol}</span><span class="report-heat-count">${formatLocaleCount(count, localeId)}</span></span></td>`;
+          const tierLabel = tiers[index]?.label ?? '';
+          const countText = formatLocaleCount(count, localeId);
+          const aria = `${row.label}, ${tierLabel}: ${countText}`;
+          return `<span class="report-heat report-heat--plain report-heat--${tone}" aria-label="${escapeHtml(aria)}"><span class="report-heat-cell"><span class="report-heat-symbol" aria-hidden="true">${symbol}</span><span class="report-heat-count">${countText}</span></span></span>`;
         })
         .join('');
-      return `<tr><th scope="row">${escapeHtml(row.label)}</th>${cells}</tr>`;
+      return `<div class="report-heatmap-row"><span class="report-heatmap-row-label">${escapeHtml(row.label)}</span>${cells}</div>`;
     })
     .join('');
 
@@ -176,11 +182,11 @@ export function renderConfidenceHeatmapHtml(
         : `<p class="report-heatmap-legend report-heatmap-legend--compact">${escapeHtml(labels.compactLegend)}</p>`;
 
   return `<div class="report-chart-block">
-    <h5>${escapeHtml(labels.title)}</h5>
-    <table class="report-heatmap report-heatmap--simple" role="grid">
-      <thead><tr><th></th>${head}</tr></thead>
-      <tbody>${body}</tbody>
-    </table>
+    <p class="report-chart-title">${escapeHtml(labels.title)}</p>
+    <div class="report-heatmap report-heatmap--simple" role="group" aria-label="${escapeHtml(labels.title)}">
+      ${head}
+      ${body}
+    </div>
     <p class="report-heatmap-cell-note">${escapeHtml(labels.cellCountNote)}</p>
     ${legend}
   </div>`;
@@ -207,7 +213,7 @@ export function renderConfidenceDistributionBarsHtml(
     })
     .join('');
   return `<div class="report-chart-block">
-    <h5>${escapeHtml(title)}</h5>
+    <p class="report-chart-title">${escapeHtml(title)}</p>
     <ul class="report-vbars" aria-label="${escapeHtml(title)} (${formatLocaleCount(total, localeId)})">${rows}</ul>
     ${axisLabel ? `<p class="report-chart-axis-label">${escapeHtml(axisLabel)}</p>` : ''}
     ${endpointLabel ? `<p class="report-scale-endpoints">${escapeHtml(endpointLabel)}</p>` : ''}
@@ -259,7 +265,7 @@ export function renderHistogramHtml(
     ? 'report-chart-block report-chart-block--secondary'
     : 'report-chart-block';
   return `<div class="${blockClass}">
-    <h5>${escapeHtml(title)}</h5>
+    <p class="report-chart-title">${escapeHtml(title)}</p>
     ${subtitle ? `<p class="report-chart-subtitle">${escapeHtml(subtitle)}</p>` : ''}
     ${bandCaption}
     <div class="report-histogram-stage">
@@ -389,7 +395,7 @@ export function renderNumericPeerChangeBarsHtml(
     )
     .join('');
   return `<div class="report-chart-block report-peer-change">
-    <h5>${escapeHtml(labels.numericPeerChangeBarsTitle)}</h5>
+    <p class="report-chart-title">${escapeHtml(labels.numericPeerChangeBarsTitle)}</p>
     <div class="report-peer-change-bar" role="img" aria-label="${escapeHtml(labels.numericPeerChangeBarsTitle)}">${bars}</div>
     <ul class="report-peer-change-legend">${legend}</ul>
   </div>`;
@@ -441,7 +447,7 @@ export function renderOptionBarsHtml(
     .join('');
   const note = footnote ? `<p class="report-chart-footnote">${escapeHtml(footnote)}</p>` : '';
   const intro = introNote ? `<p class="report-chart-intro">${escapeHtml(introNote)}</p>` : '';
-  return `<h4>${escapeHtml(title)}</h4>${intro}<ul class="report-bars">${rows}</ul>${note}`;
+  return `<h3>${escapeHtml(title)}</h3>${intro}<ul class="report-bars">${rows}</ul>${note}`;
 }
 
 export function renderPeerInstructionOptionComparisonHtml(
@@ -490,7 +496,7 @@ export function renderPeerInstructionOptionComparisonHtml(
       </li>`;
     })
     .join('');
-  return `<div class="report-pi-comparison"><h4>${escapeHtml(title)}</h4><ul class="report-pi-list">${rows}</ul></div>`;
+  return `<div class="report-pi-comparison"><h3>${escapeHtml(title)}</h3><ul class="report-pi-list">${rows}</ul></div>`;
 }
 
 export function renderFreetextTopBarsHtml(
@@ -521,7 +527,7 @@ export function renderFreetextTopBarsHtml(
     rest.length > 0
       ? `<p class="report-note">${escapeHtml(moreLabelTemplate.replace('{0}', formatLocaleCount(rest.length, localeId)))}</p>`
       : '';
-  return `<h4>${escapeHtml(title)}</h4><ul class="report-bars">${rows}</ul>${more}`;
+  return `<h3>${escapeHtml(title)}</h3><ul class="report-bars">${rows}</ul>${more}`;
 }
 
 export function renderStarRatingBarsHtml(
@@ -588,7 +594,7 @@ export function renderStarRatingBarsHtml(
         )}</p>`
       : '';
   return `<div class="report-chart-block">
-    <h5>${escapeHtml(title)}</h5>
+    <p class="report-chart-title">${escapeHtml(title)}</p>
     ${avg}
     <ul class="report-bars">${rows}</ul>
     ${endpointLabel ? `<p class="report-scale-endpoints">${escapeHtml(endpointLabel)}</p>` : ''}

@@ -44,3 +44,9 @@ export {
   planQuestionContinuationStamps,
   stampQuestionContinuationsOnPdf,
 } from './session-results-report-continuation.util.js';
+export {
+  encodeXmpUtf8,
+  enhanceSessionResultsPdfUa,
+  neutralizePdfUaInlineMarkup,
+  sanitizeXmlText,
+} from './session-results-report-pdf-ua.util.js';

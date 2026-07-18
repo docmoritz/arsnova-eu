@@ -6,8 +6,12 @@
  * 1. Host laedt Demo-Quiz hoch und erstellt Session
  * 2. 30 Teilnehmende joinen (Team-Modus, Kindergarten-Nicknames)
  * 3. Host oeffnet nacheinander alle 9 Fragen; TN voten jeweils
- * 4. Frage 8 (Franz. Revolution): zwei Runden (Peer Instruction)
+ * 4. Frage 8 (Franz. Revolution): zwei Runden (Peer Instruction mit Lernzuwachs)
  * 5. Session endet mit FINISHED
+ *
+ * Die Vote-Verteilungen sind didaktisch ausbalanciert (Varianz, Distraktoren,
+ * Fehlkonzept-Hinweise, Peer-Instruction-Lerngewinn) — analog zum
+ * Confidence-Summary-Demo-Flow, nicht als gleichmäßige Round-Robin-Auswahl.
  *
  * Run:
  *   npm run load:smoke:demo-classroom-30
@@ -47,6 +51,26 @@ const EXPECTED_QUESTIONS = Math.max(1, Number(process.env.EXPECTED_QUESTIONS || 
 const VOTE_P95_LIMIT_MS = Math.max(100, Number(process.env.VOTE_P95_LIMIT_MS || 1_000));
 /** Backend: max. 1 Vote/s pro Teilnehmer (checkVoteRate). */
 const VOTE_COOLDOWN_MS = Math.max(1_000, Number(process.env.VOTE_COOLDOWN_MS || 1_100));
+const CONFIDENCE_SEED = Number(process.env.CONFIDENCE_SEED || 20260713) >>> 0;
+/** Fragen mit Fehlkonzept-Hinweis für den Nachbesprechungsplan (MC + Würfel). */
+const PRIORITY_QUESTION_ORDERS = new Set([3, 4]);
+
+function createSeededRandom(seed) {
+  let state = seed || 0x6d2b79f5;
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
+  };
+}
+
+const random = createSeededRandom(CONFIDENCE_SEED);
+
+function randomConfidenceValue(min = 1, max = 5) {
+  return min + Math.floor(random() * (max - min + 1));
+}
 
 function createHttpClient(hostToken) {
   return createTRPCProxyClient({
@@ -139,61 +163,220 @@ async function loadDemoQuizUploadPayload() {
   };
 }
 
-function buildVoteInput(participant, question, round, participantIndex) {
+/** Korrektheit kommt aus dem Upload-Payload; die Student-API liefert keine isCorrect-Flags. */
+function normalizeAnswerText(value) {
+  return String(value ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function answerIdsByCorrectness(question, metadata) {
+  const metaAnswers = Array.isArray(metadata.answers) ? metadata.answers : [];
+  const byText = new Map(
+    metaAnswers.map((answer) => [normalizeAnswerText(answer.text), answer.isCorrect === true]),
+  );
+  const correct = [];
+  const wrong = [];
+  for (const answer of question.answers ?? []) {
+    const key = normalizeAnswerText(answer.text);
+    if (byText.get(key) === true) {
+      correct.push(answer.id);
+    } else {
+      wrong.push(answer.id);
+    }
+  }
+  return { correct, wrong };
+}
+
+function findAnswerIdByText(question, needles) {
+  const normalizedNeedles = needles.map((needle) => normalizeAnswerText(needle));
+  const match = (question.answers ?? []).find((answer) => {
+    const text = normalizeAnswerText(answer.text);
+    return normalizedNeedles.some((needle) => text.includes(needle) || needle.includes(text));
+  });
+  return match?.id ?? null;
+}
+
+/**
+ * Didaktisch ausbalancierte Demo-Votes:
+ * - Varianz statt Round-Robin
+ * - Fehlkonzept-Hinweise bei Prioritätsfragen (hohe Sicherheit × falsch)
+ * - Peer Instruction mit messbarem Lernzuwachs (Runde 1 → 2)
+ */
+function buildVoteInput(participant, question, metadata, round, participantIndex) {
   const base = {
     sessionId: participant.id,
     participantId: participant.participantId,
     questionId: question.id,
     round,
+    responseTimeMs: 1_200 + participantIndex * 37 + round * 180 + (participantIndex % 7) * 90,
   };
-
+  const requiresDebrief = PRIORITY_QUESTION_ORDERS.has(metadata.order);
+  const n = PARTICIPANTS;
   let vote;
+
   switch (question.type) {
     case 'SURVEY':
-    case 'SINGLE_CHOICE':
       if (!question.answers?.length) {
-        throw new Error(`Frage ${question.order} (${question.type}) hat keine Antwortoptionen.`);
+        throw new Error(`Frage ${metadata.order} (SURVEY) hat keine Antwortoptionen.`);
       }
       vote = {
         ...base,
-        answerIds: [question.answers[participantIndex % question.answers.length].id],
+        // Stimmungsbild mit leichter Schiefe, nicht gleichverteilt
+        answerIds: [
+          question.answers[
+            participantIndex % 10 < 4
+              ? 0
+              : participantIndex % 10 < 7
+                ? 1
+                : participantIndex % 10 < 9
+                  ? 2
+                  : Math.min(3, question.answers.length - 1)
+          ].id,
+        ],
       };
       break;
+    case 'SINGLE_CHOICE': {
+      if (!question.answers?.length) {
+        throw new Error(`Frage ${metadata.order} (SINGLE_CHOICE) hat keine Antwortoptionen.`);
+      }
+      const { correct, wrong } = answerIdsByCorrectness(question, metadata);
+      const correctId = correct[0] ?? question.answers[0].id;
+      const wrongId = wrong[0] ?? question.answers[question.answers.length - 1].id;
+      const otherWrongId = wrong[1] ?? wrongId;
+      let answerId = correctId;
+      if (requiresDebrief) {
+        // Fehlkonzept Würfel: Mehrheit „22“ (nicht 26), mit natürlicher Varianz (~80 %)
+        const distractor22 =
+          findAnswerIdByText(question, ['22']) ?? wrong[wrong.length - 1] ?? wrongId;
+        const bucket = participantIndex % 10;
+        if (bucket < 8) {
+          answerId = distractor22;
+        } else if (bucket === 8) {
+          answerId = otherWrongId;
+        } else {
+          answerId = correctId;
+        }
+      } else if (metadata.order === 2) {
+        // ~40 % falsch bei niedriger Sicherheit → „Grundlage erneut erklären“
+        answerId = participantIndex % 5 < 2 ? wrongId : correctId;
+      } else if (metadata.order === 5) {
+        // Code-Sprache: ~25 % richtig → empirisch schwierig
+        answerId = participantIndex % 4 === 0 ? correctId : otherWrongId;
+      } else {
+        answerId = participantIndex % 3 === 0 ? wrongId : correctId;
+      }
+      vote = { ...base, answerIds: [answerId] };
+      break;
+    }
     case 'MULTIPLE_CHOICE': {
       if (!question.answers?.length) {
-        throw new Error(`Frage ${question.order} (MULTIPLE_CHOICE) hat keine Antwortoptionen.`);
+        throw new Error(`Frage ${metadata.order} (MULTIPLE_CHOICE) hat keine Antwortoptionen.`);
       }
-      const answerIds =
-        question.answers.length > 1
-          ? question.answers.slice(0, -1).map((answer) => answer.id)
-          : [question.answers[0].id];
-      vote = { ...base, answerIds };
+      const { correct, wrong } = answerIdsByCorrectness(question, metadata);
+      const falseOnly = wrong.length > 0 ? wrong : [question.answers[0].id];
+      const vorwissenId = findAnswerIdByText(question, ['vorwissen']);
+      const omitVorwissen =
+        vorwissenId && correct.includes(vorwissenId)
+          ? correct.filter((id) => id !== vorwissenId)
+          : correct.slice(1);
+      let answerIds;
+      if (requiresDebrief) {
+        const bucket = participantIndex % 10;
+        if (bucket < 6) {
+          answerIds = omitVorwissen.length > 0 ? omitVorwissen : falseOnly;
+        } else if (bucket < 8) {
+          answerIds = falseOnly;
+        } else if (bucket === 8 && correct.length > 0) {
+          answerIds = [correct[0]];
+        } else {
+          answerIds = correct.length > 0 ? correct : falseOnly;
+        }
+      } else {
+        answerIds = correct.length > 0 ? correct : [question.answers[0].id];
+      }
+      vote = { ...base, answerIds: [...new Set(answerIds)] };
       break;
     }
     case 'NUMERIC_ESTIMATE':
-      vote = {
-        ...base,
-        numericValue: question.order === 1 ? 3.14 : 1789 + (participantIndex % 5) - 2,
-      };
+      if (metadata.numericTwoRounds === true) {
+        // Peer Instruction: Runde 1 oft außerhalb, Runde 2 klarer Lernzuwachs
+        const outsideBand = [1500, 1600, 1648, 1655, 1918, 1950, 1999, 2000];
+        if (round === 1) {
+          vote = {
+            ...base,
+            numericValue:
+              participantIndex < Math.round(n * 0.3)
+                ? 1789
+                : outsideBand[participantIndex % outsideBand.length],
+          };
+        } else {
+          vote = {
+            ...base,
+            numericValue:
+              participantIndex < Math.round(n * 0.82)
+                ? 1789
+                : outsideBand[participantIndex % outsideBand.length],
+          };
+        }
+      } else if (metadata.order === 1) {
+        // π: Mehrheit exakt richtig, wenige Ausreißer
+        vote = {
+          ...base,
+          numericValue: participantIndex % 10 === 0 ? 3.5 : 3.14,
+        };
+      } else {
+        vote = {
+          ...base,
+          numericValue: Number(metadata.numericReferenceValue ?? 0),
+        };
+      }
       break;
     case 'SHORT_TEXT':
-      vote = { ...base, freeText: 'Peer Instruction' };
+      vote = {
+        ...base,
+        // ~34 % richtig → erneut erklären (ohne Fehlkonzept-Signal)
+        freeText: participantIndex % 3 === 0 ? 'Peer Instruction' : 'Think Pair Share',
+      };
       break;
     case 'RATING':
-      vote = { ...base, ratingValue: 3 + (participantIndex % 3) };
+      vote = {
+        ...base,
+        // Leicht positive Schiefe
+        ratingValue: participantIndex % 10 < 5 ? 5 : participantIndex % 10 < 8 ? 4 : 3,
+      };
       break;
     default:
       throw new Error(`Unbekannter Fragentyp: ${question.type}`);
   }
 
   if (question.confidenceEnabled) {
-    vote.confidenceValue = 2 + (participantIndex % 4);
+    if (requiresDebrief) {
+      const bucket = participantIndex % 10;
+      vote.confidenceValue = bucket < 8 ? randomConfidenceValue(4, 5) : randomConfidenceValue(1, 3);
+    } else if (metadata.numericTwoRounds === true) {
+      const inBandShare = Math.round(n * (round === 1 ? 0.3 : 0.82));
+      const inBand = participantIndex < inBandShare;
+      if (round === 1) {
+        vote.confidenceValue = randomConfidenceValue(1, 3);
+      } else if (inBand) {
+        vote.confidenceValue = randomConfidenceValue(3, 5);
+      } else {
+        vote.confidenceValue = randomConfidenceValue(1, 2);
+      }
+    } else if (metadata.order === 1) {
+      vote.confidenceValue = randomConfidenceValue(1, 2);
+    } else {
+      vote.confidenceValue = randomConfidenceValue(1, 3);
+    }
   }
 
   return vote;
 }
 
-async function submitVotes(publicTrpc, participants, question, round) {
+async function submitVotes(publicTrpc, participants, question, metadata, round) {
   const durations = [];
   const startedAt = performance.now();
   const results = await Promise.allSettled(
@@ -201,7 +384,7 @@ async function submitVotes(publicTrpc, participants, question, round) {
       const requestStartedAt = performance.now();
       try {
         return await publicTrpc.vote.submit.mutate(
-          buildVoteInput(participant, question, round, index),
+          buildVoteInput(participant, question, metadata, round, index),
         );
       } finally {
         durations.push(performance.now() - requestStartedAt);
@@ -234,7 +417,7 @@ async function runQuestion({ questionNumber, hostTrpc, publicTrpc, code, partici
   }
 
   const voteRounds = [];
-  voteRounds.push(await submitVotes(publicTrpc, participants, question, 1));
+  voteRounds.push(await submitVotes(publicTrpc, participants, question, meta, 1));
 
   if (meta.numericTwoRounds === true) {
     await hostTrpc.session.startDiscussion.mutate({ code });
@@ -244,7 +427,7 @@ async function runQuestion({ questionNumber, hostTrpc, publicTrpc, code, partici
     if (!questionRound2?.id) {
       throw new Error(`Frage ${questionNumber} Runde 2 konnte nicht geladen werden.`);
     }
-    voteRounds.push(await submitVotes(publicTrpc, participants, questionRound2, 2));
+    voteRounds.push(await submitVotes(publicTrpc, participants, questionRound2, meta, 2));
   }
 
   const resultsStatus = await hostTrpc.session.revealResults.mutate({ code });
@@ -274,7 +457,40 @@ function questionMetaFromUpload(questions) {
       .slice(0, 80),
     numericTwoRounds: question.numericTwoRounds === true,
     skipReadingPhase: question.skipReadingPhase === true,
+    numericReferenceValue: question.numericReferenceValue ?? null,
+    answers: Array.isArray(question.answers) ? question.answers : [],
   }));
+}
+
+function buildSessionFeedbackInput(participant, participantIndex, code) {
+  // Leicht entkoppelte, realistische Verteilungen (nicht byte-identisch)
+  const overallPool = [3, 3, 4, 4, 4, 5, 5, 5, 5, 2];
+  const qualityPool = [4, 4, 4, 5, 5, 5, 3, 3, 5, 4];
+  return {
+    code,
+    participantId: participant.participantId,
+    overallRating: overallPool[participantIndex % overallPool.length],
+    questionQualityRating: qualityPool[participantIndex % qualityPool.length],
+    wouldRepeat: participantIndex % 5 !== 0,
+  };
+}
+
+async function submitSessionFeedback(publicTrpc, participants, code) {
+  const settled = await Promise.allSettled(
+    participants.map((participant, index) =>
+      publicTrpc.session.submitSessionFeedback.mutate(
+        buildSessionFeedbackInput(participant, index, code),
+      ),
+    ),
+  );
+  const accepted = settled.filter((result) => result.status === 'fulfilled').length;
+  const rejected = settled.filter((result) => result.status === 'rejected').length;
+  if (accepted === 0) {
+    const message =
+      settled.find((result) => result.status === 'rejected')?.reason?.message ?? 'unknown';
+    throw new Error(`Session-Feedback: 0/${participants.length} akzeptiert (${message}).`);
+  }
+  return { accepted, rejected };
 }
 
 async function mintHostToken(sessionCode) {
@@ -372,6 +588,10 @@ async function run() {
   }
 
   const finished = await hostTrpc.session.nextQuestion.mutate({ code });
+  const feedback =
+    finished.status === 'FINISHED'
+      ? await submitSessionFeedback(publicTrpc, participants, code)
+      : { accepted: 0, rejected: PARTICIPANTS };
   const totalVotesAccepted = questions.reduce(
     (sum, question) =>
       sum + question.voteRounds.reduce((roundSum, round) => roundSum + round.accepted, 0),
@@ -390,6 +610,7 @@ async function run() {
     questions: questionMetas.length,
     expectedVotes,
     totalVotesAccepted,
+    feedbackAccepted: feedback.accepted,
     finishedStatus: finished.status,
     questionResults: questions,
   };
@@ -405,6 +626,9 @@ async function run() {
   }
   if (finished.status !== 'FINISHED') {
     failures.push(`Session endete mit Status ${finished.status}, erwartet FINISHED.`);
+  }
+  if (feedback.accepted !== PARTICIPANTS) {
+    failures.push(`Session-Feedback: ${feedback.accepted}/${PARTICIPANTS} akzeptiert.`);
   }
   for (const question of questions) {
     for (const round of question.voteRounds) {

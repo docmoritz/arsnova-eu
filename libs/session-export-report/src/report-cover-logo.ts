@@ -1,5 +1,5 @@
 /** EU-Marken-Icon wie in `TopToolbarComponent` (nicht PWA-App-Icon). */
-export const REPORT_COVER_LOGO_SVG = `<svg class="report-cover-logo-svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" width="28" height="28" aria-hidden="true" role="img">
+export const REPORT_COVER_LOGO_SVG = `<svg class="report-cover-logo-svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" width="28" height="28" aria-hidden="true" role="presentation" focusable="false">
   <defs>
     <linearGradient id="report-toolbar-brand-bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#002395"/>

@@ -216,7 +216,9 @@ describe('buildSessionResultsReportHtml', () => {
     expect(planStart).toBeGreaterThanOrEqual(0);
     const planSection = html.slice(planStart, html.indexOf('</section>', planStart) + 10);
     const debriefLine =
-      planSection.match(/Mögliches Fehlkonzept zuerst klären:[\s\S]*?<\/li>/)?.[0] ?? '';
+      planSection.match(
+        /Mögliches Fehlkonzept zuerst klären:[\s\S]*?(?=<\/div>\s*<div class="report-action-plan-row"|<\/div>\s*<\/div>)/,
+      )?.[0] ?? '';
     expect(debriefLine).toContain('Frage 8');
     expect(debriefLine).toContain('Frage 1');
     expect(debriefLine).not.toContain('Frage 4');

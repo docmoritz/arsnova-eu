@@ -71,7 +71,7 @@ Der **Ergebnisbericht (PDF)** ist das empfohlene Format für Nachbereitung und A
 den Block **„Lernstand und Selbsteinschätzung“** mit Heatmap, Verteilungsbalken und priorisierten
 Fragen für die Nachbesprechung. Details zur Pipeline und UI: [`session-export-pdf.md`](session-export-pdf.md).
 
-- **Host-Abschlussansicht:** primärer Button **Ergebnisbericht (PDF)**; CSV unter **Mehr → Für Excel exportieren**
+- **Host-Abschlussansicht:** primärer Button **Ergebnisbericht (PDF)**; CSV unter **Mehr → Rohdaten als CSV exportieren**
 - **Quiz-Sammlung:** **Ergebnisbericht (PDF)** neben **Nachbesprechung** auf der Quizkarte
 
 ### CSV — sekundär (Excel)

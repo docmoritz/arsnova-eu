@@ -32,6 +32,7 @@ import {
   DEFAULT_TIMER_SECONDS,
   type CreateSessionOutput,
   type QuizPreset,
+  type SessionResultsPdfProfile,
   type TeamAssignment,
 } from '@arsnova/shared-types';
 import { homePresetOptionsKeyForQuizPreset } from '../../../core/home-preset-storage';
@@ -200,8 +201,9 @@ export class QuizListComponent implements OnInit {
   readonly lastFeedbackEmptyTooltip = $localize`:@@quizList.lastFeedbackEmpty:Noch keine abgeschlossene Auswertung vorhanden.`;
   readonly lastSessionReportPdfEnabledTooltip = $localize`:@@quizList.lastSessionReportPdfTooltip:Nachbesprechungsplan mit Diagrammen und Details – zum Speichern, Drucken oder Teilen.`;
   readonly demoSessionResultsPdfTooltip = $localize`:@@quizList.demoSessionResultsPdfTooltip:Beispiel-PDF mit didaktischer Auswertung – ohne eigenen Live-Durchlauf.`;
-  /** Locale-aware URL zum Demo-Nachbesprechungsplan unter `/<locale>/assets/…`. */
+  /** Locale-aware URLs zu den Demo-Nachbesprechungsplänen unter `/<locale>/assets/…`. */
   readonly demoSessionResultsPdfUrl = `${resolveMotdAssetOrigin()}/assets/demo/demo-session-results-30.pdf`;
+  readonly demoSessionResultsPdfUaUrl = `${resolveMotdAssetOrigin()}/assets/demo/demo-session-results-30-pdfua.pdf`;
   readonly sessionPdfExportQuizId = signal<string | null>(null);
   private readonly descriptionMarkdownCache = new Map<string, SafeHtml>();
   private lastQuizHistoryAvailabilityKey = '';
@@ -827,7 +829,10 @@ export class QuizListComponent implements OnInit {
     return this.sessionPdfExportQuizId() === quizId;
   }
 
-  async exportLastSessionPdf(quiz: QuizSummary): Promise<void> {
+  async exportLastSessionPdf(
+    quiz: QuizSummary,
+    profile: SessionResultsPdfProfile = 'visual',
+  ): Promise<void> {
     if (!this.hasAvailableLastSessionAnalysis(quiz)) return;
     const sid = quiz.lastServerQuizId;
     if (!sid) return;
@@ -838,7 +843,9 @@ export class QuizListComponent implements OnInit {
 
     this.sessionPdfExportQuizId.set(quiz.id);
     try {
-      const result = await this.sessionResultsExport.exportPdfFromQuizHistory(sid, accessProof);
+      const result = await this.sessionResultsExport.exportPdfFromQuizHistory(sid, accessProof, {
+        profile,
+      });
       const message =
         result === 'pdf-download'
           ? $localize`:@@quizList.exportLastSessionPdfDone:Ergebnis-PDF heruntergeladen.`

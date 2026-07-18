@@ -632,7 +632,7 @@ async function verifyHostUiAndCsv(code, hostToken, expectedResponses, expectedPr
 
     const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
     await page.getByRole('button', { name: 'Weitere Exportoptionen' }).click();
-    await page.getByRole('menuitem', { name: /Für Excel exportieren/i }).click();
+    await page.getByRole('menuitem', { name: /Rohdaten als CSV exportieren/i }).click();
     const download = await downloadPromise;
     const downloadPath = await download.path();
     if (!downloadPath) {

@@ -1,10 +1,20 @@
 import type { SessionResultsReportLabels } from './labels-de';
 
-const PDF_PAGE_MARGINS = {
+export type SessionResultsPdfProfile = 'visual' | 'pdfUa';
+
+const PDF_PAGE_MARGINS_VISUAL = {
   /** Platz für Header-Template; Content-Abstand steuert vor allem CSS `@page`. */
   top: '18mm',
   right: '14mm',
   bottom: '20mm',
+  left: '14mm',
+} as const;
+
+const PDF_PAGE_MARGINS_PDF_UA = {
+  /** Gleichmäßige Ränder ohne Playwright-Header/Footer (PDF/UA). */
+  top: '14mm',
+  right: '14mm',
+  bottom: '14mm',
   left: '14mm',
 } as const;
 
@@ -80,20 +90,33 @@ export function buildSessionResultsPrintPageFooterCss(labels: SessionResultsRepo
     .filter(Boolean)
     .join(' ');
 
-  return `@page { margin-bottom: ${PDF_PAGE_MARGINS.bottom}; @bottom-center { content: ${content}; font: 9pt/1.2 "Segoe UI", system-ui, sans-serif; color: #5c6570; } }`;
+  return `@page { margin-bottom: ${PDF_PAGE_MARGINS_VISUAL.bottom}; @bottom-center { content: ${content}; font: 9pt/1.2 "Segoe UI", system-ui, sans-serif; color: #5c6570; } }`;
 }
 
 export function buildSessionResultsPlaywrightPdfOptions(
   labels: SessionResultsReportLabels,
   header: SessionResultsPdfHeaderContext,
+  profile: SessionResultsPdfProfile = 'visual',
 ) {
+  if (profile === 'pdfUa') {
+    // Header/Footer-Templates erzeugen untagged Content (veraPDF 7.1/3).
+    return {
+      format: 'A4' as const,
+      printBackground: true,
+      displayHeaderFooter: false,
+      margin: { ...PDF_PAGE_MARGINS_PDF_UA },
+      tagged: true,
+      outline: true,
+    };
+  }
+
   return {
     format: 'A4' as const,
     printBackground: true,
     displayHeaderFooter: true,
     headerTemplate: buildSessionResultsPdfHeaderTemplate(header),
     footerTemplate: buildSessionResultsPdfFooterTemplate(labels),
-    margin: { ...PDF_PAGE_MARGINS },
+    margin: { ...PDF_PAGE_MARGINS_VISUAL },
     /** Chromium-getaggtes PDF (Strukturbaum); kein vollständiges PDF/UA. */
     tagged: true,
     outline: true,

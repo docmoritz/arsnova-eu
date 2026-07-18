@@ -6470,9 +6470,10 @@ export const sessionRouter = router({
     .query(async ({ input }) => {
       const code = await resolveLastFinishedSessionCodeForQuiz(input.quizId, input.accessProof);
       const data = await loadFinishedQuizSessionExportData(code);
-      const pdf = await buildSessionResultsPdf(data, { localeId: input.localeId });
+      const profile = input.profile ?? 'visual';
+      const pdf = await buildSessionResultsPdf(data, { localeId: input.localeId, profile });
       return {
-        fileName: buildSessionResultsPdfFilename(data.quizName, data.sessionCode),
+        fileName: buildSessionResultsPdfFilename(data.quizName, data.sessionCode, profile),
         mimeType: 'application/pdf' as const,
         contentBase64: pdf.toString('base64'),
       };
@@ -6782,9 +6783,10 @@ export const sessionRouter = router({
     .output(SessionExportPdfOutputSchema)
     .query(async ({ input }) => {
       const data = await loadFinishedQuizSessionExportData(input.code);
-      const pdf = await buildSessionResultsPdf(data, { localeId: input.localeId });
+      const profile = input.profile ?? 'visual';
+      const pdf = await buildSessionResultsPdf(data, { localeId: input.localeId, profile });
       return {
-        fileName: buildSessionResultsPdfFilename(data.quizName, data.sessionCode),
+        fileName: buildSessionResultsPdfFilename(data.quizName, data.sessionCode, profile),
         mimeType: 'application/pdf' as const,
         contentBase64: pdf.toString('base64'),
       };

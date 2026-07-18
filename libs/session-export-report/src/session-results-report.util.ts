@@ -37,8 +37,12 @@ import {
   renderPeerInstructionOptionComparisonHtml,
   renderFreetextTopBarsHtml,
 } from './session-results-report-charts.util';
-import { SESSION_RESULTS_REPORT_STYLES } from './session-results-report-styles';
+import {
+  SESSION_RESULTS_REPORT_PDF_UA_SAFE_STYLES,
+  SESSION_RESULTS_REPORT_STYLES,
+} from './session-results-report-styles';
 import { buildSessionResultsPrintPageFooterCss } from './session-results-report-pdf-footer.util';
+import { neutralizePdfUaInlineMarkup } from './session-results-report-pdf-ua.util';
 import {
   questionAnchorId,
   renderBackToOverviewHtml,
@@ -81,9 +85,14 @@ export interface BuildSessionResultsReportOptions {
   assetBaseUrl?: string;
   /**
    * Seitenzahlen per `@page`-CSS (Browser-Druck).
-   * Bei Playwright-PDF `false` lassen — dort übernimmt `footerTemplate`.
+   * Bei Playwright-PDF `false` lassen — Header/Footer-Templates sind PDF/UA-schädlich.
    */
   pageNumbersViaCss?: boolean;
+  /**
+   * Dekorative Chart-/SVG-Paints für Chromium-PDF/UA abschalten
+   * (veraPDF 7.1/3: untagged Content aus leeren Balken/Tracks).
+   */
+  pdfUaSafeVisuals?: boolean;
   /** Bekannte Sprache des Quiz-Inhalts, z. B. `de` oder `en`. */
   quizContentLocale?: string;
   /** Unterrichtsideen aus Fragentexten aufnehmen; standardmäßig nur im Demo-Export. */
@@ -366,7 +375,7 @@ function renderNumericRoundComparison(
           .replace('{2}', formatLocaleCount(comparison.pairedAnalysis.unchangedCount, localeId))
     : '';
   return `<div class="report-numeric-comparison">
-    <h4>${escapeHtml(labels.numericRoundComparisonTitle)}</h4>
+    <h3>${escapeHtml(labels.numericRoundComparisonTitle)}</h3>
     <table class="report-table">
       <thead><tr><th scope="col">${escapeHtml(labels.numericComparisonMetric)}</th><th scope="col">${escapeHtml(labels.aggregationRound1)}</th><th scope="col">${escapeHtml(labels.aggregationRound2)}</th></tr></thead>
       <tbody>${rows
@@ -510,7 +519,7 @@ function renderConfidenceSection(
     result.crossTab.incorrectHigh === total &&
     result.crossTab.correctHigh === 0;
   if (highOnly) {
-    return `<h4>${escapeHtml(labels.confidenceSection)} <span class="report-badge">${escapeHtml(labels.confidenceN)}: ${formatLocaleCount(total, localeId)}</span></h4>
+    return `<h3>${escapeHtml(labels.confidenceSection)} <span class="report-badge">${escapeHtml(labels.confidenceN)}: ${formatLocaleCount(total, localeId)}</span></h3>
       <div class="report-confidence-degenerate">
         <p><strong>${escapeHtml(
           labels.confidenceDegenerateAllHighWrongTemplate.replace(
@@ -547,7 +556,7 @@ function renderConfidenceSection(
     ${renderConfidenceHeatmapHtml(result.crossTab, heatmapLabels(labels), localeId, 'compact')}
     ${distribution}
   </div>`;
-  return `<h4>${escapeHtml(labels.confidenceSection)} <span class="report-badge">${escapeHtml(labels.confidenceN)}: ${formatLocaleCount(total, localeId)}</span></h4>${charts}${topSignalNote}`;
+  return `<h3>${escapeHtml(labels.confidenceSection)} <span class="report-badge">${escapeHtml(labels.confidenceN)}: ${formatLocaleCount(total, localeId)}</span></h3>${charts}${topSignalNote}`;
 }
 
 function renderQuestion(
@@ -598,7 +607,7 @@ function renderQuestion(
   }
 
   if (q.shortTextSolutions?.length) {
-    body += `<h4>${escapeHtml(labels.shortTextExpectedSolutions)}</h4><ul class="report-list">${q.shortTextSolutions
+    body += `<h3>${escapeHtml(labels.shortTextExpectedSolutions)}</h3><ul class="report-list">${q.shortTextSolutions
       .map((solution) => `<li>${escapeHtml(stripMarkdownToPlainText(solution))}</li>`)
       .join('')}</ul>`;
   }
@@ -626,7 +635,7 @@ function renderQuestion(
         .sort((left, right) => right.count - left.count || left.text.localeCompare(right.text))
         .slice(0, 5);
       body += `<div class="report-shorttext-incorrect">
-        <h4>${escapeHtml(labels.shortTextIncorrectHeading)}</h4>
+        <h3>${escapeHtml(labels.shortTextIncorrectHeading)}</h3>
         <ol class="report-list report-list--ranked">${ranked
           .map(
             (entry) =>
@@ -660,7 +669,7 @@ function renderQuestion(
   if (q.numericStats) {
     const hasRound2 = (q.numericRoundComparison?.round2Stats.n ?? 0) > 0;
     if (!hasRound2) {
-      body += `<h4>${escapeHtml(labels.numericStats)}</h4><p>${escapeHtml(numericStatsText(q.numericStats, localeId, labels, numericOverlay))}</p>`;
+      body += `<h3>${escapeHtml(labels.numericStats)}</h3><p>${escapeHtml(numericStatsText(q.numericStats, localeId, labels, numericOverlay))}</p>`;
       if (numericOverlay) {
         body += renderNumericInBandSummaryHtml(q.numericStats, numericOverlay, labels, localeId);
         body += renderNumericPlainLanguageHtml(q.numericStats, labels, localeId, (value) =>
@@ -1012,6 +1021,9 @@ export function buildSessionResultsReportHtml(
   const printPageFooterCss = options.pageNumbersViaCss
     ? buildSessionResultsPrintPageFooterCss(labels)
     : '';
+  const pdfUaSafeVisuals = options.pdfUaSafeVisuals === true;
+  const pdfUaSafeCss = pdfUaSafeVisuals ? SESSION_RESULTS_REPORT_PDF_UA_SAFE_STYLES : '';
+  const htmlClass = pdfUaSafeVisuals ? ' class="report-pdf-ua"' : '';
 
   const feedbackHtml = data.feedbackSummary
     ? renderFeedbackSummary(data.feedbackSummary, labels, localeId, data.participantCount)
@@ -1125,14 +1137,14 @@ export function buildSessionResultsReportHtml(
     </section>`;
   }
 
-  return `<!DOCTYPE html>
-<html lang="${escapeHtml(localeId.slice(0, 2))}">
+  const html = `<!DOCTYPE html>
+<html lang="${escapeHtml(localeId.slice(0, 2))}"${htmlClass}>
 <head>
   <meta charset="utf-8" />
   <title>${escapeHtml(labels.documentTitle)} — ${escapeHtml(data.quizName)}</title>
   <link rel="stylesheet" href="${EXPORT_REPORT_KATEX_CSS_URL}" crossorigin="anonymous" />
   <link rel="stylesheet" href="${EXPORT_REPORT_HLJS_CSS_URL}" crossorigin="anonymous" />
-  <style>${SESSION_RESULTS_REPORT_STYLES}${printPageFooterCss}</style>
+  <style>${SESSION_RESULTS_REPORT_STYLES}${printPageFooterCss}${pdfUaSafeCss}</style>
 </head>
 <body>
   <section class="report-cover">
@@ -1176,9 +1188,14 @@ export function buildSessionResultsReportHtml(
   <footer class="report-footer">${escapeHtml(labels.generatedBy)} · ${escapeHtml(footerMeta)}</footer>
 </body>
 </html>`;
+  return neutralizePdfUaInlineMarkup(html);
 }
 
-export function buildSessionResultsPdfFilename(quizTitle: string, sessionCode: string): string {
+export function buildSessionResultsPdfFilename(
+  quizTitle: string,
+  sessionCode: string,
+  profile: 'visual' | 'pdfUa' = 'visual',
+): string {
   const sanitize = (value: string, fallback: string) => {
     const normalized = value
       .normalize('NFKD')
@@ -1188,5 +1205,6 @@ export function buildSessionResultsPdfFilename(quizTitle: string, sessionCode: s
       .slice(0, 80);
     return normalized || fallback;
   };
-  return `arsnova-results-${sanitize(quizTitle, 'quiz')}-${sanitize(sessionCode, 'session')}.pdf`;
+  const suffix = profile === 'pdfUa' ? '-pdfua' : '';
+  return `arsnova-results-${sanitize(quizTitle, 'quiz')}-${sanitize(sessionCode, 'session')}${suffix}.pdf`;
 }

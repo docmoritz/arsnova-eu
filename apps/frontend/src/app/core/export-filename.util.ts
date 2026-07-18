@@ -49,14 +49,19 @@ export function buildSessionResultsCsvFilename(quizTitle: string, sessionCode: s
   return `arsnova-results-${safeTitle}-${safeSessionCode}.csv`;
 }
 
-export function buildSessionResultsPdfFilename(quizTitle: string, sessionCode: string): string {
+export function buildSessionResultsPdfFilename(
+  quizTitle: string,
+  sessionCode: string,
+  profile: 'visual' | 'pdfUa' = 'visual',
+): string {
   const safeTitle = sanitizeExportFilenameSegment(quizTitle, 'quiz');
   const safeSessionCode = sanitizeExportFilenameSegment(
     sessionCode,
     'session',
     SESSION_CODE_MAX_LENGTH,
   );
-  return `arsnova-results-${safeTitle}-${safeSessionCode}.pdf`;
+  const suffix = profile === 'pdfUa' ? '-pdfua' : '';
+  return `arsnova-results-${safeTitle}-${safeSessionCode}${suffix}.pdf`;
 }
 
 export function buildQaQuestionsCsvFilename(sessionCode: string): string {

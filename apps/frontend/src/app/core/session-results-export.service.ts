@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, LOCALE_ID, inject } from '@angular/core';
-import type { SessionExportDTO } from '@arsnova/shared-types';
+import type { SessionExportDTO, SessionResultsPdfProfile } from '@arsnova/shared-types';
 import {
   buildSessionResultsReportHtml,
   inlineExportImagesInHtml,
@@ -11,6 +11,11 @@ import { trpc } from './trpc.client';
 
 export type SessionResultsPdfExportResult = 'pdf-download' | 'print-fallback';
 
+export interface SessionResultsPdfExportOptions {
+  profile?: SessionResultsPdfProfile;
+  onLargeReportHint?: (questionCount: number) => void;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SessionResultsExportService {
   private readonly document = inject(DOCUMENT);
@@ -18,7 +23,7 @@ export class SessionResultsExportService {
 
   async exportPdfFromSessionCode(
     code: string,
-    options?: { onLargeReportHint?: (questionCount: number) => void },
+    options?: SessionResultsPdfExportOptions,
   ): Promise<SessionResultsPdfExportResult> {
     const exportData = await trpc.session.getExportData.query({
       code: code.toUpperCase(),
@@ -29,8 +34,9 @@ export class SessionResultsExportService {
   async exportPdfFromQuizHistory(
     quizId: string,
     accessProof: string,
-    options?: { onLargeReportHint?: (questionCount: number) => void },
+    options?: SessionResultsPdfExportOptions,
   ): Promise<SessionResultsPdfExportResult> {
+    const profile = options?.profile ?? 'visual';
     const exportData = await trpc.session.getLastSessionExportDataForQuiz.query({
       quizId,
       accessProof,
@@ -40,6 +46,7 @@ export class SessionResultsExportService {
         quizId,
         accessProof,
         localeId: this.localeId,
+        profile,
       });
       this.downloadBase64Export(pdf.contentBase64, pdf.fileName, pdf.mimeType);
       return 'pdf-download';
@@ -50,8 +57,9 @@ export class SessionResultsExportService {
 
   private async exportPdfFromExportData(
     exportData: SessionExportDTO,
-    options?: { onLargeReportHint?: (questionCount: number) => void },
+    options?: SessionResultsPdfExportOptions,
   ): Promise<SessionResultsPdfExportResult> {
+    const profile = options?.profile ?? 'visual';
     if (exportData.questions.length >= 15) {
       options?.onLargeReportHint?.(exportData.questions.length);
     }
@@ -60,11 +68,12 @@ export class SessionResultsExportService {
       const pdf = await trpc.session.getSessionExportPdf.query({
         code: exportData.sessionCode,
         localeId: this.localeId,
+        profile,
       });
       this.downloadBase64Export(pdf.contentBase64, pdf.fileName, pdf.mimeType);
       return 'pdf-download';
     } catch {
-      const html = await this.buildPrintableReportHtml(exportData);
+      const html = await this.buildPrintableReportHtml(exportData, profile);
       const labels = getSessionResultsReportLabels();
       const documentTitle = `${labels.documentTitle} — ${exportData.quizName}`;
       const opened = printSessionResultsReport(html, documentTitle);
@@ -75,13 +84,17 @@ export class SessionResultsExportService {
     }
   }
 
-  private async buildPrintableReportHtml(exportData: SessionExportDTO): Promise<string> {
+  private async buildPrintableReportHtml(
+    exportData: SessionExportDTO,
+    profile: SessionResultsPdfProfile,
+  ): Promise<string> {
     const labels = getSessionResultsReportLabels();
     const assetBaseUrl = window.location.origin;
     const html = buildSessionResultsReportHtml(exportData, labels, {
       localeId: this.localeId,
       assetBaseUrl,
       pageNumbersViaCss: true,
+      pdfUaSafeVisuals: profile === 'pdfUa',
     });
     return inlineExportImagesInHtml(html, { fetchExternal: true, maxImageBytes: 400_000 });
   }

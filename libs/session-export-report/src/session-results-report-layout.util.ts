@@ -66,7 +66,8 @@ export function renderCoverSummaryHtml(
 }
 
 export function renderBackToOverviewHtml(labels: SessionResultsReportLabels): string {
-  return `<p class="report-back-to-overview"><a href="#report-overview">${escapeHtml(labels.backToOverview)}</a></p>`;
+  const label = labels.backToOverview;
+  return `<p class="report-back-to-overview"><a href="#report-overview" title="${escapeHtml(label)}">${escapeHtml(label)}</a></p>`;
 }
 
 export function renderCoverBrandHtml(): string {
@@ -82,41 +83,30 @@ export function renderCoverNavigationHtml(
 ): string {
   const items: string[] = [];
 
+  const navItem = (href: string, label: string, count?: number) =>
+    `<a class="report-cover-nav-item" href="${href}" title="${escapeHtml(label)}">${escapeHtml(label)}${
+      count !== undefined ? ` <span class="report-cover-nav-count">${count}</span>` : ''
+    } <span aria-hidden="true">↗</span></a>`;
+
   if (data.confidenceSummary?.questions.length) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-action-plan">${escapeHtml(labels.tocActionPlan)} <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-action-plan', labels.tocActionPlan));
   }
-  items.push(
-    `<a class="report-cover-nav-item" href="#report-hardest-questions">${escapeHtml(labels.tocHardestQuestions)} <span aria-hidden="true">↗</span></a>`,
-  );
+  items.push(navItem('#report-hardest-questions', labels.tocHardestQuestions));
   if (data.confidenceSummary) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-confidence">${escapeHtml(labels.tocConfidence)} <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-confidence', labels.tocConfidence));
   }
-  items.push(
-    `<a class="report-cover-nav-item" href="#report-questions">${escapeHtml(labels.tocQuestions)} <span class="report-cover-nav-count">${data.questions.length}</span> <span aria-hidden="true">↗</span></a>`,
-  );
+  items.push(navItem('#report-questions', labels.tocQuestions, data.questions.length));
   if (data.feedbackSummary) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-feedback">${escapeHtml(labels.tocFeedback)} <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-feedback', labels.tocFeedback));
   }
   if (data.qaQuestions?.length) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-qa">${escapeHtml(labels.tocQa)} <span class="report-cover-nav-count">${data.qaQuestions.length}</span> <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-qa', labels.tocQa, data.qaQuestions.length));
   }
   if (data.teamMode && data.teamLeaderboard?.length) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-teams">${escapeHtml(labels.tocTeams)} <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-teams', labels.tocTeams));
   }
   if (data.bonusTokens?.length) {
-    items.push(
-      `<a class="report-cover-nav-item" href="#report-bonus">${escapeHtml(labels.tocBonus)} <span aria-hidden="true">↗</span></a>`,
-    );
+    items.push(navItem('#report-bonus', labels.tocBonus));
   }
 
   if (!items.length) return '';
@@ -187,5 +177,5 @@ export function priorityQuestionJumpLink(
   labels: SessionResultsReportLabels,
 ): string {
   const label = labels.priorityJumpToQuestion.replace('{0}', String(questionOrder + 1));
-  return `<a class="report-priority-jump" href="#${questionAnchorId(questionOrder)}">${escapeHtml(label)}</a>`;
+  return `<a class="report-priority-jump" href="#${questionAnchorId(questionOrder)}" title="${escapeHtml(label)}">${escapeHtml(label)}</a>`;
 }

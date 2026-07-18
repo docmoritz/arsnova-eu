@@ -23,15 +23,34 @@ describe('session-results-report-pdf-footer', () => {
     expect(css).toContain('Seite');
   });
 
-  it('liefert Playwright-PDF-Optionen mit Footer und Tagging', () => {
-    const options = buildSessionResultsPlaywrightPdfOptions(getSessionResultsReportLabelsDe(), {
-      quizName: 'Demo Quiz',
-      sessionCode: 'ABC123',
-    });
+  it('liefert visuelle Playwright-PDF-Optionen mit Header/Footer', () => {
+    const options = buildSessionResultsPlaywrightPdfOptions(
+      getSessionResultsReportLabelsDe(),
+      {
+        quizName: 'Demo Quiz',
+        sessionCode: 'ABC123',
+      },
+      'visual',
+    );
     expect(options.displayHeaderFooter).toBe(true);
     expect(options.footerTemplate).toContain('pageNumber');
     expect(options.headerTemplate).toContain('Demo Quiz');
     expect(options.margin.bottom).toBe('20mm');
+    expect(options.tagged).toBe(true);
+    expect(options.outline).toBe(true);
+  });
+
+  it('liefert PDF/UA-Playwright-Optionen ohne Header/Footer-Templates', () => {
+    const options = buildSessionResultsPlaywrightPdfOptions(
+      getSessionResultsReportLabelsDe(),
+      {
+        quizName: 'Demo Quiz',
+        sessionCode: 'ABC123',
+      },
+      'pdfUa',
+    );
+    expect(options.displayHeaderFooter).toBe(false);
+    expect(options.margin.bottom).toBe('14mm');
     expect(options.tagged).toBe(true);
     expect(options.outline).toBe(true);
   });

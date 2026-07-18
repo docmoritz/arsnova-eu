@@ -3161,9 +3161,18 @@ export const GetExportDataInputSchema = z.object({
 });
 export type GetExportDataInput = z.infer<typeof GetExportDataInputSchema>;
 
+/**
+ * PDF-Exportprofil für den Nachbesprechungsplan:
+ * - `visual`: Diagramme/Kopfzeile wie bisher (nicht PDF/UA-1)
+ * - `pdfUa`: PDF/UA-1-konform (reduzierte Dekoration)
+ */
+export const SessionResultsPdfProfileSchema = z.enum(['visual', 'pdfUa']);
+export type SessionResultsPdfProfile = z.infer<typeof SessionResultsPdfProfileSchema>;
+
 /** Input: Session-Ergebnisbericht als PDF (optional mit UI-Locale). */
 export const GetSessionExportPdfInputSchema = GetExportDataInputSchema.extend({
   localeId: z.string().min(2).max(10).optional(),
+  profile: SessionResultsPdfProfileSchema.optional().default('visual'),
 });
 export type GetSessionExportPdfInput = z.infer<typeof GetSessionExportPdfInputSchema>;
 
@@ -3863,6 +3872,7 @@ export type GetLastSessionExportDataForQuizInput = z.infer<
 /** Input: PDF-Export der zuletzt beendeten Session eines Quizzes (Quiz-Sammlung). */
 export const GetLastSessionExportPdfForQuizInputSchema = GetBonusTokensForQuizInputSchema.extend({
   localeId: z.string().min(2).max(10).optional(),
+  profile: SessionResultsPdfProfileSchema.optional().default('visual'),
 });
 export type GetLastSessionExportPdfForQuizInput = z.infer<
   typeof GetLastSessionExportPdfForQuizInputSchema

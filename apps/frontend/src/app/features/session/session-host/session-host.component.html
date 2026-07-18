@@ -1170,10 +1170,6 @@
                   </h1>
                   <p class="session-host__finished-sub" i18n>Alle Ergebnisse sind gespeichert.</p>
                   <div class="session-host__export-actions">
-                    <a matButton="filled" [routerLink]="localizedPath('/')">
-                      <mat-icon>home</mat-icon>
-                      <span i18n>Zur Startseite</span>
-                    </a>
                     <div class="session-host__export-pdf">
                       @let exportPdfPriorityCount =
                         finishedConfidenceSummary()?.priorityQuestionCount ?? 0;
@@ -1181,12 +1177,15 @@
                         class="session-host__export-pdf-btn"
                         matButton="filled"
                         type="button"
-                        (click)="exportSessionResultsPdf()"
+                        [matMenuTriggerFor]="sessionExportPdfMenu"
                         [disabled]="exportExporting()"
                         [attr.aria-busy]="exportExporting()"
                         [attr.aria-label]="exportPdfButtonAria()"
+                        [attr.aria-haspopup]="true"
                       >
-                        <mat-icon aria-hidden="true">psychology</mat-icon>
+                        <mat-icon class="session-host__export-pdf-btn-icon" aria-hidden="true"
+                          >psychology</mat-icon
+                        >
                         <span i18n="@@sessionHost.exportPdfButton"
                           >Nachbesprechungsplan ansehen</span
                         >
@@ -1195,7 +1194,32 @@
                             exportPdfPriorityCount
                           }}</span>
                         }
+                        <mat-icon aria-hidden="true">arrow_drop_down</mat-icon>
                       </button>
+                      <mat-menu #sessionExportPdfMenu="matMenu">
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="exportSessionResultsPdf('visual')"
+                          [disabled]="exportExporting()"
+                        >
+                          <mat-icon aria-hidden="true">bar_chart</mat-icon>
+                          <span i18n="@@sessionHost.exportPdfMenuVisual"
+                            >Standard (mit Diagrammen)</span
+                          >
+                        </button>
+                        <button
+                          mat-menu-item
+                          type="button"
+                          (click)="exportSessionResultsPdf('pdfUa')"
+                          [disabled]="exportExporting()"
+                        >
+                          <mat-icon aria-hidden="true">accessibility</mat-icon>
+                          <span i18n="@@sessionHost.exportPdfMenuPdfUa"
+                            >Barrierefrei (PDF/UA-1)</span
+                          >
+                        </button>
+                      </mat-menu>
                       @if (exportPdfPriorityCount > 0) {
                         <p class="session-host__export-pdf-hint">
                           {{ exportPdfPriorityHint(exportPdfPriorityCount) }}
@@ -1213,6 +1237,10 @@
                       <mat-icon aria-hidden="true">more_vert</mat-icon>
                       <span i18n="@@sessionHost.exportMoreButton">Mehr</span>
                     </button>
+                    <a matButton [routerLink]="localizedPath('/')">
+                      <mat-icon aria-hidden="true">home</mat-icon>
+                      <span i18n>Zur Startseite</span>
+                    </a>
                     <mat-menu #sessionExportMoreMenu="matMenu">
                       <button
                         mat-menu-item
@@ -1226,7 +1254,7 @@
                       >
                         <mat-icon aria-hidden="true">fact_check</mat-icon>
                         <span i18n="@@sessionHost.exportCsvExcelMenuItem"
-                          >Für Excel exportieren</span
+                          >Rohdaten als CSV exportieren</span
                         >
                       </button>
                     </mat-menu>

@@ -11245,6 +11245,14 @@
           <context context-type="linenumber">567</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="quizList.exportLastSessionPdfVisual" datatype="html">
+        <source>Standard (mit Diagrammen)</source>
+        <target state="translated">Standard (con grafici)</target>
+      </trans-unit>
+      <trans-unit id="quizList.exportLastSessionPdfUa" datatype="html">
+        <source>Barrierefrei (PDF/UA-1)</source>
+        <target state="translated">Accessibile (PDF/UA-1)</target>
+      </trans-unit>
       <trans-unit id="quizList.demoSessionResultsPdf" datatype="html">
         <source>Beispiel-Nachbesprechungsplan</source>
         <target>Esempio di piano di debriefing</target>
@@ -12777,6 +12785,14 @@
           <context context-type="linenumber">1191</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="sessionHost.exportPdfMenuVisual" datatype="html">
+        <source>Standard (mit Diagrammen)</source>
+        <target state="translated">Standard (con grafici)</target>
+      </trans-unit>
+      <trans-unit id="sessionHost.exportPdfMenuPdfUa" datatype="html">
+        <source>Barrierefrei (PDF/UA-1)</source>
+        <target state="translated">Accessibile (PDF/UA-1)</target>
+      </trans-unit>
       <trans-unit id="sessionHost.exportMoreButtonAria" datatype="html">
         <source>Weitere Exportoptionen</source>
         <target>Altre opzioni di esportazione</target>
@@ -12802,8 +12818,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportCsvExcelMenuItem" datatype="html">
-        <source>Für Excel exportieren</source>
-        <target>Esporta per Excel</target>
+        <source>Rohdaten als CSV exportieren</source>
+        <target>Esporta dati grezzi (CSV)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
           <context context-type="linenumber">1229</context>

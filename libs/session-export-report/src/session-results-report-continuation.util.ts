@@ -1,7 +1,17 @@
 import type { SessionExportDTO } from '@arsnova/shared-types';
-import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage, type RGB } from 'pdf-lib';
+import {
+  beginMarkedContent,
+  endMarkedContent,
+  PDFDocument,
+  rgb,
+  StandardFonts,
+  type PDFFont,
+  type PDFPage,
+  type RGB,
+} from 'pdf-lib';
 import type { SessionResultsReportLabels } from './labels-de';
 import { stripMarkdownToPlainText } from './markdown-plain-text.util';
+import { enhanceSessionResultsPdfUa } from './session-results-report-pdf-ua.util';
 
 export interface QuestionContinuationStamp {
   /** 1-basierte Fragennummer (wie „FRAGE N VON …“). */
@@ -38,84 +48,51 @@ export function buildQuestionContinuationStamps(
   }));
 }
 
-/** Adobe Symbol Encoding: π bei Oktal 160 = 0x70. */
-const SYMBOL_PI = String.fromCharCode(0x70);
-
 /**
- * WinAnsi-sichere Zeichenkette für Helvetica.
- * Bewahrt Gedankenstriche (–/— → WinAnsi 0x96/0x97); π als Platzhalter `\u0001` für Symbol-Font.
+ * WinAnsi-sichere Zeichenkette für Helvetica (ohne Symbol-Font / ungültige Glyphs).
+ * Bewahrt Gedankenstriche (–/— → WinAnsi 0x96/0x97); π als ASCII `pi`.
  */
 export function toWinAnsiSafe(text: string): string {
   return text
-    .replace(/\u03c0/g, '\u0001')
+    .replace(/\u03c0/g, 'pi')
     .replace(/\u2013/g, '\x96')
     .replace(/\u2014/g, '\x97')
     .replace(/×/g, 'x')
     .replace(/[„“”«»]/g, '"')
     .replace(/…/g, '...')
     .replace(/./gu, (ch) => {
-      if (ch === '\u0001') return ch;
       const cp = ch.codePointAt(0) ?? 0;
       return cp <= 0xff ? ch : '?';
     });
 }
 
-function measureLabelWidth(
-  label: string,
-  helvetica: PDFFont,
-  symbol: PDFFont,
-  size: number,
-): number {
-  const safe = toWinAnsiSafe(label);
-  const parts = safe.split('\u0001');
-  let width = 0;
-  for (let i = 0; i < parts.length; i++) {
-    width += helvetica.widthOfTextAtSize(parts[i] ?? '', size);
-    if (i < parts.length - 1) {
-      width += symbol.widthOfTextAtSize(SYMBOL_PI, size);
-    }
-  }
-  return width;
+function measureLabelWidth(label: string, helvetica: PDFFont, size: number): number {
+  return helvetica.widthOfTextAtSize(toWinAnsiSafe(label), size);
 }
 
 function truncateLabelToWidth(
   label: string,
   helvetica: PDFFont,
-  symbol: PDFFont,
   size: number,
   maxWidth: number,
 ): string {
   let current = label;
-  while (measureLabelWidth(current, helvetica, symbol, size) > maxWidth && current.length > 12) {
+  while (measureLabelWidth(current, helvetica, size) > maxWidth && current.length > 12) {
     current = `${current.slice(0, Math.max(0, current.length - 2))}...`;
   }
   return current;
 }
 
-function drawMixedLabel(
+function drawLabel(
   page: PDFPage,
   label: string,
   x: number,
   y: number,
   size: number,
   helvetica: PDFFont,
-  symbol: PDFFont,
   color: RGB,
 ): void {
-  const safe = toWinAnsiSafe(label);
-  const parts = safe.split('\u0001');
-  let cursorX = x;
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i] ?? '';
-    if (part) {
-      page.drawText(part, { x: cursorX, y, size, font: helvetica, color });
-      cursorX += helvetica.widthOfTextAtSize(part, size);
-    }
-    if (i < parts.length - 1) {
-      page.drawText(SYMBOL_PI, { x: cursorX, y, size, font: symbol, color });
-      cursorX += symbol.widthOfTextAtSize(SYMBOL_PI, size);
-    }
-  }
+  page.drawText(toWinAnsiSafe(label), { x, y, size, font: helvetica, color });
 }
 
 export interface ContinuationStampPlanItem {
@@ -204,11 +181,16 @@ async function extractPdfPageTexts(pdfBytes: Uint8Array): Promise<string[]> {
 export interface StampQuestionContinuationsOptions {
   /** PDF-Dokumenttitel (Metadaten / Screenreader / Browser-Tab). */
   documentTitle?: string;
+  /** Locale für Catalog Lang / XMP (PDF/UA). */
+  localeId?: string;
+  /** Nur bei PDF/UA-Profil `pdfuaid:part=1` setzen. */
+  claimPdfUa?: boolean;
 }
 
 /**
  * Stempelt kompakte Fortsetzungszeilen auf PDF-Seiten, die mitten in einer Frage beginnen.
  * Erhält die HTML/DOM-Lesereihenfolge (kein thead-Repeat, kein Absolute-Content-Reorder).
+ * Stempel liegen in Artifact-Marked-Content; abschließend PDF/UA-Metadaten.
  */
 export async function stampQuestionContinuationsOnPdf(
   pdfBytes: Uint8Array,
@@ -216,7 +198,8 @@ export async function stampQuestionContinuationsOnPdf(
   options: StampQuestionContinuationsOptions = {},
 ): Promise<Uint8Array> {
   const documentTitle = options.documentTitle?.trim();
-  if (questions.length === 0 && !documentTitle) return pdfBytes;
+  const localeId = options.localeId;
+  const claimPdfUa = options.claimPdfUa === true;
 
   try {
     // pdf.js kann den Input-Buffer transferieren — Kopie für nachfolgendes pdf-lib.
@@ -224,55 +207,51 @@ export async function stampQuestionContinuationsOnPdf(
     const pageTexts = questions.length > 0 ? await extractPdfPageTexts(bytesForExtract) : [];
     const plan = questions.length > 0 ? planQuestionContinuationStamps(pageTexts, questions) : [];
 
-    if (plan.length === 0 && !documentTitle) return pdfBytes;
-
     const pdfDoc = await PDFDocument.load(pdfBytes.slice());
     if (documentTitle) {
       pdfDoc.setTitle(documentTitle);
     }
-    if (plan.length === 0) {
-      return pdfDoc.save();
+
+    if (plan.length > 0) {
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const pages = pdfDoc.getPages();
+      const fontSize = 9;
+      const color = rgb(0.216, 0.255, 0.318); // #374151
+      const lineColor = rgb(0.82, 0.835, 0.859); // #d1d5db
+
+      for (const item of plan) {
+        const page = pages[item.pageIndex];
+        if (!page) continue;
+        const { width, height } = page.getSize();
+        /** Kompakte Fortsetzungszeile im oberen Randbereich (ohne Playwright-Header). */
+        const textY = height - 40;
+        const textX = 40;
+        const maxWidth = width - 80;
+        const label = truncateLabelToWidth(item.label, font, fontSize, maxWidth);
+        const textWidth = measureLabelWidth(label, font, fontSize);
+        page.pushOperators(beginMarkedContent('Artifact'));
+        page.drawRectangle({
+          x: textX - 2,
+          y: textY - 1,
+          width: Math.min(textWidth + 4, maxWidth + 4),
+          height: fontSize + 2,
+          color: rgb(1, 1, 1),
+        });
+        drawLabel(page, label, textX, textY, fontSize, font, color);
+        page.drawLine({
+          start: { x: textX, y: textY - 4 },
+          end: { x: width - 40, y: textY - 4 },
+          thickness: 0.6,
+          color: lineColor,
+        });
+        page.pushOperators(endMarkedContent());
+      }
     }
 
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const symbolFont = await pdfDoc.embedFont(StandardFonts.Symbol);
-    const pages = pdfDoc.getPages();
-    const fontSize = 9;
-    const color = rgb(0.216, 0.255, 0.318); // #374151
-    const lineColor = rgb(0.82, 0.835, 0.859); // #d1d5db
-
-    for (const item of plan) {
-      const page = pages[item.pageIndex];
-      if (!page) continue;
-      const { width, height } = page.getSize();
-      /**
-       * Band zwischen laufendem Header (~y 822) und Content (@page margin-top 24mm ≈ y 758).
-       * Etwas unter der Header-Linie, mit klarer Luft nach oben und unten.
-       */
-      const textY = height - 56; // ≈ 20mm vom oberen Rand
-      const textX = 40;
-      const maxWidth = width - 80;
-      const label = truncateLabelToWidth(item.label, font, symbolFont, fontSize, maxWidth);
-      const textWidth = measureLabelWidth(label, font, symbolFont, fontSize);
-      page.drawRectangle({
-        x: textX - 2,
-        y: textY - 1,
-        width: Math.min(textWidth + 4, maxWidth + 4),
-        height: fontSize + 2,
-        color: rgb(1, 1, 1),
-      });
-      drawMixedLabel(page, label, textX, textY, fontSize, font, symbolFont, color);
-      page.drawLine({
-        start: { x: textX, y: textY - 4 },
-        end: { x: width - 40, y: textY - 4 },
-        thickness: 0.6,
-        color: lineColor,
-      });
-    }
-
-    return pdfDoc.save();
+    const stamped = await pdfDoc.save({ useObjectStreams: false });
+    return enhanceSessionResultsPdfUa(stamped, { documentTitle, localeId, claimPdfUa });
   } catch {
-    // Ungültige/minimale PDFs (z. B. Unit-Test-Mocks) unverändert zurückgeben.
-    return pdfBytes;
+    // Ungültige/minimale PDFs: zumindest Basis-Metadaten versuchen.
+    return enhanceSessionResultsPdfUa(pdfBytes, { documentTitle, localeId, claimPdfUa });
   }
 }

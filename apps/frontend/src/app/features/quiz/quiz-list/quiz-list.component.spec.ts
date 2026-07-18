@@ -349,7 +349,7 @@ describe('QuizListComponent', () => {
     expect(link.getAttribute('aria-label')).toContain('Datenbanken');
   });
 
-  it('zeigt auf der Demo-Quizkarte einen Beispiellink zum Nachbesprechungsplan-PDF', () => {
+  it('zeigt auf der Demo-Quizkarte ein Untermenü mit Standard- und PDF/UA-Beispiel', () => {
     quizzesSignal.set([
       {
         id: DEMO_QUIZ_ID,
@@ -378,18 +378,43 @@ describe('QuizListComponent', () => {
     ]);
 
     const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance;
     fixture.detectChanges();
 
-    const demoPdfLinks = fixture.nativeElement.querySelectorAll(
-      'a.quiz-list-item__demo-pdf',
-    ) as NodeListOf<HTMLAnchorElement>;
-    expect(demoPdfLinks.length).toBe(1);
-    expect(demoPdfLinks[0]?.textContent).toContain('Beispiel-Nachbesprechungsplan');
-    expect(demoPdfLinks[0]?.getAttribute('href')).toContain(
+    expect(component.demoSessionResultsPdfUrl).toContain(
       '/assets/demo/demo-session-results-30.pdf',
     );
-    expect(demoPdfLinks[0]?.getAttribute('target')).toBe('_blank');
-    expect(demoPdfLinks[0]?.getAttribute('rel')).toContain('noopener');
+    expect(component.demoSessionResultsPdfUaUrl).toContain(
+      '/assets/demo/demo-session-results-30-pdfua.pdf',
+    );
+
+    const demoPdfTrigger = fixture.nativeElement.querySelector(
+      'button.quiz-list-item__demo-pdf',
+    ) as HTMLButtonElement | null;
+    expect(demoPdfTrigger).toBeTruthy();
+    expect(demoPdfTrigger?.textContent).toContain('Beispiel-Nachbesprechungsplan');
+
+    demoPdfTrigger?.click();
+    fixture.detectChanges();
+
+    const demoPdfLinks = Array.from(
+      document.body.querySelectorAll('a[mat-menu-item]') as NodeListOf<HTMLAnchorElement>,
+    ).filter((link) => (link.getAttribute('href') ?? '').includes('demo-session-results-30'));
+    expect(demoPdfLinks).toHaveLength(2);
+    expect(
+      demoPdfLinks.some((link) =>
+        (link.getAttribute('href') ?? '').endsWith('demo-session-results-30.pdf'),
+      ),
+    ).toBe(true);
+    expect(
+      demoPdfLinks.some((link) =>
+        (link.getAttribute('href') ?? '').endsWith('demo-session-results-30-pdfua.pdf'),
+      ),
+    ).toBe(true);
+    for (const link of demoPdfLinks) {
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+    }
   });
 
   it('rendert Markdown in der Quiz-Beschreibung', () => {
