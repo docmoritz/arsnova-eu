@@ -27,10 +27,20 @@ function escapeHtml(value: string): string {
 
 /** Entfernt Demo-Timestamps und kürzt für die laufende Kopfzeile. */
 export function displayQuizNameForPdfHeader(quizName: string, maxLength = 64): string {
-  const cleaned = quizName
-    .replace(/\s*·\s*Didaktik-Demo\s+\d{10,}\s*$/u, '')
-    .replace(/\s+\d{13,}\s*$/u, '')
-    .trim();
+  let cleaned = quizName.trimEnd();
+  const demoMarker = ' · Didaktik-Demo ';
+  const demoIdx = cleaned.lastIndexOf(demoMarker);
+  if (demoIdx >= 0) {
+    const suffix = cleaned.slice(demoIdx + demoMarker.length).trim();
+    if (/^\d{10,}$/u.test(suffix)) {
+      cleaned = cleaned.slice(0, demoIdx).trimEnd();
+    }
+  }
+  const trailingDigits = cleaned.match(/ \d{13,}$/u);
+  if (trailingDigits) {
+    cleaned = cleaned.slice(0, cleaned.length - trailingDigits[0].length).trimEnd();
+  }
+  cleaned = cleaned.trim();
   return (cleaned || quizName).slice(0, maxLength);
 }
 

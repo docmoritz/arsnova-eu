@@ -344,8 +344,7 @@ function buildVoteInput(participant, question, metadata, round, participantIndex
     if (requiresDebrief) {
       // Meist hohe Sicherheit beim Fehlkonzept, vereinzelt unsicher/richtig
       const bucket = participantIndex % 10;
-      vote.confidenceValue =
-        bucket < 8 ? randomConfidenceValue(4, 5) : randomConfidenceValue(1, 3);
+      vote.confidenceValue = bucket < 8 ? randomConfidenceValue(4, 5) : randomConfidenceValue(1, 3);
     } else if (metadata.numericTwoRounds === true) {
       const inBandShare = Math.round(n * (round === 1 ? 0.3 : 0.82));
       const inBand = participantIndex < inBandShare;
