@@ -953,10 +953,13 @@
                               <td class="session-host__lb-col--rank">
                                 @if (entry.rank === 1) {
                                   <span class="session-host__lb-medal" aria-hidden="true">🥇</span>
+                                  <span class="sr-only">{{ entry.rank }}</span>
                                 } @else if (entry.rank === 2) {
                                   <span class="session-host__lb-medal" aria-hidden="true">🥈</span>
+                                  <span class="sr-only">{{ entry.rank }}</span>
                                 } @else if (entry.rank === 3) {
                                   <span class="session-host__lb-medal" aria-hidden="true">🥉</span>
+                                  <span class="sr-only">{{ entry.rank }}</span>
                                 } @else {
                                   {{ entry.rank }}
                                 }
@@ -1049,10 +1052,19 @@
                             >
                               @if (teamScoreboardHasPoints() && entry.rank === 1) {
                                 <span class="session-host__lb-medal" aria-hidden="true">🥇</span>
+                                <span class="sr-only">{{
+                                  teamLeaderboardRankDisplay(entry.rank)
+                                }}</span>
                               } @else if (teamScoreboardHasPoints() && entry.rank === 2) {
                                 <span class="session-host__lb-medal" aria-hidden="true">🥈</span>
+                                <span class="sr-only">{{
+                                  teamLeaderboardRankDisplay(entry.rank)
+                                }}</span>
                               } @else if (teamScoreboardHasPoints() && entry.rank === 3) {
                                 <span class="session-host__lb-medal" aria-hidden="true">🥉</span>
+                                <span class="sr-only">{{
+                                  teamLeaderboardRankDisplay(entry.rank)
+                                }}</span>
                               } @else {
                                 {{ teamLeaderboardRankDisplay(entry.rank) }}
                               }
@@ -2784,10 +2796,13 @@
                         <span class="session-host__interim-rank">
                           @if (entry.rank === 1) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥇</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else if (entry.rank === 2) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥈</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else if (entry.rank === 3) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥉</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else {
                             {{ entry.rank }}.
                           }
@@ -2878,10 +2893,13 @@
                         >
                           @if (entry.totalScore > 0 && entry.rank === 1) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥇</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else if (entry.totalScore > 0 && entry.rank === 2) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥈</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else if (entry.totalScore > 0 && entry.rank === 3) {
                             <span class="session-host__lb-medal" aria-hidden="true">🥉</span>
+                            <span class="sr-only">{{ entry.rank }}.</span>
                           } @else if (entry.totalScore > 0) {
                             {{ entry.rank }}.
                           }
