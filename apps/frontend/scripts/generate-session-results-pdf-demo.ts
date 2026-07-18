@@ -8,7 +8,12 @@
  * Optional:
  *   SESSION_CODE=ABC123 TRPC_URL=http://127.0.0.1:3000/trpc \
  *   OUTPUT=output/pdf/demo-session-results-30.pdf \
+ *   PDF_PROFILE=visual|pdfUa|both \
  *   npm run generate:session-pdf-demo -w @arsnova/frontend
+ *
+ * Standard (PDF_PROFILE=both): schreibt beide Profile nach
+ *   apps/frontend/src/assets/demo/demo-session-results-30.pdf
+ *   apps/frontend/src/assets/demo/demo-session-results-30-pdfua.pdf
  *
  * Standardmäßig wird das PDF lokal per Playwright aus dem frisch gerenderten HTML
  * erzeugt (aktueller Workspace-Stand). USE_BACKEND_PDF=1 testet zusätzlich die Backend-Route.
@@ -22,7 +27,6 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { createTRPCProxyClient, httpLink } from '@trpc/client';
 import { chromium } from 'playwright';
-import { buildSessionResultsPdfFilename } from '../src/app/core/export-filename.util';
 import {
   buildSessionResultsReportHtml,
   getDefaultSessionResultsReportLabelsDe,
@@ -61,9 +65,20 @@ const QUIZ_CONTENT_LOCALE = String(process.env.QUIZ_CONTENT_LOCALE || 'de')
   .trim()
   .slice(0, 2)
   .toLowerCase();
-const OUTPUT = resolve(
-  process.env.OUTPUT || join(REPO_ROOT, 'output/pdf/demo-session-results-30.pdf'),
-);
+const DEMO_ASSETS_DIR = join(FRONTEND_ASSET_ROOT, 'demo');
+const DEFAULT_VISUAL_OUTPUT = join(DEMO_ASSETS_DIR, 'demo-session-results-30.pdf');
+const DEFAULT_PDFUA_OUTPUT = join(DEMO_ASSETS_DIR, 'demo-session-results-30-pdfua.pdf');
+const OUTPUT_ENV = process.env.OUTPUT ? resolve(process.env.OUTPUT) : '';
+const PDF_PROFILE_RAW = String(process.env.PDF_PROFILE || 'both')
+  .trim()
+  .toLowerCase();
+type DemoPdfProfile = 'visual' | 'pdfUa';
+const PDF_PROFILES: DemoPdfProfile[] =
+  PDF_PROFILE_RAW === 'visual'
+    ? ['visual']
+    : PDF_PROFILE_RAW === 'pdfua'
+      ? ['pdfUa']
+      : ['visual', 'pdfUa'];
 
 function createTrpcClient(hostToken?: string) {
   return createTRPCProxyClient({
@@ -126,6 +141,8 @@ async function runDemoClassroomScenario(): Promise<string> {
       ...process.env,
       PARTICIPANTS: String(PARTICIPANTS),
       TRPC_URL,
+      // PDF-Demo: lokale Runner-Last darf das p95-Smoke-Gate nicht blockieren
+      VOTE_P95_LIMIT_MS: String(process.env.VOTE_P95_LIMIT_MS || 3_000),
     },
     maxBuffer: 10 * 1024 * 1024,
   });
@@ -148,25 +165,45 @@ async function renderLocalPlaywrightPdf(
     sessionCode: string;
     questions: { questionOrder: number; questionTextShort: string }[];
   },
+  profile: DemoPdfProfile,
 ): Promise<Buffer> {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle' });
     const raw = await page.pdf(
-      buildSessionResultsPlaywrightPdfOptions(labels, {
-        quizName: exportData.quizName,
-        sessionCode: exportData.sessionCode,
-      }),
+      buildSessionResultsPlaywrightPdfOptions(
+        labels,
+        {
+          quizName: exportData.quizName,
+          sessionCode: exportData.sessionCode,
+        },
+        profile,
+      ),
     );
+    const documentTitle = `${labels.documentTitle} — ${exportData.quizName}`;
     const stamped = await stampQuestionContinuationsOnPdf(
       new Uint8Array(raw),
       buildQuestionContinuationStamps(exportData, labels),
+      { documentTitle, localeId: 'de', claimPdfUa: profile === 'pdfUa' },
     );
     return Buffer.from(stamped);
   } finally {
     await browser.close();
   }
+}
+
+function resolveProfileOutput(profile: DemoPdfProfile): string {
+  if (OUTPUT_ENV) {
+    if (PDF_PROFILES.length === 1) {
+      return OUTPUT_ENV.endsWith('.pdf')
+        ? OUTPUT_ENV
+        : join(OUTPUT_ENV, `demo-session-results-30${profile === 'pdfUa' ? '-pdfua' : ''}.pdf`);
+    }
+    const base = OUTPUT_ENV.endsWith('.pdf') ? OUTPUT_ENV.replace(/\.pdf$/i, '') : OUTPUT_ENV;
+    return `${base}${profile === 'pdfUa' ? '-pdfua' : ''}.pdf`;
+  }
+  return profile === 'pdfUa' ? DEFAULT_PDFUA_OUTPUT : DEFAULT_VISUAL_OUTPUT;
 }
 
 async function run() {
@@ -179,42 +216,61 @@ async function run() {
 
   const exportData = await client.session.getExportData.query({ code });
   const labels = getDefaultSessionResultsReportLabelsDe();
-  let html = buildSessionResultsReportHtml(exportData, labels, {
-    localeId: 'de',
-    generatedAt: new Date().toISOString(),
-    assetBaseUrl: ASSET_BASE_URL,
-    pageNumbersViaCss: false,
-    quizContentLocale: QUIZ_CONTENT_LOCALE,
-    includeTeachingNotes: true,
-  });
-
-  html = await inlineExportImagesInHtml(html, {
-    readLocalAsset: readDemoLocalAsset,
-    fetchExternal: true,
-  });
-
-  const pdfPath = OUTPUT.endsWith('.pdf')
-    ? OUTPUT
-    : join(OUTPUT, buildSessionResultsPdfFilename(exportData.quizName, exportData.sessionCode));
-  const htmlPath = pdfPath.replace(/\.pdf$/i, '.html');
-
-  await mkdir(dirname(pdfPath), { recursive: true });
-  await writeFile(htmlPath, html, 'utf8');
-
-  let pdfBuffer: Buffer;
   const useBackendPdf = String(process.env.USE_BACKEND_PDF || '').trim() === '1';
-  if (useBackendPdf) {
-    try {
-      const serverPdf = await client.session.getSessionExportPdf.query({ code });
-      pdfBuffer = Buffer.from(serverPdf.contentBase64, 'base64');
-    } catch (error) {
-      console.warn('Backend-PDF fehlgeschlagen, fallback auf lokales Playwright:', error);
-      pdfBuffer = await renderLocalPlaywrightPdf(html, labels, exportData);
+  const outputs: { profile: DemoPdfProfile; pdfPath: string; htmlPath: string }[] = [];
+
+  for (const profile of PDF_PROFILES) {
+    let html = buildSessionResultsReportHtml(exportData, labels, {
+      localeId: 'de',
+      generatedAt: new Date().toISOString(),
+      assetBaseUrl: ASSET_BASE_URL,
+      pageNumbersViaCss: false,
+      pdfUaSafeVisuals: profile === 'pdfUa',
+      quizContentLocale: QUIZ_CONTENT_LOCALE,
+      includeTeachingNotes: true,
+    });
+
+    html = await inlineExportImagesInHtml(html, {
+      readLocalAsset: readDemoLocalAsset,
+      fetchExternal: true,
+    });
+
+    const pdfPath = resolveProfileOutput(profile);
+    // HTML-Debugausgaben nicht unter src/assets ablegen (nur PDFs gehören dorthin).
+    const htmlPath =
+      pdfPath.includes('/assets/demo/') || pdfPath.includes('\\assets\\demo\\')
+        ? join(
+            REPO_ROOT,
+            'output/pdf',
+            profile === 'pdfUa'
+              ? 'demo-session-results-30-pdfua.html'
+              : 'demo-session-results-30.html',
+          )
+        : pdfPath.replace(/\.pdf$/i, '.html');
+
+    await mkdir(dirname(pdfPath), { recursive: true });
+    await mkdir(dirname(htmlPath), { recursive: true });
+    await writeFile(htmlPath, html, 'utf8');
+
+    let pdfBuffer: Buffer;
+    if (useBackendPdf) {
+      try {
+        const serverPdf = await client.session.getSessionExportPdf.query({
+          code,
+          localeId: 'de',
+          profile,
+        });
+        pdfBuffer = Buffer.from(serverPdf.contentBase64, 'base64');
+      } catch (error) {
+        console.warn('Backend-PDF fehlgeschlagen, fallback auf lokales Playwright:', error);
+        pdfBuffer = await renderLocalPlaywrightPdf(html, labels, exportData, profile);
+      }
+    } else {
+      pdfBuffer = await renderLocalPlaywrightPdf(html, labels, exportData, profile);
     }
-  } else {
-    pdfBuffer = await renderLocalPlaywrightPdf(html, labels, exportData);
+    await writeFile(pdfPath, pdfBuffer);
+    outputs.push({ profile, pdfPath, htmlPath });
   }
-  await writeFile(pdfPath, pdfBuffer);
 
   console.log(
     JSON.stringify(
@@ -223,8 +279,7 @@ async function run() {
         participantCount: exportData.participantCount,
         questionCount: exportData.questions.length,
         hasConfidenceSummary: Boolean(exportData.confidenceSummary),
-        pdfPath,
-        htmlPath,
+        profiles: outputs,
       },
       null,
       2,

@@ -7,7 +7,7 @@ import { webcrypto } from 'node:crypto';
 import { createLegacyQuizHistoryAccessProof } from '@arsnova/shared-types';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QuizListComponent } from './quiz-list.component';
-import { QuizStoreService, type QuizSummary } from '../data/quiz-store.service';
+import { DEMO_QUIZ_ID, QuizStoreService, type QuizSummary } from '../data/quiz-store.service';
 
 const {
   getActiveQuizIdsQueryMock,
@@ -349,6 +349,74 @@ describe('QuizListComponent', () => {
     expect(link.getAttribute('aria-label')).toContain('Datenbanken');
   });
 
+  it('zeigt auf der Demo-Quizkarte ein Untermenü mit Standard- und PDF/UA-Beispiel', () => {
+    quizzesSignal.set([
+      {
+        id: DEMO_QUIZ_ID,
+        name: 'Demo-Quiz',
+        description: 'Showcase',
+        createdAt: '2026-03-08T10:00:00.000Z',
+        updatedAt: '2026-03-08T11:30:00.000Z',
+        questionCount: 3,
+        teamMode: false,
+        hasBonus: false,
+        lastServerQuizId: null,
+        lastServerQuizAccessProof: null,
+      },
+      {
+        id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
+        name: 'Datenbanken',
+        description: 'SQL Grundlagen',
+        createdAt: '2026-03-08T10:00:00.000Z',
+        updatedAt: '2026-03-08T11:30:00.000Z',
+        questionCount: 2,
+        teamMode: false,
+        hasBonus: false,
+        lastServerQuizId: null,
+        lastServerQuizAccessProof: null,
+      },
+    ]);
+
+    const fixture = TestBed.createComponent(QuizListComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.demoSessionResultsPdfUrl).toContain(
+      '/assets/demo/demo-session-results-30.pdf',
+    );
+    expect(component.demoSessionResultsPdfUaUrl).toContain(
+      '/assets/demo/demo-session-results-30-pdfua.pdf',
+    );
+
+    const demoPdfTrigger = fixture.nativeElement.querySelector(
+      'button.quiz-list-item__demo-pdf',
+    ) as HTMLButtonElement | null;
+    expect(demoPdfTrigger).toBeTruthy();
+    expect(demoPdfTrigger?.textContent).toContain('Beispiel-Nachbesprechungsplan');
+
+    demoPdfTrigger?.click();
+    fixture.detectChanges();
+
+    const demoPdfLinks = Array.from(
+      document.body.querySelectorAll('a[mat-menu-item]') as NodeListOf<HTMLAnchorElement>,
+    ).filter((link) => (link.getAttribute('href') ?? '').includes('demo-session-results-30'));
+    expect(demoPdfLinks).toHaveLength(2);
+    expect(
+      demoPdfLinks.some((link) =>
+        (link.getAttribute('href') ?? '').endsWith('demo-session-results-30.pdf'),
+      ),
+    ).toBe(true);
+    expect(
+      demoPdfLinks.some((link) =>
+        (link.getAttribute('href') ?? '').endsWith('demo-session-results-30-pdfua.pdf'),
+      ),
+    ).toBe(true);
+    for (const link of demoPdfLinks) {
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+    }
+  });
+
   it('rendert Markdown in der Quiz-Beschreibung', () => {
     quizzesSignal.set([
       {
@@ -488,7 +556,7 @@ describe('QuizListComponent', () => {
     ).toBe(7);
   });
 
-  it('graut Bonus-Codes und Letzte Auswertung aus, wenn noch keine Inhalte vorhanden sind', async () => {
+  it('graut Bonus-Codes und Nachbesprechungsplan aus, wenn noch keine Inhalte vorhanden sind', async () => {
     quizzesSignal.set([
       {
         id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
@@ -507,7 +575,6 @@ describe('QuizListComponent', () => {
       {
         quizId: '11111111-1111-4111-8111-111111111111',
         hasBonusTokens: false,
-        hasLastSessionFeedback: false,
         hasLastSessionAnalysis: false,
       },
     ]);
@@ -524,10 +591,9 @@ describe('QuizListComponent', () => {
       fixture.nativeElement.querySelectorAll('.quiz-list-item__actions button'),
     ) as HTMLButtonElement[];
     const bonusButton = buttons.find((button) => button.textContent?.includes('Bonus-Codes'));
-    const feedbackButton = buttons.find((button) =>
-      button.textContent?.includes('Nachbesprechung'),
+    const pdfButton = buttons.find((button) =>
+      button.textContent?.includes('Nachbesprechungsplan'),
     );
-    const pdfButton = buttons.find((button) => button.textContent?.includes('Ergebnisbericht'));
 
     expect(getQuizCollectionHistoryAvailabilityQueryMock).toHaveBeenCalledWith([
       {
@@ -536,11 +602,10 @@ describe('QuizListComponent', () => {
       },
     ]);
     expect(bonusButton?.disabled).toBe(true);
-    expect(feedbackButton?.disabled).toBe(true);
     expect(pdfButton?.disabled).toBe(true);
   });
 
-  it('aktiviert Bonus-Codes und Letzte Auswertung nur bei vorhandenen Inhalten', async () => {
+  it('aktiviert Bonus-Codes und Nachbesprechungsplan nur bei vorhandenen Inhalten', async () => {
     quizzesSignal.set([
       {
         id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
@@ -562,7 +627,6 @@ describe('QuizListComponent', () => {
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
           {
             hasBonusTokens: true,
-            hasLastSessionFeedback: true,
             hasLastSessionAnalysis: true,
           },
         ],
@@ -575,13 +639,11 @@ describe('QuizListComponent', () => {
       fixture.nativeElement.querySelectorAll('.quiz-list-item__actions button'),
     ) as HTMLButtonElement[];
     const bonusButton = buttons.find((button) => button.textContent?.includes('Bonus-Codes'));
-    const feedbackButton = buttons.find((button) =>
-      button.textContent?.includes('Nachbesprechung'),
+    const pdfButton = buttons.find((button) =>
+      button.textContent?.includes('Nachbesprechungsplan'),
     );
-    const pdfButton = buttons.find((button) => button.textContent?.includes('Ergebnisbericht'));
 
     expect(bonusButton?.disabled).toBe(false);
-    expect(feedbackButton?.disabled).toBe(false);
     expect(pdfButton?.disabled).toBe(false);
   });
 
@@ -608,7 +670,6 @@ describe('QuizListComponent', () => {
       {
         quizId: '11111111-1111-4111-8111-111111111111',
         hasBonusTokens: true,
-        hasLastSessionFeedback: true,
         hasLastSessionAnalysis: true,
       },
     ]);
@@ -641,7 +702,6 @@ describe('QuizListComponent', () => {
         .get('e31fef3f-f7b1-4705-a739-28c8ec4486bf'),
     ).toEqual({
       hasBonusTokens: true,
-      hasLastSessionFeedback: true,
       hasLastSessionAnalysis: true,
     });
   });
@@ -1083,7 +1143,6 @@ Viel Erfolg beim Import.`);
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
           {
             hasBonusTokens: true,
-            hasLastSessionFeedback: false,
             hasLastSessionAnalysis: false,
           },
         ],
@@ -1130,7 +1189,6 @@ Viel Erfolg beim Import.`);
           'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
           {
             hasBonusTokens: true,
-            hasLastSessionFeedback: false,
             hasLastSessionAnalysis: false,
           },
         ],
@@ -1159,64 +1217,6 @@ Viel Erfolg beim Import.`);
       'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
       'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
     );
-    expect(dialogOpenSpy).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        data: expect.objectContaining({
-          serverQuizId: '11111111-1111-4111-8111-111111111111',
-          accessProof: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          quizName: 'Datenbanken',
-        }),
-      }),
-    );
-  });
-
-  it('oeffnet die Letzte Auswertung nur bei vorhandenem Durchlauf', async () => {
-    const fixture = TestBed.createComponent(QuizListComponent);
-    const component = fixture.componentInstance;
-    const dialogOpenSpy = vi.spyOn(component['dialog'], 'open').mockReturnValue({} as never);
-
-    await component.openLastSessionFeedbackDialog({
-      id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-      name: 'Datenbanken',
-      description: null,
-      createdAt: '2026-03-08T10:00:00.000Z',
-      updatedAt: '2026-03-08T11:30:00.000Z',
-      questionCount: 2,
-      teamMode: false,
-      hasBonus: true,
-      lastServerQuizId: '11111111-1111-4111-8111-111111111111',
-      lastServerQuizAccessProof: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-    });
-
-    expect(dialogOpenSpy).not.toHaveBeenCalled();
-
-    component.quizHistoryAvailability.set(
-      new Map([
-        [
-          'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-          {
-            hasBonusTokens: false,
-            hasLastSessionFeedback: true,
-            hasLastSessionAnalysis: true,
-          },
-        ],
-      ]),
-    );
-
-    await component.openLastSessionFeedbackDialog({
-      id: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-      name: 'Datenbanken',
-      description: null,
-      createdAt: '2026-03-08T10:00:00.000Z',
-      updatedAt: '2026-03-08T11:30:00.000Z',
-      questionCount: 2,
-      teamMode: false,
-      hasBonus: true,
-      lastServerQuizId: '11111111-1111-4111-8111-111111111111',
-      lastServerQuizAccessProof: 'e31fef3f-f7b1-4705-a739-28c8ec4486bf',
-    });
-
     expect(dialogOpenSpy).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({

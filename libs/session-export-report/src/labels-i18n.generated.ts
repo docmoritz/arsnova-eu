@@ -10,7 +10,9 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocTeams: 'Classement par équipe',
   tocBonus: 'Codes bonus',
   coverSummaryQuestions: 'Questions',
-  coverSummaryRisk: 'Questions avec risque d’idée fausse',
+  coverSummaryRisk: 'Questions avec indice de conception erronée',
+  coverSummaryRiskNote:
+    'Une question est comptée dès qu’au moins 2 personnes et au moins 10 % ont répondu incorrectement avec une autoévaluation élevée.',
   coverSummaryFeedback: 'Retour des participants',
   coverSummaryParticipants: 'Participantes et participants',
   coverPrivacyIncluded:
@@ -23,7 +25,7 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceReadingGuideMastery:
     'Connaissances consolidées = bonne réponse + autoévaluation élevée (4–5)',
   confidenceReadingGuideRisk:
-    'Risque d’idée fausse = mauvaise réponse + autoévaluation élevée (4–5)',
+    'Indice de conception erronée = mauvaise réponse + autoévaluation élevée (4–5)',
   confidenceReadingGuideFragile:
     'Connaissances fragiles = bonne réponse + autoévaluation faible (1–2)',
   confidenceReadingGuideGap:
@@ -33,12 +35,12 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   heatmapCellCountNote: 'Le nombre dans chaque cellule indique le nombre de réponses.',
   heatmapLegendToneTitle: 'Catégories diagnostiques',
   heatmapLegendToneSuccess: '✓ Consolidé : correct avec autoévaluation élevée',
-  heatmapLegendToneRisk: '⚠ Risque d’idée fausse : incorrect avec autoévaluation élevée',
+  heatmapLegendToneRisk: '⚠ Indice de conception erronée : incorrect avec autoévaluation élevée',
   heatmapLegendToneCaution: '◯ Lacune : incorrect avec autoévaluation faible',
   heatmapLegendToneNeutral: '? Fragile : correct avec autoévaluation faible',
   heatmapLegendToneMid: 'M Moyen : autoévaluation 3, correct ou incorrect',
   heatmapLegendFrequencyHint: 'Les symboles identifient la catégorie diagnostique.',
-  heatmapCompactLegend: '✓ Consolidé · ⚠ Idée fausse · ? Fragile · ◯ Lacune · M Moyen',
+  heatmapCompactLegend: '✓ Consolidé · ⚠ Indice · ? Fragile · ◯ Lacune · M Moyen',
   confidenceScaleEndpoints: '1 = très incertain · 5 = très certain',
   piComparisonTitle: 'Peer Instruction — ronde 1 vs. ronde 2',
   freetextMoreTemplate: '+ {0} autres réponses',
@@ -51,9 +53,9 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   blockquoteTeachingIdea: 'Idée pédagogique',
   blockquoteHint: 'Note pour les enseignants',
   exportFooterMeta: 'Export {0} · Séance {1}',
-  documentTitle: 'Rapport sur les résultats de la séance',
-  coverTitle: 'Rapport de résultats',
-  coverSubtitle: 'Évaluation de session agrégée pour les enseignants',
+  documentTitle: 'Analyse pédagogique du quiz',
+  coverTitle: 'Analyse pédagogique du quiz',
+  coverSubtitle: 'Niveau de maîtrise, possibles conceptions erronées et plan de débriefing',
   quizName: 'Quiz',
   sessionCode: 'Code de séance',
   finishedAt: 'Terminé le',
@@ -75,7 +77,7 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   coverActionWrongTemplate: '{0} sur {1} incorrectes et sûres',
   coverActionStartTemplate: 'Point d’entrée recommandé : commencez par la question {0}.',
   confidenceMastery: 'Connaissances consolidées',
-  confidenceRisk: 'Risque d’idée fausse',
+  confidenceRisk: 'Réponses avec indice de conception erronée',
   confidenceFragile: 'Connaissances fragiles',
   confidenceGap: 'Lacune de connaissances',
   confidenceMiddle: 'Certitude moyenne',
@@ -91,7 +93,8 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceDisabledTemplate: 'Désactivée dans ce quiz pour : {0}.',
   confidenceNotCollectedForQuestion:
     'Aucune autoévaluation n’a été recueillie pour cette question.',
-  confidenceNotSupportedForQuestion: 'Ce type de question ne prend pas en charge l’autoévaluation.',
+  confidenceNotSupportedForQuestion:
+    'L’autoévaluation n’est pas proposée pour le type de question « {0} ».',
   confidenceDisabledForQuestion:
     'L’autoévaluation était désactivée pour cette question dans ce quiz.',
   confidencePrioritiesTitle: 'Priorité au débriefing',
@@ -110,6 +113,11 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Moyen',
   confidenceTierHigh: 'Haut',
   questionsTitle: 'Questions en détail',
+  questionsLead:
+    'Les énoncés correspondent à ce que les participants ont vu en direct (images, formules et contexte inclus).',
+  backToOverview: '↑ Retour à l’aperçu',
+  lowSuccessRateHintTemplate:
+    'Seulement {0} ont répondu correctement dans cette séance. Vérifiez la formulation, les prérequis et la limite de temps.',
   questionNumber: 'Demander',
   questionOfTotal: 'Question {0} de {1}',
   questionContinuationTemplate: 'Question {0} – Suite : {1}',
@@ -129,7 +137,7 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceSection: 'Autoévaluation',
   confidenceN: 'Réponse n',
   confidenceMasteryCol: 'Solidifié',
-  confidenceRiskCol: 'Risque d’idée fausse',
+  confidenceRiskCol: 'Indice de conception erronée',
   confidenceFragileCol: 'Fragile',
   confidenceGapCol: 'Lacune de connaissances reconnue',
   confidenceUndecidedCol: 'Certitude moyenne',
@@ -174,7 +182,7 @@ export const FR_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   finalSummaryTitle: 'Bref bilan de cette séance',
   finalSummaryPriorityTemplate: '{0} questions devraient être reprises',
   finalSummaryMasteryTemplate: '{0} des réponses avec connaissances consolidées',
-  finalSummaryRiskTemplate: '{0} des réponses avec risque d’idée fausse',
+  finalSummaryRiskTemplate: '{0} des réponses avec indice de conception erronée',
   finalSummaryTopTeamTemplate: '{0} a obtenu le meilleur score d’équipe',
   numericToleranceBand: 'Plage acceptée',
   bonusCodesTitle: 'Codes bonus',
@@ -217,7 +225,9 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocTeams: 'Clasificación por equipos',
   tocBonus: 'Códigos bonus',
   coverSummaryQuestions: 'Preguntas',
-  coverSummaryRisk: 'Preguntas con riesgo de concepto erróneo',
+  coverSummaryRisk: 'Preguntas con indicación de concepto erróneo',
+  coverSummaryRiskNote:
+    'Una pregunta cuenta cuando al menos 2 personas y al menos el 10 % respondieron incorrectamente con alta confianza.',
   coverSummaryFeedback: 'Valoración de las personas participantes',
   coverSummaryParticipants: 'Participantes',
   coverPrivacyIncluded:
@@ -230,7 +240,7 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceReadingGuideMastery:
     'Conocimiento consolidado = respuesta correcta + autoevaluación alta (4–5)',
   confidenceReadingGuideRisk:
-    'Riesgo de concepto erróneo = respuesta incorrecta + autoevaluación alta (4–5)',
+    'Indicación de concepto erróneo = respuesta incorrecta + autoevaluación alta (4–5)',
   confidenceReadingGuideFragile:
     'Conocimiento frágil = respuesta correcta + autoevaluación baja (1–2)',
   confidenceReadingGuideGap:
@@ -240,12 +250,12 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   heatmapCellCountNote: 'El número en cada celda indica la cantidad de respuestas.',
   heatmapLegendToneTitle: 'Categorías diagnósticas',
   heatmapLegendToneSuccess: '✓ Consolidado: correcto con autoevaluación alta',
-  heatmapLegendToneRisk: '⚠ Riesgo de concepto erróneo: incorrecto con autoevaluación alta',
+  heatmapLegendToneRisk: '⚠ Indicación de concepto erróneo: incorrecto con autoevaluación alta',
   heatmapLegendToneCaution: '◯ Laguna: incorrecto con autoevaluación baja',
   heatmapLegendToneNeutral: '? Frágil: correcto con autoevaluación baja',
   heatmapLegendToneMid: 'M Media: autoevaluación 3, correcta o incorrecta',
   heatmapLegendFrequencyHint: 'Los símbolos identifican la categoría diagnóstica.',
-  heatmapCompactLegend: '✓ Consolidado · ⚠ Concepto erróneo · ? Frágil · ◯ Laguna · M Media',
+  heatmapCompactLegend: '✓ Consolidado · ⚠ Indicación · ? Frágil · ◯ Laguna · M Media',
   confidenceScaleEndpoints: '1 = muy inseguro · 5 = muy seguro',
   piComparisonTitle: 'Peer Instruction — ronda 1 vs. ronda 2',
   freetextMoreTemplate: '+ {0} respuestas más',
@@ -258,9 +268,9 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   blockquoteTeachingIdea: 'Idea didáctica',
   blockquoteHint: 'Nota para docentes',
   exportFooterMeta: 'Exportación {0} · Sesión {1}',
-  documentTitle: 'Informe de resultados de la sesión',
-  coverTitle: 'Informe de resultados',
-  coverSubtitle: 'Evaluación de sesiones agregadas para profesores.',
+  documentTitle: 'Análisis pedagógico del cuestionario',
+  coverTitle: 'Análisis pedagógico del cuestionario',
+  coverSubtitle: 'Nivel de aprendizaje, posibles ideas erróneas y plan para la puesta en común',
   quizName: 'Cuestionario',
   sessionCode: 'código de sesión',
   finishedAt: 'Terminó el',
@@ -282,7 +292,7 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   coverActionWrongTemplate: '{0} de {1} incorrectas y seguras',
   coverActionStartTemplate: 'Entrada recomendada: empieza por la pregunta {0}.',
   confidenceMastery: 'Conocimiento sólido',
-  confidenceRisk: 'Riesgo de idea errónea',
+  confidenceRisk: 'Respuestas con indicación de concepto erróneo',
   confidenceFragile: 'Conocimiento frágil',
   confidenceGap: 'Brecha de conocimiento',
   confidenceMiddle: 'Seguridad media',
@@ -297,7 +307,8 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceNotSupportedTemplate: 'No compatible con: {0}.',
   confidenceDisabledTemplate: 'Desactivada en este quiz para: {0}.',
   confidenceNotCollectedForQuestion: 'No se recogió autoevaluación para esta pregunta.',
-  confidenceNotSupportedForQuestion: 'Este tipo de pregunta no admite autoevaluación.',
+  confidenceNotSupportedForQuestion:
+    'La autoevaluación no se ofrece para el tipo de pregunta «{0}».',
   confidenceDisabledForQuestion:
     'La autoevaluación estaba desactivada para esta pregunta en este quiz.',
   confidencePrioritiesTitle: 'Prioridad para el informe',
@@ -316,6 +327,11 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Medio',
   confidenceTierHigh: 'Alto',
   questionsTitle: 'Preguntas en detalle',
+  questionsLead:
+    'Los textos de las preguntas coinciden con lo que vieron los participantes en directo (incluidas imágenes, fórmulas y contexto adicional).',
+  backToOverview: '↑ Volver al resumen',
+  lowSuccessRateHintTemplate:
+    'Solo {0} respondieron correctamente en esta sesión. Revisa redacción, conocimientos previos y límite de tiempo.',
   questionNumber: 'Preguntar',
   questionOfTotal: 'Pregunta {0} de {1}',
   questionContinuationTemplate: 'Pregunta {0} – Continuación: {1}',
@@ -335,7 +351,7 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceSection: 'Autoevaluación',
   confidenceN: 'respuesta n',
   confidenceMasteryCol: 'Solidificado',
-  confidenceRiskCol: 'Riesgo de idea errónea',
+  confidenceRiskCol: 'Indicación de concepto erróneo',
   confidenceFragileCol: 'Frágil',
   confidenceGapCol: 'Brecha de conocimiento reconocida',
   confidenceUndecidedCol: 'Seguridad media',
@@ -378,7 +394,7 @@ export const ES_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   finalSummaryTitle: 'Resumen breve de esta sesión',
   finalSummaryPriorityTemplate: '{0} preguntas deberían repasarse',
   finalSummaryMasteryTemplate: '{0} de las respuestas con conocimiento consolidado',
-  finalSummaryRiskTemplate: '{0} de las respuestas con riesgo de concepto erróneo',
+  finalSummaryRiskTemplate: '{0} de las respuestas con indicación de concepto erróneo',
   finalSummaryTopTeamTemplate: '{0} alcanzó la puntuación de equipo más alta',
   numericToleranceBand: 'Rango aceptado',
   bonusCodesTitle: 'Códigos de bonificación',
@@ -421,7 +437,9 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   tocTeams: 'Classifica squadre',
   tocBonus: 'Codici bonus',
   coverSummaryQuestions: 'Domande',
-  coverSummaryRisk: 'Domande con rischio di errore concettuale',
+  coverSummaryRisk: 'Domande con indizio di idea errata',
+  coverSummaryRiskNote:
+    'Una domanda conta se almeno 2 persone e almeno il 10 % hanno risposto in modo errato con alta sicurezza.',
   coverSummaryFeedback: 'Feedback dei partecipanti',
   coverSummaryParticipants: 'Partecipanti',
   coverPrivacyIncluded:
@@ -434,7 +452,7 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceReadingGuideMastery:
     'Conoscenza consolidata = risposta corretta + autovalutazione alta (4–5)',
   confidenceReadingGuideRisk:
-    'Rischio di idea errata = risposta errata + autovalutazione alta (4–5)',
+    'Indizio di idea errata = risposta errata + autovalutazione alta (4–5)',
   confidenceReadingGuideFragile:
     'Conoscenza fragile = risposta corretta + autovalutazione bassa (1–2)',
   confidenceReadingGuideGap: 'Lacuna di conoscenza = risposta errata + autovalutazione bassa (1–2)',
@@ -443,12 +461,12 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   heatmapCellCountNote: 'Il numero in ogni cella indica il numero di risposte.',
   heatmapLegendToneTitle: 'Categorie diagnostiche',
   heatmapLegendToneSuccess: '✓ Consolidata: corretta con autovalutazione alta',
-  heatmapLegendToneRisk: '⚠ Rischio di errore: errata con autovalutazione alta',
+  heatmapLegendToneRisk: '⚠ Indizio di idea errata: errata con autovalutazione alta',
   heatmapLegendToneCaution: '◯ Lacuna: errata con autovalutazione bassa',
   heatmapLegendToneNeutral: '? Fragile: corretta con autovalutazione bassa',
   heatmapLegendToneMid: 'M Media: autovalutazione 3, corretta o errata',
   heatmapLegendFrequencyHint: 'I simboli identificano la categoria diagnostica.',
-  heatmapCompactLegend: '✓ Consolidata · ⚠ Errore · ? Fragile · ◯ Lacuna · M Media',
+  heatmapCompactLegend: '✓ Consolidata · ⚠ Indizio · ? Fragile · ◯ Lacuna · M Media',
   confidenceScaleEndpoints: '1 = molto insicuro · 5 = molto sicuro',
   piComparisonTitle: 'Peer Instruction — round 1 vs. round 2',
   freetextMoreTemplate: '+ altre {0} risposte',
@@ -461,9 +479,10 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   blockquoteTeachingIdea: 'Idea didattica',
   blockquoteHint: 'Nota per i docenti',
   exportFooterMeta: 'Export {0} · Sessione {1}',
-  documentTitle: 'Rapporto sui risultati della sessione',
-  coverTitle: 'Rapporto sui risultati',
-  coverSubtitle: 'Valutazione aggregata della sessione per gli insegnanti',
+  documentTitle: 'Analisi didattica del quiz',
+  coverTitle: 'Analisi didattica del quiz',
+  coverSubtitle:
+    'Livello di apprendimento, possibili idee errate e piano per la discussione finale',
   quizName: 'Quiz',
   sessionCode: 'Codice sessione',
   finishedAt: 'Finito il',
@@ -485,7 +504,7 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   coverActionWrongTemplate: '{0} su {1} errate e sicure',
   coverActionStartTemplate: 'Punto di partenza consigliato: inizia dalla domanda {0}.',
   confidenceMastery: 'Conoscenza solida',
-  confidenceRisk: 'Rischio di malintesi',
+  confidenceRisk: 'Risposte con indizio di idea errata',
   confidenceFragile: 'Conoscenza fragile',
   confidenceGap: 'Lacuna di conoscenza',
   confidenceMiddle: 'Sicurezza media',
@@ -501,7 +520,8 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceDisabledTemplate: 'Disattivata in questo quiz per: {0}.',
   confidenceNotCollectedForQuestion:
     'Per questa domanda non è stata raccolta alcuna autovalutazione.',
-  confidenceNotSupportedForQuestion: 'Questo tipo di domanda non supporta l’autovalutazione.',
+  confidenceNotSupportedForQuestion:
+    'L’autovalutazione non è offerta per il tipo di domanda «{0}».',
   confidenceDisabledForQuestion:
     'L’autovalutazione era disattivata per questa domanda in questo quiz.',
   confidencePrioritiesTitle: 'Priorità al debriefing',
@@ -520,6 +540,11 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceTierMid: 'Medio',
   confidenceTierHigh: 'Alto',
   questionsTitle: 'Domande in dettaglio',
+  questionsLead:
+    'I testi delle domande corrispondono a ciò che i partecipanti hanno visto live (incluse immagini, formule e contesto aggiuntivo).',
+  backToOverview: '↑ Torna alla panoramica',
+  lowSuccessRateHintTemplate:
+    'Solo {0} hanno risposto correttamente in questa sessione. Controlla formulazione, conoscenze pregresse e limite di tempo.',
   questionNumber: 'Chiedere',
   questionOfTotal: 'Domanda {0} da {1}',
   questionContinuationTemplate: 'Domanda {0} – Continuazione: {1}',
@@ -539,7 +564,7 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   confidenceSection: 'Autovalutazione',
   confidenceN: 'Risposta n',
   confidenceMasteryCol: 'Solidificato',
-  confidenceRiskCol: 'Rischio di malintesi',
+  confidenceRiskCol: 'Indizio di idea errata',
   confidenceFragileCol: 'Fragile',
   confidenceGapCol: 'Divario conoscitivo riconosciuto',
   confidenceUndecidedCol: 'Sicurezza media',
@@ -584,7 +609,7 @@ export const IT_LABEL_OVERRIDES: Partial<SessionResultsReportLabels> = {
   finalSummaryTitle: 'Sintesi di questa sessione',
   finalSummaryPriorityTemplate: '{0} domande andrebbero riprese',
   finalSummaryMasteryTemplate: '{0} delle risposte con conoscenza consolidata',
-  finalSummaryRiskTemplate: '{0} delle risposte con rischio di errore concettuale',
+  finalSummaryRiskTemplate: '{0} delle risposte con indizio di idea errata',
   finalSummaryTopTeamTemplate: '{0} ha raggiunto il punteggio di squadra più alto',
   numericToleranceBand: 'Intervallo accettato',
   bonusCodesTitle: 'Codici bonus',

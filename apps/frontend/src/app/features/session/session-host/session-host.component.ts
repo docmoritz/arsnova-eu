@@ -100,6 +100,7 @@ import type {
   SessionInfoDTO,
   SessionParticipantsPayload,
   TeamAssignment,
+  SessionResultsPdfProfile,
   SessionStatusUpdate,
   TeamDTO,
   TeamLeaderboardEntryDTO,
@@ -130,10 +131,7 @@ import {
   buildSessionResultsCsvFilename,
 } from '../../../core/export-filename.util';
 import { stripMarkdownToPlainText } from '../../../core/markdown-plain-text.util';
-import { printSessionResultsReport } from '../../../core/session-results-report-print.util';
-import { getSessionResultsReportLabels } from '../../../core/session-results-report-labels';
-import { buildSessionResultsReportHtml } from '../../../core/session-results-report.util';
-import { inlineExportImagesInHtml } from '@arsnova/session-export-report';
+import { SessionResultsExportService } from '../../../core/session-results-export.service';
 import {
   replaceEmojiShortcodes,
   edgeEmojiMarkerPosition,
@@ -483,6 +481,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
   private readonly hostDisplayMode = inject(HostDisplayModeService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly sessionResultsExport = inject(SessionResultsExportService);
   private readonly quizStore = inject(QuizStoreService);
   private readonly wordCloudTermExtractor = inject(WordCloudTermExtractorService);
   private auxPollTimer: ReturnType<typeof setInterval> | null = null;
@@ -5940,7 +5939,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     try {
       const data = await trpc.session.getExportData.query({ code: this.code.toUpperCase() });
       const rows: string[] = [
-        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden;Häufigste selbstsicher falsche Antwort;Details`,
+        $localize`:@@sessionHost.exportQuestionsHeader:Frage Nr.;Fragentext;Typ;Teilnehmende;Aggregationsrunde;Ø Punkte;Selbsteinschätzung n;Gefestigt;Fehlkonzept-Hinweis;Fragil;Erkannte Wissenslücke;Unentschieden;Häufigste selbstsicher falsche Antwort;Details`,
       ];
 
       for (const q of data.questions) {
@@ -5997,7 +5996,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
           $localize`:@@sessionHost.exportConfidenceSummaryTitle:Lernstand und Selbsteinschätzung`,
         );
         rows.push(
-          $localize`:@@sessionHost.exportConfidenceSummaryHeader:Gültige Antworten;Ausgewertete Fragen;Nicht aggregiert (<5 Antworten mit Selbsteinschätzung);Gefestigt;Fehlkonzept-Risiko;Fragil;Erkannte Wissenslücke;Unentschieden`,
+          $localize`:@@sessionHost.exportConfidenceSummaryHeader:Gültige Antworten;Ausgewertete Fragen;Nicht aggregiert (<5 Antworten mit Selbsteinschätzung);Gefestigt;Fehlkonzept-Hinweis;Fragil;Erkannte Wissenslücke;Unentschieden`,
         );
         const middle = summary.crossTab.correctMid + summary.crossTab.incorrectMid;
         rows.push(
@@ -6057,53 +6056,47 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     }
   }
 
-  async exportSessionResultsPdf(): Promise<void> {
+  exportPdfButtonAria(): string {
+    const count = this.finishedConfidenceSummary()?.priorityQuestionCount ?? 0;
+    if (count === 1) {
+      return $localize`:@@sessionHost.exportPdfButtonAriaWithPriorityOne:Nachbesprechungsplan als PDF ansehen – 1 Frage zur Nachbesprechung`;
+    }
+    if (count > 1) {
+      return $localize`:@@sessionHost.exportPdfButtonAriaWithPriorityMany:Nachbesprechungsplan als PDF ansehen – ${count}:count: Fragen zur Nachbesprechung`;
+    }
+    return $localize`:@@sessionHost.exportPdfButtonAria:Nachbesprechungsplan als PDF ansehen`;
+  }
+
+  exportPdfPriorityHint(count: number): string {
+    if (count === 1) {
+      return $localize`:@@sessionHost.exportPdfPriorityHintSingular:1 Frage braucht Nachbesprechung`;
+    }
+    return $localize`:@@sessionHost.exportPdfPriorityHintPlural:${count}:count: Fragen brauchen Nachbesprechung`;
+  }
+
+  async exportSessionResultsPdf(profile: SessionResultsPdfProfile = 'visual'): Promise<void> {
     if (!this.code || this.exportExporting()) return;
     this.exportStatus.set(null);
     this.exportExporting.set(true);
     try {
-      const exportData = await trpc.session.getExportData.query({
-        code: this.code.toUpperCase(),
+      const result = await this.sessionResultsExport.exportPdfFromSessionCode(this.code, {
+        profile,
+        onLargeReportHint: (questionCount) => {
+          this.exportStatus.set(
+            $localize`:@@sessionHost.exportPdfGeneratingLarge:PDF wird erstellt (${questionCount} Fragen)…`,
+          );
+        },
       });
-      if (exportData.questions.length >= 15) {
-        this.exportStatus.set(
-          $localize`:@@sessionHost.exportPdfGeneratingLarge:PDF wird erstellt (${exportData.questions.length} Fragen)…`,
-        );
-      }
-      try {
-        const pdf = await trpc.session.getSessionExportPdf.query({
-          code: this.code.toUpperCase(),
-          localeId: this.localeId,
-        });
-        this.downloadBase64Export(pdf.contentBase64, pdf.fileName, pdf.mimeType);
-        this.exportStatus.set(
-          $localize`:@@sessionHost.exportPdfDownloadDone:Ergebnis-PDF heruntergeladen.`,
-        );
-        this.dismissHostSteeringCallout();
-        return;
-      } catch {
-        // Fallback: druckoptimiertes HTML im Browser
-      }
-
-      const labels = getSessionResultsReportLabels();
-      const assetBaseUrl = window.location.origin;
-      let html = buildSessionResultsReportHtml(exportData, labels, {
-        localeId: this.localeId,
-        assetBaseUrl,
-        pageNumbersViaCss: true,
-      });
-      html = await inlineExportImagesInHtml(html, { fetchExternal: true, maxImageBytes: 400_000 });
-      const documentTitle = `${labels.documentTitle} — ${exportData.quizName}`;
-      const opened = printSessionResultsReport(html, documentTitle);
-      if (!opened) {
-        throw new Error('print window blocked');
-      }
       this.exportStatus.set(
-        $localize`:@@sessionHost.exportPdfPrintDone:Ergebnis-PDF zum Speichern geöffnet.`,
+        result === 'pdf-download'
+          ? $localize`:@@sessionHost.exportPdfDownloadDone:Ergebnis-PDF heruntergeladen.`
+          : $localize`:@@sessionHost.exportPdfPrintDone:Ergebnis-PDF zum Speichern geöffnet.`,
       );
       this.dismissHostSteeringCallout();
     } catch {
-      this.openHostSteeringCalloutForExportFailure(() => void this.exportSessionResultsPdf());
+      this.openHostSteeringCalloutForExportFailure(
+        () => void this.exportSessionResultsPdf(profile),
+      );
     } finally {
       this.exportExporting.set(false);
     }
@@ -6171,21 +6164,6 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     a.href = url;
     a.download = fileName;
     a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  private downloadBase64Export(contentBase64: string, fileName: string, mimeType: string): void {
-    const binary = atob(contentBase64);
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) {
-      bytes[index] = binary.charCodeAt(index);
-    }
-    const blob = new Blob([bytes], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const anchor = this.document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
     URL.revokeObjectURL(url);
   }
 

@@ -138,7 +138,8 @@ describe('buildSessionResultsReportHtml', () => {
       },
     );
 
-    expect(html).toContain('Ergebnisbericht');
+    expect(html).toContain('Didaktische Quiz-Auswertung');
+    expect(html).toContain('Lernstand, mögliche Fehlkonzepte und Nachbesprechungsplan');
     expect(html).toContain('Demo Quiz');
     expect(html).toContain('ABC123');
     expect(html).toContain('So liest du die Auswertung');
@@ -169,7 +170,7 @@ describe('buildSessionResultsReportHtml', () => {
     expect(html).toContain('counter(page)');
   });
 
-  it('nimmt nur Fragen mit Fehlkonzept-Risiko in „Fehlkonzept zuerst klären“ auf', () => {
+  it('nimmt nur Fragen mit Fehlkonzept-Hinweis in „Mögliches Fehlkonzept zuerst klären“ auf', () => {
     const html = buildSessionResultsReportHtml(
       {
         ...sampleExport,
@@ -181,7 +182,7 @@ describe('buildSessionResultsReportHtml', () => {
             ...sampleExport.confidenceSummary!.questions,
             {
               questionOrder: 3,
-              questionTextShort: 'Ohne Fehlkonzept-Risiko',
+              questionTextShort: 'Ohne Fehlkonzept-Hinweis',
               questionType: 'SINGLE_CHOICE',
               responseCount: 20,
               result: {
@@ -214,7 +215,10 @@ describe('buildSessionResultsReportHtml', () => {
     const planStart = html.indexOf('id="report-action-plan"');
     expect(planStart).toBeGreaterThanOrEqual(0);
     const planSection = html.slice(planStart, html.indexOf('</section>', planStart) + 10);
-    const debriefLine = planSection.match(/Fehlkonzept zuerst klären:[\s\S]*?<\/li>/)?.[0] ?? '';
+    const debriefLine =
+      planSection.match(
+        /Mögliches Fehlkonzept zuerst klären:[\s\S]*?(?=<\/div>\s*<div class="report-action-plan-row"|<\/div>\s*<\/div>)/,
+      )?.[0] ?? '';
     expect(debriefLine).toContain('Frage 8');
     expect(debriefLine).toContain('Frage 1');
     expect(debriefLine).not.toContain('Frage 4');
@@ -316,7 +320,7 @@ describe('buildSessionResultsReportHtml', () => {
     expect(html).toContain('report-bar-leading-emoji');
     expect(html).toContain('report-bar-label-text');
     expect(html).toContain('😄');
-    expect(html).toContain('Dieser Fragetyp unterstützt keine Selbsteinschätzung.');
+    expect(html).toContain('Selbsteinschätzung wird für den Fragetyp »Umfrage« nicht angeboten.');
   });
 
   it('unterscheidet nicht unterstützte und deaktivierte Selbsteinschätzung', () => {
@@ -353,10 +357,8 @@ describe('buildSessionResultsReportHtml', () => {
 
     expect(html).toContain('Nicht unterstützt bei: Frage 1 (Umfrage).');
     expect(html).toContain('In diesem Quiz deaktiviert bei: Frage 2 (Single Choice).');
-    expect(html).toContain('Dieser Fragetyp unterstützt keine Selbsteinschätzung.');
-    expect(html).toContain(
-      'Für diese Frage war die Selbsteinschätzung in diesem Quiz deaktiviert.',
-    );
+    expect(html).toContain('Selbsteinschätzung wird für den Fragetyp »Umfrage« nicht angeboten.');
+    expect(html).toContain('Selbsteinschätzung von dir in diesem Quiz deaktiviert.');
   });
 
   it('formatiert Scores und Zeitstempel einheitlich', () => {

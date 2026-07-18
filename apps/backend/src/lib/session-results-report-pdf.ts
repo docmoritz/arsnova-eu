@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { chromium, type Browser, type LaunchOptions } from 'playwright';
-import type { SessionExportDTO } from '@arsnova/shared-types';
+import type { SessionExportDTO, SessionResultsPdfProfile } from '@arsnova/shared-types';
 import {
   buildSessionResultsReportHtml,
   buildSessionResultsPdfFilename,
@@ -16,6 +16,8 @@ export { buildSessionResultsPdfFilename };
 
 export interface BuildSessionResultsPdfOptions {
   localeId?: string;
+  /** `visual` (Standard) oder `pdfUa`. */
+  profile?: SessionResultsPdfProfile;
 }
 
 function resolveExportAssetBaseUrl(): string {
@@ -55,11 +57,13 @@ export async function buildSessionResultsPdf(
 ): Promise<Buffer> {
   const assetBaseUrl = resolveExportAssetBaseUrl();
   const localeId = options.localeId ?? 'de';
+  const profile: SessionResultsPdfProfile = options.profile ?? 'visual';
   const labels = getSessionResultsReportLabelsForLocale(localeId);
   let html = buildSessionResultsReportHtml(data, labels, {
     localeId,
     assetBaseUrl,
     pageNumbersViaCss: false,
+    pdfUaSafeVisuals: profile === 'pdfUa',
   });
   html = await inlineExportImagesInHtml(html, {
     readLocalAsset: readSessionExportLocalAsset,
@@ -75,15 +79,21 @@ export async function buildSessionResultsPdf(
     await page.setContent(html, { waitUntil: 'load', timeout: 60_000 });
     const rawPdf = Buffer.from(
       await page.pdf(
-        buildSessionResultsPlaywrightPdfOptions(labels, {
-          quizName: data.quizName,
-          sessionCode: data.sessionCode,
-        }),
+        buildSessionResultsPlaywrightPdfOptions(
+          labels,
+          {
+            quizName: data.quizName,
+            sessionCode: data.sessionCode,
+          },
+          profile,
+        ),
       ),
     );
+    const documentTitle = `${labels.documentTitle} — ${data.quizName}`;
     const stamped = await stampQuestionContinuationsOnPdf(
       new Uint8Array(rawPdf),
       buildQuestionContinuationStamps(data, labels),
+      { documentTitle, localeId, claimPdfUa: profile === 'pdfUa' },
     );
     return Buffer.from(stamped);
   } finally {

@@ -554,17 +554,6 @@
                 </button>
               </span>
             }
-            <span [matTooltip]="lastSessionDebriefTooltip(quiz)">
-              <button
-                mat-button
-                type="button"
-                [disabled]="!hasAvailableLastSessionAnalysis(quiz)"
-                (click)="openLastSessionAnalysisDialog(quiz)"
-              >
-                <mat-icon aria-hidden="true">forum</mat-icon>
-                <span i18n="@@quizList.lastSessionDebrief">Nachbesprechung</span>
-              </button>
-            </span>
             <span [matTooltip]="lastSessionReportPdfTooltip(quiz)">
               <button
                 mat-button
@@ -572,12 +561,77 @@
                 [disabled]="
                   !hasAvailableLastSessionAnalysis(quiz) || isSessionPdfExportPending(quiz.id)
                 "
-                (click)="exportLastSessionPdf(quiz)"
+                [matMenuTriggerFor]="lastSessionPdfMenu"
               >
-                <mat-icon aria-hidden="true">download</mat-icon>
-                <span i18n="@@quizList.exportLastSessionPdf">Ergebnisbericht (PDF)</span>
+                <mat-icon aria-hidden="true">psychology</mat-icon>
+                <span i18n="@@quizList.exportLastSessionPdf">Nachbesprechungsplan ansehen</span>
+                <mat-icon aria-hidden="true" class="quiz-list-item__menu-caret"
+                  >arrow_drop_down</mat-icon
+                >
               </button>
             </span>
+            <mat-menu #lastSessionPdfMenu="matMenu">
+              <button
+                mat-menu-item
+                type="button"
+                [disabled]="
+                  !hasAvailableLastSessionAnalysis(quiz) || isSessionPdfExportPending(quiz.id)
+                "
+                (click)="exportLastSessionPdf(quiz, 'visual')"
+              >
+                <mat-icon aria-hidden="true">bar_chart</mat-icon>
+                <span i18n="@@quizList.exportLastSessionPdfVisual">Standard (mit Diagrammen)</span>
+              </button>
+              <button
+                mat-menu-item
+                type="button"
+                [disabled]="
+                  !hasAvailableLastSessionAnalysis(quiz) || isSessionPdfExportPending(quiz.id)
+                "
+                (click)="exportLastSessionPdf(quiz, 'pdfUa')"
+              >
+                <mat-icon aria-hidden="true">accessibility</mat-icon>
+                <span i18n="@@quizList.exportLastSessionPdfUa">Barrierefrei (PDF/UA-1)</span>
+              </button>
+            </mat-menu>
+            @if (quiz.id === demoQuizId) {
+              <span [matTooltip]="demoSessionResultsPdfTooltip">
+                <button
+                  mat-button
+                  class="quiz-list-item__demo-pdf"
+                  type="button"
+                  [matMenuTriggerFor]="demoSessionPdfMenu"
+                >
+                  <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+                  <span i18n="@@quizList.demoSessionResultsPdf">Beispiel-Nachbesprechungsplan</span>
+                  <mat-icon aria-hidden="true" class="quiz-list-item__menu-caret"
+                    >arrow_drop_down</mat-icon
+                  >
+                </button>
+              </span>
+              <mat-menu #demoSessionPdfMenu="matMenu">
+                <a
+                  mat-menu-item
+                  [href]="demoSessionResultsPdfUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <mat-icon aria-hidden="true">bar_chart</mat-icon>
+                  <span i18n="@@quizList.exportLastSessionPdfVisual"
+                    >Standard (mit Diagrammen)</span
+                  >
+                </a>
+                <a
+                  mat-menu-item
+                  [href]="demoSessionResultsPdfUaUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <mat-icon aria-hidden="true">accessibility</mat-icon>
+                  <span i18n="@@quizList.exportLastSessionPdfUa">Barrierefrei (PDF/UA-1)</span>
+                </a>
+              </mat-menu>
+            }
             <a
               mat-button
               type="button"

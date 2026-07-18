@@ -23,7 +23,7 @@ Phase 2 ergänzt:
 ### Host-Abschlussansicht (`FINISHED`)
 
 - **Primär:** **Ergebnisbericht (PDF)** — Server-PDF via `getSessionExportPdf` (Playwright)
-- **Unter „Mehr“:** **Für Excel exportieren** — CSV mit tabellarischen Rohdaten (weniger Kontext als der PDF-Bericht)
+- **Unter „Mehr“:** **Rohdaten als CSV exportieren** — tabellarische Rohdaten (weniger Kontext als der PDF-Bericht)
 
 Fallback, falls das Server-PDF scheitert: Browser-Druckdialog über dasselbe HTML (`printSessionResultsReport`) — ohne eigene Vorschau-UI.
 

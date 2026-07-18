@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { planQuestionContinuationStamps } from './session-results-report-continuation.util';
+import {
+  planQuestionContinuationStamps,
+  toWinAnsiSafe,
+} from './session-results-report-continuation.util';
 
 const questions = [
   { questionNumber: 2, label: 'Frage 2 – Fortsetzung: Runde π auf zwei Dezimalstellen.' },
@@ -8,10 +11,18 @@ const questions = [
   { questionNumber: 6, label: 'Frage 6 – Fortsetzung: In welcher Sprache?' },
 ];
 
+describe('toWinAnsiSafe', () => {
+  it('bewahrt Gedankenstrich und schreibt π als ASCII pi', () => {
+    expect(toWinAnsiSafe('Frage 2 – Fortsetzung: Runde π.')).toBe(
+      'Frage 2 \x96 Fortsetzung: Runde pi.',
+    );
+  });
+});
+
 describe('planQuestionContinuationStamps', () => {
   it('plant Stempel für Fortsetzungsseiten ohne Fragenkopf', () => {
     const pages = [
-      'Quizname CODE Ergebnisbericht Demo Quiz',
+      'Quizname CODE Didaktische Quiz-Auswertung Demo Quiz',
       'Quizname CODE Fragen im Detail FRAGE 2 VON 9 Numerische Schätzfrage Runde π',
       'Quizname CODE Verteilung der Schätzwerte Akzeptierter Bereich Selbsteinschätzung',
       'Quizname CODE FRAGE 4 VON 9 Multiple Choice Antwortverteilung',

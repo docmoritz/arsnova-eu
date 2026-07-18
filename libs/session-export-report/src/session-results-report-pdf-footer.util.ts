@@ -1,10 +1,20 @@
 import type { SessionResultsReportLabels } from './labels-de';
 
-const PDF_PAGE_MARGINS = {
+export type SessionResultsPdfProfile = 'visual' | 'pdfUa';
+
+const PDF_PAGE_MARGINS_VISUAL = {
   /** Platz für Header-Template; Content-Abstand steuert vor allem CSS `@page`. */
   top: '18mm',
   right: '14mm',
   bottom: '20mm',
+  left: '14mm',
+} as const;
+
+const PDF_PAGE_MARGINS_PDF_UA = {
+  /** Gleichmäßige Ränder ohne Playwright-Header/Footer (PDF/UA). */
+  top: '14mm',
+  right: '14mm',
+  bottom: '14mm',
   left: '14mm',
 } as const;
 
@@ -25,11 +35,30 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** Entfernt Demo-Timestamps und kürzt für die laufende Kopfzeile. */
+export function displayQuizNameForPdfHeader(quizName: string, maxLength = 64): string {
+  let cleaned = quizName.trimEnd();
+  const demoMarker = ' · Didaktik-Demo ';
+  const demoIdx = cleaned.lastIndexOf(demoMarker);
+  if (demoIdx >= 0) {
+    const suffix = cleaned.slice(demoIdx + demoMarker.length).trim();
+    if (/^\d{10,}$/u.test(suffix)) {
+      cleaned = cleaned.slice(0, demoIdx).trimEnd();
+    }
+  }
+  const trailingDigits = cleaned.match(/ \d{13,}$/u);
+  if (trailingDigits) {
+    cleaned = cleaned.slice(0, cleaned.length - trailingDigits[0].length).trimEnd();
+  }
+  cleaned = cleaned.trim();
+  return (cleaned || quizName).slice(0, maxLength);
+}
+
 /** Playwright/Chromium `headerTemplate` für laufenden Seitenkopf. */
 export function buildSessionResultsPdfHeaderTemplate(
   header: SessionResultsPdfHeaderContext,
 ): string {
-  const title = escapeHtml(header.quizName.slice(0, 64));
+  const title = escapeHtml(displayQuizNameForPdfHeader(header.quizName));
   const code = escapeHtml(header.sessionCode);
   return `<div style="width:100%;font-size:8px;color:#5c6570;font-family:Segoe UI,system-ui,sans-serif;padding:3mm 14mm 3mm;border-bottom:1px solid #d8dee6;display:flex;justify-content:space-between;box-sizing:border-box;">
     <span>${title}</span>
@@ -61,20 +90,33 @@ export function buildSessionResultsPrintPageFooterCss(labels: SessionResultsRepo
     .filter(Boolean)
     .join(' ');
 
-  return `@page { margin-bottom: ${PDF_PAGE_MARGINS.bottom}; @bottom-center { content: ${content}; font: 9pt/1.2 "Segoe UI", system-ui, sans-serif; color: #5c6570; } }`;
+  return `@page { margin-bottom: ${PDF_PAGE_MARGINS_VISUAL.bottom}; @bottom-center { content: ${content}; font: 9pt/1.2 "Segoe UI", system-ui, sans-serif; color: #5c6570; } }`;
 }
 
 export function buildSessionResultsPlaywrightPdfOptions(
   labels: SessionResultsReportLabels,
   header: SessionResultsPdfHeaderContext,
+  profile: SessionResultsPdfProfile = 'visual',
 ) {
+  if (profile === 'pdfUa') {
+    // Header/Footer-Templates erzeugen untagged Content (veraPDF 7.1/3).
+    return {
+      format: 'A4' as const,
+      printBackground: true,
+      displayHeaderFooter: false,
+      margin: { ...PDF_PAGE_MARGINS_PDF_UA },
+      tagged: true,
+      outline: true,
+    };
+  }
+
   return {
     format: 'A4' as const,
     printBackground: true,
     displayHeaderFooter: true,
     headerTemplate: buildSessionResultsPdfHeaderTemplate(header),
     footerTemplate: buildSessionResultsPdfFooterTemplate(labels),
-    margin: { ...PDF_PAGE_MARGINS },
+    margin: { ...PDF_PAGE_MARGINS_VISUAL },
     /** Chromium-getaggtes PDF (Strukturbaum); kein vollständiges PDF/UA. */
     tagged: true,
     outline: true,

@@ -61,6 +61,9 @@ export interface SessionResultsReportLabels {
   confidenceTierMid: string;
   confidenceTierHigh: string;
   questionsTitle: string;
+  questionsLead: string;
+  backToOverview: string;
+  lowSuccessRateHintTemplate: string;
   questionNumber: string;
   questionOfTotal: string;
   questionContinuationTemplate: string;
@@ -176,6 +179,7 @@ export interface SessionResultsReportLabels {
   tocBonus: string;
   coverSummaryQuestions: string;
   coverSummaryRisk: string;
+  coverSummaryRiskNote: string;
   coverSummaryFeedback: string;
   coverSummaryFeedbackAvgTemplate: string;
   coverSummaryFeedbackMetaTemplate: string;
@@ -312,9 +316,9 @@ export function questionTypeLabelForReport(
 
 export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
   return {
-    documentTitle: 'Session-Ergebnisbericht',
-    coverTitle: 'Ergebnisbericht',
-    coverSubtitle: 'Aggregierte Session-Auswertung für Lehrende',
+    documentTitle: 'Didaktische Quiz-Auswertung',
+    coverTitle: 'Didaktische Quiz-Auswertung',
+    coverSubtitle: 'Lernstand, mögliche Fehlkonzepte und Nachbesprechungsplan',
     quizName: 'Quiz',
     sessionCode: 'Session-Code',
     finishedAt: 'Beendet am',
@@ -337,7 +341,7 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     coverActionWrongTemplate: '{0} von {1} falsch und sicher',
     coverActionStartTemplate: 'Empfohlener Einstieg: Beginne mit Frage {0}.',
     confidenceMastery: 'Gefestigtes Wissen',
-    confidenceRisk: 'Fehlkonzept-Risiko',
+    confidenceRisk: 'Antworten mit Fehlkonzept-Hinweis',
     confidenceFragile: 'Fragiles Wissen',
     confidenceGap: 'Wissenslücke',
     confidenceMiddle: 'Mittlere Sicherheit',
@@ -346,7 +350,7 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     confidenceReadingGuideMastery:
       'Gefestigtes Wissen = richtige Antwort + hohe Selbsteinschätzung (4–5)',
     confidenceReadingGuideRisk:
-      'Fehlkonzept-Risiko = falsche Antwort + hohe Selbsteinschätzung (4–5)',
+      'Antwort mit Fehlkonzept-Hinweis = falsche Antwort + hohe Selbsteinschätzung (4–5)',
     confidenceReadingGuideFragile:
       'Fragiles Wissen = richtige Antwort + niedrige Selbsteinschätzung (1–2)',
     confidenceReadingGuideGap: 'Wissenslücke = falsche Antwort + niedrige Selbsteinschätzung (1–2)',
@@ -363,9 +367,9 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     confidenceNotSupportedTemplate: 'Nicht unterstützt bei: {0}.',
     confidenceDisabledTemplate: 'In diesem Quiz deaktiviert bei: {0}.',
     confidenceNotCollectedForQuestion: 'Für diese Frage wurde keine Selbsteinschätzung erhoben.',
-    confidenceNotSupportedForQuestion: 'Dieser Fragetyp unterstützt keine Selbsteinschätzung.',
-    confidenceDisabledForQuestion:
-      'Für diese Frage war die Selbsteinschätzung in diesem Quiz deaktiviert.',
+    confidenceNotSupportedForQuestion:
+      'Selbsteinschätzung wird für den Fragetyp »{0}« nicht angeboten.',
+    confidenceDisabledForQuestion: 'Selbsteinschätzung von dir in diesem Quiz deaktiviert.',
     confidencePrioritiesTitle: 'Priorität für die Nachbesprechung',
     confidencePriorityRuleTemplate:
       '{0} Fragen zur Nachbesprechung empfohlen: Mindestens 2 Personen und mindestens 10 % antworteten falsch und mit hoher Sicherheit. Einzelne Fälle werden nur als Hinweis markiert.',
@@ -383,6 +387,11 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     confidenceTierMid: 'Mittel',
     confidenceTierHigh: 'Hoch',
     questionsTitle: 'Fragen im Detail',
+    questionsLead:
+      'Die Fragentexte entsprechen der Anzeige für Teilnehmende (inkl. Bilder, Formeln und Zusatzkontext).',
+    backToOverview: '↑ Zur Übersicht',
+    lowSuccessRateHintTemplate:
+      'Nur {0} antworteten richtig in dieser Session. Formulierung, Vorwissen und Zeitlimit prüfen.',
     questionNumber: 'Frage',
     questionOfTotal: 'Frage {0} von {1}',
     questionContinuationTemplate: 'Frage {0} – Fortsetzung: {1}',
@@ -403,7 +412,7 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     confidenceSection: 'Selbsteinschätzung',
     confidenceN: 'Antworten',
     confidenceMasteryCol: 'Gefestigt',
-    confidenceRiskCol: 'Fehlkonzept-Risiko',
+    confidenceRiskCol: 'Fehlkonzept-Hinweis',
     confidenceFragileCol: 'Fragil',
     confidenceGapCol: 'Wissenslücke',
     confidenceUndecidedCol: 'Mittlere Sicherheit',
@@ -463,9 +472,9 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     finalSummaryTitle: 'Nächste Schritte',
     finalSummaryPriorityTemplate: '{0} Fragen sollten nachbesprochen werden',
     finalSummaryMasteryTemplate: '{0} der Antworten mit gefestigtem Wissen',
-    finalSummaryRiskTemplate: '{0} der Antworten mit Fehlkonzept-Risiko',
+    finalSummaryRiskTemplate: '{0} der Antworten mit Fehlkonzept-Hinweis',
     finalSummaryTopTeamTemplate: '{0} erreichte den höchsten Team-Score',
-    nextStepsDebriefFirstTemplate: 'Frage {0} zuerst nachbesprechen (Fehlkonzept)',
+    nextStepsDebriefFirstTemplate: 'Frage {0} zuerst nachbesprechen (Fehlkonzept-Hinweis)',
     nextStepsDebriefNextTemplate: 'Frage {0} als Nächstes klären',
     nextStepsDebriefOmitTemplate: 'Bei Frage {0} die übersehene Option „{1}“ klären.',
     nextStepsDebriefWrongTemplate: 'Bei Frage {0} die Unterscheidung bei „{1}“ erklären.',
@@ -516,7 +525,9 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     tocTeams: 'Team-Wertung',
     tocBonus: 'Bonus-Codes',
     coverSummaryQuestions: 'Fragen',
-    coverSummaryRisk: 'Fragen mit Fehlkonzept-Risiko',
+    coverSummaryRisk: 'Fragen mit Fehlkonzept-Hinweis',
+    coverSummaryRiskNote:
+      'Eine Frage zählt dazu, wenn mindestens 2 Personen und mindestens 10 % falsch und sicher geantwortet haben.',
     coverSummaryFeedback: 'Teilnehmendenfeedback',
     coverSummaryFeedbackAvgTemplate: '{0} von 5 ★',
     coverSummaryFeedbackMetaTemplate: '{0} Rückmeldungen',
@@ -532,12 +543,12 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     heatmapCellCountNote: 'Die Zahl in jeder Zelle zeigt die Anzahl der Antworten.',
     heatmapLegendToneTitle: 'Diagnosekategorien',
     heatmapLegendToneSuccess: '✓ Gefestigt: richtig und hohe Selbsteinschätzung',
-    heatmapLegendToneRisk: '⚠ Fehlkonzept-Risiko: falsch und hohe Selbsteinschätzung',
+    heatmapLegendToneRisk: '⚠ Fehlkonzept-Hinweis: falsch und hohe Selbsteinschätzung',
     heatmapLegendToneCaution: '◯ Wissenslücke: falsch und niedrige Selbsteinschätzung',
     heatmapLegendToneNeutral: '? Fragil: richtig und niedrige Selbsteinschätzung',
     heatmapLegendToneMid: 'M Mittel: Selbsteinschätzung 3, unabhängig von richtig oder falsch',
     heatmapLegendFrequencyHint: 'Symbole kennzeichnen die Diagnosekategorie.',
-    heatmapCompactLegend: '✓ Gefestigt · ⚠ Fehlkonzept · ? Fragil · ◯ Wissenslücke · M Mittel',
+    heatmapCompactLegend: '✓ Gefestigt · ⚠ Hinweis · ? Fragil · ◯ Wissenslücke · M Mittel',
     confidenceScaleEndpoints: '1 = sehr unsicher · 5 = sehr sicher',
     piComparisonTitle: 'Peer Instruction — Runde 1 vs. Runde 2',
     freetextMoreTemplate: '+ {0} weitere Antworten',
@@ -555,15 +566,15 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     blockquoteHint: 'Hinweis für Lehrende',
     exportFooterMeta: 'Export {0} · Session {1}',
     actionPlanTitle: 'Dein Nachbesprechungsplan',
-    actionPlanDebrief: 'Fehlkonzept zuerst klären',
+    actionPlanDebrief: 'Mögliches Fehlkonzept zuerst klären',
     actionPlanReinforce: 'Richtige Lösung kurz absichern',
     actionPlanReteach: 'Grundlage erneut erklären',
     actionPlanObserve: 'Kurz überprüfen',
     actionPlanDone: 'Überwiegend gefestigt',
     actionPlanStartTemplate: 'Empfohlener Einstieg: Frage {0}',
     actionPlanCriteriaNote:
-      'Automatisch priorisiert nach Fehlkonzept-Risiko, Lösungsquote und Antwortsicherheit.',
-    actionPlanCriteriaLink: 'Kriterien zur Einordnung',
+      'Automatisch priorisiert nach Fehlkonzept-Hinweis, Lösungsquote und Antwortsicherheit.',
+    actionPlanCriteriaLink: '→ Kriterien zur Einordnung',
     hardestQuestionsTitle: 'Schwierigste Fragen',
     hardestQuestionsLead:
       'Empirische Lösungsquote: Anteil vollständig richtiger Antworten. Eine niedrige Quote kann auch an Formulierung oder Zeitlimit liegen.',
@@ -583,7 +594,7 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     roundParticipationDropTemplate:
       'Runde 1: {0} Antworten · Runde 2: {1} Antworten · {2} Personen nahmen an der zweiten Runde nicht mehr teil.',
     distractorAnalysisTitle: 'Auswahlfehler',
-    strongestDistractor: 'Stärkster Distraktor',
+    strongestDistractor: 'Stärkster Distraktor (häufigste falsche Antwort)',
     distractorChosenByTemplate: 'gewählt von {0} Personen',
     distractorAsAttractiveAsCorrect:
       'Die falsche Option war genauso attraktiv wie die richtige Antwort.',
@@ -591,7 +602,7 @@ export function getSessionResultsReportLabelsDe(): SessionResultsReportLabels {
     mcOmission: 'Häufigste Auslassung',
     mcOmissionCountTemplate: 'von {0} Personen übersehen',
     unusedDistractorTemplate:
-      'Distraktor „{0}“ wurde in dieser Session nicht gewählt. Bei wiederholtem Auftreten Überarbeitung prüfen.',
+      'Die falsche Option „{0}“ wurde in dieser Session nicht gewählt. Bei wiederholtem Auftreten Überarbeitung prüfen.',
     piGainTitle: 'Wirkung der Diskussion',
     piGainCorrectTemplate: 'Vollständig richtig: {0} von {1} → {2} von {3}',
     piGainDeltaUpTemplate: '+{0} Prozentpunkte',

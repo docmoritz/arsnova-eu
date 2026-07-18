@@ -32,6 +32,7 @@ import {
   DEFAULT_TIMER_SECONDS,
   type CreateSessionOutput,
   type QuizPreset,
+  type SessionResultsPdfProfile,
   type TeamAssignment,
 } from '@arsnova/shared-types';
 import { homePresetOptionsKeyForQuizPreset } from '../../../core/home-preset-storage';
@@ -63,7 +64,6 @@ import {
   renderMarkdownWithoutKatex,
 } from '../../../shared/markdown-katex.util';
 import { BonusCodesDialogComponent } from './bonus-codes-dialog.component';
-import { LastSessionFeedbackDialogComponent } from './last-session-feedback-dialog.component';
 import {
   ConfirmLeaveDialogComponent,
   type ConfirmLeaveDialogData,
@@ -167,7 +167,6 @@ export class QuizListComponent implements OnInit {
       string,
       {
         hasBonusTokens: boolean;
-        hasLastSessionFeedback: boolean;
         hasLastSessionAnalysis: boolean;
       }
     >
@@ -200,8 +199,11 @@ export class QuizListComponent implements OnInit {
   readonly lastFeedbackAfterLiveTooltip = $localize`:@@quizList.lastFeedbackAfterLive:Erst nach einem beendeten Live-Durchlauf dieses Quiz hier abrufbar.`;
   readonly bonusCodesEmptyTooltip = $localize`:@@quizList.bonusCodesEmpty:Noch keine Bonus-Codes vorhanden.`;
   readonly lastFeedbackEmptyTooltip = $localize`:@@quizList.lastFeedbackEmpty:Noch keine abgeschlossene Auswertung vorhanden.`;
-  readonly lastSessionDebriefEnabledTooltip = $localize`:@@quizList.lastSessionDebriefTooltip:Lernstand, Prioritäten für die Nachbesprechung und Teilnehmer-Feedback – kompakt im Dialog.`;
-  readonly lastSessionReportPdfEnabledTooltip = $localize`:@@quizList.lastSessionReportPdfTooltip:Alle Fragen mit Diagrammen und Details – zum Speichern, Drucken oder Teilen.`;
+  readonly lastSessionReportPdfEnabledTooltip = $localize`:@@quizList.lastSessionReportPdfTooltip:Nachbesprechungsplan mit Diagrammen und Details – zum Speichern, Drucken oder Teilen.`;
+  readonly demoSessionResultsPdfTooltip = $localize`:@@quizList.demoSessionResultsPdfTooltip:Beispiel-PDF mit didaktischer Auswertung – ohne eigenen Live-Durchlauf.`;
+  /** Locale-aware URLs zu den Demo-Nachbesprechungsplänen unter `/<locale>/assets/…`. */
+  readonly demoSessionResultsPdfUrl = `${resolveMotdAssetOrigin()}/assets/demo/demo-session-results-30.pdf`;
+  readonly demoSessionResultsPdfUaUrl = `${resolveMotdAssetOrigin()}/assets/demo/demo-session-results-30-pdfua.pdf`;
   readonly sessionPdfExportQuizId = signal<string | null>(null);
   private readonly descriptionMarkdownCache = new Map<string, SafeHtml>();
   private lastQuizHistoryAvailabilityKey = '';
@@ -393,10 +395,6 @@ export class QuizListComponent implements OnInit {
     return this.quizHistoryAvailability().get(quiz.id)?.hasBonusTokens === true;
   }
 
-  hasAvailableLastSessionFeedback(quiz: QuizSummary): boolean {
-    return this.quizHistoryAvailability().get(quiz.id)?.hasLastSessionFeedback === true;
-  }
-
   hasAvailableLastSessionAnalysis(quiz: QuizSummary): boolean {
     return this.quizHistoryAvailability().get(quiz.id)?.hasLastSessionAnalysis === true;
   }
@@ -419,10 +417,6 @@ export class QuizListComponent implements OnInit {
       return this.lastFeedbackEmptyTooltip;
     }
     return null;
-  }
-
-  lastSessionDebriefTooltip(quiz: QuizSummary): string {
-    return this.lastSessionAnalysisDisabledTooltip(quiz) ?? this.lastSessionDebriefEnabledTooltip;
   }
 
   lastSessionReportPdfTooltip(quiz: QuizSummary): string {
@@ -831,30 +825,14 @@ export class QuizListComponent implements OnInit {
     });
   }
 
-  async openLastSessionFeedbackDialog(quiz: QuizSummary): Promise<void> {
-    return this.openLastSessionAnalysisDialog(quiz);
-  }
-
-  async openLastSessionAnalysisDialog(quiz: QuizSummary): Promise<void> {
-    if (!this.hasAvailableLastSessionAnalysis(quiz)) return;
-    const sid = quiz.lastServerQuizId;
-    if (!sid) return;
-    const accessProof = await this.resolveQuizHistoryAccessProof(quiz);
-    if (!accessProof) return;
-    this.dialog.open(LastSessionFeedbackDialogComponent, {
-      width: 'min(52rem, calc(100vw - 1.5rem))',
-      maxWidth: '100vw',
-      maxHeight: 'min(90dvh, calc(100vh - 2rem))',
-      autoFocus: false,
-      data: { serverQuizId: sid, accessProof, quizName: quiz.name },
-    });
-  }
-
   isSessionPdfExportPending(quizId: string): boolean {
     return this.sessionPdfExportQuizId() === quizId;
   }
 
-  async exportLastSessionPdf(quiz: QuizSummary): Promise<void> {
+  async exportLastSessionPdf(
+    quiz: QuizSummary,
+    profile: SessionResultsPdfProfile = 'visual',
+  ): Promise<void> {
     if (!this.hasAvailableLastSessionAnalysis(quiz)) return;
     const sid = quiz.lastServerQuizId;
     if (!sid) return;
@@ -865,7 +843,9 @@ export class QuizListComponent implements OnInit {
 
     this.sessionPdfExportQuizId.set(quiz.id);
     try {
-      const result = await this.sessionResultsExport.exportPdfFromQuizHistory(sid, accessProof);
+      const result = await this.sessionResultsExport.exportPdfFromQuizHistory(sid, accessProof, {
+        profile,
+      });
       const message =
         result === 'pdf-download'
           ? $localize`:@@quizList.exportLastSessionPdfDone:Ergebnis-PDF heruntergeladen.`
@@ -1001,7 +981,6 @@ export class QuizListComponent implements OnInit {
         string,
         {
           hasBonusTokens: boolean;
-          hasLastSessionFeedback: boolean;
           hasLastSessionAnalysis: boolean;
         }
       >();
@@ -1010,7 +989,6 @@ export class QuizListComponent implements OnInit {
         if (!localQuizId) continue;
         next.set(localQuizId, {
           hasBonusTokens: availability.hasBonusTokens,
-          hasLastSessionFeedback: availability.hasLastSessionFeedback,
           hasLastSessionAnalysis: availability.hasLastSessionAnalysis,
         });
       }

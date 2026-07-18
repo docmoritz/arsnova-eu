@@ -34,6 +34,8 @@ export async function buildSessionResultsPdf(
   const labels = options.labels ?? getSessionResultsReportLabelsDe();
   const html = buildSessionResultsReportHtml(data, labels, {
     localeId: options.localeId ?? 'de',
+    pageNumbersViaCss: false,
+    pdfUaSafeVisuals: false,
   });
   return pdfRenderer(html);
 }
