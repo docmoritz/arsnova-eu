@@ -36,6 +36,7 @@ Thumbs.db
 # ---------- Test & Coverage ----------
 coverage/
 .lighthouseci/
+.lighthouseci-a11y/
 e2e/test-output/
 artifacts/
 scripts/load/artillery/.session.json
