@@ -69,12 +69,13 @@ describe('MarkdownImageLightboxDirective', () => {
   });
 
   it('markiert Bilder erst als loading und nach dem Laden als ready', () => {
+    const dialogOpen = vi.fn();
     TestBed.configureTestingModule({
       imports: [TestHostComponent],
       providers: [
         {
           provide: MatDialog,
-          useValue: { open: vi.fn() },
+          useValue: { open: dialogOpen },
         },
         {
           provide: MatSnackBar,
@@ -106,6 +107,12 @@ describe('MarkdownImageLightboxDirective', () => {
 
     directive.syncImageState(image);
     expect(image.dataset.markdownImageState).toBe('loading');
+    expect(image.getAttribute('role')).toBe('button');
+    expect(image.getAttribute('tabindex')).toBe('0');
+    expect(image.getAttribute('aria-label')).toBe('Demo in Vollansicht öffnen');
+
+    image.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(dialogOpen).toHaveBeenCalledOnce();
 
     Object.defineProperty(image, 'complete', {
       configurable: true,
