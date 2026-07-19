@@ -222,7 +222,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.presetSub = this.themePreset.presetChanged$.subscribe(() => this.onPresetChanged());
     this.routerSub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(() => {
+      .subscribe((event) => {
         this.seo.applyFromRouter();
         if (!isPlatformBrowser(this.platformId)) {
           return;
@@ -234,8 +234,11 @@ export class AppComponent implements OnInit, OnDestroy {
         /* Nur bei Folge-Navigationen: #main-content scrollen (nicht window). Erstes Event überspringen — vermeidet sichtbares „Zucken“. */
         if (this.pendingInitialNavigationEnd) {
           this.pendingInitialNavigationEnd = false;
-        } else {
-          requestAnimationFrame(() => this.scrollPrimaryScrollContainerToTop());
+        } else if (!event.urlAfterRedirects.includes('#')) {
+          requestAnimationFrame(() => {
+            this.scrollPrimaryScrollContainerToTop();
+            this.focusPrimaryContent();
+          });
         }
       });
     if (isPlatformBrowser(this.platformId)) {
@@ -279,6 +282,50 @@ export class AppComponent implements OnInit, OnDestroy {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+  }
+
+  skipToMainContent(event: Event): void {
+    event.preventDefault();
+    const main = document.getElementById('main-content');
+    if (!main) {
+      return;
+    }
+    main.scrollTop = 0;
+    main.focus({ preventScroll: true });
+  }
+
+  /** Folge-Navigationen werden für Tastatur und Screenreader am neuen Seitenanfang verankert. */
+  private focusPrimaryContent(): void {
+    const main = document.getElementById('main-content');
+    if (!main) {
+      return;
+    }
+
+    const heading = main.querySelector<HTMLElement>('h1:not([hidden]):not([aria-hidden="true"])');
+    const target = heading ?? main;
+    const addedProgrammaticTabindex = target !== main && !target.hasAttribute('tabindex');
+    if (addedProgrammaticTabindex) {
+      target.setAttribute('tabindex', '-1');
+      target.addEventListener(
+        'blur',
+        () => {
+          if (target.getAttribute('tabindex') === '-1') {
+            target.removeAttribute('tabindex');
+          }
+        },
+        { once: true },
+      );
+    }
+
+    try {
+      target.focus({ preventScroll: true });
+    } catch {
+      target.focus();
+    }
+  }
+
+  showToolbarForFocus(): void {
+    this.toolbarHidden.set(false);
   }
 
   /**

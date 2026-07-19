@@ -118,6 +118,42 @@ describe('HomeComponent', () => {
     localStorage.clear();
   });
 
+  describe('Accessibility', () => {
+    it('stiehlt dem Skip-Link beim Start nicht per Autofokus die erste Tabposition', () => {
+      const sentinel = document.createElement('button');
+      document.body.append(sentinel);
+      sentinel.focus();
+      const fixture = createHomeFixture();
+
+      fixture.detectChanges();
+      vi.advanceTimersByTime(200);
+
+      expect(document.activeElement).toBe(sentinel);
+      sentinel.remove();
+    });
+
+    it('verwendet für den Session-Code nur das native Eingabefeld als Tabstopp', () => {
+      const fixture = createHomeFixture();
+      fixture.detectChanges();
+
+      const segments = fixture.nativeElement.querySelector('.home-code-segments') as HTMLElement;
+      const input = segments.querySelector('.home-code-segments__input') as HTMLInputElement;
+
+      expect(segments.hasAttribute('tabindex')).toBe(false);
+      expect(input).not.toBeNull();
+    });
+
+    it('leitet den Accessible Name des Join-Buttons aus seinem sichtbaren Text ab', () => {
+      const fixture = createHomeFixture();
+      fixture.detectChanges();
+
+      const button = fixture.nativeElement.querySelector('.home-cta') as HTMLButtonElement;
+
+      expect(button.hasAttribute('aria-label')).toBe(false);
+      expect(button.textContent).toContain("Los geht's");
+    });
+  });
+
   describe('isPlayfulPreset', () => {
     it('ist true im Standard-Preset Spielerisch', () => {
       const comp = createHomeComponent();
@@ -597,6 +633,24 @@ describe('HomeComponent', () => {
           baseEl.setAttribute('href', previousBaseHref);
         }
       }
+    });
+
+    it('sperrt den Hintergrund und hält den Tastaturfokus im MOTD-Dialog', () => {
+      const fixture = createHomeFixture();
+      fixture.componentInstance.motd.set({
+        id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        contentVersion: 7,
+        markdown: 'Meldung',
+        endsAt: '2099-12-31T12:00:00.000Z',
+      });
+      fixture.detectChanges();
+
+      const background = fixture.nativeElement.querySelector('.home-main') as HTMLElement;
+      const dialog = fixture.nativeElement.querySelector('.home-motd-sheet') as HTMLElement;
+
+      expect(background.hasAttribute('inert')).toBe(true);
+      expect(dialog).not.toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('.cdk-focus-trap-anchor')).toHaveLength(2);
     });
 
     it('lädt nach dem Schließen nicht sofort die nächste MOTD nach', async () => {

@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { Component, computed, HostListener, inject, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
@@ -160,6 +161,7 @@ export function getPresetDefaults(preset: 'serious' | 'spielerisch'): PresetOpti
     MatOption,
     MatSelect,
     MatSelectTrigger,
+    CdkTrapFocus,
   ],
   templateUrl: './preset-toast.component.html',
   styleUrls: ['../styles/dialog-title-header.scss', './preset-toast.component.scss'],
@@ -201,9 +203,15 @@ export class PresetToastComponent implements OnInit {
 
   /** i18n: Aria-label for preset chip (label + state + optional disabled). */
   chipAriaLabel(label: string, on: boolean, disabled: boolean): string {
-    const state = on ? $localize` an` : $localize` aus`;
-    const suffix = disabled ? $localize`, deaktiviert` : '';
-    return label + state + suffix;
+    if (disabled) {
+      return on
+        ? $localize`:@@presetToast.chipOnDisabledAria:${label}:label:, an, deaktiviert`
+        : $localize`:@@presetToast.chipOffDisabledAria:${label}:label:, aus, deaktiviert`;
+    }
+
+    return on
+      ? $localize`:@@presetToast.chipOnAria:${label}:label:, an`
+      : $localize`:@@presetToast.chipOffAria:${label}:label:, aus`;
   }
 
   selectedNicknameTheme = computed(() => {
@@ -253,6 +261,12 @@ export class PresetToastComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPreset(this.themePreset.preset());
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscape(event: Event): void {
+    event.preventDefault();
+    this.closed.emit();
   }
 
   isOptionVisible(id: string): boolean {

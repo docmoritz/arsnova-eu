@@ -13,6 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatBadge } from '@angular/material/badge';
@@ -87,6 +88,7 @@ import { MarkdownImageLightboxDirective } from '../../shared/markdown-image-ligh
     MatIcon,
     MatIconButton,
     MatTooltip,
+    CdkTrapFocus,
     MarkdownImageLightboxDirective,
   ],
   templateUrl: './home.component.html',
@@ -133,7 +135,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly hostSharingOriginSummary = computed(() => {
     const peer = this.syncPeerInfos()[0] ?? null;
     if (peer) {
-      return `${peer.browserLabel} auf ${peer.deviceLabel}`;
+      return $localize`:@@home.syncOrigin:${peer.browserLabel}:browser: auf ${peer.deviceLabel}:device:`;
     }
 
     const deviceLabel = this.syncOriginDeviceLabel();
@@ -144,7 +146,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (deviceLabel === this.currentDeviceLabel() && browserLabel === this.currentBrowserLabel()) {
       return null;
     }
-    return `${browserLabel} auf ${deviceLabel}`;
+    return $localize`:@@home.syncOrigin:${browserLabel}:browser: auf ${deviceLabel}:device:`;
   });
   readonly showHostSharingHint = computed(
     () => this.librarySharingMode() === 'shared' && this.hostSharingOriginSummary() !== null,
@@ -182,6 +184,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Erzwingt Neuablesung der MOTD-Interaktions-Flags aus localStorage. */
   private readonly motdInteractionRev = signal(0);
   private motdTouchStartY = 0;
+  private motdFocusReturn: HTMLElement | null = null;
   readonly thumbUpRecorded = computed(() => {
     this.motdInteractionRev();
     const m = this.motd();
@@ -250,11 +253,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.focusService.registerInput(this.sessionCodeInput);
-    // preventScroll: vermeidet Scroll des #main-content zum Code-Feld (kurze Viewports).
-    this.scheduleTimeout(
-      () => this.sessionCodeInput?.nativeElement.focus({ preventScroll: true }),
-      100,
-    );
     if (typeof document !== 'undefined') {
       document.addEventListener('keydown', this.keydownListener, true);
       document.addEventListener('keyup', this.keyupListener, true);
@@ -735,6 +733,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!motd || isMotdDismissedForVersion(motd.id, motd.contentVersion)) {
       return;
     }
+    const activeElement = document.activeElement;
+    this.motdFocusReturn =
+      activeElement instanceof HTMLElement && activeElement !== document.body
+        ? activeElement
+        : (this.sessionCodeInput?.nativeElement ?? null);
     this.motd.set(motd);
     const html = appendMotdContentVersionToAssetImgSrc(
       absolutizeMarkdownHtmlRootAssetImgSrc(
@@ -814,16 +817,19 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private clearMotdOverlay(): void {
+    const focusReturn = this.motdFocusReturn;
+    this.motdFocusReturn = null;
     this.motd.set(null);
     this.motdBodyHtml.set(null);
+    queueMicrotask(() => {
+      const target =
+        focusReturn?.isConnected === true ? focusReturn : this.sessionCodeInput?.nativeElement;
+      target?.focus({ preventScroll: true });
+    });
   }
 
   onMotdBackdropClick(): void {
     void this.dismissMotdOverlay('DISMISS_CLOSE');
-  }
-
-  onMotdSheetClick(event: MouseEvent): void {
-    event.stopPropagation();
   }
 
   onMotdTouchStart(event: TouchEvent): void {

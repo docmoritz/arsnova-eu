@@ -15,7 +15,7 @@
             formControlName="name"
             maxlength="200"
             autocomplete="off"
-            i18n-aria-label
+            i18n-aria-label="@@quizForm.nameAria"
             aria-label="Quiz-Name"
           />
           <mat-hint align="end">{{ nameControl.value.length }}/200</mat-hint>
@@ -30,11 +30,14 @@
         <div
           class="quiz-form__markdown-field"
           role="group"
-          i18n-aria-label
+          i18n-aria-label="@@quizForm.descriptionAria"
           aria-label="Quiz-Beschreibung"
         >
-          <label class="quiz-form__markdown-label" i18n>Beschreibung (optional)</label>
+          <label class="quiz-form__markdown-label" for="quiz-new-description" i18n
+            >Beschreibung (optional)</label
+          >
           <app-markdown-katex-editor
+            fieldId="quiz-new-description"
             [value]="descriptionControl.value"
             (valueChange)="descriptionControl.setValue($event)"
             [rows]="8"
@@ -289,7 +292,7 @@
                           min="2"
                           max="8"
                           (input)="syncTeamNamesValidation()"
-                          i18n-aria-label
+                          i18n-aria-label="@@quizForm.teamCountAria"
                           aria-label="Anzahl Teams"
                         />
                         @if (teamCountControl.hasError('min')) {
@@ -304,7 +307,7 @@
                         <mat-label i18n>Zuweisen</mat-label>
                         <mat-select
                           formControlName="teamAssignment"
-                          i18n-aria-label
+                          i18n-aria-label="@@quizForm.teamAssignmentAria"
                           aria-label="Zuweisen"
                         >
                           <mat-option value="AUTO" i18n>Automatisch</mat-option>
@@ -321,7 +324,7 @@
                           (input)="syncTeamNamesValidation()"
                           i18n-placeholder
                           placeholder="Ein Team pro Zeile"
-                          i18n-aria-label
+                          i18n-aria-label="@@quizForm.customTeamNamesAria"
                           aria-label="Eigene Team-Namen"
                         ></textarea>
                         <mat-hint i18n="@@quizForm.teamNamesAutoHint"
@@ -385,7 +388,7 @@
                       min="1"
                       max="50"
                       placeholder="3"
-                      i18n-aria-label
+                      i18n-aria-label="@@quizForm.bonusCodeCountAria"
                       aria-label="Anzahl Bonus-Codes"
                     />
                     <mat-hint i18n
@@ -409,7 +412,12 @@
         }
 
         <mat-card-actions class="quiz-form__actions">
-          <a mat-button routerLink="../" i18n-aria-label aria-label="Zurück zur Quiz-Liste">
+          <a
+            mat-button
+            routerLink="../"
+            i18n-aria-label="@@quizForm.backToListAria"
+            aria-label="Zurück zur Quiz-Liste"
+          >
             <mat-icon>arrow_back</mat-icon>
             <span i18n>Zurück</span>
           </a>

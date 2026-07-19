@@ -118,10 +118,13 @@ describe('JoinComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     await new Promise((r) => setTimeout(r, 50));
+    fixture.detectChanges();
 
     expect(comp.session()).toEqual(mockSession);
     expect(comp.error()).toBeNull();
     expect(comp.loading()).toBe(false);
+    expect(comp.anonymousNickname(6)).toBe('Teilnehmende 6');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Dein Name');
   });
 
   it('fixiert den Beitrittsbutton im unteren Aktionsbereich des Join-Clients', async () => {

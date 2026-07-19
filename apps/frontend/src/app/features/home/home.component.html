@@ -1,5 +1,5 @@
 <div class="l-page">
-  <div class="home-main">
+  <div class="home-main" [attr.inert]="motd() ? '' : null">
     <div class="home-hero-band">
       <p class="home-hero">
         <span class="home-hero-channels">
@@ -172,13 +172,11 @@
         <div class="home-code-entry home-spotlight-panel">
           <div
             class="home-code-segments"
+            role="presentation"
             [class.home-code-segments--focused]="codeInputFocused()"
             [class.home-code-segments--shake]="codeShaking()"
             [class.home-code-segments--joining]="isJoining()"
             (click)="focusCodeInput()"
-            (keydown.enter)="focusCodeInput()"
-            (keydown.space)="focusCodeInput(); $event.preventDefault()"
-            tabindex="0"
           >
             @for (slot of codeSlots; track slot) {
               <span
@@ -204,7 +202,7 @@
               autocapitalize="characters"
               autocomplete="off"
               spellcheck="false"
-              i18n-aria-label
+              i18n-aria-label="@@home.sessionCodeAria"
               aria-label="Session-Code, 6 Zeichen"
             />
           </div>
@@ -218,13 +216,7 @@
 
       <mat-card-actions class="l-stack l-stack--sm">
         @if (isJoining()) {
-          <button
-            matButton="filled"
-            class="home-cta"
-            disabled
-            i18n-aria-label
-            aria-label="Session beitreten"
-          >
+          <button matButton="filled" class="home-cta" disabled>
             <mat-icon class="home-cta__icon home-spin">sync</mat-icon>
             <span i18n>Verbinde…</span>
           </button>
@@ -235,8 +227,6 @@
             [class.home-cta--ready]="ctaReady()"
             (click)="joinSession()"
             [disabled]="!isValidSessionCode()"
-            i18n-aria-label
-            aria-label="Teilnehmen"
           >
             <mat-icon class="home-cta__icon">login</mat-icon>
             <span i18n>Los geht's</span>
@@ -531,9 +521,10 @@
       <dialog
         class="home-motd-sheet"
         open
+        cdkTrapFocus
+        [cdkTrapFocusAutoCapture]="true"
         aria-labelledby="home-motd-title"
         aria-describedby="home-motd-body"
-        (click)="onMotdSheetClick($event)"
         (touchstart)="onMotdTouchStart($event)"
         (touchend)="onMotdTouchEnd($event)"
       >
@@ -558,6 +549,7 @@
             #motdCloseBtn
             type="button"
             matIconButton
+            cdkFocusInitial
             (click)="dismissMotdOverlay('DISMISS_CLOSE')"
             i18n-aria-label="@@motd.overlayCloseAria"
             aria-label="Meldung schließen"

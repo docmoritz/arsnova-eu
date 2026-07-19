@@ -1,7 +1,7 @@
 /**
  * Unit-Tests für PresetToastComponent (Preset-Optionen, localStorage, UI-State).
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { PresetToastComponent } from './preset-toast.component';
 import type { NicknameTheme } from '@arsnova/shared-types';
@@ -20,6 +20,22 @@ describe('PresetToastComponent', () => {
     const fixture = TestBed.createComponent(PresetToastComponent);
     return fixture.componentInstance;
   }
+
+  it('verwendet Dialogsemantik, Focus Trap und Escape zum Schließen', () => {
+    const fixture = TestBed.createComponent(PresetToastComponent);
+    const closed = vi.fn();
+    fixture.componentInstance.closed.subscribe(closed);
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('.preset-toast') as HTMLElement;
+    expect(dialog.getAttribute('role')).toBe('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(fixture.nativeElement.querySelectorAll('.cdk-focus-trap-anchor')).toHaveLength(2);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(closed).toHaveBeenCalledTimes(1);
+    fixture.destroy();
+  });
 
   describe('resetOptions (Preset-Defaults)', () => {
     it('setzt "seriös"-Defaults: readingPhaseEnabled an, Rest aus', () => {
@@ -75,6 +91,15 @@ describe('PresetToastComponent', () => {
       comp.teamCountValue.set(5);
       comp.resetOptions();
       expect(comp.teamCountValue()).toBe(2);
+    });
+  });
+
+  describe('chipAriaLabel', () => {
+    it('bildet Zustand und deaktivierte Option als vollständige Nachricht', () => {
+      const comp = createToast();
+
+      expect(comp.chipAriaLabel('Rangliste', true, false)).toBe('Rangliste, an');
+      expect(comp.chipAriaLabel('Rangliste', false, true)).toBe('Rangliste, aus, deaktiviert');
     });
   });
 

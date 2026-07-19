@@ -73,6 +73,11 @@
   transform: translate(-50%, -100vh);
 }
 
+/* Tastaturfokus macht die Toolbar sofort sichtbar, noch bevor der Parent den Hidden-State löscht. */
+.top-toolbar--fixed.top-toolbar--hidden:focus-within {
+  transform: translateX(-50%);
+}
+
 @media (max-width: 599px) {
   .top-toolbar {
     min-height: 48px;

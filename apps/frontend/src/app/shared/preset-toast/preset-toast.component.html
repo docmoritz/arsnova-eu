@@ -1,7 +1,20 @@
-<div class="preset-toast-backdrop" (click)="closed.emit()">
+<div
+  class="preset-toast-backdrop"
+  role="presentation"
+  tabindex="-1"
+  (click)="closed.emit()"
+  (keydown.escape)="onEscape($event)"
+>
+  <!-- Pointer bubbling would close the backdrop; Escape and the close button are keyboard equivalents. -->
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -->
   <div
     class="preset-toast"
     [class.preset-toast--playful]="themePreset.preset() === 'spielerisch'"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="preset-toast-title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
     (click)="$event.stopPropagation()"
   >
     <div class="preset-toast__scroll">
@@ -24,7 +37,9 @@
               </span>
             }
             <span class="dialog-title-header__copy">
-              <span class="dialog-title-header__heading">{{ toastTitle() }}</span>
+              <span id="preset-toast-title" class="dialog-title-header__heading">{{
+                toastTitle()
+              }}</span>
             </span>
           </div>
           <p class="preset-toast__preset-hint">{{ toastHint() }}</p>
@@ -37,7 +52,8 @@
           matIconButton
           type="button"
           class="preset-toast__close"
-          i18n-aria-label
+          cdkFocusInitial
+          i18n-aria-label="@@presetToast.closeAria"
           aria-label="Einstellungen schließen"
           (click)="closed.emit()"
         >
@@ -56,7 +72,7 @@
                 [value]="nameMode()"
                 (change)="setNameMode($event.value)"
                 class="preset-toast__name-mode"
-                i18n-aria-label
+                i18n-aria-label="@@presetToast.nicknameModeAria"
                 aria-label="Namensmodus wählen"
               >
                 @for (mode of nameModeOptions; track mode.value) {
@@ -105,7 +121,7 @@
                 >
                   <mat-select
                     [(ngModel)]="nicknameThemeSelectValue"
-                    i18n-aria-label
+                    i18n-aria-label="@@presetToast.nicknameThemeAria"
                     aria-label="Altersgruppe wählen"
                   >
                     <mat-select-trigger>
@@ -134,8 +150,7 @@
                 >
                   <mat-select
                     [(ngModel)]="teamCountSelectValue"
-                    i18n-aria-label
-                    i18n-aria-label
+                    i18n-aria-label="@@presetToast.teamCountAria"
                     aria-label="Anzahl Teams wählen"
                   >
                     <mat-select-trigger>
