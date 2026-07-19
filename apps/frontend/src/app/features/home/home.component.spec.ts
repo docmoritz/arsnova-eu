@@ -163,6 +163,7 @@ describe('HomeComponent', () => {
       const input = fixture.nativeElement.querySelector(
         '.home-code-segments__input',
       ) as HTMLInputElement;
+      const focusSpy = vi.spyOn(input, 'focus');
       const action = Array.from(
         fixture.nativeElement.querySelectorAll<HTMLButtonElement>('button'),
       ).find((button) => button.textContent?.includes('Code eingeben'));
@@ -171,6 +172,7 @@ describe('HomeComponent', () => {
 
       expect(action).toBeDefined();
       expect(document.activeElement).toBe(input);
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: false });
     });
 
     it('fokussiert am dedizierten Join-Einstieg auf Geräten ohne groben Primärzeiger', () => {
@@ -194,6 +196,7 @@ describe('HomeComponent', () => {
       const input = fixture.nativeElement.querySelector(
         '.home-code-segments__input',
       ) as HTMLInputElement;
+      const focusSpy = vi.spyOn(input, 'focus');
       const runAnimationFrame = (timestamp: number): void => {
         const callbacks = animationFrames.splice(0);
         callbacks.forEach((callback) => callback(timestamp));
@@ -205,6 +208,7 @@ describe('HomeComponent', () => {
 
       expect(matchMedia).toHaveBeenCalledWith('(pointer: coarse)');
       expect(document.activeElement).toBe(input);
+      expect(focusSpy).toHaveBeenCalledWith({ preventScroll: false });
       sentinel.remove();
     });
 

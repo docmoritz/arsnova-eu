@@ -258,7 +258,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       // Join-Einstieg übernimmt den Fokus im Folge-Frame danach gezielt für
       // die Code-Eingabe.
       this.scheduleAnimationFrame(() =>
-        this.scheduleAnimationFrame(() => this.focusSessionCodeInput()),
+        this.scheduleAnimationFrame(() => this.focusSessionCodeInput({ reveal: true })),
       );
     }
     if (typeof document !== 'undefined') {
@@ -447,19 +447,26 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   focusCodeInput(): void {
     this.markJoinIntentForMotd();
-    this.focusSessionCodeInput({ selectAll: this.shouldSelectAllSessionCodeOnFocus() });
+    this.focusSessionCodeInput({
+      reveal: true,
+      selectAll: this.shouldSelectAllSessionCodeOnFocus(),
+    });
   }
 
   private shouldSelectAllSessionCodeOnFocus(): boolean {
     return this.sessionCode().trim().length === 6 && this.joinError() !== null;
   }
 
-  private focusSessionCodeInput(options?: { defer?: boolean; selectAll?: boolean }): void {
+  private focusSessionCodeInput(options?: {
+    defer?: boolean;
+    reveal?: boolean;
+    selectAll?: boolean;
+  }): void {
     if (!isPlatformBrowser(this.platformId)) return;
     const el = this.sessionCodeInput?.nativeElement;
     if (!el) return;
     const run = (): void => {
-      el.focus({ preventScroll: true });
+      el.focus({ preventScroll: !options?.reveal });
       if (!options?.selectAll) return;
       try {
         el.setSelectionRange(0, el.value.length);

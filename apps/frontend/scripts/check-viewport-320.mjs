@@ -255,13 +255,10 @@ async function main() {
     }, VIEWPORT_WIDTH);
 
     const undersizedTargets = await inspectTargetSizes(page);
+    const initialJoinFocus = path === '/de/join' ? await inspectMobileJoinEntry(page) : [];
     const hiddenFocus = await inspectKeyboardFocus(page);
     const keyboardNavigation =
-      path === '/de/'
-        ? await inspectHomeKeyboardNavigation(page)
-        : path === '/de/join'
-          ? await inspectMobileJoinEntry(page)
-          : [];
+      path === '/de/' ? await inspectHomeKeyboardNavigation(page) : initialJoinFocus;
 
     if (
       result.ok &&
