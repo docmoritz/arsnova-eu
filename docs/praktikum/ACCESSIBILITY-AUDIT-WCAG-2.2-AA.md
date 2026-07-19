@@ -14,11 +14,14 @@ Accessibility-Basis. Dazu gehören Angular Material, Skip-Links, Landmarks,
 sichtbare Fokusindikatoren, viele Live-Regionen, Reduced Motion,
 Formularfehler-Fokus, lokalisierte Oberflächen und ein eigenes PDF/UA-Profil.
 
-Eine WCAG-2.2-AA-Konformität ist dennoch **nicht nachgewiesen**. Im Audit wurden
-zwölf konkrete Level-A-/AA-Defekte identifiziert. Zusätzlich fehlen
-routenübergreifende axe-Tests, Accessibility-Regeln für Angular-Templates, ein
-Landing-A11y-Gate, ein vollständiges manuelles Prüfprotokoll und eine formale
-PDF/UA-Validierung.
+Eine WCAG-2.2-AA-Konformität ist dennoch **nicht nachgewiesen**. Im initialen
+Audit wurden zwölf konkrete Level-A-/AA-Defekte identifiziert. Zu diesem
+Zeitpunkt fehlten außerdem routenübergreifende axe-Tests,
+Accessibility-Regeln für Angular-Templates, ein Landing-A11y-Gate, ein
+vollständiges manuelles Prüfprotokoll und eine formale PDF/UA-Validierung.
+Der dokumentierte Umsetzungsstand vom 2026-07-19 behebt diese technischen
+Befunde und automatisiert die genannten Gates; die vollständige manuelle
+Assistive-Technology-, Zoom-, Hochkontrast- und Reader-Abnahme bleibt offen.
 
 Ein hoher Lighthouse-Score ist dabei kein Konformitätsnachweis: Die
 Produktionsstartseite erreichte im Audit 100 Punkte, obwohl derselbe
@@ -535,12 +538,17 @@ versteckten Zustand sicher aus der Tab-Reihenfolge entfernen.
 **Evidenz:**
 `apps/frontend/src/app/features/quiz/quiz-edit/quiz-edit.component.html`
 
-Fragen werden über CDK Drag-and-drop umsortiert. Sichtbare „Nach oben“/
-„Nach unten“-Aktionen fehlen.
+**Umsetzungsstand 2026-07-19:** Im lokalen Arbeitsstand behoben. Sichtbare
+44-Pixel-Buttons verschieben Fragen nach oben oder unten; dieselben Aktionen
+sind per Tastatur erreichbar und eine Live-Region kündigt die neue Position an.
 
-**Erforderlich:** Buttons oder ein anderes Single-Pointer- und
-Tastaturverfahren ergänzen. Nach der Aktion muss die neue Position
-verständlich angekündigt werden.
+Im Ausgangsstand wurden Fragen ausschließlich über CDK Drag-and-drop
+umsortiert. Sichtbare „Nach oben“-/„Nach unten“-Aktionen und eine verständliche
+Positionsansage fehlten.
+
+**Ursprünglich erforderlich:** Buttons oder ein anderes Single-Pointer- und
+Tastaturverfahren ergänzen und die neue Position nach der Aktion verständlich
+ankündigen.
 
 ### 5.12 Nicht vollständig lokalisierte assistive Texte
 
