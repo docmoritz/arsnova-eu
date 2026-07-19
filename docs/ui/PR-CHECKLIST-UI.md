@@ -79,7 +79,11 @@ Mindestens passend zur Änderung ausführen oder im PR begründen, warum nicht:
 - [ ] Reflow-/Fokus-/Zielgrößen-Smoke: `BASE_URL=http://localhost:4200 npm run a11y:layout -w @arsnova/frontend`
 - [ ] Statisches axe-Gate: `BASE_URL=http://localhost:4200 npm run a11y:axe:static -w @arsnova/frontend`
 - [ ] Lighthouse-A11y einschließlich Einzelaudits: `BASE_URL=http://localhost:4200 npm run lighthouse:a11y -w @arsnova/frontend`
-- [ ] Landing bei Landing-Änderungen: `npm run build -w @arsnova/landing && npm run test:a11y -w @arsnova/landing`
+- [ ] Landing bei Landing-Änderungen: `npm run build -w @arsnova/landing`,
+      anschließend `npx serve apps/landing/dist -l 4173` starten und in einem
+      zweiten Terminal
+      `BASE_URL=http://localhost:4173 npm run test:a11y -w @arsnova/landing`
+      ausführen.
 - [ ] PDF-Export bei PDF-Änderungen: `npm run validate:pdfua`
 - [ ] Markdown-only: `npx prettier --check <dateien>` und `git diff --check -- <dateien>`
 
