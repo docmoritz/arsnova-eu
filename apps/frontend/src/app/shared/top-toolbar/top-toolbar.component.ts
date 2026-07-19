@@ -1,4 +1,15 @@
-import { Component, Input, PLATFORM_ID, LOCALE_ID, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  Input,
+  PLATFORM_ID,
+  LOCALE_ID,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { tryExitDocumentFullscreen } from '../../core/document-fullscreen.util';
 import { Router, RouterLink } from '@angular/router';
@@ -50,6 +61,9 @@ import {
   styleUrls: ['./top-toolbar.component.scss'],
 })
 export class TopToolbarComponent {
+  @ViewChild('mobileControls') private mobileControls?: ElementRef<HTMLElement>;
+  private controlsMenuTrigger: HTMLButtonElement | null = null;
+
   readonly localizedPath = localizePath;
   readonly themePreset = inject(ThemePresetService);
   readonly motdHeaderState = inject(MotdHeaderStateService);
@@ -177,22 +191,61 @@ export class TopToolbarComponent {
   }
 
   onThemeChange(value: 'system' | 'dark' | 'light'): void {
+    const mobileMenuWasOpen = this.controlsMenuOpen();
     this.themePreset.setTheme(value);
-    this.closeControlsMenu();
-    setTimeout(() => this.focusService.refocusInput(), 0);
+    this.closeControlsMenu(mobileMenuWasOpen);
+    if (!mobileMenuWasOpen) {
+      setTimeout(() => this.focusService.refocusInput(), 0);
+    }
   }
 
   setPreset(value: 'serious' | 'spielerisch', closeMenu = false): void {
     this.themePreset.setPreset(value);
-    if (closeMenu) this.closeControlsMenu();
+    if (closeMenu) this.closeControlsMenu(true);
   }
 
-  toggleControlsMenu(): void {
-    this.controlsMenuOpen.set(!this.controlsMenuOpen());
+  toggleControlsMenu(event?: Event): void {
+    if (event?.currentTarget instanceof HTMLButtonElement) {
+      this.controlsMenuTrigger = event.currentTarget;
+    }
+    if (this.controlsMenuOpen()) {
+      this.closeControlsMenu();
+      return;
+    }
+    this.controlsMenuOpen.set(true);
+    setTimeout(() => {
+      this.mobileControls?.nativeElement
+        .querySelector<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )
+        ?.focus();
+    }, 0);
   }
 
-  closeControlsMenu(): void {
+  closeControlsMenu(restoreTriggerFocus = false): void {
     this.controlsMenuOpen.set(false);
+    if (restoreTriggerFocus) {
+      const trigger = this.controlsMenuTrigger;
+      setTimeout(() => {
+        if (trigger?.isConnected) {
+          trigger.focus({ preventScroll: true });
+        }
+      }, 0);
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  closeControlsMenuOnEscape(event: Event): void {
+    if (!this.controlsMenuOpen()) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof Element && target.closest('.cdk-overlay-pane')) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeControlsMenu(true);
   }
 
   /** Logo/Brand: Vollbild verlassen (z. B. Host-Ansicht), Navigation bleibt über routerLink. */

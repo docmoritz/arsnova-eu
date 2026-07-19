@@ -234,12 +234,18 @@ export class JoinComponent implements OnInit, OnDestroy {
 
   readonly effectiveNickname = computed(() => {
     if (this.session()?.anonymousMode === true) {
-      return toParticipantNickname(`Teilnehmende ${(this.session()?.participantCount ?? 0) + 1}`);
+      return this.anonymousNickname((this.session()?.participantCount ?? 0) + 1);
     }
     const custom = toParticipantNickname(this.customNickname());
     if (custom.length > 0) return custom;
     return toParticipantNickname(this.selectedNickname());
   });
+
+  anonymousNickname(position: number): string {
+    return toParticipantNickname(
+      $localize`:@@join.anonymousNickname:Teilnehmende ${position}:position:`,
+    );
+  }
 
   /** i18n: participant count label (singular). */
   participantSingular = () => $localize`:@@join.participantCountOne:Teilnehmende`;
@@ -481,7 +487,7 @@ export class JoinComponent implements OnInit, OnDestroy {
   private async joinAnonymous(session: SessionInfoDTO): Promise<void> {
     this.joining.set(true);
     try {
-      const nickname = toParticipantNickname(`Teilnehmende ${session.participantCount + 1}`);
+      const nickname = this.anonymousNickname(session.participantCount + 1);
       const result = await trpc.session.join.mutate({
         code: this.code,
         nickname,

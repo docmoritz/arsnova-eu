@@ -1176,6 +1176,12 @@ mat-card-actions.l-stack {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--mat-sys-primary) 15%, transparent);
 }
 
+.home-code-segments--focused {
+  border-radius: var(--mat-sys-corner-small);
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 3px;
+}
+
 /* Verbindungs-Feedback: laufende Join-Anfrage ohne Erfolgsversprechen. */
 .home-code-segments--joining .home-code-segment--filled {
   border-color: var(--mat-sys-primary);

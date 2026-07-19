@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { SwUpdate } from '@angular/service-worker';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppComponent } from './app.component';
+import { TopToolbarComponent } from './shared/top-toolbar/top-toolbar.component';
 
 const { footerBundleQueryMock, healthStatsQueryMock, swVersionUpdatesSubscribeMock } = vi.hoisted(
   () => ({
@@ -25,6 +27,25 @@ vi.mock('./core/trpc.client', () => ({
     },
   },
 }));
+
+function configureAppTestBed(): void {
+  TestBed.configureTestingModule({
+    imports: [AppComponent],
+    providers: [
+      provideRouter([]),
+      { provide: MatDialog, useValue: { open: vi.fn() } },
+      {
+        provide: SwUpdate,
+        useValue: {
+          isEnabled: false,
+          versionUpdates: { subscribe: swVersionUpdatesSubscribeMock },
+          checkForUpdate: vi.fn().mockResolvedValue(false),
+          activateUpdate: vi.fn().mockResolvedValue(undefined),
+        },
+      },
+    ],
+  });
+}
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -72,6 +93,138 @@ describe('AppComponent', () => {
         dispatchEvent: vi.fn(),
       })),
     );
+  });
+
+  it('macht das Main-Landmark zum verlässlichen Skip-Link-Ziel', () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const main = fixture.nativeElement.querySelector('#main-content') as HTMLElement;
+
+    expect(main.getAttribute('tabindex')).toBe('-1');
+    fixture.destroy();
+  });
+
+  it('verschiebt den Fokus beim Aktivieren des Skip-Links auf den Hauptinhalt', () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const skipLink = fixture.nativeElement.querySelector('.app-skip-link') as HTMLAnchorElement;
+    const main = fixture.nativeElement.querySelector('#main-content') as HTMLElement;
+
+    skipLink.click();
+
+    expect(document.activeElement).toBe(main);
+    fixture.destroy();
+  });
+
+  it('führt den Fokus beim Öffnen der mobilen Einstellungen in das Panel', async () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const toolbar = fixture.debugElement.query(By.directive(TopToolbarComponent))
+      .componentInstance as TopToolbarComponent;
+    const trigger = fixture.nativeElement.querySelector(
+      '.top-toolbar__menu-btn',
+    ) as HTMLButtonElement;
+
+    trigger.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(toolbar.controlsMenuOpen()).toBe(true);
+    expect(
+      (document.activeElement as HTMLElement | null)?.closest('#top-toolbar-mobile'),
+    ).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('schließt die mobilen Einstellungen mit Escape und fokussiert den Auslöser', async () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const toolbar = fixture.debugElement.query(By.directive(TopToolbarComponent))
+      .componentInstance as TopToolbarComponent;
+    const trigger = fixture.nativeElement.querySelector(
+      '.top-toolbar__menu-btn',
+    ) as HTMLButtonElement;
+    const triggerFocusSpy = vi.spyOn(trigger, 'focus');
+    trigger.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(toolbar.controlsMenuOpen()).toBe(false);
+    expect(triggerFocusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    fixture.destroy();
+  });
+
+  it('lässt die mobilen Einstellungen offen, wenn Escape nur ein Untermenü schließt', async () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const toolbar = fixture.debugElement.query(By.directive(TopToolbarComponent))
+      .componentInstance as TopToolbarComponent;
+    const trigger = fixture.nativeElement.querySelector(
+      '.top-toolbar__menu-btn',
+    ) as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const overlay = document.createElement('div');
+    overlay.className = 'cdk-overlay-pane';
+    const menuItem = document.createElement('button');
+    overlay.append(menuItem);
+    document.body.append(overlay);
+    menuItem.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(toolbar.controlsMenuOpen()).toBe(true);
+    overlay.remove();
+    fixture.destroy();
+  });
+
+  it('fokussiert nach einer Folge-Navigation die neue Hauptüberschrift', () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const content = fixture.nativeElement.querySelector('.app-main__content') as HTMLElement;
+    const heading = document.createElement('h1');
+    heading.textContent = 'Neue Seite';
+    content.append(heading);
+
+    (
+      fixture.componentInstance as AppComponent & {
+        focusPrimaryContent: () => void;
+      }
+    ).focusPrimaryContent();
+
+    expect(document.activeElement).toBe(heading);
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+
+    heading.blur();
+    expect(heading.hasAttribute('tabindex')).toBe(false);
+    fixture.destroy();
+  });
+
+  it('blendet eine versteckte Toolbar ein, sobald ein enthaltenes Element Fokus erhält', () => {
+    configureAppTestBed();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.toolbarHidden.set(true);
+    fixture.detectChanges();
+    const brand = fixture.nativeElement.querySelector(
+      'app-top-toolbar .top-toolbar__brand',
+    ) as HTMLAnchorElement;
+
+    brand.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+    expect(fixture.componentInstance.toolbarHidden()).toBe(false);
+    fixture.destroy();
   });
 
   it('rendert den Update-Banner als auffaelliges Callout mit primaerer CTA', async () => {

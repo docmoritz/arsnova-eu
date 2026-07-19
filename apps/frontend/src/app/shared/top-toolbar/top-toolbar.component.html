@@ -74,7 +74,7 @@
       aria-controls="top-toolbar-mobile"
       i18n-aria-label="@@topToolbar.openMenuAria"
       aria-label="Einstellungen öffnen"
-      (click)="toggleControlsMenu()"
+      (click)="toggleControlsMenu($event)"
     >
       <mat-icon>menu</mat-icon>
     </button>
@@ -154,7 +154,7 @@
   </div>
 
   @if (controlsMenuOpen()) {
-    <div id="top-toolbar-mobile" class="top-toolbar__mobile l-stack l-stack--sm">
+    <div #mobileControls id="top-toolbar-mobile" class="top-toolbar__mobile l-stack l-stack--sm">
       <mat-button-toggle-group
         [value]="themePreset.preset()"
         appearance="standard"

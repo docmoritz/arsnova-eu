@@ -11,7 +11,12 @@
     </div>
   }
   <div class="quiz-list__actions">
-    <a matButton="filled" routerLink="new" i18n-aria-label aria-label="Neues Quiz erstellen">
+    <a
+      matButton="filled"
+      routerLink="new"
+      i18n-aria-label="@@quizList.createAria"
+      aria-label="Neues Quiz erstellen"
+    >
       <mat-icon>add_circle</mat-icon>
       <span i18n>Neues Quiz erstellen</span>
     </a>
@@ -518,7 +523,7 @@
             >
           }
           @if (quiz.description) {
-            <div class="quiz-list-item__description-wrap" (click)="$event.stopPropagation()">
+            <div class="quiz-list-item__description-wrap">
               <details class="quiz-list-item__description-details">
                 <summary class="quiz-list-item__description-summary">
                   <span i18n>Beschreibung</span>
