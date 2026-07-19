@@ -57,6 +57,28 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build:landing
 
+      - name: Accessibility gate
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+          landing_base="/${{ github.event.repository.name }}"
+          mkdir -p "$RUNNER_TEMP/landing-a11y${landing_base}"
+          cp -R apps/landing/dist/. "$RUNNER_TEMP/landing-a11y${landing_base}/"
+          node scripts/serve-static-compressed.mjs "$RUNNER_TEMP/landing-a11y" 4321 > "$RUNNER_TEMP/landing-static.log" 2>&1 &
+          server_pid="$!"
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS "http://localhost:4321${landing_base}/" >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat "$RUNNER_TEMP/landing-static.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          BASE_URL="http://localhost:4321${landing_base}" npm run test:a11y -w @arsnova/landing
+
       - name: List artifact root (Debug)
         run: ls -la apps/landing/dist/
 

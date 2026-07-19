@@ -8,6 +8,7 @@
  */
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import { chromium, webkit } from 'playwright';
+import { assertNoBlockingA11y } from './axe-a11y.mjs';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4200/de';
 const TRPC_URL = process.env.TRPC_URL || 'http://localhost:3000/trpc';
@@ -15,6 +16,7 @@ const DESKTOP = { width: 1440, height: 1000 };
 const MOBILE = { width: 430, height: 932 };
 const HOST_TOKEN_STORAGE_PREFIX = 'arsnova-host-token:';
 const PARTICIPANT_JOIN_BUTTON = /join now|jetzt beitreten|mitmachen/i;
+const A11Y_SCAN_ENABLED = process.env.A11Y_SCAN !== '0';
 const SMOKE_QUESTIONS = {
   quizPrompt: 'Which unified flow is under test?',
   quizCorrectAnswer: 'Quiz, Q&A and quick feedback',
@@ -71,6 +73,12 @@ function logStep(ok, label, detail = '') {
 function logWarn(label, detail = '') {
   const suffix = detail ? ` - ${detail}` : '';
   console.log(`WARN ${label}${suffix}`);
+}
+
+async function scanA11y(page, label) {
+  if (A11Y_SCAN_ENABLED) {
+    await assertNoBlockingA11y(page, `unified-${label}`);
+  }
 }
 
 function createBrowserTrpcClient() {
@@ -553,6 +561,33 @@ async function runQuickFeedbackFlow(host, participant, warnings, hardFailures) {
   logWarn('Host does not see quick feedback result immediately');
 }
 
+async function endSessionAndScan(host, participant, hardFailures) {
+  const joinPopoverClose = host.locator('.session-host__join-viewport-overlay__close').first();
+  if (await joinPopoverClose.isVisible().catch(() => false)) {
+    await joinPopoverClose.click();
+  }
+
+  const endButton = host.getByRole('button', { name: /session beenden|end session/i }).first();
+  if (!(await endButton.isVisible().catch(() => false))) {
+    hardFailures.push('Host session end action is not visible.');
+    return;
+  }
+
+  await endButton.click();
+  const confirmation = host
+    .locator('.cdk-overlay-container')
+    .getByRole('button', { name: /trotzdem|anyway/i })
+    .first();
+  await confirmation.waitFor({ state: 'visible', timeout: 30_000 });
+  await host.waitForTimeout(500);
+  await scanA11y(host, 'end-confirmation');
+  await confirmation.click();
+
+  await participant.waitForTimeout(1_500);
+  await scanA11y(participant, 'participant-session-ended');
+  logStep(true, 'Participant session-end state passes axe');
+}
+
 async function main() {
   console.log(`Warte auf ${BASE_URL}...`);
   const ready = await waitForServer(BASE_URL);
@@ -592,12 +627,21 @@ async function main() {
     const presenter = await presenterContext.newPage();
 
     await openHostSession(host, code, hardFailures);
+    await scanA11y(host, 'host-lobby');
     await verifyHostQaTab(host, hardFailures);
+    await scanA11y(host, 'host-qa-empty');
     await joinParticipantSession(participant, code, warnings, hardFailures);
+    await scanA11y(participant, 'participant-lobby');
     await submitParticipantQuestions(participant, hardFailures);
+    await scanA11y(participant, 'participant-qa');
     await verifyHostQuestions(host, hardFailures);
+    await scanA11y(host, 'host-qa-moderation');
     await verifyPresenterView(presenter, code, hardFailures);
+    await scanA11y(presenter, 'presenter-qa');
     await runQuickFeedbackFlow(host, participant, warnings, hardFailures);
+    await scanA11y(host, 'host-feedback');
+    await scanA11y(participant, 'participant-feedback');
+    await endSessionAndScan(host, participant, hardFailures);
 
     console.log(`\nSession-Code: ${code}`);
     if (warnings.length > 0) {

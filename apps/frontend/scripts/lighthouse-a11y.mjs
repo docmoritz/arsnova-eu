@@ -4,7 +4,7 @@
  * Startet bei fehlender LIGHTHOUSE_URL einen lokalen Serve aus dist/browser.
  *
  * Run: npm run lighthouse:a11y
- * Oder: LIGHTHOUSE_URL=http://localhost:3000 npm run lighthouse:a11y
+ * Oder: LIGHTHOUSE_URL=http://localhost:3000/de/ npm run lighthouse:a11y
  */
 import { spawn } from 'child_process';
 import { createServer } from 'http';
@@ -74,7 +74,7 @@ async function main() {
       process.exit(1);
     }
     const port = defaultPort;
-    url = `http://localhost:${port}`;
+    url = `http://localhost:${port}/de/`;
     console.log(`Starte Server auf ${url}…`);
     serverProcess = spawn('npx', ['serve', 'dist/browser', '-s', '-l', String(port)], {
       stdio: 'ignore',
@@ -96,17 +96,18 @@ async function main() {
       const data = JSON.parse(readFileSync(reportJsonPath, 'utf8'));
       const a11y = data.categories?.accessibility;
       const score = a11y?.score != null ? Math.round(a11y.score * 100) : null;
-      console.log(`\nAccessibility Score: ${score ?? '?'} ${score != null && score >= 90 ? '✓ (DoD ≥ 90)' : score != null ? '✗ (Ziel ≥ 90)' : ''}`);
-      if (data.categories?.accessibility?.auditRefs) {
-        const failed = data.categories.accessibility.auditRefs.filter(
-          (ref) => data.audits[ref.id]?.score === false
-        );
-        if (failed.length) {
-          console.log('Fehlgeschlagene Audits:', failed.map((r) => r.id).join(', '));
-        }
+      console.log(
+        `\nAccessibility Score: ${score ?? '?'} ${score != null && score >= 90 ? '✓ (DoD ≥ 90)' : score != null ? '✗ (Ziel ≥ 90)' : ''}`,
+      );
+      const failed = (data.categories?.accessibility?.auditRefs ?? []).filter((ref) => {
+        const audit = data.audits?.[ref.id];
+        return (ref.weight ?? 0) > 0 && (audit?.score === 0 || audit?.score === false);
+      });
+      if (failed.length) {
+        console.log('Fehlgeschlagene Audits:', failed.map((r) => r.id).join(', '));
       }
       const exitScore = data.categories?.accessibility?.score;
-      process.exit(exitScore != null && exitScore < 0.9 ? 1 : 0);
+      process.exit(exitScore == null || exitScore < 0.9 || failed.length > 0 ? 1 : 0);
     }
   } finally {
     if (serverProcess) serverProcess.kill();

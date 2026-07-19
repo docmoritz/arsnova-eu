@@ -1,15 +1,22 @@
 #!/usr/bin/env node
 /**
- * Prüft: Kein horizontales Scrollen bei 320px Viewport (Backlog DoD, Story 6.4).
+ * Prüft Reflow, Fokus-Sichtbarkeit und Mindestzielgrößen bei 320 CSS-Pixel.
+ * 320 CSS-Pixel entsprechen der WCAG-Reflow-Prüfung eines 1280-Pixel-
+ * Viewports bei 400 % Zoom.
  * Erwartet: App läuft unter BASE_URL (z. B. npx serve dist/browser -s).
  *
- * Run: BASE_URL=http://localhost:3000 node scripts/check-viewport-320.mjs
+ * Run: BASE_URL=http://localhost:4173 node scripts/check-viewport-320.mjs
  */
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { chromium, webkit } from 'playwright';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const BASE_URL = (process.env.BASE_URL || 'http://localhost:4173').replace(/\/+$/, '');
 const VIEWPORT_WIDTH = 320;
 const VIEWPORT_HEIGHT = 568;
+const MIN_TARGET_SIZE = 24;
+const ARTIFACT_DIR =
+  process.env.A11Y_ARTIFACT_DIR || process.env.SMOKE_ARTIFACT_DIR || 'tmp/a11y-layout';
 
 async function waitForServer(url, maxAttempts = 30) {
   for (let i = 0; i < maxAttempts; i++) {
@@ -24,9 +31,158 @@ async function waitForServer(url, maxAttempts = 30) {
   return false;
 }
 
+async function dismissOptionalOverlay(page) {
+  const closeButton = page
+    .locator('.home-motd-sheet button[aria-label], [role="dialog"] button[aria-label]')
+    .first();
+  if (await closeButton.isVisible().catch(() => false)) {
+    await closeButton.click();
+    await page.waitForTimeout(200);
+  }
+}
+
+async function inspectTargetSizes(page) {
+  return page.evaluate((minimum) => {
+    const selectors = [
+      'button',
+      '[role="button"]',
+      'input:not([type="hidden"])',
+      'select',
+      'textarea',
+      'a[href]',
+    ];
+    return Array.from(document.querySelectorAll(selectors.join(',')))
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        if (
+          style.display === 'none' ||
+          style.visibility === 'hidden' ||
+          style.clip !== 'auto' ||
+          style.clipPath !== 'none' ||
+          rect.width === 0 ||
+          rect.height === 0 ||
+          rect.bottom <= 0 ||
+          rect.right <= 0 ||
+          rect.top >= window.innerHeight ||
+          rect.left >= window.innerWidth
+        ) {
+          return false;
+        }
+        // Inline links inside running text use the WCAG spacing exception.
+        return !(element instanceof HTMLAnchorElement && style.display === 'inline');
+      })
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          element,
+          width: Math.round(rect.width * 10) / 10,
+          height: Math.round(rect.height * 10) / 10,
+        };
+      })
+      .filter(({ width, height }) => width < minimum || height < minimum)
+      .map(({ element, width, height }) => ({
+        target:
+          element.getAttribute('aria-label') ||
+          element.textContent?.trim().replace(/\s+/g, ' ').slice(0, 50) ||
+          element.tagName.toLowerCase(),
+        width,
+        height,
+      }));
+  }, MIN_TARGET_SIZE);
+}
+
+async function inspectKeyboardFocus(page) {
+  const issues = [];
+  await page
+    .locator('body')
+    .click({ position: { x: 1, y: 1 } })
+    .catch(() => undefined);
+  for (let index = 0; index < 12; index += 1) {
+    await page.keyboard.press('Tab');
+    const issue = await page.evaluate(() => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active === document.body) return null;
+      const rect = active.getBoundingClientRect();
+      const visible =
+        rect.bottom > 0 &&
+        rect.right > 0 &&
+        rect.top < window.innerHeight &&
+        rect.left < window.innerWidth;
+      return visible
+        ? null
+        : active.getAttribute('aria-label') ||
+            active.textContent?.trim().slice(0, 50) ||
+            active.tagName;
+    });
+    if (issue) issues.push(issue);
+  }
+  return issues;
+}
+
+async function inspectHomeKeyboardNavigation(page) {
+  const issues = [];
+  await page.evaluate(() => {
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+    document.body.removeAttribute('tabindex');
+  });
+  await page.keyboard.press('Tab');
+  if (
+    !(await page
+      .locator('.app-skip-link')
+      .evaluate((element) => element === document.activeElement))
+  ) {
+    issues.push('Skip-Link ist nicht der erste Tabstopp');
+  } else {
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(50);
+    if (
+      !(await page
+        .locator('#main-content')
+        .evaluate((element) => element === document.activeElement))
+    ) {
+      issues.push('Skip-Link verschiebt den Fokus nicht auf den Hauptinhalt');
+    }
+  }
+
+  const menuButton = page.locator('.top-toolbar__menu-btn');
+  await menuButton.focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#top-toolbar-mobile').waitFor({ state: 'visible' });
+  const focusInsideMenu = await page
+    .waitForFunction(
+      () => document.querySelector('#top-toolbar-mobile')?.contains(document.activeElement),
+      undefined,
+      { timeout: 1_000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!focusInsideMenu) {
+    issues.push('Mobile Einstellungen übernehmen den Fokus beim Öffnen nicht');
+  }
+
+  await page.keyboard.press('Escape');
+  await page
+    .waitForFunction(
+      () =>
+        document.querySelector('.top-toolbar__menu-btn')?.getAttribute('aria-expanded') === 'false',
+      undefined,
+      { timeout: 1_000 },
+    )
+    .catch(() => undefined);
+  if ((await menuButton.getAttribute('aria-expanded')) !== 'false') {
+    issues.push('Mobile Einstellungen schließen nicht mit Escape');
+  }
+  if (!(await menuButton.evaluate((element) => element === document.activeElement))) {
+    issues.push('Fokus kehrt nach Escape nicht zum Menüauslöser zurück');
+  }
+  return issues;
+}
+
 async function main() {
-  console.log(`Warte auf ${BASE_URL}…`);
-  const ready = await waitForServer(BASE_URL);
+  console.log(`Warte auf ${BASE_URL}/de/…`);
+  const ready = await waitForServer(`${BASE_URL}/de/`);
   if (!ready) {
     console.error('App nicht erreichbar. Starte zuerst: npx serve dist/browser -s');
     process.exit(1);
@@ -43,50 +199,69 @@ async function main() {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
   });
 
-  const paths = ['/', '/legal/imprint', '/legal/privacy', '/quiz', '/session/DEMO01'];
+  const paths = ['/de/', '/en/', '/de/quiz', '/de/quiz/new', '/de/help', '/de/legal/privacy'];
   let failed = 0;
+  await mkdir(ARTIFACT_DIR, { recursive: true });
 
   for (const path of paths) {
     const page = await context.newPage();
     const url = `${BASE_URL}${path}`;
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForLoadState('networkidle').catch(() => {});
+    await dismissOptionalOverlay(page);
 
-    const result = await page.evaluate(
-      (w) => {
-        const doc = document.documentElement;
-        const body = document.body;
-        const scrollWidth = Math.max(
-          body.scrollWidth,
-          body.offsetWidth,
-          doc.scrollWidth,
-          doc.offsetWidth,
-          doc.clientWidth
-        );
-        const clientWidth = doc.clientWidth;
-        const ok = scrollWidth <= w && clientWidth === w;
-        return { ok, scrollWidth, clientWidth };
-      },
-      VIEWPORT_WIDTH
-    );
+    const result = await page.evaluate((w) => {
+      const doc = document.documentElement;
+      const body = document.body;
+      const scrollWidth = Math.max(
+        body.scrollWidth,
+        body.offsetWidth,
+        doc.scrollWidth,
+        doc.offsetWidth,
+        doc.clientWidth,
+      );
+      const clientWidth = doc.clientWidth;
+      const ok = scrollWidth <= w && clientWidth === w;
+      return { ok, scrollWidth, clientWidth };
+    }, VIEWPORT_WIDTH);
 
-    await page.close();
+    const undersizedTargets = await inspectTargetSizes(page);
+    const hiddenFocus = await inspectKeyboardFocus(page);
+    const keyboardNavigation = path === '/de/' ? await inspectHomeKeyboardNavigation(page) : [];
 
-    if (result.ok) {
-      console.log(`  ${path} … OK (scrollWidth=${result.scrollWidth}, client=${result.clientWidth})`);
+    if (
+      result.ok &&
+      undersizedTargets.length === 0 &&
+      hiddenFocus.length === 0 &&
+      keyboardNavigation.length === 0
+    ) {
+      console.log(`  ${path} … OK (Reflow, ${MIN_TARGET_SIZE}px-Ziele, sichtbarer Tastaturfokus)`);
     } else {
-      console.error(`  ${path} … FEHLER: scrollWidth=${result.scrollWidth} > ${VIEWPORT_WIDTH}`);
+      console.error(
+        `  ${path} … FEHLER: scrollWidth=${result.scrollWidth}, kleine Ziele=${JSON.stringify(
+          undersizedTargets,
+        )}, verdeckter Fokus=${JSON.stringify(hiddenFocus)}, Tastaturnavigation=${JSON.stringify(
+          keyboardNavigation,
+        )}`,
+      );
+      await page.screenshot({
+        path: join(ARTIFACT_DIR, `${path.replace(/[^a-z0-9]+/gi, '-') || 'root'}.png`),
+        fullPage: true,
+      });
       failed++;
     }
+    await page.close();
   }
 
   await browser.close();
 
   if (failed > 0) {
-    console.error(`\n${failed} Seite(n) mit horizontalem Overflow bei ${VIEWPORT_WIDTH}px.`);
+    console.error(`\n${failed} Seite(n) mit Reflow-, Fokus- oder Zielgrößenfehlern.`);
     process.exit(1);
   }
-  console.log(`\n✓ Kein horizontales Scrollen bei ${VIEWPORT_WIDTH}px (${paths.length} Seiten).`);
+  console.log(
+    `\n✓ Reflow bei ${VIEWPORT_WIDTH}px, Fokus-Sichtbarkeit und ${MIN_TARGET_SIZE}px-Ziele bestanden (${paths.length} Seiten).`,
+  );
 }
 
 main().catch((err) => {

@@ -7,6 +7,7 @@
  */
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import { chromium, webkit } from 'playwright';
+import { assertNoBlockingA11y } from './axe-a11y.mjs';
 
 function normalizeLoopbackUrl(url) {
   return url.replace('://localhost', '://127.0.0.1');
@@ -28,6 +29,7 @@ const SHORT_TEXT_PROMPT =
 const MODEL_ANSWER = 'Peer Instruction';
 const PARTIAL_ANSWER = 'Peer Instrcution';
 const PARTICIPANT_NAME = 'SmokeTester';
+const A11Y_SCAN_ENABLED = process.env.A11Y_SCAN !== '0';
 
 const QUIZ_PAYLOAD = {
   name: `Short Text Smoke ${Date.now()}`,
@@ -78,6 +80,12 @@ function logStep(ok, label, detail = '') {
   const prefix = ok ? 'OK ' : 'FEHLER ';
   const suffix = detail ? ` - ${detail}` : '';
   console.log(`${prefix}${label}${suffix}`);
+}
+
+async function scanA11y(page, label) {
+  if (A11Y_SCAN_ENABLED) {
+    await assertNoBlockingA11y(page, `short-text-${label}`);
+  }
 }
 
 function createBrowserTrpcClient() {
@@ -421,12 +429,16 @@ async function main() {
 
     if (hardFailures.length === 0) {
       await startQuestion(host, participant, hardFailures);
+      await scanA11y(host, 'host-active-question');
+      await scanA11y(participant, 'participant-active-question');
     }
     if (hardFailures.length === 0) {
       await submitPartialAnswer(participant, hardFailures);
     }
     if (hardFailures.length === 0) {
       await revealResults(host, participant, hardFailures);
+      await scanA11y(host, 'host-results');
+      await scanA11y(participant, 'participant-results');
     }
 
     await participantContext.close();

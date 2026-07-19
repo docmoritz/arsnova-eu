@@ -10,7 +10,7 @@ import { legal, site } from '../config/legal';
 >
   <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
     <h1 class="font-display text-3xl font-bold text-white">Impressum</h1>
-    <p class="mt-2 text-slate-500">Angaben gemäß § 5 DDG</p>
+    <p class="mt-2 text-slate-400">Angaben gemäß § 5 DDG</p>
 
     <section class="mt-6 rounded-2xl border border-slate-700 bg-slate-800/60 p-5 text-slate-300">
       <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-400">Kurzinfo</p>
@@ -34,9 +34,9 @@ import { legal, site } from '../config/legal';
       <div>
         <h2 class="font-display text-lg font-semibold text-white">Kontakt</h2>
         <p class="mt-2">
-          E-Mail: <a href={`mailto:${legal.provider.contact.email}`} class="text-brand-400 hover:underline">{legal.provider.contact.email}</a>
+          E-Mail: <a href={`mailto:${legal.provider.contact.email}`} class="text-brand-400 underline underline-offset-2">{legal.provider.contact.email}</a>
           {legal.provider.contact.website && (
-            <><br />Web: <a href={legal.provider.contact.website} class="text-brand-400 hover:underline" target="_blank" rel="noopener noreferrer">{legal.provider.contact.website}</a></>
+            <><br />Web: <a href={legal.provider.contact.website} class="text-brand-400 underline underline-offset-2" target="_blank" rel="noopener noreferrer">{legal.provider.contact.website}</a></>
           )}
           {legal.provider.contact.phone && (
             <><br />Telefon: {legal.provider.contact.phone}</>

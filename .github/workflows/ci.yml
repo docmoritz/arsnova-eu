@@ -86,7 +86,9 @@ jobs:
               echo "docs_only=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
+            # HEAD_SHA is provided through the step environment.
             base_sha="$PUSH_BEFORE"
+            # shellcheck disable=SC2153
             head_sha="$HEAD_SHA"
           else
             echo "docs_only=false" >> "$GITHUB_OUTPUT"
@@ -310,6 +312,29 @@ jobs:
           PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
           BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build:landing
+
+      - name: Landing accessibility gate
+        if: needs.changes.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          npx playwright install --with-deps chromium
+          landing_base="/${{ github.event.repository.name }}"
+          mkdir -p "$RUNNER_TEMP/landing-a11y${landing_base}"
+          cp -R apps/landing/dist/. "$RUNNER_TEMP/landing-a11y${landing_base}/"
+          node scripts/serve-static-compressed.mjs "$RUNNER_TEMP/landing-a11y" 4321 > "$RUNNER_TEMP/landing-static.log" 2>&1 &
+          server_pid="$!"
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS "http://localhost:4321${landing_base}/" >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat "$RUNNER_TEMP/landing-static.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          BASE_URL="http://localhost:4321${landing_base}" npm run test:a11y -w @arsnova/landing
 
   # Explizites `npm run typecheck` (Backend + Frontend, --noEmit) — ergänzt die
   # tsc-Schritte im build-Job; eigener Check in der PR-Übersicht, parallel zu build.
@@ -537,13 +562,18 @@ jobs:
           fi
 
           npx -y @lhci/cli@0.15.1 autorun --config=.lighthouserc.cjs
+          npx -y @lhci/cli@0.15.1 autorun --config=.lighthouserc-a11y.cjs
+          node apps/frontend/scripts/assert-lighthouse-a11y.mjs .lighthouseci
+          node apps/frontend/scripts/assert-lighthouse-a11y.mjs .lighthouseci-a11y
 
       - name: Upload Lighthouse reports
         if: always() && needs.changes.outputs.docs_only != 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: lighthouse-reports
-          path: .lighthouseci
+          path: |
+            .lighthouseci
+            .lighthouseci-a11y
           if-no-files-found: ignore
           retention-days: 7
 
@@ -691,6 +721,8 @@ jobs:
           export BASE_URL=http://localhost:4200/de
           export TRPC_URL=http://localhost:3000/trpc
           export SMOKE_ARTIFACT_DIR="$RUNNER_TEMP/browser-smokes"
+          BASE_URL=http://localhost:4200 npm run a11y:axe:static -w @arsnova/frontend
+          BASE_URL=http://localhost:4200 npm run a11y:layout -w @arsnova/frontend
           npm run smoke:host-present-auth -w @arsnova/frontend
           npm run smoke:host-music -w @arsnova/frontend
           npm run smoke:short-text -w @arsnova/frontend
