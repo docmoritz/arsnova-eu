@@ -37,16 +37,18 @@ PR 7 des Audits.
 
 ## Übersicht
 
-| Arbeitsschnitt | Thema                                      | Status                | Automatische Validierung                                   | Manuelle Abnahme  | PR/Commit                      |
-| -------------- | ------------------------------------------ | --------------------- | ---------------------------------------------------------- | ----------------- | ------------------------------ |
-| PR 1           | Semantik und Eingaben                      | automatisch validiert | 950 Frontend-Tests, Typecheck, ESLint, lokalisierter Build | ausstehend        | #89 `1e3fff8c`                 |
-| PR 2           | Fokus und SPA-Navigation                   | automatisch validiert | 953 Frontend-Tests, Typecheck, ESLint, lokalisierter Build | ausstehend        | #89 `1e3fff8c`                 |
-| PR 3           | Dialoge und Overlays                       | automatisch validiert | 955 Frontend-Tests, Typecheck, ESLint, lokalisierter Build | ausstehend        | #89 `1e3fff8c`                 |
-| PR 4           | WCAG-2.2-Interaktionen und Inhaltsstruktur | automatisch validiert | 959 Frontend-Tests, Typecheck, ESLint, lokalisierter Build | ausstehend        | #90 `e2d99a25`                 |
-| PR 5           | i18n assistiver Texte                      | automatisch validiert | 964 Frontend-Tests, Typecheck, ESLint, lokalisierter Build | ausstehend        | #90 `e2d99a25`                 |
-| PR 6           | automatisierte Qualitätssicherung          | automatisch validiert | Template-Lint, axe statisch/dynamisch, Lighthouse, Reflow  | ausstehend        | #91 `746f43c1`                 |
-| PR 7           | manuelle Abschlussprüfung                  | in Arbeit             | Browser-/Locale-Matrix und neue Fokusregressionen grün     | AT/OS ausstehend  | Abnahme ausstehend             |
-| PR 8           | PDF/UA und Dokumentation                   | automatisch validiert | veraPDF PDF/UA-1: fünf Locale-Demos PASS                   | AT/PAC ausstehend | #92 `1d5f798b`, #93 `5dfd9119` |
+| Arbeitsschnitt | Thema                                      | Status                | Automatische Validierung                                    | Manuelle Abnahme  | PR/Commit                          |
+| -------------- | ------------------------------------------ | --------------------- | ----------------------------------------------------------- | ----------------- | ---------------------------------- |
+| PR 1           | Semantik und Eingaben                      | automatisch validiert | 950 Frontend-Tests, Typecheck, ESLint, lokalisierter Build  | ausstehend        | #89 `1e3fff8c`                     |
+| PR 2           | Fokus und SPA-Navigation                   | automatisch validiert | 953 Frontend-Tests, Typecheck, ESLint, lokalisierter Build  | ausstehend        | #89 `1e3fff8c`                     |
+| PR 3           | Dialoge und Overlays                       | automatisch validiert | 955 Frontend-Tests, Typecheck, ESLint, lokalisierter Build  | ausstehend        | #89 `1e3fff8c`                     |
+| PR 4           | WCAG-2.2-Interaktionen und Inhaltsstruktur | automatisch validiert | 959 Frontend-Tests, Typecheck, ESLint, lokalisierter Build  | ausstehend        | #90 `e2d99a25`                     |
+| PR 5           | i18n assistiver Texte                      | automatisch validiert | 964 Frontend-Tests, Typecheck, ESLint, lokalisierter Build  | ausstehend        | #90 `e2d99a25`                     |
+| PR 6           | automatisierte Qualitätssicherung          | automatisch validiert | Template-Lint, axe statisch/dynamisch, Lighthouse, Reflow   | ausstehend        | #91 `746f43c1`                     |
+| PR 7           | manuelle Abschlussprüfung                  | in Arbeit             | Browser-/Locale-Matrix und neue Fokusregressionen grün      | AT/OS ausstehend  | Abnahme ausstehend                 |
+| PR 8           | PDF/UA und Dokumentation                   | automatisch validiert | veraPDF PDF/UA-1: fünf Locale-Demos PASS                    | AT/PAC ausstehend | #92 `1d5f798b`, #93 `5dfd9119`     |
+| PR 9           | WCAG-AA-Restblocker (Semantik, Gates)      | umgesetzt             | Headings, axe A/AA, Lighthouse weight=0, erweiterter Reflow | Matrix angelegt   | Branch `a11y/wcag22-aa-compliance` |
+| PR 9b          | Timer-Nachteilsausgleich (2.2.1)           | umgesetzt             | persönliche Timer-Anpassung schema-first + Vote-UI          | ausstehend        | Branch `a11y/wcag22-aa-compliance` |
 
 ## PR 1 – Kritische Semantik und Eingaben
 
@@ -1156,7 +1158,7 @@ kein ausreichender Konformitätsnachweis.
 **Datum:** 2026-07-19  
 **Status:** umgesetzt  
 **WCAG:** 2.4.7 Fokus sichtbar  
-**PR/Commit:** `b8feff12` (`main`-HEAD; Push/PR ausstehend)
+**PR/Commit:** lokaler Commit `b8feff12`; Integration in `origin/main` ausstehend
 
 ### Ausgangsproblem
 
@@ -1197,6 +1199,146 @@ Klickfläche.
 - Textlinks in hellem, dunklem und spielerischem Theme per Tastatur prüfen;
 - Fokusrahmen an Containerkanten und in scrollbaren Markdown-Bereichen auf
   mögliches Abschneiden kontrollieren.
+
+## PR 9 – WCAG-AA-Restblocker: Semantik, Gates, Matrix, Reflow
+
+**Datum:** 2026-07-20
+**Status:** umgesetzt
+**WCAG:** 1.3.1, 1.4.10, 2.4.6, 2.4.7, 2.4.11; Prozessgates für A/AA
+**PR/Commit:** Branch `a11y/wcag22-aa-compliance` (noch ohne Merge)
+
+### Ausgangsproblem
+
+Der Review-Report vom 2026-07-20 bestätigte offene AA-Blocker bzw.
+Konformitätsrisiken: fehlende Heading-Semantik auf Startseite und Admin,
+axe-Gate nur für `serious`/`critical`, Lighthouse-Gate mit `weight > 0`,
+fehlende ausführbare manuelle Matrix sowie zu schmaler Reflow-/Fokus-Smoke.
+
+### Konkrete Umsetzung
+
+1. **A11Y-02 Headings:** Startseiten-Hero als `h1`, Kartentitel als
+   `h2 mat-card-title`; Admin-Login als `h1`, Session-/MOTD-Kartentitel als `h2`.
+2. **A11Y-03 axe:** Alle WCAG-A/AA-`violations` blockieren; Impact ist kein
+   Filter mehr. Optionale versionierte Allowlist und Warnung bei `incomplete`.
+3. **A11Y-04 Lighthouse:** Fehlgeschlagene Accessibility-Audits unabhängig vom
+   Gewicht; `manual`/`notApplicable`/`informative` bleiben ausgenommen.
+4. **A11Y-05 Matrix:** Neue Vorlage
+   [`ACCESSIBILITY-MANUELLE-PRUEFMATRIX.md`](./ACCESSIBILITY-MANUELLE-PRUEFMATRIX.md)
+   mit Routen, Zoom, Locales, PDF-Reader und Abschlussregel; alle Zeilen offen.
+5. **A11Y-06 Reflow:** Routen auf fünf Locales, Help-Varianten, Admin-Login und
+   Offline-Banner erweitert; Tab-Lauf bis Rückkehr zum ersten Ziel bzw.
+   maximal 40; grobe Fokus-Verdeckungsprüfung per `elementFromPoint`.
+
+### Betroffene Dateien
+
+- `apps/frontend/src/app/features/home/home.component.html|.scss|.spec.ts`
+- `apps/frontend/src/app/features/admin/admin.component.html|.scss`
+- `apps/frontend/src/app/features/admin/admin-motd-panel.component.html|.scss`
+- `apps/frontend/scripts/axe-a11y.mjs`
+- `apps/frontend/scripts/assert-lighthouse-a11y.mjs|.test.mjs`
+- `apps/frontend/scripts/lighthouse-a11y.mjs`
+- `apps/frontend/scripts/check-viewport-320.mjs`
+- `docs/praktikum/ACCESSIBILITY-MANUELLE-PRUEFMATRIX.md`
+- `docs/README.md`
+
+### Tests und Nachweise
+
+- Home-Heading-Test und Lighthouse-Gate-Unit-Tests grün;
+- Typecheck shared/backend/frontend grün;
+- i18n 2361/2361;
+- fokussierte Shared-/Backend-/Frontend-Tests grün;
+- axe-/Lighthouse-/Reflow-Volläufe gegen lokalisierten Build noch ausstehend.
+
+### UX-, Design- und Performance-Einfluss
+
+- Optik der Startseite und Admin-Karten bleibt gleich; nur Semantik ändert sich.
+- Strengere Gates können zuvor unsichtbare moderate/minor WCAG-Verstöße in CI
+  sichtbar machen; das ist beabsichtigt.
+- Der erweiterte Reflow-Lauf verlängert den Layout-Smoke spürbar, ersetzt aber
+  weiterhin keinen echten 200-/400-%-Browserzoom.
+
+### Offene Risiken und manuelle Abnahme
+
+- VoiceOver/NVDA/Forced-Colors/Zoom laut Matrix noch offen;
+- nach Gate-Verschärfung müssen axe- und Lighthouse-Läufe gegen den aktuellen
+  Build grün sein, bevor eine Konformitätsaussage denkbar ist.
+
+## PR 9b – Timer-Nachteilsausgleich (A11Y-01 / WCAG 2.2.1)
+
+**Datum:** 2026-07-20
+**Status:** umgesetzt
+**WCAG:** 2.2.1 Timing Adjustable
+**PR/Commit:** PR #101, Branch `a11y/wcag22-aa-restblocker`
+
+### Ausgangsproblem
+
+Aktive Quiz-Timer hatten für Teilnehmende keine persönliche Anpassungs- oder
+Verlängerungsmöglichkeit. Die 2-Sekunden-Backend-Karenz reicht für WCAG 2.2.1
+nicht; eine rein hostseitige timerlose Session ist zwar konform, aber kein
+Nachteilsausgleich für getimte Fragen.
+
+### Architekturentscheidung
+
+Persönliche Präferenz am `Participant` (`timerAccommodation`: `DEFAULT` |
+`EXTENDED` | `OFF`):
+
+- `EXTENDED` = zehnfache persönliche Deadline (WCAG „Adjust“);
+- `OFF` = keine persönliche Deadline, solange die Frage `ACTIVE` ist;
+- Scoring bleibt am Session-Timer (`baseTimerSeconds`), damit Verlängerung keine
+  Punktvorteile erzeugt;
+- gemeinsame Question-Caches bleiben sessionweit; persönliche Felder werden
+  nach dem Cache nur für die anfragende Teilnehmer:in überlagert;
+- keine Lösungsdaten in Teilnehmerpayloads.
+
+### Konkrete Umsetzung
+
+- Prisma-Feld + Migration `20260720090000_participant_timer_accommodation`;
+- Shared Contracts inkl. `resolvePersonalTimerSeconds` und
+  `session.setTimerAccommodation`;
+- Backend: Vote-Deadline personalisiert; Self-/Join-DTO tragen den Modus;
+- Vote-UI: MD3-Segmented-Control Standard / 10× Zeit / Ohne Timer mit Live-Status;
+- Vote-UI: lokale Punktvorschau am Session-Timer; in der Nachlaufzeit wird der
+  feste Mindestwert als „Nachlaufzeit · richtige Antwort“ gekennzeichnet (1 Hz,
+  ohne Netzwerkanfrage und ohne `aria-live`-Spam);
+- Host: kurzer Hinweis, dass Teilnehmende ihre Zeit persönlich anpassen können;
+- Host: Live-Hinweis vor „Ergebnis zeigen“, wenn Personen mit Zeitanpassung noch
+  nicht geantwortet haben; die Lehrperson entscheidet weiterhin, wird aber
+  ausdrücklich auf das Ende dieser Eingabefenster hingewiesen;
+- Gerätepräferenz in `localStorage` (`arsnova-timer-accommodation`).
+
+### Betroffene Dateien
+
+- `prisma/schema.prisma`,
+  `prisma/migrations/20260720090000_participant_timer_accommodation/migration.sql`
+- `libs/shared-types/src/schemas.ts`, `libs/shared-types/src/schemas.test.ts`
+- `apps/backend/src/routers/vote.ts`, `apps/backend/src/routers/session.ts`
+- `apps/backend/src/__tests__/vote.test.ts`,
+  `apps/backend/src/__tests__/session.participants.test.ts`,
+  `apps/backend/src/__tests__/session.current-question-host.test.ts`
+- `apps/frontend/src/app/features/session/session-vote/session-vote.component.{ts,html,scss,spec.ts}`
+- `apps/frontend/src/app/features/session/session-host/session-host.component.{html,scss}`
+- Locale-Dateien nach `extract-i18n` + `sync-i18n`
+
+### Tests und Nachweise
+
+- Shared: persönliche Timer-Berechnung und Contract-Schemas
+- Backend: EXTENDED/OFF akzeptieren Votes nach Session-Timerende; Self-/Set-API
+- Frontend: Template-Präsenz, `setTimerAccommodation`, OFF ohne
+  Interaktionssperre und Host-Hinweis für noch ausstehende Antworten
+
+### UX-, Design- und Performance-Einfluss
+
+- Zusätzlicher kompakter Block unter der Frage bei getimten ACTIVE-Fragen;
+- Host-Countdown erhält einen kurzen Hinweistext;
+- der Host behält die Steuerung über „Ergebnis zeigen“, sieht davor jedoch die
+  konkrete Zahl noch antwortender Personen mit Zeitanpassung;
+- keine Änderung der Fairness der Punktelogik.
+
+### Offene Risiken und manuelle Abnahme
+
+- manuell prüfen: Live-Session mit Timer, Wechsel EXTENDED/OFF, Mobile-Längen;
+- VoiceOver/NVDA für Segmented-Control und Statusansage;
+- keine WCAG-2.2-AA-Gesamtabnahme allein durch diesen Schritt.
 
 ## Vorlage für weitere Einträge
 

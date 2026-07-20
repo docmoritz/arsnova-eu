@@ -1,7 +1,7 @@
 <div class="l-page">
   <div class="home-main" [attr.inert]="motd() ? '' : null">
     <div class="home-hero-band">
-      <p class="home-hero">
+      <h1 class="home-hero">
         <span class="home-hero-channels">
           <span i18n="@@homeHero.channelQuiz">Quiz</span>
           <span class="home-hero-host-sep" aria-hidden="true">·</span>
@@ -10,7 +10,7 @@
           <span i18n="@@homeHero.channelBlitzlicht">Blitzlicht</span> </span
         ><span i18n="@@homeHero.line1Dash"> – </span>
         <span class="home-hero-break-mobile" i18n="@@homeHero.line2">live in einer App</span>
-      </p>
+      </h1>
       <p class="home-hero-usp" i18n>Für Schulen, Unis, Events &amp; Business</p>
       <p class="home-hero-usp home-hero-usp--secondary" i18n="@@homeHero.uspTrust">
         Kostenlos. Open Source.
@@ -131,7 +131,7 @@
           </span>
           <span i18n>Mitmachen</span>
         </mat-card-subtitle>
-        <mat-card-title class="home-card__title" i18n>Dabei sein</mat-card-title>
+        <h2 mat-card-title class="home-card__title" i18n>Dabei sein</h2>
         @if (isPlayfulPreset()) {
           <span class="home-card__brand-repeat" aria-hidden="true">
             <img
@@ -271,9 +271,9 @@
           </span>
           <span i18n="@@sessionTabs.quickFeedback">Blitzlicht</span>
         </mat-card-subtitle>
-        <mat-card-title class="home-card__title" i18n="@@homeFeedbackCard.title"
-          >Live mit einem Klick</mat-card-title
-        >
+        <h2 mat-card-title class="home-card__title" i18n="@@homeFeedbackCard.title">
+          Live mit einem Klick
+        </h2>
       </mat-card-header>
 
       <mat-card-content class="l-stack l-stack--sm">
@@ -371,9 +371,9 @@
             </span>
             <span i18n>Veranstalten</span>
           </mat-card-subtitle>
-          <mat-card-title class="home-card__title" i18n="@@homeHostCard.title"
-            >Quiz vorbereiten oder starten</mat-card-title
-          >
+          <h2 mat-card-title class="home-card__title" i18n="@@homeHostCard.title">
+            Quiz vorbereiten oder starten
+          </h2>
         </div>
       </mat-card-header>
 

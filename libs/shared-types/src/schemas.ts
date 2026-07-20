@@ -104,6 +104,33 @@ export const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
 /** Maximale Basispunkte pro Frage (vor Multiplikator) */
 export const MAX_BASE_POINTS = 1000;
 
+/**
+ * Untergrenze des Zeitfaktors bei angenommener Antwort (Backend-Scoring).
+ * Gilt auch in persönlicher Nachlaufzeit: keine Speed-Punkte unter diesem Anteil.
+ */
+export const MIN_ACCEPTED_TIME_SCORE_RATIO = 0.1;
+
+/**
+ * Punktvorschau für eine volle richtige Antwort zum aktuellen Zeitpunkt.
+ * Bewertungsbasis ist immer der Session-Timer – nicht die persönliche Verlängerung.
+ */
+export function previewMaxCorrectScoreAtElapsedSeconds(input: {
+  difficulty: Difficulty;
+  sessionTimerSeconds: number;
+  elapsedSeconds: number;
+}): number {
+  const multiplier = DIFFICULTY_MULTIPLIER[input.difficulty];
+  const maxBeforeTime = MAX_BASE_POINTS * multiplier;
+  if (!(input.sessionTimerSeconds > 0)) {
+    return Math.round(maxBeforeTime);
+  }
+  const responseTimeMs = Math.max(0, input.elapsedSeconds) * 1000;
+  const timerDurationMs = input.sessionTimerSeconds * 1000;
+  const rawTimeFraction = Math.max(0, 1 - responseTimeMs / timerDurationMs);
+  const timeFraction = Math.max(rawTimeFraction, MIN_ACCEPTED_TIME_SCORE_RATIO);
+  return Math.round(maxBeforeTime * timeFraction);
+}
+
 /** Standard- und Obergrenzen für bewertbare Kurzantworten (Story 1.2e). */
 export const SHORT_TEXT_DEFAULT_MAX_LENGTH = 120;
 export const SHORT_TEXT_MAX_LENGTH_LIMIT = 500;
@@ -1165,6 +1192,41 @@ export function resolveEffectiveQuestionTimer(
   }
 
   return null;
+}
+
+/**
+ * Persönliche Timer-Anpassung für Teilnehmende (WCAG 2.2.1 Timing Adjustable).
+ * EXTENDED verlängert auf das Zehnfache; OFF deaktiviert die persönliche Deadline.
+ * Die Session-Deadline anderer Teilnehmender bleibt unverändert.
+ */
+export const TIMER_ACCOMMODATION_VALUES = ['DEFAULT', 'EXTENDED', 'OFF'] as const;
+export const TimerAccommodationEnum = z.enum(TIMER_ACCOMMODATION_VALUES);
+export type TimerAccommodation = z.infer<typeof TimerAccommodationEnum>;
+/** WCAG 2.2.1 „Adjust“: mindestens zehnfache Zeit. */
+export const TIMER_ACCOMMODATION_EXTENDED_FACTOR = 10;
+
+export function normalizeTimerAccommodation(value: unknown): TimerAccommodation {
+  if (value === 'EXTENDED' || value === 'OFF' || value === 'DEFAULT') {
+    return value;
+  }
+  return 'DEFAULT';
+}
+
+export function resolvePersonalTimerSeconds(
+  baseTimerSeconds: number | null | undefined,
+  accommodation: TimerAccommodation | null | undefined,
+): number | null {
+  if (typeof baseTimerSeconds !== 'number' || baseTimerSeconds <= 0) {
+    return null;
+  }
+  const mode = normalizeTimerAccommodation(accommodation);
+  if (mode === 'OFF') {
+    return null;
+  }
+  if (mode === 'EXTENDED') {
+    return baseTimerSeconds * TIMER_ACCOMMODATION_EXTENDED_FACTOR;
+  }
+  return baseTimerSeconds;
 }
 
 /** Obergrenze Motivbild-URL (typische Bild-URLs; lange signierte CDN-Links bleiben i. d. R. darunter). */
@@ -2314,6 +2376,8 @@ export const HostVoteProgressDTOSchema = z.object({
   questionOrder: z.number().int().min(0),
   round: z.number().int().min(1).max(2),
   totalVotes: z.number().int().min(0),
+  /** Personen mit persönlicher Zeitanpassung, die in dieser Runde noch nicht geantwortet haben. */
+  pendingTimerAccommodationCount: z.number().int().min(0).optional(),
   correctVoterCount: z.number().int().min(0).optional(),
   incorrectVoterCount: z.number().int().min(0).optional(),
   peerInstructionSuggestion: PeerInstructionSuggestionDTOSchema.optional(),
@@ -2444,7 +2508,12 @@ export const QuestionStudentDTOSchema = z.object({
   id: z.uuid(),
   text: z.string(),
   type: QuestionTypeEnum,
+  /** Effektiver Timer für diese:n Teilnehmer:in (nach persönlicher Anpassung). */
   timer: z.number().nullable(),
+  /** Session-Timer vor persönlicher Anpassung; steuert die Anzeige der Anpassungsoptionen. */
+  sessionTimer: z.number().nullable().optional(),
+  /** Persönliche Timer-Anpassung der anfragenden Teilnehmer:in. */
+  timerAccommodation: TimerAccommodationEnum.optional(),
   difficulty: DifficultyEnum,
   showQuestionTypeIndicators: z.boolean().optional().default(true),
   order: z.number(),
@@ -2614,8 +2683,24 @@ export const JoinSessionOutputSchema = SessionInfoDTOSchema.extend({
   rejoinToken: z.uuid(),
   teamId: z.uuid().nullable().optional(),
   teamName: z.string().nullable().optional(),
+  /** Persönliche Timer-Anpassung (WCAG 2.2.1); bei Rejoin unverändert. */
+  timerAccommodation: TimerAccommodationEnum.optional().default('DEFAULT'),
 });
 export type JoinSessionOutput = z.infer<typeof JoinSessionOutputSchema>;
+
+/** Input: Persönliche Timer-Anpassung setzen (Teilnehmer:in, WCAG 2.2.1). */
+export const SetTimerAccommodationInputSchema = z.object({
+  code: z.string().length(6),
+  participantId: z.uuid(),
+  accommodation: TimerAccommodationEnum,
+});
+export type SetTimerAccommodationInput = z.infer<typeof SetTimerAccommodationInputSchema>;
+
+/** Output: Bestätigung der persönlichen Timer-Anpassung. */
+export const SetTimerAccommodationOutputSchema = z.object({
+  timerAccommodation: TimerAccommodationEnum,
+});
+export type SetTimerAccommodationOutput = z.infer<typeof SetTimerAccommodationOutputSchema>;
 
 /** Input: Live-Freitextdaten der aktuell aktiven Frage per Session-Code abrufen. */
 export const GetLiveFreetextInputSchema = z.object({
@@ -2754,6 +2839,15 @@ export const GetSessionParticipantInputSchema = z.object({
   participantId: z.uuid(),
 });
 export type GetSessionParticipantInput = z.infer<typeof GetSessionParticipantInputSchema>;
+
+/**
+ * Self-DTO für Teilnehmende (nicht für Host-Teilnehmerlisten).
+ * Enthält die persönliche Timer-Anpassung ohne Lösungsdaten.
+ */
+export const ParticipantSelfDTOSchema = ParticipantDTOSchema.extend({
+  timerAccommodation: TimerAccommodationEnum.default('DEFAULT'),
+});
+export type ParticipantSelfDTO = z.infer<typeof ParticipantSelfDTOSchema>;
 
 /** DTO: Team-Info für Join/Lobby (Story 7.1). */
 export const TeamDTOSchema = z.object({

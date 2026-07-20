@@ -3918,6 +3918,21 @@ describe('SessionHostComponent', { timeout: 30_000 }, () => {
 
     expect(exitAnchor.className).toContain('session-host__exit-anchor--with-primary');
     expect(buttonTexts).toEqual(['Ergebnis zeigen', 'Session beenden']);
+    fixture.componentInstance.hostVoteProgress.set({
+      questionId: 'bbbbbbbb-2222-4222-8222-222222222222',
+      questionOrder: 0,
+      round: 1,
+      totalVotes: 0,
+      pendingTimerAccommodationCount: 1,
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '.session-host__timer-accommodation-warning',
+      )?.textContent,
+    ).toContain(
+      'Eine Person mit Zeitanpassung antwortet noch. „Ergebnis zeigen“ beendet ihre Eingabe.',
+    );
     fixture.destroy();
   });
 

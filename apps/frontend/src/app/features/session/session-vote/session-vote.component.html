@@ -296,19 +296,30 @@
       </div>
     }
 
-    @if (countdownSeconds() !== null && isActive()) {
+    @if ((countdownSeconds() !== null && isActive()) || liveScorePreviewPoints() !== null) {
       <div
         class="vote-countdown-floating"
         [class.vote-countdown-floating--with-tabs]="showChannelTabs()"
       >
-        <span
-          class="vote-countdown"
-          [class.vote-countdown--urgent]="countdownSeconds()! <= 5"
-          role="timer"
-          [attr.aria-label]="countdownAriaLabel()"
-        >
-          {{ countdownSeconds() }}
-        </span>
+        @if (countdownSeconds() !== null && isActive()) {
+          <span
+            class="vote-countdown"
+            [class.vote-countdown--urgent]="countdownSeconds()! <= 5"
+            role="timer"
+            [attr.aria-label]="countdownAriaLabel()"
+          >
+            {{ countdownSeconds() }}
+          </span>
+        }
+        @if (liveScorePreviewPoints() !== null) {
+          <p class="vote-score-preview" data-testid="vote-score-preview">
+            <span class="vote-score-preview__label">{{ liveScorePreviewCaption() }}</span>
+            <strong class="vote-score-preview__value">
+              <span>{{ liveScorePreviewFormattedPoints() }}</span>
+              <span i18n="@@sessionVote.scorePreview.pointsUnit">Punkte</span>
+            </strong>
+          </p>
+        }
       </div>
     }
 
@@ -981,6 +992,68 @@
               <mat-icon>timer_off</mat-icon>
               <span>{{ timeoutMessage() }}</span>
             </div>
+          }
+
+          @if (showTimerAccommodationControls()) {
+            <section
+              class="vote-timer-a11y"
+              data-testid="vote-timer-accommodation"
+              aria-labelledby="vote-timer-a11y-heading"
+            >
+              <header class="vote-timer-a11y__header">
+                <mat-icon class="vote-timer-a11y__icon" aria-hidden="true">schedule</mat-icon>
+                <div>
+                  <h3
+                    id="vote-timer-a11y-heading"
+                    class="vote-timer-a11y__title"
+                    i18n="@@sessionVote.timerAccommodation.legend"
+                  >
+                    Zeit anpassen
+                  </h3>
+                  <p
+                    class="vote-timer-a11y__supporting"
+                    i18n="@@sessionVote.timerAccommodation.help"
+                  >
+                    Nur für dich · Der Quizablauf bleibt unverändert
+                  </p>
+                </div>
+              </header>
+              <p class="vote-timer-a11y__points" i18n="@@sessionVote.timerAccommodation.points">
+                Punkte richten sich nach dem gemeinsamen Countdown
+              </p>
+              <mat-button-toggle-group
+                class="vote-timer-a11y__options"
+                [value]="timerAccommodation()"
+                [disabled]="timerAccommodationSaving()"
+                [attr.aria-label]="timerAccommodationGroupAriaLabel()"
+                (change)="setTimerAccommodation($any($event.value))"
+              >
+                @for (mode of timerAccommodationModes; track mode) {
+                  <mat-button-toggle class="vote-timer-a11y__option" [value]="mode">
+                    {{ timerAccommodationOptionLabel(mode) }}
+                  </mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+              @if (timerAccommodation() === 'OFF') {
+                <p
+                  class="vote-timer-a11y__status"
+                  role="status"
+                  aria-live="polite"
+                  i18n="@@sessionVote.timerAccommodation.offStatus"
+                >
+                  Ohne Timer aktiv · Abgabe möglich, solange die Frage offen ist
+                </p>
+              } @else if (timerAccommodation() === 'EXTENDED') {
+                <p
+                  class="vote-timer-a11y__status"
+                  role="status"
+                  aria-live="polite"
+                  i18n="@@sessionVote.timerAccommodation.extendedStatus"
+                >
+                  10× Zeit aktiv
+                </p>
+              }
+            </section>
           }
 
           @if (voteError()) {

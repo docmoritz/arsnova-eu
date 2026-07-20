@@ -189,7 +189,7 @@
               }
               <mat-select
                 [value]="selectedNickname()"
-                (valueChange)="selectedNickname.set($event)"
+                (valueChange)="selectNickname($event)"
                 [panelClass]="nicknameSelectPanelClass()"
               >
                 <mat-select-trigger>
@@ -243,7 +243,7 @@
                 matInput
                 type="text"
                 [value]="customNickname()"
-                (input)="customNickname.set($any($event.target).value)"
+                (input)="onCustomNicknameInput($any($event.target).value)"
                 i18n-placeholder
                 placeholder="z. B. Max oder M. Mustermann"
                 maxlength="30"
@@ -252,10 +252,10 @@
           </div>
         }
 
-        @if (error()) {
+        @if (joinError()) {
           <p class="join-card__error" role="alert">
             <mat-icon class="join-card__error-icon" aria-hidden="true">warning</mat-icon>
-            <span class="join-card__error-text">{{ error() }}</span>
+            <span class="join-card__error-text">{{ joinError() }}</span>
           </p>
         }
       </mat-card-content>

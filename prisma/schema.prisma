@@ -160,6 +160,8 @@ model Participant {
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   teamId    String?                                  // Story 7.1: Team-Zugehörigkeit (optional)
   team      Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  /// Persönliche Timer-Anpassung (WCAG 2.2.1): DEFAULT | EXTENDED | OFF
+  timerAccommodation String @default("DEFAULT")
   votes      Vote[]
   bonusTokens BonusToken[] // Story 4.6: Ausgestellte Bonus-Tokens
   sessionFeedbacks SessionFeedback[] // Story 4.8: Bewertungen

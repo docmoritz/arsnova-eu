@@ -51,12 +51,16 @@ import {
   isNumericToleranceMode,
   questionSupportsConfidence,
   normalizeShortTextValue,
+  normalizeTimerAccommodation,
   parseNumericInput,
+  previewMaxCorrectScoreAtElapsedSeconds,
   resolveNumericEstimateToleranceMode,
   resolveNumericQuestionEvaluationSettings,
   resolveNumericTolerance,
+  resolvePersonalTimerSeconds,
   resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
+  type Difficulty,
   type NumericInputType,
   type NicknameTheme,
   type ParticipantDTO,
@@ -72,6 +76,7 @@ import {
   type SessionStatus,
   type TeamDTO,
   type TeamLeaderboardEntryDTO,
+  type TimerAccommodation,
   usesNumericShortTextEvaluation,
 } from '@arsnova/shared-types';
 import { CountdownFingersComponent } from '../../../shared/countdown-fingers/countdown-fingers.component';
@@ -107,6 +112,13 @@ import { FeedbackVoteComponent } from '../../feedback/feedback-vote.component';
 
 const PARTICIPANT_STORAGE_KEY = 'arsnova-participant';
 const NICKNAME_STORAGE_KEY = 'arsnova-nickname';
+/** Geräteweite Präferenz für persönliche Timer-Anpassung (WCAG 2.2.1). */
+const TIMER_ACCOMMODATION_STORAGE_KEY = 'arsnova-timer-accommodation';
+const TIMER_ACCOMMODATION_MODES = [
+  'DEFAULT',
+  'EXTENDED',
+  'OFF',
+] as const satisfies readonly TimerAccommodation[];
 const VOTE_RESPONSE_STORAGE_KEY = 'arsnova-vote-response';
 const VOTE_FALLBACK_POLL_MS = 2000;
 const VOTE_FALLBACK_POLL_JITTER_MS = 800;
@@ -457,6 +469,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   });
   readonly debounced = signal(false);
   readonly countdownSeconds = signal<number | null>(null);
+  /** Persönliche Timer-Anpassung (DEFAULT | EXTENDED | OFF). */
+  readonly timerAccommodation = signal<TimerAccommodation>('DEFAULT');
+  /** Session-Timer vor persönlicher Anpassung; steuert die Anzeige der Optionen. */
+  readonly sessionTimerSeconds = signal<number | null>(null);
+  /** Ganzzahlige Sekunden seit Fragenstart für die lokale Punktvorschau (1-Hz). */
+  readonly scorePreviewElapsedSeconds = signal(0);
+  readonly timerAccommodationSaving = signal(false);
+  readonly timerAccommodationModes = TIMER_ACCOMMODATION_MODES;
+  private questionActiveAtMs: number | null = null;
+  /** Nur bei Timer-aus: leichter 1-Hz-Ticker statt Countdown-Interval. */
+  private scorePreviewTimer: ReturnType<typeof setInterval> | null = null;
   readonly motivationMessage = signal<string | null>(null);
   readonly showRewardEffect = signal(false);
   readonly timeoutMessage = signal<string | null>(null);
@@ -725,12 +748,21 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     const candidates = this.buildAutoJoinNicknameCandidates(takenNicknames, participantCountHint);
     let lastError: unknown = null;
 
+    const rejoinToken =
+      typeof localStorage !== 'undefined'
+        ? (localStorage.getItem(`${PARTICIPANT_STORAGE_KEY}-${this.code}`) ?? undefined)
+        : undefined;
+
     for (const nickname of candidates) {
       try {
         const join = await trpc.session.join.mutate({
           code: this.code,
           nickname,
+          rejoinToken,
         });
+        if (join.timerAccommodation) {
+          this.applyTimerAccommodation(join.timerAccommodation, { restartCountdown: false });
+        }
         return {
           participantId: join.participantId,
           sessionId: join.id,
@@ -1118,6 +1150,9 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   );
 
   readonly timerExpired = computed(() => {
+    if (this.timerAccommodation() === 'OFF') {
+      return false;
+    }
     const s = this.countdownSeconds();
     return s !== null && s <= 0;
   });
@@ -1125,6 +1160,67 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     () => this.voteSent() || this.timerExpired() || this.voteClosed(),
   );
   readonly voteSubmissionLocked = computed(() => this.voteSent() || this.voteClosed());
+
+  /** Zeitanpassung nur bei aktiver, getimter Quizfrage (Runde 1) und vor dem Absenden. */
+  readonly showTimerAccommodationControls = computed(() => {
+    if (!this.isActive() || this.voteSent() || this.currentRound() === 2) {
+      return false;
+    }
+    const sessionTimer = this.sessionTimerSeconds();
+    return typeof sessionTimer === 'number' && sessionTimer > 0;
+  });
+
+  /** Lokale Punktvorschau ohne Netzwerklast; nur bei bewerteten, getimten Fragen. */
+  readonly showLiveScorePreview = computed(() => {
+    if (!this.isActive() || this.voteSent() || this.voteClosed() || this.currentRound() === 2) {
+      return false;
+    }
+    if (!this.currentQuestionIsScored()) {
+      return false;
+    }
+    const sessionTimer = this.sessionTimerSeconds();
+    return typeof sessionTimer === 'number' && sessionTimer > 0;
+  });
+
+  readonly liveScorePreviewPoints = computed(() => {
+    if (!this.showLiveScorePreview()) {
+      return null;
+    }
+    const sessionTimer = this.sessionTimerSeconds();
+    const question = this.currentQuestion();
+    if (
+      typeof sessionTimer !== 'number' ||
+      sessionTimer <= 0 ||
+      !question ||
+      !('difficulty' in question)
+    ) {
+      return null;
+    }
+    return previewMaxCorrectScoreAtElapsedSeconds({
+      difficulty: question.difficulty as Difficulty,
+      sessionTimerSeconds: sessionTimer,
+      elapsedSeconds: this.scorePreviewElapsedSeconds(),
+    });
+  });
+
+  readonly liveScorePreviewUsesUpperBound = computed(() => {
+    const type = this.currentQuestion()?.type;
+    return type === 'SHORT_TEXT' || type === 'NUMERIC_ESTIMATE';
+  });
+
+  readonly liveScorePreviewFormattedPoints = computed(() => {
+    const points = this.liveScorePreviewPoints();
+    return points === null ? '' : formatLocaleCount(points);
+  });
+
+  readonly liveScorePreviewInOvertime = computed(() => {
+    const sessionTimer = this.sessionTimerSeconds();
+    return (
+      typeof sessionTimer === 'number' &&
+      sessionTimer > 0 &&
+      this.scorePreviewElapsedSeconds() >= sessionTimer
+    );
+  });
 
   /** True, wenn alle Teilnehmer abgestimmt haben (Server liefert participantCount/totalVotes). Countdown wird dann ausgeblendet. */
   readonly allHaveVoted = computed(() => {
@@ -2388,6 +2484,63 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       : $localize`:@@sessionVote.countdownAriaMany:${seconds}:seconds: Sekunden verbleibend`;
   }
 
+  timerAccommodationGroupAriaLabel(): string {
+    return $localize`:@@sessionVote.timerAccommodation.groupAria:Persönliche Zeit`;
+  }
+
+  timerAccommodationOptionLabel(mode: TimerAccommodation): string {
+    switch (mode) {
+      case 'EXTENDED':
+        return $localize`:@@sessionVote.timerAccommodation.extended:10× Zeit`;
+      case 'OFF':
+        return $localize`:@@sessionVote.timerAccommodation.off:Ohne Timer`;
+      default:
+        return $localize`:@@sessionVote.timerAccommodation.default:Standard`;
+    }
+  }
+
+  liveScorePreviewCaption(): string {
+    if (this.liveScorePreviewInOvertime()) {
+      return $localize`:@@sessionVote.scorePreview.overtimeCorrect:Nachlaufzeit · richtige Antwort`;
+    }
+    return this.liveScorePreviewUsesUpperBound()
+      ? $localize`:@@sessionVote.scorePreview.upToNow:Volle Wertung jetzt`
+      : $localize`:@@sessionVote.scorePreview.correctNow:Richtige Antwort jetzt`;
+  }
+
+  async setTimerAccommodation(mode: TimerAccommodation): Promise<void> {
+    const accommodation = normalizeTimerAccommodation(mode);
+    if (accommodation === this.timerAccommodation() || this.timerAccommodationSaving()) {
+      return;
+    }
+    const participantId = this.participantId();
+    if (!this.code || !participantId) {
+      return;
+    }
+
+    this.timerAccommodationSaving.set(true);
+    try {
+      const result = await trpc.session.setTimerAccommodation.mutate({
+        code: this.code,
+        participantId,
+        accommodation,
+      });
+      this.applyTimerAccommodation(result.timerAccommodation, { restartCountdown: true });
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(TIMER_ACCOMMODATION_STORAGE_KEY, result.timerAccommodation);
+      }
+    } catch (error) {
+      this.voteError.set(
+        localizeKnownServerError(
+          error,
+          $localize`:@@sessionVote.timerAccommodation.error:Zeitanpassung konnte nicht gespeichert werden.`,
+        ),
+      );
+    } finally {
+      this.timerAccommodationSaving.set(false);
+    }
+  }
+
   qaVoteAriaLabel(question: QaQuestionDTO, direction: 'UP' | 'DOWN'): string {
     if (direction === 'UP') {
       return question.myVote === 'UP'
@@ -2651,6 +2804,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
         }
       }
       await this.refreshQuestion();
+      await this.syncTimerAccommodationPreference();
       await this.refreshQuickFeedbackResult();
       this.ensureActiveChannel();
       this.applyPendingLobbyArrivalIfNeeded();
@@ -2799,15 +2953,17 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
           if (data.status === 'ACTIVE' && newRound === 2 && prevRound === 1) {
             this.resetForSecondRoundStart();
           }
-          if (data.status === 'ACTIVE' && data.activeAt && data.timer && data.timer > 0) {
-            const deadline = new Date(data.activeAt).getTime() + data.timer * 1000;
-            this.startCountdownFromDeadline(deadline);
-          } else if (data.status === 'ACTIVE') {
-            this.stopCountdown();
-            this.countdownSeconds.set(null);
+          if (data.status === 'ACTIVE') {
+            if (typeof data.timer === 'number' && data.timer > 0) {
+              this.sessionTimerSeconds.set(data.timer);
+            } else if (data.timer === null) {
+              this.sessionTimerSeconds.set(null);
+            }
+            this.startCountdownFromSessionTimer(data.timer, data.activeAt);
           } else if (data.status !== 'ACTIVE') {
             this.stopCountdown();
             this.countdownSeconds.set(null);
+            this.sessionTimerSeconds.set(null);
           }
           if (this.sessionSettings().teamMode) {
             if (data.status === 'RESULTS') {
@@ -2912,6 +3068,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
       this.lobbyArrivalTimeout = null;
     }
     this.stopCountdown();
+    this.stopScorePreviewTicker();
     this.clearLateSubmitCloseTimeout();
   }
 
@@ -2999,22 +3156,130 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
   }
 
   private startCountdown(q: CurrentQuestion | null): void {
-    if (!q || !('timer' in q) || !q.timer || q.timer <= 0) {
+    if (!q || !('timer' in q)) {
       this.stopCountdown();
       this.countdownSeconds.set(null);
       return;
     }
-    const activeAt = 'activeAt' in q && q.activeAt ? new Date(q.activeAt).getTime() : Date.now();
-    this.startCountdownFromDeadline(activeAt + q.timer * 1000);
+    const studentQ = q as QuestionStudentDTO;
+    if (typeof studentQ.sessionTimer === 'number' || studentQ.sessionTimer === null) {
+      this.sessionTimerSeconds.set(studentQ.sessionTimer);
+    } else if (typeof studentQ.timer === 'number' || studentQ.timer === null) {
+      // Fallback, falls sessionTimer fehlt: timer ist bereits personalisiert.
+      if (this.timerAccommodation() === 'DEFAULT') {
+        this.sessionTimerSeconds.set(studentQ.timer);
+      }
+    }
+    if (studentQ.timerAccommodation) {
+      this.applyTimerAccommodation(studentQ.timerAccommodation, { restartCountdown: false });
+    }
+    const activeAt =
+      'activeAt' in studentQ && studentQ.activeAt
+        ? new Date(studentQ.activeAt).getTime()
+        : Date.now();
+    this.startCountdownFromSessionTimer(this.sessionTimerSeconds(), studentQ.activeAt ?? activeAt);
+  }
+
+  private startCountdownFromSessionTimer(
+    sessionTimer: number | null | undefined,
+    activeAtIsoOrMs?: string | number,
+  ): void {
+    const activeAtMs =
+      typeof activeAtIsoOrMs === 'number'
+        ? activeAtIsoOrMs
+        : activeAtIsoOrMs
+          ? new Date(activeAtIsoOrMs).getTime()
+          : Date.now();
+    this.questionActiveAtMs = Number.isFinite(activeAtMs) ? activeAtMs : Date.now();
+    const personalTimer = resolvePersonalTimerSeconds(sessionTimer, this.timerAccommodation());
+    if (!personalTimer || personalTimer <= 0) {
+      this.stopCountdown();
+      this.countdownSeconds.set(null);
+      this.clearLateSubmitCloseTimeout();
+      this.timeoutMessage.set(null);
+      this.syncScorePreviewTicker();
+      return;
+    }
+    this.stopScorePreviewTicker();
+    this.startCountdownFromDeadline(activeAtMs + personalTimer * 1000);
+  }
+
+  private applyTimerAccommodation(
+    mode: TimerAccommodation,
+    options: { restartCountdown: boolean },
+  ): void {
+    this.timerAccommodation.set(normalizeTimerAccommodation(mode));
+    if (!options.restartCountdown || !this.isActive()) {
+      this.syncScorePreviewTicker();
+      return;
+    }
+    const q = this.currentQuestion();
+    const activeAt = q && 'activeAt' in q && q.activeAt ? q.activeAt : undefined;
+    this.startCountdownFromSessionTimer(this.sessionTimerSeconds(), activeAt);
+  }
+
+  private async syncTimerAccommodationPreference(): Promise<void> {
+    const participantId = this.participantId();
+    if (!this.code || !participantId) {
+      return;
+    }
+
+    let localPreferred: TimerAccommodation = 'DEFAULT';
+    if (typeof localStorage !== 'undefined') {
+      localPreferred = normalizeTimerAccommodation(
+        localStorage.getItem(TIMER_ACCOMMODATION_STORAGE_KEY),
+      );
+    }
+
+    let serverPreferred: TimerAccommodation | null = null;
+    try {
+      const self = await trpc.session.getParticipantSelf.query({
+        code: this.code,
+        participantId,
+      });
+      if (self) {
+        serverPreferred = normalizeTimerAccommodation(self.timerAccommodation);
+      }
+    } catch {
+      /* Self-Info optional; lokale Präferenz bleibt Fallback. */
+    }
+
+    const desired =
+      serverPreferred && serverPreferred !== 'DEFAULT'
+        ? serverPreferred
+        : localPreferred !== 'DEFAULT'
+          ? localPreferred
+          : (serverPreferred ?? 'DEFAULT');
+
+    if (desired !== serverPreferred) {
+      try {
+        const result = await trpc.session.setTimerAccommodation.mutate({
+          code: this.code,
+          participantId,
+          accommodation: desired,
+        });
+        this.applyTimerAccommodation(result.timerAccommodation, { restartCountdown: true });
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(TIMER_ACCOMMODATION_STORAGE_KEY, result.timerAccommodation);
+        }
+        return;
+      } catch {
+        /* lokal anwenden */
+      }
+    }
+
+    this.applyTimerAccommodation(desired, { restartCountdown: true });
   }
 
   private startCountdownFromDeadline(deadline: number): void {
     this.stopCountdown();
+    this.stopScorePreviewTicker();
     this.clearLateSubmitCloseTimeout();
     this.timeoutMessage.set(null);
     const tick = (): void => {
       const remaining = remainingCountdownSeconds(deadline);
       this.countdownSeconds.set(remaining);
+      this.updateScorePreviewElapsedFromCountdown(remaining);
       if (remaining <= 0) {
         this.stopCountdown();
         this.countdownSeconds.set(0);
@@ -3034,6 +3299,60 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     };
     tick();
     this.countdownTimer = setInterval(tick, 1000);
+  }
+
+  private updateScorePreviewElapsedFromCountdown(remainingSeconds: number): void {
+    const sessionTimer = this.sessionTimerSeconds();
+    const personalTimer = resolvePersonalTimerSeconds(sessionTimer, this.timerAccommodation());
+    if (typeof personalTimer !== 'number' || personalTimer <= 0) {
+      return;
+    }
+    this.setScorePreviewElapsedSeconds(Math.max(0, personalTimer - remainingSeconds));
+  }
+
+  private setScorePreviewElapsedSeconds(elapsedSeconds: number): void {
+    const next = Math.max(0, Math.floor(elapsedSeconds));
+    if (this.scorePreviewElapsedSeconds() !== next) {
+      this.scorePreviewElapsedSeconds.set(next);
+    }
+  }
+
+  private syncScorePreviewTicker(): void {
+    const needsTicker =
+      this.showLiveScorePreview() &&
+      this.timerAccommodation() === 'OFF' &&
+      this.questionActiveAtMs !== null;
+    if (!needsTicker) {
+      this.stopScorePreviewTicker();
+      if (!this.showLiveScorePreview()) {
+        this.scorePreviewElapsedSeconds.set(0);
+      }
+      return;
+    }
+    if (this.scorePreviewTimer) {
+      return;
+    }
+    const tick = (): void => {
+      if (!this.showLiveScorePreview() || this.timerAccommodation() !== 'OFF') {
+        this.stopScorePreviewTicker();
+        return;
+      }
+      const activeAt = this.questionActiveAtMs;
+      if (activeAt === null) {
+        return;
+      }
+      this.setScorePreviewElapsedSeconds((Date.now() - activeAt) / 1000);
+    };
+    tick();
+    this.scorePreviewTimer = setInterval(tick, 1000);
+  }
+
+  private stopScorePreviewTicker(): void {
+    if (!this.scorePreviewTimer) {
+      return;
+    }
+    clearInterval(this.scorePreviewTimer);
+    this.scorePreviewTimer = null;
   }
 
   private scheduleLateSubmitClose(): void {
@@ -3877,6 +4196,7 @@ export class SessionVoteComponent implements OnInit, OnDestroy {
     this.timeoutMessage.set(null);
     this.clearLateSubmitCloseTimeout();
     this.voteSent.set(true);
+    this.stopScorePreviewTicker();
     this.cdr.detectChanges();
 
     try {

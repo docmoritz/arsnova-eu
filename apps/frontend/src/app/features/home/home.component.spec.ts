@@ -236,6 +236,26 @@ describe('HomeComponent', () => {
       expect(button.hasAttribute('aria-label')).toBe(false);
       expect(button.textContent).toContain("Los geht's");
     });
+
+    it('stellt Hero und Kartentitel als programmatische Überschriften bereit', () => {
+      const fixture = createHomeFixture();
+      fixture.detectChanges();
+
+      const hero = fixture.nativeElement.querySelector('h1.home-hero') as HTMLHeadingElement;
+      const cardTitles = Array.from(
+        fixture.nativeElement.querySelectorAll<HTMLHeadingElement>('h2.home-card__title'),
+      ).map((heading) => heading.textContent?.replace(/\s+/g, ' ').trim());
+
+      expect(hero).not.toBeNull();
+      expect(hero.textContent).toMatch(/Quiz/);
+      expect(cardTitles).toEqual(
+        expect.arrayContaining([
+          'Dabei sein',
+          'Live mit einem Klick',
+          'Quiz vorbereiten oder starten',
+        ]),
+      );
+    });
   });
 
   describe('isPlayfulPreset', () => {

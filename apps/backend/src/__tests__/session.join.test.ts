@@ -112,6 +112,7 @@ describe('session.join', () => {
       id: PARTICIPANT_ID,
       teamId: TEAM_ID,
       team: { name: 'Team A' },
+      timerAccommodation: 'DEFAULT',
     });
 
     const result = await caller.join({
@@ -128,6 +129,7 @@ describe('session.join', () => {
       select: {
         id: true,
         teamId: true,
+        timerAccommodation: true,
         team: {
           select: {
             name: true,

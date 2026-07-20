@@ -2,7 +2,7 @@
   @if (!authenticated()) {
     <mat-card appearance="outlined" class="admin-card admin-card--login">
       <mat-card-header>
-        <mat-card-title i18n="@@admin.loginTitle">Admin-Login</mat-card-title>
+        <h1 mat-card-title i18n="@@admin.loginTitle">Admin-Login</h1>
       </mat-card-header>
       <mat-card-content>
         <p class="admin-help" i18n="@@admin.loginHelp">
@@ -60,7 +60,7 @@
           <div class="admin-session-grid">
             <mat-card appearance="outlined" class="admin-card">
               <mat-card-header>
-                <mat-card-title i18n="@@admin.areaTitle">Session-Übersicht</mat-card-title>
+                <h2 mat-card-title i18n="@@admin.areaTitle">Session-Übersicht</h2>
                 <mat-card-subtitle i18n="@@admin.listCardSubtitle">
                   Per Code suchen oder Eintrag in der Liste antippen.
                 </mat-card-subtitle>

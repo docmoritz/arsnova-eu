@@ -1430,6 +1430,19 @@
                           {{ countdownSeconds() }}
                         </span>
                       }
+                      @if (
+                        countdownSeconds() !== null &&
+                        effectiveStatus() === 'ACTIVE' &&
+                        (displayedCurrentQuestionForHost()?.timer ?? 0) > 0
+                      ) {
+                        <p
+                          class="session-host__timer-a11y-note"
+                          i18n="@@sessionHost.timerAccommodationNote"
+                        >
+                          Teilnehmende können ihre persönliche Zeit bei Bedarf verlängern oder
+                          abschalten.
+                        </p>
+                      }
                     </mat-card-subtitle>
                     <mat-card-title class="session-host__question-title">
                       <span
@@ -3523,6 +3536,12 @@
           !isQaSession() &&
           hasCurrentQuizQuestionForHost()
         ) {
+          @if (pendingTimerAccommodationCount(); as pendingCount) {
+            <p class="session-host__timer-accommodation-warning" role="status" aria-live="polite">
+              <mat-icon aria-hidden="true">schedule</mat-icon>
+              <span>{{ pendingTimerAccommodationLabel(pendingCount) }}</span>
+            </p>
+          }
           @if (shouldShowPeerInstructionSuggestion(displayedCurrentQuestionForHost())) {
             <button
               mat-flat-button

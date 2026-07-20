@@ -38,6 +38,7 @@ const {
   quickFeedbackResultsQueryMock,
   quickFeedbackOnResultsSubscribeMock,
   getParticipantSelfQueryMock,
+  setTimerAccommodationMutateMock,
   getTeamsQueryMock,
   getTeamLeaderboardQueryMock,
   getPersonalScorecardQueryMock,
@@ -62,6 +63,7 @@ const {
   quickFeedbackResultsQueryMock: vi.fn(),
   quickFeedbackOnResultsSubscribeMock: vi.fn(),
   getParticipantSelfQueryMock: vi.fn(),
+  setTimerAccommodationMutateMock: vi.fn(),
   getTeamsQueryMock: vi.fn(),
   getTeamLeaderboardQueryMock: vi.fn(),
   getPersonalScorecardQueryMock: vi.fn(),
@@ -90,6 +92,7 @@ vi.mock('../../../core/trpc.client', () => ({
       getCurrentQuestionForStudent: { query: currentQuestionQueryMock },
       confirmReadingReady: { mutate: confirmReadingReadyMutateMock },
       getParticipantSelf: { query: getParticipantSelfQueryMock },
+      setTimerAccommodation: { mutate: setTimerAccommodationMutateMock },
       getTeams: { query: getTeamsQueryMock },
       getTeamLeaderboard: { query: getTeamLeaderboardQueryMock },
       getPersonalScorecard: { query: getPersonalScorecardQueryMock },
@@ -215,7 +218,9 @@ describe('SessionVoteComponent', { timeout: 30_000 }, () => {
       nickname: 'Ada',
       teamId: '22222222-2222-4222-8222-222222222222',
       teamName: 'Rot',
+      timerAccommodation: 'DEFAULT',
     });
+    setTimerAccommodationMutateMock.mockResolvedValue({ timerAccommodation: 'EXTENDED' });
     getTeamsQueryMock.mockResolvedValue({ teams: [], teamCount: 0 });
     getTeamLeaderboardQueryMock.mockResolvedValue([
       {
@@ -319,6 +324,160 @@ describe('SessionVoteComponent', { timeout: 30_000 }, () => {
       code: 'ABC123',
       participantId: '11111111-1111-4111-8111-111111111111',
     });
+    fixture.destroy();
+  });
+
+  it('zeigt die persönliche Zeitanpassung bei aktivem Session-Timer und speichert EXTENDED', async () => {
+    getInfoQueryMock.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      serverTime: MOCK_SERVER_TIME,
+      code: 'ABC123',
+      type: 'QUIZ',
+      status: 'ACTIVE',
+      quizName: 'Q',
+      title: null,
+      participantCount: 2,
+      teamMode: false,
+      enableRewardEffects: false,
+      preset: 'SERIOUS',
+      enableEmojiReactions: false,
+      channels: {
+        quiz: { enabled: true },
+        qa: { enabled: false, open: false, title: null, moderationMode: false },
+        quickFeedback: { enabled: false, open: false },
+      },
+    });
+    currentQuestionQueryMock.mockResolvedValue({
+      id: 'timer-a11y-question',
+      text: 'Frage mit Timer',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A' },
+        { id: 'a2', text: 'B' },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 300,
+      sessionTimer: 30,
+      timerAccommodation: 'DEFAULT',
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 2,
+    });
+
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    fixture.detectChanges();
+    await flushComponentAfterStable(fixture, 50);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    expect(component.showTimerAccommodationControls()).toBe(true);
+    expect(component.sessionTimerSeconds()).toBe(30);
+
+    const host = fixture.nativeElement as HTMLElement;
+    const timerCard = host.querySelector(
+      '[data-testid="vote-timer-accommodation"]',
+    ) as HTMLElement | null;
+    expect(timerCard).toBeTruthy();
+    expect(timerCard?.querySelector('h3')?.textContent).toContain('Zeit anpassen');
+    expect(timerCard?.querySelector('mat-button-toggle-group')).toBeTruthy();
+    expect(host.textContent).toContain('Zeit anpassen');
+    expect(host.textContent).toContain('Quizablauf bleibt unverändert');
+    expect(host.textContent).toContain('Punkte richten sich nach dem gemeinsamen Countdown');
+    expect(host.textContent).toContain('Standard');
+    expect(host.textContent).toContain('10× Zeit');
+    expect(host.textContent).toContain('Ohne Timer');
+
+    await component.setTimerAccommodation('EXTENDED');
+    fixture.detectChanges();
+
+    expect(setTimerAccommodationMutateMock).toHaveBeenCalledWith({
+      code: 'ABC123',
+      participantId: '11111111-1111-4111-8111-111111111111',
+      accommodation: 'EXTENDED',
+    });
+    expect(component.timerAccommodation()).toBe('EXTENDED');
+    expect(host.textContent).toContain('10× Zeit aktiv');
+    expect(localStorage.getItem('arsnova-timer-accommodation')).toBe('EXTENDED');
+    fixture.destroy();
+  });
+
+  it('deaktiviert den persönlichen Countdown bei Timer aus ohne Interaktion zu sperren', async () => {
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.status.set('ACTIVE');
+    component.currentRound.set(1);
+    component.sessionTimerSeconds.set(30);
+    component.countdownSeconds.set(5);
+    component.timerAccommodation.set('DEFAULT');
+    component.voteSent.set(false);
+    component.voteClosed.set(false);
+
+    component['applyTimerAccommodation']('OFF', { restartCountdown: true });
+
+    expect(component.timerAccommodation()).toBe('OFF');
+    expect(component.countdownSeconds()).toBeNull();
+    expect(component.timerExpired()).toBe(false);
+    expect(component.voteInteractionLocked()).toBe(false);
+    expect(component.showTimerAccommodationControls()).toBe(true);
+    fixture.destroy();
+  });
+
+  it('zeigt die Punktvorschau am Session-Timer auch in der Nachlaufzeit als Mindestwert', () => {
+    const fixture = TestBed.createComponent(SessionVoteComponent);
+    const component = fixture.componentInstance;
+    component.status.set('ACTIVE');
+    component.currentRound.set(1);
+    component.voteSent.set(false);
+    component.voteClosed.set(false);
+    component.sessionTimerSeconds.set(60);
+    component.scorePreviewElapsedSeconds.set(0);
+    component.currentQuestion.set({
+      id: 'score-preview-question',
+      text: 'Frage',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      order: 0,
+      totalQuestions: 1,
+      answers: [
+        { id: 'a1', text: 'A' },
+        { id: 'a2', text: 'B' },
+      ],
+      activeAt: new Date().toISOString(),
+      timer: 60,
+      sessionTimer: 60,
+      timerAccommodation: 'EXTENDED',
+      currentRound: 1,
+      totalVotes: 0,
+      participantCount: 1,
+    });
+
+    expect(component.showLiveScorePreview()).toBe(true);
+    expect(component.liveScorePreviewPoints()).toBe(2000);
+
+    component.scorePreviewElapsedSeconds.set(30);
+    expect(component.liveScorePreviewPoints()).toBe(1000);
+    expect(component.liveScorePreviewCaption()).toBe('Richtige Antwort jetzt');
+
+    component.scorePreviewElapsedSeconds.set(90);
+    expect(component.liveScorePreviewPoints()).toBe(200);
+    expect(component.liveScorePreviewInOvertime()).toBe(true);
+    expect(component.liveScorePreviewCaption()).toBe('Nachlaufzeit · richtige Antwort');
+    expect(component.liveScorePreviewFormattedPoints()).toBe('200');
+    fixture.detectChanges();
+    const floatingPreview = fixture.nativeElement.querySelector(
+      '.vote-countdown-floating .vote-score-preview',
+    ) as HTMLElement | null;
+    expect(floatingPreview?.querySelector('.vote-score-preview__label')?.textContent).toContain(
+      'Nachlaufzeit · richtige Antwort',
+    );
+    expect(
+      floatingPreview
+        ?.querySelector('.vote-score-preview__value')
+        ?.textContent?.replace(/\s+/g, ''),
+    ).toContain('200Punkte');
     fixture.destroy();
   });
 

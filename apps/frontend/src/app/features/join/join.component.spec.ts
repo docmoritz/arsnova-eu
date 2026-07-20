@@ -414,6 +414,39 @@ describe('JoinComponent', () => {
     expect(navSpy).toHaveBeenCalledWith(['session', 'ABC123', 'vote']);
   });
 
+  it('behaelt die Lobby bei Nickname-Konflikt und zeigt den Fehler inline', async () => {
+    vi.mocked(trpc.session.getInfo.query).mockResolvedValue({
+      ...mockSession,
+      allowCustomNicknames: false,
+    });
+    vi.mocked(trpc.session.join.mutate).mockRejectedValueOnce({
+      message: 'Dieser Nickname ist in dieser Session bereits vergeben.',
+      data: { code: 'CONFLICT' },
+    });
+    vi.mocked(trpc.session.getParticipantNicknames.query).mockResolvedValue({
+      nicknames: ['Ada Yonath'],
+      participantCount: 1,
+    });
+
+    const { fixture, comp } = createWithCode('ABC123');
+    const router = fixture.debugElement.injector.get(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 80));
+
+    comp.selectedNickname.set('Ada Yonath');
+    await comp.submitJoin();
+    fixture.detectChanges();
+
+    expect(navSpy).not.toHaveBeenCalled();
+    expect(comp.error()).toBeNull();
+    expect(comp.session()?.code).toBe('ABC123');
+    expect(comp.joinError()).toContain('bereits vergeben');
+    expect(comp.isTaken('Ada Yonath')).toBe(true);
+    expect(comp.selectedNickname()).toBe('');
+  });
+
   it('laesst lange Pseudonyme aus der Liste beitreten und sendet den Backend-kompatiblen Namen', async () => {
     const longNickname = NICKNAME_LISTS.PRIMARY_SCHOOL.find((name) => name.length > 30)!;
     vi.mocked(trpc.session.getInfo.query).mockResolvedValue({

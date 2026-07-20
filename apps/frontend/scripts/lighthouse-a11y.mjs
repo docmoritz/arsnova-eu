@@ -99,9 +99,12 @@ async function main() {
       console.log(
         `\nAccessibility Score: ${score ?? '?'} ${score != null && score >= 90 ? '✓ (DoD ≥ 90)' : score != null ? '✗ (Ziel ≥ 90)' : ''}`,
       );
+      const nonBlockingModes = new Set(['manual', 'notApplicable', 'informative']);
       const failed = (data.categories?.accessibility?.auditRefs ?? []).filter((ref) => {
         const audit = data.audits?.[ref.id];
-        return (ref.weight ?? 0) > 0 && (audit?.score === 0 || audit?.score === false);
+        if (!audit || nonBlockingModes.has(audit.scoreDisplayMode)) return false;
+        // Gewicht 0 darf keine WCAG-relevanten Fehler verschlucken.
+        return audit.score === 0 || audit.score === false;
       });
       if (failed.length) {
         console.log('Fehlgeschlagene Audits:', failed.map((r) => r.id).join(', '));

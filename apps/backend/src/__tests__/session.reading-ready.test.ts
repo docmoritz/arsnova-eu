@@ -303,7 +303,10 @@ describe('session reading-ready flow', () => {
     expect(first).toMatchObject({ id: QUESTION_ID, totalVotes: 1 });
     expect(second).toMatchObject({ id: QUESTION_ID, totalVotes: 1 });
     expect(voteCountMock).toHaveBeenCalledTimes(1);
-    expect(prismaMock.participant.findFirst).toHaveBeenCalledTimes(1);
+    const membershipLookups = prismaMock.participant.findFirst.mock.calls.filter(
+      ([query]) => query?.select?.id === true,
+    );
+    expect(membershipLookups).toHaveLength(1);
   });
 
   it('liefert bei ACTIVE fuer SHORT_TEXT keine Musterloesungen an Teilnehmende', async () => {

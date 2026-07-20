@@ -651,6 +651,113 @@ describe('vote.submit', () => {
     );
   });
 
+  it('akzeptiert Votes nach Session-Timerende bei persönlicher Verlängerung', async () => {
+    const activeAt = new Date('2026-05-24T10:00:00.000Z');
+    // Session-Timer 10s wäre abgelaufen; EXTENDED (10×) erlaubt bis 100s.
+    const nowSpy = vi
+      .spyOn(Date, 'now')
+      .mockReturnValue(new Date('2026-05-24T10:00:25.000Z').getTime());
+    prismaMock.participant.findFirst.mockResolvedValue({
+      id: 'participant-1',
+      sessionId: 'session-1',
+      timerAccommodation: 'EXTENDED',
+      session: {
+        status: 'ACTIVE',
+        quizId: 'quiz-1',
+        currentQuestion: 0,
+        currentRound: 1,
+        statusChangedAt: activeAt,
+        activeQuestionStartedAt: activeAt,
+      },
+    });
+    prismaMock.quiz.findUnique.mockResolvedValue({
+      defaultTimer: null,
+      timerScaleByDifficulty: true,
+    });
+    prismaMock.question.findFirst.mockResolvedValue({
+      id: 'question-1',
+      order: 0,
+      quizId: 'quiz-1',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      timer: 10,
+      shortTextMaxLength: null,
+      shortTextCaseSensitive: false,
+      ratingMin: null,
+      ratingMax: null,
+      answers: [
+        { id: ANSWER_ID_1, text: 'A', isCorrect: true },
+        { id: ANSWER_ID_2, text: 'B', isCorrect: false },
+      ],
+    });
+
+    try {
+      await caller.submit({
+        sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        participantId: '7290465d-5982-4b3d-ab47-a2088830d4b0',
+        questionId: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+        answerIds: [ANSWER_ID_1],
+      });
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(prismaMock.vote.create).toHaveBeenCalled();
+  });
+
+  it('akzeptiert Votes ohne Deadline bei persönlicher Timer-Deaktivierung', async () => {
+    const activeAt = new Date('2026-05-24T10:00:00.000Z');
+    const nowSpy = vi
+      .spyOn(Date, 'now')
+      .mockReturnValue(new Date('2026-05-24T10:05:00.000Z').getTime());
+    prismaMock.participant.findFirst.mockResolvedValue({
+      id: 'participant-1',
+      sessionId: 'session-1',
+      timerAccommodation: 'OFF',
+      session: {
+        status: 'ACTIVE',
+        quizId: 'quiz-1',
+        currentQuestion: 0,
+        currentRound: 1,
+        statusChangedAt: activeAt,
+        activeQuestionStartedAt: activeAt,
+      },
+    });
+    prismaMock.quiz.findUnique.mockResolvedValue({
+      defaultTimer: null,
+      timerScaleByDifficulty: true,
+    });
+    prismaMock.question.findFirst.mockResolvedValue({
+      id: 'question-1',
+      order: 0,
+      quizId: 'quiz-1',
+      type: 'SINGLE_CHOICE',
+      difficulty: 'MEDIUM',
+      timer: 10,
+      shortTextMaxLength: null,
+      shortTextCaseSensitive: false,
+      ratingMin: null,
+      ratingMax: null,
+      answers: [
+        { id: ANSWER_ID_1, text: 'A', isCorrect: true },
+        { id: ANSWER_ID_2, text: 'B', isCorrect: false },
+      ],
+    });
+
+    try {
+      await caller.submit({
+        sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        participantId: '7290465d-5982-4b3d-ab47-a2088830d4b0',
+        questionId: '7ed3cc25-3179-4a91-9dc3-acc00971fb46',
+        answerIds: [ANSWER_ID_1],
+      });
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    expect(prismaMock.vote.create).toHaveBeenCalled();
+  });
+
   it('erzwingt die aktuell aktive Frage', async () => {
     prismaMock.participant.findFirst.mockResolvedValue({
       id: 'participant-1',
