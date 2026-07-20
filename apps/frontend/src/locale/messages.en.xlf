@@ -4234,7 +4234,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4630</context>
+          <context context-type="linenumber">4646</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.html</context>
@@ -4286,7 +4286,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3603</context>
+          <context context-type="linenumber">3609</context>
         </context-group>
       </trans-unit>
       <trans-unit id="feedback.compareRoundStartAria" datatype="html">
@@ -4730,7 +4730,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1872</context>
+          <context context-type="linenumber">1880</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.copyJoinLinkFailed" datatype="html">
@@ -4742,7 +4742,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1877</context>
+          <context context-type="linenumber">1885</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9053966995979025004" datatype="html">
@@ -4766,7 +4766,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4712</context>
+          <context context-type="linenumber">4728</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4286285949730415684" datatype="html">
@@ -4778,7 +4778,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4712</context>
+          <context context-type="linenumber">4728</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6496369252923108566" datatype="html">
@@ -6927,7 +6927,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4942</context>
+          <context context-type="linenumber">4958</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -6943,7 +6943,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4944</context>
+          <context context-type="linenumber">4960</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -6959,7 +6959,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4947</context>
+          <context context-type="linenumber">4963</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -6975,7 +6975,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4947</context>
+          <context context-type="linenumber">4963</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -6991,7 +6991,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4949</context>
+          <context context-type="linenumber">4965</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -7007,7 +7007,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4949</context>
+          <context context-type="linenumber">4965</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -7263,7 +7263,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2886</context>
+          <context context-type="linenumber">2894</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -7283,7 +7283,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2886</context>
+          <context context-type="linenumber">2894</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -7379,7 +7379,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2903</context>
+          <context context-type="linenumber">2911</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -9798,7 +9798,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4613</context>
+          <context context-type="linenumber">4629</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -9818,7 +9818,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4615</context>
+          <context context-type="linenumber">4631</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -9838,7 +9838,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4617</context>
+          <context context-type="linenumber">4633</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -13824,7 +13824,7 @@
         <target>Start discussion phase—talk it over before round 2</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3548</context>
+          <context context-type="linenumber">3554</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.discussionPhaseButton" datatype="html">
@@ -13832,7 +13832,7 @@
         <target>Discussion phase</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3551</context>
+          <context context-type="linenumber">3557</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.revealResultsDespiteSuggestion" datatype="html">
@@ -13840,7 +13840,7 @@
         <target>Show result anyway</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3561</context>
+          <context context-type="linenumber">3567</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.revealResultsAnchor" datatype="html">
@@ -13848,7 +13848,7 @@
         <target>Show results</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3573,3575</context>
+          <context context-type="linenumber">3579,3581</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.nextQuestionAnchor" datatype="html">
@@ -13856,7 +13856,7 @@
         <target>Next question</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3589,3591</context>
+          <context context-type="linenumber">3595,3597</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.skipDiscussionNextQuestionAria" datatype="html">
@@ -13864,7 +13864,7 @@
         <target>On to the next question without a second vote</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3612</context>
+          <context context-type="linenumber">3618</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.skipDiscussionNextQuestion" datatype="html">
@@ -13872,7 +13872,7 @@
         <target>On to the next question without a second vote</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3615</context>
+          <context context-type="linenumber">3621</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.prevQuestionTooltip" datatype="html">
@@ -13880,7 +13880,7 @@
         <target>Shows the previous question again with its result and correct answer (without a new vote).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3632</context>
+          <context context-type="linenumber">3638</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.prevQuestionAnchor" datatype="html">
@@ -13888,7 +13888,7 @@
         <target>Show previous result again</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3634,3636</context>
+          <context context-type="linenumber">3640,3642</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.endSessionAnchor" datatype="html">
@@ -13896,7 +13896,7 @@
         <target>End session</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3644,3646</context>
+          <context context-type="linenumber">3650,3652</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5482759156748483613" datatype="html">
@@ -13904,7 +13904,7 @@
         <target>Host view for lobby and control.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.html</context>
-          <context context-type="linenumber">3652</context>
+          <context context-type="linenumber">3658</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicTrackLobbyWarm" datatype="html">
@@ -14232,7 +14232,7 @@
         <target>1 answer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1518</context>
+          <context context-type="linenumber">1526</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.responseCountMany" datatype="html">
@@ -14240,7 +14240,7 @@
         <target><x id="count" equiv-text="count"/> answers</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1519</context>
+          <context context-type="linenumber">1527</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierLowWithLabel" datatype="html">
@@ -14248,7 +14248,7 @@
         <target>Low · <x id="label" equiv-text="q.confidenceLabelLow"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1610</context>
+          <context context-type="linenumber">1618</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierLow" datatype="html">
@@ -14256,7 +14256,7 @@
         <target>Low (1–2)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1611</context>
+          <context context-type="linenumber">1619</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierMid" datatype="html">
@@ -14264,7 +14264,7 @@
         <target>Medium (3)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1615</context>
+          <context context-type="linenumber">1623</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierHighWithLabel" datatype="html">
@@ -14272,7 +14272,7 @@
         <target>High · <x id="label" equiv-text="q.confidenceLabelHigh"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1647</context>
+          <context context-type="linenumber">1655</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceTierHigh" datatype="html">
@@ -14280,7 +14280,7 @@
         <target>High (4–5)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1648</context>
+          <context context-type="linenumber">1656</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabCorrect" datatype="html">
@@ -14288,7 +14288,7 @@
         <target>Correct</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1662</context>
+          <context context-type="linenumber">1670</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabIncorrect" datatype="html">
@@ -14296,7 +14296,7 @@
         <target>Incorrect</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1669</context>
+          <context context-type="linenumber">1677</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceCrossTabCellAria" datatype="html">
@@ -14304,7 +14304,7 @@
         <target><x id="row" equiv-text="rowLabel"/> · <x id="tier" equiv-text="tierLabel"/> · <x id="count" equiv-text="count"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1761</context>
+          <context context-type="linenumber">1769</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceMisconceptionSingular" datatype="html">
@@ -14312,7 +14312,7 @@
         <target>1 confident wrong answer – possible misconception</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1766</context>
+          <context context-type="linenumber">1774</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.confidenceMisconceptionPlural" datatype="html">
@@ -14320,7 +14320,7 @@
         <target><x id="count" equiv-text="count"/> confident wrong answers – possible misconceptions</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1767</context>
+          <context context-type="linenumber">1775</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceCrossTab" datatype="html">
@@ -14328,7 +14328,7 @@
         <target>Correct+high <x id="correctHigh" equiv-text="crossTab.correctHigh"/> · Wrong+high <x id="incorrectHigh" equiv-text="crossTab.incorrectHigh"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1778</context>
+          <context context-type="linenumber">1786</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportAggregationRound2Label" datatype="html">
@@ -14336,7 +14336,7 @@
         <target>2 (Peer Instruction)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1798</context>
+          <context context-type="linenumber">1806</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportRoundParticipationGap" datatype="html">
@@ -14344,7 +14344,7 @@
         <target>Round 1: <x id="r1" equiv-text="round1Count"/> votes · Aggregated: Round 2 with <x id="r2" equiv-text="round2Count"/> votes</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1816</context>
+          <context context-type="linenumber">1824</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportAggregationRound2Context" datatype="html">
@@ -14352,7 +14352,7 @@
         <target>Aggregation Round 2 (Peer Instruction)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1818</context>
+          <context context-type="linenumber">1826</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportAggregationRound1Context" datatype="html">
@@ -14360,7 +14360,7 @@
         <target>Aggregation round 1</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">1821</context>
+          <context context-type="linenumber">1829</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutTitle" datatype="html">
@@ -14368,7 +14368,7 @@
         <target>That didn’t quite go through</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2419</context>
+          <context context-type="linenumber">2427</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutBody" datatype="html">
@@ -14376,7 +14376,7 @@
         <target>No worries — this happens sometimes (a quick blip or flaky Wi‑Fi). Give it a couple of seconds, then tap Try again — that usually does the trick.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2420</context>
+          <context context-type="linenumber">2428</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutQaTitle" datatype="html">
@@ -14384,7 +14384,7 @@
         <target>Your Q&amp;A board isn’t playing along right now</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2427</context>
+          <context context-type="linenumber">2435</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutQaBody" datatype="html">
@@ -14392,7 +14392,7 @@
         <target>Nothing’s broken — it just didn’t work that once. Take a breath, wait 2–3 seconds, tap Try again, and it’ll usually snap back.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2428</context>
+          <context context-type="linenumber">2436</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutExportTitle" datatype="html">
@@ -14400,7 +14400,7 @@
         <target>Export isn’t ready yet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2435</context>
+          <context context-type="linenumber">2443</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.steeringCalloutExportBody" datatype="html">
@@ -14408,7 +14408,7 @@
         <target>PDF or Excel export didn’t go through that time. Wait a few seconds, tap Try again — a second try usually sorts it.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2436</context>
+          <context context-type="linenumber">2444</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceParticipantsHome" datatype="html">
@@ -14416,7 +14416,7 @@
         <target>Participants and the presentation view are redirected to the home page.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2570</context>
+          <context context-type="linenumber">2578</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceSessionEnds" datatype="html">
@@ -14424,7 +14424,7 @@
         <target>The session ends for everyone; it is not possible to continue with the same code.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2571</context>
+          <context context-type="linenumber">2579</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceWaitingCount" datatype="html">
@@ -14432,7 +14432,7 @@
         <target><x id="participantCount" equiv-text="participants"/> Participants are still in the session.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2575</context>
+          <context context-type="linenumber">2583</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceExportAfterEnd" datatype="html">
@@ -14440,7 +14440,7 @@
         <target>You already have results. After ending, you can export them or review feedback in the finished view.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2580</context>
+          <context context-type="linenumber">2588</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceNoResultsYet" datatype="html">
@@ -14448,7 +14448,7 @@
         <target>There are no usable results yet. After ending, you will be taken directly to the home page.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2584</context>
+          <context context-type="linenumber">2592</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.leaveConsequenceBonusCodes" datatype="html">
@@ -14456,7 +14456,7 @@
         <target>For bonus codes: Advise participants to copy their personal code now (clipboard) before they leave the page - otherwise they can easily lose it.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2589</context>
+          <context context-type="linenumber">2597</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1449856638611469268" datatype="html">
@@ -14464,7 +14464,7 @@
         <target>Leave session?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2595</context>
+          <context context-type="linenumber">2603</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5874101222082342849" datatype="html">
@@ -14472,7 +14472,7 @@
         <target>Your session is still active.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2596</context>
+          <context context-type="linenumber">2604</context>
         </context-group>
       </trans-unit>
       <trans-unit id="388074101804534257" datatype="html">
@@ -14480,7 +14480,7 @@
         <target>Leave anyway</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2598</context>
+          <context context-type="linenumber">2606</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7676535372692514896" datatype="html">
@@ -14488,7 +14488,7 @@
         <target>Back to session</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2599</context>
+          <context context-type="linenumber">2607</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicPreviewStopAria" datatype="html">
@@ -14496,7 +14496,7 @@
         <target>Stop preview</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2787</context>
+          <context context-type="linenumber">2795</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicPreviewTrackAria" datatype="html">
@@ -14504,7 +14504,7 @@
         <target>Preview track (max. 12 seconds)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2788</context>
+          <context context-type="linenumber">2796</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicToggleOn" datatype="html">
@@ -14512,7 +14512,7 @@
         <target>Sound on</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2800</context>
+          <context context-type="linenumber">2808</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.musicToggleOff" datatype="html">
@@ -14520,7 +14520,7 @@
         <target>Sound off</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2801</context>
+          <context context-type="linenumber">2809</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.participantCountOne" datatype="html">
@@ -14528,7 +14528,7 @@
         <target>Participant</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2858</context>
+          <context context-type="linenumber">2866</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.participantCountMany" datatype="html">
@@ -14536,7 +14536,7 @@
         <target>Participants</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2862</context>
+          <context context-type="linenumber">2870</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.connectedParticipantCountOne" datatype="html">
@@ -14544,7 +14544,7 @@
         <target>1 live participant connected</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2879</context>
+          <context context-type="linenumber">2887</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.connectedParticipantCountMany" datatype="html">
@@ -14552,7 +14552,7 @@
         <target><x id="connectedCount" equiv-text="connectedCount"/> live participants connected</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2881</context>
+          <context context-type="linenumber">2889</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6807726879921681315" datatype="html">
@@ -14560,7 +14560,7 @@
         <target>No one is in this team yet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">2907</context>
+          <context context-type="linenumber">2915</context>
         </context-group>
       </trans-unit>
       <trans-unit id="241839647344135361" datatype="html">
@@ -14568,7 +14568,7 @@
         <target>Rating</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3720</context>
+          <context context-type="linenumber">3729</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1477629611819298713" datatype="html">
@@ -14576,7 +14576,7 @@
         <target>Ratings</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3724</context>
+          <context context-type="linenumber">3733</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1459586565397898784" datatype="html">
@@ -14584,11 +14584,11 @@
         <target>Results are in.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3729</context>
+          <context context-type="linenumber">3738</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3736</context>
+          <context context-type="linenumber">3745</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3158548505527185467" datatype="html">
@@ -14596,11 +14596,11 @@
         <target>Time&apos;s up.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3730</context>
+          <context context-type="linenumber">3739</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3737</context>
+          <context context-type="linenumber">3746</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1777945885954120583" datatype="html">
@@ -14608,7 +14608,7 @@
         <target>Waiting for ratings…</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3731</context>
+          <context context-type="linenumber">3740</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6747188936976845111" datatype="html">
@@ -14616,7 +14616,7 @@
         <target>Waiting for answers…</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3738</context>
+          <context context-type="linenumber">3747</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8216228250854226494" datatype="html">
@@ -14624,7 +14624,23 @@
         <target><x id="PH" equiv-text="votes"/> of <x id="PH_1" equiv-text="participants"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3742</context>
+          <context context-type="linenumber">3751</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.timerAccommodationPendingOne" datatype="html">
+        <source>Eine Person mit Zeitanpassung antwortet noch. „Ergebnis zeigen“ beendet ihre Eingabe.</source>
+        <target>One person with extra time is still answering. “Show result” ends their response window.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3756</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="sessionHost.timerAccommodationPendingMany" datatype="html">
+        <source><x id="count" equiv-text="formatLocaleCount(count, this.localeId)"/> Personen mit Zeitanpassung antworten noch. „Ergebnis zeigen“ beendet ihre Eingabe.</source>
+        <target><x id="count" equiv-text="formatLocaleCount(count, this.localeId)"/> people with extra time are still answering. “Show result” ends their response window.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
+          <context context-type="linenumber">3758</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.voteProgressAriaOne" datatype="html">
@@ -14632,7 +14648,7 @@
         <target><x id="votes" equiv-text="votes"/> of <x id="participants" equiv-text="participants"/> participants voted. <x id="percentage" equiv-text="percentage"/> percent reached.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3748</context>
+          <context context-type="linenumber">3764</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.voteProgressAriaMany" datatype="html">
@@ -14640,7 +14656,7 @@
         <target><x id="votes" equiv-text="votes"/> of <x id="participants" equiv-text="participants"/> participants have voted. <x id="percentage" equiv-text="percentage"/> percent reached.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3750</context>
+          <context context-type="linenumber">3766</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.votesCastOne" datatype="html">
@@ -14648,7 +14664,7 @@
         <target><x id="voteCount"/> out of <x id="participantTotal"/> has voted</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3761</context>
+          <context context-type="linenumber">3777</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.votesCastMany" datatype="html">
@@ -14656,7 +14672,7 @@
         <target><x id="voteCount"/> out of <x id="participantTotal"/> have voted</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3763</context>
+          <context context-type="linenumber">3779</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.ratingSubmittedOne" datatype="html">
@@ -14664,7 +14680,7 @@
         <target><x id="voteCount"/> out of <x id="participantTotal"/> has rated</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3774</context>
+          <context context-type="linenumber">3790</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.ratingSubmittedMany" datatype="html">
@@ -14672,7 +14688,7 @@
         <target><x id="voteCount"/> out of <x id="participantTotal"/> have rated</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3776</context>
+          <context context-type="linenumber">3792</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.correctAllVoters" datatype="html">
@@ -14680,7 +14696,7 @@
         <target><x id="correctCount"/> out of <x id="voteTotal"/> fully correct answers (<x id="percentage"/>%)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3782</context>
+          <context context-type="linenumber">3798</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.opinionShiftChangedMind" datatype="html">
@@ -14688,7 +14704,7 @@
         <target><x id="changed"/> out of <x id="both"/> (<x id="pct"/>%) changed their mind</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3786</context>
+          <context context-type="linenumber">3802</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.opinionShiftWrongToCorrect" datatype="html">
@@ -14696,7 +14712,7 @@
         <target>↑ <x id="count"/> wrong → correct</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3790</context>
+          <context context-type="linenumber">3806</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.opinionShiftCorrectToWrong" datatype="html">
@@ -14704,7 +14720,7 @@
         <target>↓ <x id="count"/> correct → wrong</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3794</context>
+          <context context-type="linenumber">3810</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.feedbackAvgStarsAria" datatype="html">
@@ -14712,7 +14728,7 @@
         <target>Average <x id="avg"/> out of 5 stars</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3800</context>
+          <context context-type="linenumber">3816</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6038081262407463029" datatype="html">
@@ -14720,7 +14736,7 @@
         <target><x id="PH" equiv-text="total"/> reaction</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3804</context>
+          <context context-type="linenumber">3820</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8711778533396778089" datatype="html">
@@ -14728,7 +14744,7 @@
         <target><x id="PH" equiv-text="total"/> reactions</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3804</context>
+          <context context-type="linenumber">3820</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.phaseLobby" datatype="html">
@@ -14736,7 +14752,7 @@
         <target>Lobby – participants can join</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3857</context>
+          <context context-type="linenumber">3873</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.phaseQaPreparing" datatype="html">
@@ -14744,7 +14760,7 @@
         <target>Q&amp;A is getting ready</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3858</context>
+          <context context-type="linenumber">3874</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.phaseQaActive" datatype="html">
@@ -14752,15 +14768,15 @@
         <target>Q&amp;A is live</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3859</context>
+          <context context-type="linenumber">3875</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3861</context>
+          <context context-type="linenumber">3877</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3862</context>
+          <context context-type="linenumber">3878</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.phasePaused" datatype="html">
@@ -14768,7 +14784,7 @@
         <target>Paused</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3860</context>
+          <context context-type="linenumber">3876</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.phaseQaFinished" datatype="html">
@@ -14776,7 +14792,7 @@
         <target>Q&amp;A ended</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3863</context>
+          <context context-type="linenumber">3879</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6183226753731581202" datatype="html">
@@ -14784,7 +14800,7 @@
         <target>Voting ended – waiting for results</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3868</context>
+          <context context-type="linenumber">3884</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7334576405532009332" datatype="html">
@@ -14792,7 +14808,7 @@
         <target>Lobby – participants can join</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3871</context>
+          <context context-type="linenumber">3887</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1220327087999810393" datatype="html">
@@ -14800,7 +14816,7 @@
         <target>Reading phase – answers are locked</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3872</context>
+          <context context-type="linenumber">3888</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8314358219279011566" datatype="html">
@@ -14808,7 +14824,7 @@
         <target>Voting is live</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3873</context>
+          <context context-type="linenumber">3889</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3438822305353981453" datatype="html">
@@ -14816,7 +14832,7 @@
         <target>Paused</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3874</context>
+          <context context-type="linenumber">3890</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1693990659982068798" datatype="html">
@@ -14824,7 +14840,7 @@
         <target>Showing results</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3875</context>
+          <context context-type="linenumber">3891</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6318529117726534409" datatype="html">
@@ -14832,7 +14848,7 @@
         <target>Discussion – exchange before second round</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3876</context>
+          <context context-type="linenumber">3892</context>
         </context-group>
       </trans-unit>
       <trans-unit id="882376754672492511" datatype="html">
@@ -14840,7 +14856,7 @@
         <target>Session ended</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3877</context>
+          <context context-type="linenumber">3893</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.readingReadyProgressAll" datatype="html">
@@ -14848,7 +14864,7 @@
         <target><x id="readyCount" equiv-text="readyCount"/> of <x id="connectedCount" equiv-text="connectedCount"/> ready</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3888</context>
+          <context context-type="linenumber">3904</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3059004459552059204" datatype="html">
@@ -14856,7 +14872,7 @@
         <target><x id="PH" equiv-text="readyCount"/> of <x id="PH_1" equiv-text="connectedCount"/> connected participants ready · <x id="PH_2" equiv-text="totalParticipantCount"/> total</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3890</context>
+          <context context-type="linenumber">3906</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.readingReadyReleaseHintAll" datatype="html">
@@ -14864,7 +14880,7 @@
         <target>All participants are ready – answer options can be revealed.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3895</context>
+          <context context-type="linenumber">3911</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.readingReadyReleaseHintConnected" datatype="html">
@@ -14872,7 +14888,7 @@
         <target>All connected participants are ready – answer options can be revealed.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3897</context>
+          <context context-type="linenumber">3913</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.countdownAriaOne" datatype="html">
@@ -14880,7 +14896,7 @@
         <target>1 second remaining</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3928</context>
+          <context context-type="linenumber">3944</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.countdownAriaMany" datatype="html">
@@ -14888,7 +14904,7 @@
         <target><x id="seconds" equiv-text="seconds"/> seconds remaining</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">3929</context>
+          <context context-type="linenumber">3945</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericReferenceAxisLabel" datatype="html">
@@ -14902,7 +14918,7 @@
     )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4053,4056</context>
+          <context context-type="linenumber">4069,4072</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericAcceptedSingleLabel" datatype="html">
@@ -14916,7 +14932,7 @@
         )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4098,4101</context>
+          <context context-type="linenumber">4114,4117</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericAcceptedRangeLabel" datatype="html">
@@ -14930,7 +14946,7 @@
       )"/> to <x id="right" equiv-text="this.formatNumericHostValue(acceptedRight, question)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4103,4106</context>
+          <context context-type="linenumber">4119,4122</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericToleranceBandLabel" datatype="html">
@@ -14944,7 +14960,7 @@
     )"/> to <x id="right" equiv-text="this.formatNumericHostValue(band.right, question)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4108,4111</context>
+          <context context-type="linenumber">4124,4127</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMedian" datatype="html">
@@ -14952,7 +14968,7 @@
         <target>Median <x id="median" equiv-text="formatNumber(stats.median, this.localeId, '1.0-2')"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4226</context>
+          <context context-type="linenumber">4242</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatCountLabel" datatype="html">
@@ -14960,7 +14976,7 @@
         <target>Estimates</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4259</context>
+          <context context-type="linenumber">4275</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatCountCaption" datatype="html">
@@ -14968,7 +14984,7 @@
         <target>valid answers</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4261</context>
+          <context context-type="linenumber">4277</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMeanLabel" datatype="html">
@@ -14976,7 +14992,7 @@
         <target>Mean</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4267</context>
+          <context context-type="linenumber">4283</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMeanCaption" datatype="html">
@@ -14984,7 +15000,7 @@
         <target>Average of all estimates</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4269</context>
+          <context context-type="linenumber">4285</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMedianLabel" datatype="html">
@@ -14992,7 +15008,7 @@
         <target>Median</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4275</context>
+          <context context-type="linenumber">4291</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMedianCaption" datatype="html">
@@ -15000,7 +15016,7 @@
         <target>Middle sorted value</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4277</context>
+          <context context-type="linenumber">4293</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatStdDevLabel" datatype="html">
@@ -15008,7 +15024,7 @@
         <target>Spread</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4283</context>
+          <context context-type="linenumber">4299</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatStdDevCaption" datatype="html">
@@ -15016,7 +15032,7 @@
         <target>Standard deviation</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4285</context>
+          <context context-type="linenumber">4301</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMiddle50Label" datatype="html">
@@ -15024,7 +15040,7 @@
         <target>Middle 50%</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4291</context>
+          <context context-type="linenumber">4307</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMiddle50Caption" datatype="html">
@@ -15039,7 +15055,7 @@
         )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4296,4299</context>
+          <context context-type="linenumber">4312,4315</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatRangeLabel" datatype="html">
@@ -15047,7 +15063,7 @@
         <target>Range</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4305</context>
+          <context context-type="linenumber">4321</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatRangeCaption" datatype="html">
@@ -15055,7 +15071,7 @@
         <target>smallest to largest estimate</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4310</context>
+          <context context-type="linenumber">4326</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatInBandLabel" datatype="html">
@@ -15063,7 +15079,7 @@
         <target>In range</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4316</context>
+          <context context-type="linenumber">4332</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatInBandCaption" datatype="html">
@@ -15079,7 +15095,7 @@
         )"/>% accepted</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4322,4326</context>
+          <context context-type="linenumber">4338,4342</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMeanAbsoluteErrorLabel" datatype="html">
@@ -15087,7 +15103,7 @@
         <target>Avg. distance</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4332</context>
+          <context context-type="linenumber">4348</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericStatMeanAbsoluteErrorCaption" datatype="html">
@@ -15095,7 +15111,7 @@
         <target>to reference</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4334</context>
+          <context context-type="linenumber">4350</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPrimaryMedian" datatype="html">
@@ -15103,7 +15119,7 @@
         <target>Median</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4342</context>
+          <context context-type="linenumber">4358</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPrimaryMean" datatype="html">
@@ -15111,7 +15127,7 @@
         <target>Mean</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4345</context>
+          <context context-type="linenumber">4361</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPrimaryResponses" datatype="html">
@@ -15119,7 +15135,7 @@
         <target>Estimates</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4347</context>
+          <context context-type="linenumber">4363</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInBandCaption" datatype="html">
@@ -15135,7 +15151,7 @@
     )"/> % in the accepted range</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4378,4382</context>
+          <context context-type="linenumber">4394,4398</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMeanAbsoluteErrorCaption" datatype="html">
@@ -15143,7 +15159,7 @@
         <target>Average distance to reference</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4396</context>
+          <context context-type="linenumber">4412</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericPairedInsightCaption" datatype="html">
@@ -15151,7 +15167,7 @@
         <target>closer to the reference value</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4410</context>
+          <context context-type="linenumber">4426</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMedianDeltaCaption" datatype="html">
@@ -15159,7 +15175,7 @@
         <target>Median change</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4427</context>
+          <context context-type="linenumber">4443</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMeanDeltaCaption" datatype="html">
@@ -15167,7 +15183,7 @@
         <target>Mean change</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4428</context>
+          <context context-type="linenumber">4444</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMeanDeltaReadable" datatype="html">
@@ -15182,7 +15198,7 @@
         )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4439,4442</context>
+          <context context-type="linenumber">4455,4458</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericMedianDelta" datatype="html">
@@ -15197,7 +15213,7 @@
         )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4448,4451</context>
+          <context context-type="linenumber">4464,4467</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInBandDeltaReadable" datatype="html">
@@ -15213,7 +15229,7 @@
         )"/> percentage points</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4460,4464</context>
+          <context context-type="linenumber">4476,4480</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationRoundCloser" datatype="html">
@@ -15237,7 +15253,7 @@
           )"/> comparable estimates have improved.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4480,4488</context>
+          <context context-type="linenumber">4496,4504</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationRoundFarther" datatype="html">
@@ -15261,7 +15277,7 @@
           )"/> comparable estimates are further away.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4492,4500</context>
+          <context context-type="linenumber">4508,4516</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationRoundMixed" datatype="html">
@@ -15269,7 +15285,7 @@
         <target>Round 2 is mixed: closer and more distant estimates are balanced in the pair comparison.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4504</context>
+          <context context-type="linenumber">4520</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationErrorImproved" datatype="html">
@@ -15283,7 +15299,7 @@
           )"/> in round 2.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4516,4519</context>
+          <context context-type="linenumber">4532,4535</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationErrorWorse" datatype="html">
@@ -15297,7 +15313,7 @@
           )"/> larger in round 2.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4523,4526</context>
+          <context context-type="linenumber">4539,4542</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationInBandDelta" datatype="html">
@@ -15313,7 +15329,7 @@
         )"/> percentage points.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4538,4542</context>
+          <context context-type="linenumber">4554,4558</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationSingleInBand" datatype="html">
@@ -15337,7 +15353,7 @@
         )"/> estimates are within the tolerance band.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4557,4565</context>
+          <context context-type="linenumber">4573,4581</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationSingleError" datatype="html">
@@ -15351,7 +15367,7 @@
         )"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4570,4573</context>
+          <context context-type="linenumber">4586,4589</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.numericInterpretationSingleMedian" datatype="html">
@@ -15365,7 +15381,7 @@
         )"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4577,4580</context>
+          <context context-type="linenumber">4593,4596</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.quiz" datatype="html">
@@ -15373,7 +15389,7 @@
         <target>Quiz</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4626</context>
+          <context context-type="linenumber">4642</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15385,7 +15401,7 @@
         <target>Q&amp;A</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4628</context>
+          <context context-type="linenumber">4644</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15397,11 +15413,11 @@
         <target><x id="count" equiv-text="this.qaUnseenCount()"/> new</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4636</context>
+          <context context-type="linenumber">4652</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4653</context>
+          <context context-type="linenumber">4669</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.channelInactive" datatype="html">
@@ -15409,7 +15425,7 @@
         <target>Off</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4753</context>
+          <context context-type="linenumber">4769</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.channelClosed" datatype="html">
@@ -15417,7 +15433,7 @@
         <target>Closed</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4756</context>
+          <context context-type="linenumber">4772</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15429,7 +15445,7 @@
         <target>Question from <x id="PH" equiv-text="nickname"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4805</context>
+          <context context-type="linenumber">4821</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15441,7 +15457,7 @@
         <target>Question from the audience</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4805</context>
+          <context context-type="linenumber">4821</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15453,7 +15469,7 @@
         <target>Deselect <x id="PH" equiv-text="nickname"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4819</context>
+          <context context-type="linenumber">4835</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15469,7 +15485,7 @@
         <target>Highlight all questions from <x id="PH" equiv-text="nickname"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4820</context>
+          <context context-type="linenumber">4836</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15485,7 +15501,7 @@
         <target>Being answered</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4849</context>
+          <context context-type="linenumber">4865</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15497,7 +15513,7 @@
         <target>Open</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4851</context>
+          <context context-type="linenumber">4867</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15509,7 +15525,7 @@
         <target>Waiting for approval</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4853</context>
+          <context context-type="linenumber">4869</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15521,7 +15537,7 @@
         <target>Answered</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4855</context>
+          <context context-type="linenumber">4871</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15533,7 +15549,7 @@
         <target>Removed</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4857</context>
+          <context context-type="linenumber">4873</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-vote/session-vote.component.ts</context>
@@ -15545,7 +15561,7 @@
         <target>Approve</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4958</context>
+          <context context-type="linenumber">4974</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.actionPin" datatype="html">
@@ -15553,7 +15569,7 @@
         <target>Highlight</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4960</context>
+          <context context-type="linenumber">4976</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.actionUnpin" datatype="html">
@@ -15561,7 +15577,7 @@
         <target>Remove highlight</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4962</context>
+          <context context-type="linenumber">4978</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.actionArchive" datatype="html">
@@ -15569,7 +15585,7 @@
         <target>Archive</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4964</context>
+          <context context-type="linenumber">4980</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.actionPurge" datatype="html">
@@ -15577,7 +15593,7 @@
         <target>Remove permanently</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4967</context>
+          <context context-type="linenumber">4983</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.actionDelete" datatype="html">
@@ -15585,7 +15601,7 @@
         <target>Delete</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">4968</context>
+          <context context-type="linenumber">4984</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.closeChannelAction" datatype="html">
@@ -15593,7 +15609,7 @@
         <target>Close channel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5312</context>
+          <context context-type="linenumber">5328</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionTabs.reopenChannelAction" datatype="html">
@@ -15601,7 +15617,7 @@
         <target>Reopen channel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5313</context>
+          <context context-type="linenumber">5329</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationEnabled" datatype="html">
@@ -15609,7 +15625,7 @@
         <target>Pre-moderation enabled.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5727</context>
+          <context context-type="linenumber">5743</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationDisabled" datatype="html">
@@ -15617,7 +15633,7 @@
         <target>Pre-moderation disabled.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5728</context>
+          <context context-type="linenumber">5744</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationApproved" datatype="html">
@@ -15625,7 +15641,7 @@
         <target>Question approved.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5761</context>
+          <context context-type="linenumber">5777</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationPinned" datatype="html">
@@ -15633,7 +15649,7 @@
         <target>Question highlighted.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5763</context>
+          <context context-type="linenumber">5779</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationArchived" datatype="html">
@@ -15641,7 +15657,7 @@
         <target>Question archived.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5765</context>
+          <context context-type="linenumber">5781</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.moderationDeleted" datatype="html">
@@ -15649,7 +15665,7 @@
         <target>Question removed.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5766</context>
+          <context context-type="linenumber">5782</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportQuestionsHeader" datatype="html">
@@ -15657,7 +15673,7 @@
         <target>Question no.;Question text;Type;Participants;Aggregation round;Avg. points;Self-assessment n;Solid;Misconception risk;Fragile;Detected gap;Undecided;Most common incorrect high-confidence answer;Details</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">5979</context>
+          <context context-type="linenumber">5995</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceSummaryTitle" datatype="html">
@@ -15665,7 +15681,7 @@
         <target>Learning status and self-assessment</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6033</context>
+          <context context-type="linenumber">6049</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportConfidenceSummaryHeader" datatype="html">
@@ -15673,7 +15689,7 @@
         <target>Valid answers;Evaluated questions;Not aggregated (&lt;5 responses with self-assessment);Solid;Misconception risk;Fragile;Identified knowledge gap;Undecided</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6036</context>
+          <context context-type="linenumber">6052</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportTeamLeaderboardTitle" datatype="html">
@@ -15681,7 +15697,7 @@
         <target>Team leaderboard</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6057</context>
+          <context context-type="linenumber">6073</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportTeamLeaderboardHeader" datatype="html">
@@ -15689,7 +15705,7 @@
         <target>Rank;Team;Color;Members;Team points;Avg. points per member</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6059</context>
+          <context context-type="linenumber">6075</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportBonusCodesTitle" datatype="html">
@@ -15697,7 +15713,7 @@
         <target>Bonus codes</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6077</context>
+          <context context-type="linenumber">6093</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportBonusCodesHeader" datatype="html">
@@ -15705,7 +15721,7 @@
         <target>Rank;Nickname;Code;Points;Generated at</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6079</context>
+          <context context-type="linenumber">6095</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportCsvDone" datatype="html">
@@ -15713,7 +15729,7 @@
         <target>Result CSV exported.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6087</context>
+          <context context-type="linenumber">6103</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfButtonAriaWithPriorityOne" datatype="html">
@@ -15721,7 +15737,7 @@
         <target>View debrief plan as PDF – 1 question for debriefing</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6099</context>
+          <context context-type="linenumber">6115</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfButtonAriaWithPriorityMany" datatype="html">
@@ -15729,7 +15745,7 @@
         <target>View debrief plan as PDF – <x id="count" equiv-text="count"/> questions for debriefing</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6102</context>
+          <context context-type="linenumber">6118</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfButtonAria" datatype="html">
@@ -15737,7 +15753,7 @@
         <target>View debrief plan as PDF</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6104</context>
+          <context context-type="linenumber">6120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfPriorityHintSingular" datatype="html">
@@ -15745,7 +15761,7 @@
         <target>1 question recommended for debriefing</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6109</context>
+          <context context-type="linenumber">6125</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfPriorityHintPlural" datatype="html">
@@ -15753,7 +15769,7 @@
         <target><x id="count" equiv-text="count"/> questions recommended for debriefing</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6111</context>
+          <context context-type="linenumber">6127</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfGeneratingLarge" datatype="html">
@@ -15761,7 +15777,7 @@
         <target>PDF is created (<x id="PH" equiv-text="exportData.questions.length"/> questions)…</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6123</context>
+          <context context-type="linenumber">6139</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfDownloadDone" datatype="html">
@@ -15769,7 +15785,7 @@
         <target>Results PDF downloaded.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6129</context>
+          <context context-type="linenumber">6145</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionHost.exportPdfPrintDone" datatype="html">
@@ -15777,7 +15793,7 @@
         <target>Result PDF opened for saving.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6130</context>
+          <context context-type="linenumber">6146</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.exportHeader" datatype="html">
@@ -15785,7 +15801,7 @@
         <target>No.;Question ID;Status;Question;Score;Positive votes;Negative votes;Total votes;Wilson score;Controversy score;Controversial;Created at</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6157</context>
+          <context context-type="linenumber">6173</context>
         </context-group>
       </trans-unit>
       <trans-unit id="sessionQa.exportDone" datatype="html">
@@ -15793,7 +15809,7 @@
         <target>Q&amp;A CSV exported.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6180</context>
+          <context context-type="linenumber">6196</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7304749878499794874" datatype="html">
@@ -15801,11 +15817,11 @@
         <target>Question <x id="questionNumber" equiv-text="data.questionOrder + 1"/>: <x id="questionText" equiv-text="data.questionText ?? &apos;&apos;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6343</context>
+          <context context-type="linenumber">6359</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6351</context>
+          <context context-type="linenumber">6367</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -15821,7 +15837,7 @@
         <target>Live free-text is being updated.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6346</context>
+          <context context-type="linenumber">6362</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -15833,7 +15849,7 @@
         <target>Current question is not a free-text question.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6354</context>
+          <context context-type="linenumber">6370</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -15845,7 +15861,7 @@
         <target>No active question yet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6357</context>
+          <context context-type="linenumber">6373</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>
@@ -15857,7 +15873,7 @@
         <target>Could not load live free-text data.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-host/session-host.component.ts</context>
-          <context context-type="linenumber">6361</context>
+          <context context-type="linenumber">6377</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/app/features/session/session-present/session-present.component.ts</context>

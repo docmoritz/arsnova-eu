@@ -1268,7 +1268,7 @@ fehlende ausführbare manuelle Matrix sowie zu schmaler Reflow-/Fokus-Smoke.
 **Datum:** 2026-07-20
 **Status:** umgesetzt
 **WCAG:** 2.2.1 Timing Adjustable
-**PR/Commit:** Branch `a11y/wcag22-aa-compliance` (noch nicht committed)
+**PR/Commit:** PR #101, Branch `a11y/wcag22-aa-restblocker`
 
 ### Ausgangsproblem
 
@@ -1296,10 +1296,14 @@ Persönliche Präferenz am `Participant` (`timerAccommodation`: `DEFAULT` |
 - Shared Contracts inkl. `resolvePersonalTimerSeconds` und
   `session.setTimerAccommodation`;
 - Backend: Vote-Deadline personalisiert; Self-/Join-DTO tragen den Modus;
-- Vote-UI: Radiogruppe Standard / Zehnfache Zeit / Timer aus mit Live-Status;
-- Vote-UI: lokale Punktvorschau „bei richtiger Antwort jetzt: N Punkte“ am
-  Session-Timer (1-Hz, ohne Netzwerkanfrage, ohne `aria-live`-Spam);
+- Vote-UI: MD3-Segmented-Control Standard / 10× Zeit / Ohne Timer mit Live-Status;
+- Vote-UI: lokale Punktvorschau am Session-Timer; in der Nachlaufzeit wird der
+  feste Mindestwert als „Nachlaufzeit · richtige Antwort“ gekennzeichnet (1 Hz,
+  ohne Netzwerkanfrage und ohne `aria-live`-Spam);
 - Host: kurzer Hinweis, dass Teilnehmende ihre Zeit persönlich anpassen können;
+- Host: Live-Hinweis vor „Ergebnis zeigen“, wenn Personen mit Zeitanpassung noch
+  nicht geantwortet haben; die Lehrperson entscheidet weiterhin, wird aber
+  ausdrücklich auf das Ende dieser Eingabefenster hingewiesen;
 - Gerätepräferenz in `localStorage` (`arsnova-timer-accommodation`).
 
 ### Betroffene Dateien
@@ -1309,7 +1313,8 @@ Persönliche Präferenz am `Participant` (`timerAccommodation`: `DEFAULT` |
 - `libs/shared-types/src/schemas.ts`, `libs/shared-types/src/schemas.test.ts`
 - `apps/backend/src/routers/vote.ts`, `apps/backend/src/routers/session.ts`
 - `apps/backend/src/__tests__/vote.test.ts`,
-  `apps/backend/src/__tests__/session.participants.test.ts`
+  `apps/backend/src/__tests__/session.participants.test.ts`,
+  `apps/backend/src/__tests__/session.current-question-host.test.ts`
 - `apps/frontend/src/app/features/session/session-vote/session-vote.component.{ts,html,scss,spec.ts}`
 - `apps/frontend/src/app/features/session/session-host/session-host.component.{html,scss}`
 - Locale-Dateien nach `extract-i18n` + `sync-i18n`
@@ -1318,18 +1323,21 @@ Persönliche Präferenz am `Participant` (`timerAccommodation`: `DEFAULT` |
 
 - Shared: persönliche Timer-Berechnung und Contract-Schemas
 - Backend: EXTENDED/OFF akzeptieren Votes nach Session-Timerende; Self-/Set-API
-- Frontend: Template-Präsenz, `setTimerAccommodation`, OFF ohne Interaktionssperre
+- Frontend: Template-Präsenz, `setTimerAccommodation`, OFF ohne
+  Interaktionssperre und Host-Hinweis für noch ausstehende Antworten
 
 ### UX-, Design- und Performance-Einfluss
 
 - Zusätzlicher kompakter Block unter der Frage bei getimten ACTIVE-Fragen;
 - Host-Countdown erhält einen kurzen Hinweistext;
-- keine Änderung der Host-Steuerung oder der Fairness der Punktelogik.
+- der Host behält die Steuerung über „Ergebnis zeigen“, sieht davor jedoch die
+  konkrete Zahl noch antwortender Personen mit Zeitanpassung;
+- keine Änderung der Fairness der Punktelogik.
 
 ### Offene Risiken und manuelle Abnahme
 
 - manuell prüfen: Live-Session mit Timer, Wechsel EXTENDED/OFF, Mobile-Längen;
-- VoiceOver/NVDA für Radiogruppe und Statusansage;
+- VoiceOver/NVDA für Segmented-Control und Statusansage;
 - keine WCAG-2.2-AA-Gesamtabnahme allein durch diesen Schritt.
 
 ## Vorlage für weitere Einträge

@@ -9,6 +9,9 @@ const { prismaMock, hostAuthMocks } = vi.hoisted(() => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    participant: {
+      count: vi.fn(),
+    },
   },
   hostAuthMocks: {
     extractHostTokenMock: vi.fn(),
@@ -48,6 +51,7 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
     resetVoteAggregationCachesForTests();
     prismaMock.vote.findMany.mockResolvedValue([]);
     prismaMock.vote.count.mockResolvedValue(0);
+    prismaMock.participant.count.mockResolvedValue(0);
   });
 
   it('liefert aktuelle Frage mit Antwortoptionen und isCorrect', async () => {
@@ -335,6 +339,48 @@ describe('session.getCurrentQuestionForHost (Story 2.3)', () => {
       totalVotes: 17,
     });
     expect(prismaMock.vote.findMany).not.toHaveBeenCalled();
+  });
+
+  it('meldet dem Host noch antwortende Personen mit Zeitanpassung', async () => {
+    const questionId = '11111111-1111-4111-8111-111111111111';
+    prismaMock.session.findUnique.mockResolvedValue({
+      id: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+      code: CODE,
+      status: 'ACTIVE',
+      currentQuestion: 0,
+      currentRound: 1,
+      quiz: {
+        questions: [
+          {
+            id: questionId,
+            order: 0,
+            type: 'NUMERIC_ESTIMATE',
+            answers: [],
+          },
+        ],
+      },
+    });
+    prismaMock.participant.count.mockResolvedValueOnce(2);
+
+    const result = await caller.getHostVoteProgress({ code: CODE });
+
+    expect(result).toMatchObject({
+      questionId,
+      round: 1,
+      pendingTimerAccommodationCount: 2,
+    });
+    expect(prismaMock.participant.count).toHaveBeenCalledWith({
+      where: {
+        sessionId: '6a8edced-5f8f-4cfa-9176-454fac9570ad',
+        timerAccommodation: { in: ['EXTENDED', 'OFF'] },
+        votes: {
+          none: {
+            questionId,
+            round: 1,
+          },
+        },
+      },
+    });
   });
 
   it('liefert Choice-Fortschritt mit Peer-Instruction-Signal ohne Vote-Verteilung', async () => {

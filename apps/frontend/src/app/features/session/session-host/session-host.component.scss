@@ -210,6 +210,26 @@
   box-shadow: var(--mat-sys-level2);
 }
 
+.session-host__timer-accommodation-warning {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  box-shadow: var(--mat-sys-level1);
+}
+
+.session-host__timer-accommodation-warning mat-icon {
+  flex: 0 0 auto;
+  color: var(--mat-sys-primary);
+}
+
 @media (max-width: 599px) {
   .session-host {
     --session-host-shell-inline: var(--host-mobile-inline);
@@ -241,6 +261,10 @@
   .session-host__exit-anchor--with-primary {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .session-host__timer-accommodation-warning {
+    grid-column: 1 / -1;
   }
 
   .session-host__exit-anchor-button {

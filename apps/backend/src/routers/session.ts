@@ -3747,10 +3747,23 @@ async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO 
 
   const round = session.currentRound ?? 1;
   const questionType = question.type as QuestionType;
+  const pendingTimerAccommodationCount = await prisma.participant.count({
+    where: {
+      sessionId: session.id,
+      timerAccommodation: { in: ['EXTENDED', 'OFF'] },
+      votes: {
+        none: {
+          questionId: question.id,
+          round,
+        },
+      },
+    },
+  });
   const base = {
     questionId: question.id,
     questionOrder: question.order,
     round,
+    ...(pendingTimerAccommodationCount > 0 ? { pendingTimerAccommodationCount } : {}),
   };
 
   if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {

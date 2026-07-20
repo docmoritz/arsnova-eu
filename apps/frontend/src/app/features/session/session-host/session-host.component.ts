@@ -1233,6 +1233,14 @@ export class SessionHostComponent implements OnInit, OnDestroy {
     const votes = this.getVoteCountForCurrentQuestion(this.displayedCurrentQuestionForHost());
     return votes >= participants;
   });
+  readonly pendingTimerAccommodationCount = computed(() => {
+    if (this.effectiveStatus() !== 'ACTIVE') return 0;
+    const question = this.displayedCurrentQuestionForHost();
+    const progress = this.hostVoteProgress();
+    return this.hostVoteProgressMatchesQuestion(progress, question)
+      ? (progress.pendingTimerAccommodationCount ?? 0)
+      : 0;
+  });
   readonly readingReadyStatus = computed(() => this.participantsPayload()?.readingReady ?? null);
   readonly allConnectedParticipantsReady = computed(
     () =>
@@ -3708,6 +3716,7 @@ export class SessionHostComponent implements OnInit, OnDestroy {
       left.questionOrder === right.questionOrder &&
       left.round === right.round &&
       left.totalVotes === right.totalVotes &&
+      (left.pendingTimerAccommodationCount ?? 0) === (right.pendingTimerAccommodationCount ?? 0) &&
       (left.correctVoterCount ?? null) === (right.correctVoterCount ?? null) &&
       (left.incorrectVoterCount ?? null) === (right.incorrectVoterCount ?? null) &&
       JSON.stringify(left.peerInstructionSuggestion ?? null) ===
@@ -3740,6 +3749,13 @@ export class SessionHostComponent implements OnInit, OnDestroy {
 
   voteProgressCompactLabel(votes: number, participants: number): string {
     return $localize`${formatLocaleCount(votes, this.localeId)} von ${formatLocaleCount(participants, this.localeId)}`;
+  }
+
+  pendingTimerAccommodationLabel(count: number): string {
+    if (count === 1) {
+      return $localize`:@@sessionHost.timerAccommodationPendingOne:Eine Person mit Zeitanpassung antwortet noch. „Ergebnis zeigen“ beendet ihre Eingabe.`;
+    }
+    return $localize`:@@sessionHost.timerAccommodationPendingMany:${formatLocaleCount(count, this.localeId)}:count: Personen mit Zeitanpassung antworten noch. „Ergebnis zeigen“ beendet ihre Eingabe.`;
   }
 
   voteProgressAria(votes: number, participants: number, percentage: number): string {

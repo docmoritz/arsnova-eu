@@ -2376,6 +2376,8 @@ export const HostVoteProgressDTOSchema = z.object({
   questionOrder: z.number().int().min(0),
   round: z.number().int().min(1).max(2),
   totalVotes: z.number().int().min(0),
+  /** Personen mit persönlicher Zeitanpassung, die in dieser Runde noch nicht geantwortet haben. */
+  pendingTimerAccommodationCount: z.number().int().min(0).optional(),
   correctVoterCount: z.number().int().min(0).optional(),
   incorrectVoterCount: z.number().int().min(0).optional(),
   peerInstructionSuggestion: PeerInstructionSuggestionDTOSchema.optional(),

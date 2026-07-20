@@ -3536,6 +3536,12 @@
           !isQaSession() &&
           hasCurrentQuizQuestionForHost()
         ) {
+          @if (pendingTimerAccommodationCount(); as pendingCount) {
+            <p class="session-host__timer-accommodation-warning" role="status" aria-live="polite">
+              <mat-icon aria-hidden="true">schedule</mat-icon>
+              <span>{{ pendingTimerAccommodationLabel(pendingCount) }}</span>
+            </p>
+          }
           @if (shouldShowPeerInstructionSuggestion(displayedCurrentQuestionForHost())) {
             <button
               mat-flat-button
