@@ -4375,6 +4375,14 @@ button.session-host__btn-discussion {
   }
 }
 
+.session-host__timer-a11y-note {
+  margin: 0.35rem 0 0;
+  font: var(--mat-sys-body-small);
+  line-height: 1.4;
+  color: var(--mat-sys-on-surface-variant);
+  max-width: 22rem;
+}
+
 .session-host__countdown {
   display: inline-flex;
   align-items: center;

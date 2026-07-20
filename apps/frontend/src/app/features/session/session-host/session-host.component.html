@@ -1430,6 +1430,19 @@
                           {{ countdownSeconds() }}
                         </span>
                       }
+                      @if (
+                        countdownSeconds() !== null &&
+                        effectiveStatus() === 'ACTIVE' &&
+                        (displayedCurrentQuestionForHost()?.timer ?? 0) > 0
+                      ) {
+                        <p
+                          class="session-host__timer-a11y-note"
+                          i18n="@@sessionHost.timerAccommodationNote"
+                        >
+                          Teilnehmende können ihre persönliche Zeit bei Bedarf verlängern oder
+                          abschalten.
+                        </p>
+                      }
                     </mat-card-subtitle>
                     <mat-card-title class="session-host__question-title">
                       <span

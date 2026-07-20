@@ -87,6 +87,8 @@ export class JoinComponent implements OnInit, OnDestroy {
 
   readonly session = signal<SessionInfoDTO | null>(null);
   readonly error = signal<string | null>(null);
+  /** Join-/Nickname-Fehler bleiben in der Lobby sichtbar (kein Seitenwechsel). */
+  readonly joinError = signal<string | null>(null);
   readonly errorSessionFinished = signal(false);
   readonly loading = signal(true);
   /** Bereits vergebene Nicknames (für Ausgrauen). */
@@ -461,6 +463,17 @@ export class JoinComponent implements OnInit, OnDestroy {
 
   selectTeam(teamId: string): void {
     this.selectedTeamId.set(teamId);
+    this.joinError.set(null);
+  }
+
+  selectNickname(nickname: string): void {
+    this.selectedNickname.set(nickname);
+    this.joinError.set(null);
+  }
+
+  onCustomNicknameInput(value: string): void {
+    this.customNickname.set(value);
+    this.joinError.set(null);
   }
 
   private getStoredRejoinToken(): string | undefined {
@@ -504,7 +517,7 @@ export class JoinComponent implements OnInit, OnDestroy {
       await this.router.navigate(localizeCommands(['session', this.code, 'vote']));
     } catch (err: unknown) {
       this.errorSessionFinished.set(false);
-      this.error.set(localizeKnownServerError(err, $localize`Beitritt fehlgeschlagen.`));
+      this.joinError.set(localizeKnownServerError(err, $localize`Beitritt fehlgeschlagen.`));
     } finally {
       this.joining.set(false);
       this.loading.set(false);
@@ -516,6 +529,7 @@ export class JoinComponent implements OnInit, OnDestroy {
     const nickname = this.effectiveNickname();
     if (!nickname) return;
     this.error.set(null);
+    this.joinError.set(null);
     this.joining.set(true);
     try {
       const result = await trpc.session.join.mutate({
@@ -534,7 +548,14 @@ export class JoinComponent implements OnInit, OnDestroy {
       await this.router.navigate(localizeCommands(['session', this.code, 'vote']));
     } catch (err: unknown) {
       this.errorSessionFinished.set(false);
-      this.error.set(localizeKnownServerError(err, $localize`Beitritt fehlgeschlagen.`));
+      const message = localizeKnownServerError(err, $localize`Beitritt fehlgeschlagen.`);
+      this.joinError.set(message);
+      if (message.includes('bereits vergeben')) {
+        await this.loadParticipants();
+        if (this.showNicknameList() && this.isTaken(nickname)) {
+          this.selectedNickname.set('');
+        }
+      }
     } finally {
       this.joining.set(false);
     }

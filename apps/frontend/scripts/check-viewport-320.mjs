@@ -93,28 +93,65 @@ async function inspectTargetSizes(page) {
 
 async function inspectKeyboardFocus(page) {
   const issues = [];
+  const maxTabs = 40;
   await page
     .locator('body')
     .click({ position: { x: 1, y: 1 } })
     .catch(() => undefined);
-  for (let index = 0; index < 12; index += 1) {
+  let firstFocusKey = null;
+  for (let index = 0; index < maxTabs; index += 1) {
     await page.keyboard.press('Tab');
-    const issue = await page.evaluate(() => {
+    const result = await page.evaluate(() => {
       const active = document.activeElement;
-      if (!(active instanceof HTMLElement) || active === document.body) return null;
+      if (!(active instanceof HTMLElement) || active === document.body) {
+        return { key: null, issue: null };
+      }
+      const key =
+        active.getAttribute('id') ||
+        active.getAttribute('aria-label') ||
+        active.outerHTML.slice(0, 120);
       const rect = active.getBoundingClientRect();
-      const visible =
+      const inViewport =
         rect.bottom > 0 &&
         rect.right > 0 &&
         rect.top < window.innerHeight &&
         rect.left < window.innerWidth;
-      return visible
-        ? null
-        : active.getAttribute('aria-label') ||
+      if (!inViewport) {
+        return {
+          key,
+          issue:
+            active.getAttribute('aria-label') ||
             active.textContent?.trim().slice(0, 50) ||
-            active.tagName;
+            active.tagName,
+        };
+      }
+
+      const centerX = rect.left + Math.min(rect.width, 24) / 2;
+      const centerY = rect.top + Math.min(rect.height, 24) / 2;
+      const topEl = document.elementFromPoint(centerX, centerY);
+      const obscured =
+        topEl instanceof Element &&
+        topEl !== active &&
+        !active.contains(topEl) &&
+        !topEl.contains(active) &&
+        getComputedStyle(topEl).pointerEvents !== 'none';
+      if (obscured) {
+        const label =
+          active.getAttribute('aria-label') ||
+          active.textContent?.trim().slice(0, 50) ||
+          active.tagName;
+        return { key, issue: `Fokus verdeckt: ${label}` };
+      }
+      return { key, issue: null };
     });
-    if (issue) issues.push(issue);
+    if (result.issue) issues.push(result.issue);
+    if (result.key) {
+      if (firstFocusKey == null) {
+        firstFocusKey = result.key;
+      } else if (result.key === firstFocusKey && index > 0) {
+        break;
+      }
+    }
   }
   return issues;
 }
@@ -225,22 +262,24 @@ async function main() {
   const paths = [
     '/de/',
     '/en/',
+    '/fr/',
+    '/es/',
+    '/it/',
     '/de/join',
     '/de/quiz',
     '/de/quiz/new',
     '/de/help',
+    '/fr/help',
+    '/es/help',
+    '/it/help',
     '/de/legal/privacy',
+    '/de/admin',
   ];
   let failed = 0;
+  let checkedStates = 0;
   await mkdir(ARTIFACT_DIR, { recursive: true });
 
-  for (const path of paths) {
-    const page = await context.newPage();
-    const url = `${BASE_URL}${path}`;
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await page.waitForLoadState('networkidle').catch(() => {});
-    await dismissOptionalOverlay(page);
-
+  async function checkPage(page, label, options = {}) {
     const result = await page.evaluate((w) => {
       const doc = document.documentElement;
       const body = document.body;
@@ -257,34 +296,57 @@ async function main() {
     }, VIEWPORT_WIDTH);
 
     const undersizedTargets = await inspectTargetSizes(page);
-    const initialJoinFocus = path === '/de/join' ? await inspectMobileJoinEntry(page) : [];
-    const hiddenFocus = await inspectKeyboardFocus(page);
-    const keyboardNavigation =
-      path === '/de/' ? await inspectHomeKeyboardNavigation(page) : initialJoinFocus;
+    const hiddenFocus = options.skipFocus ? [] : await inspectKeyboardFocus(page);
+    const keyboardNavigation = options.keyboardNavigation ?? [];
 
+    checkedStates += 1;
     if (
       result.ok &&
       undersizedTargets.length === 0 &&
       hiddenFocus.length === 0 &&
       keyboardNavigation.length === 0
     ) {
-      console.log(`  ${path} … OK (Reflow, ${MIN_TARGET_SIZE}px-Ziele, sichtbarer Tastaturfokus)`);
-    } else {
-      console.error(
-        `  ${path} … FEHLER: scrollWidth=${result.scrollWidth}, kleine Ziele=${JSON.stringify(
-          undersizedTargets,
-        )}, verdeckter Fokus=${JSON.stringify(hiddenFocus)}, Tastaturnavigation=${JSON.stringify(
-          keyboardNavigation,
-        )}`,
-      );
-      await page.screenshot({
-        path: join(ARTIFACT_DIR, `${path.replace(/[^a-z0-9]+/gi, '-') || 'root'}.png`),
-        fullPage: true,
-      });
-      failed++;
+      console.log(`  ${label} … OK (Reflow, ${MIN_TARGET_SIZE}px-Ziele, sichtbarer Tastaturfokus)`);
+      return;
     }
+
+    console.error(
+      `  ${label} … FEHLER: scrollWidth=${result.scrollWidth}, kleine Ziele=${JSON.stringify(
+        undersizedTargets,
+      )}, verdeckter Fokus=${JSON.stringify(hiddenFocus)}, Tastaturnavigation=${JSON.stringify(
+        keyboardNavigation,
+      )}`,
+    );
+    await page.screenshot({
+      path: join(ARTIFACT_DIR, `${label.replace(/[^a-z0-9]+/gi, '-') || 'root'}.png`),
+      fullPage: true,
+    });
+    failed += 1;
+  }
+
+  for (const path of paths) {
+    const page = await context.newPage();
+    const url = `${BASE_URL}${path}`;
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await dismissOptionalOverlay(page);
+
+    const initialJoinFocus = path === '/de/join' ? await inspectMobileJoinEntry(page) : [];
+    const keyboardNavigation =
+      path === '/de/' ? await inspectHomeKeyboardNavigation(page) : initialJoinFocus;
+    await checkPage(page, path, { keyboardNavigation });
     await page.close();
   }
+
+  const offlinePage = await context.newPage();
+  await offlinePage.goto(`${BASE_URL}/de/`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await dismissOptionalOverlay(offlinePage);
+  await context.setOffline(true);
+  await offlinePage.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await offlinePage.locator('.app-offline-banner[role="alert"]').waitFor({ state: 'visible' });
+  await checkPage(offlinePage, '/de/ (offline-banner)');
+  await context.setOffline(false);
+  await offlinePage.close();
 
   const desktopContext = await browser.newContext({
     viewport: { width: 1280, height: 800 },
@@ -317,7 +379,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    `\n✓ Reflow bei ${VIEWPORT_WIDTH}px, Fokus-Sichtbarkeit und ${MIN_TARGET_SIZE}px-Ziele bestanden (${paths.length} Seiten).`,
+    `\n✓ Reflow bei ${VIEWPORT_WIDTH}px, Fokus-Sichtbarkeit und ${MIN_TARGET_SIZE}px-Ziele bestanden (${checkedStates} Zustände + Desktop-Join).`,
   );
 }
 

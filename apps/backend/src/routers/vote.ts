@@ -10,7 +10,9 @@ import {
   evaluateShortAnswer,
   hasAtMostNumericDecimalPlaces,
   normalizeShortTextValue,
+  normalizeTimerAccommodation,
   resolveEffectiveQuestionTimer,
+  resolvePersonalTimerSeconds,
   resolveNumericQuestionEvaluationSettings,
   resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
@@ -175,7 +177,8 @@ export const voteRouter = router({
           where: { id: sessionQuizId },
           select: { defaultTimer: true, timerScaleByDifficulty: true },
         }));
-      const timerSeconds =
+      // Bewertungsbasis bleibt der Session-Timer; die persönliche Deadline steuert nur die Annahme.
+      const baseTimerSeconds =
         round === 2
           ? null
           : resolveEffectiveQuestionTimer(
@@ -184,6 +187,10 @@ export const voteRouter = router({
               question.difficulty as Difficulty,
               quiz?.timerScaleByDifficulty ?? true,
             );
+      const timerAccommodation = normalizeTimerAccommodation(
+        (participant as { timerAccommodation?: string | null }).timerAccommodation,
+      );
+      const timerSeconds = resolvePersonalTimerSeconds(baseTimerSeconds, timerAccommodation);
 
       const statusChangedAtMs = participant.session.statusChangedAt
         ? new Date(participant.session.statusChangedAt).getTime()
@@ -569,7 +576,7 @@ export const voteRouter = router({
           ? numericSettings.acceptEquivalentUnits
           : true,
         responseTimeMs,
-        timerDurationMs: timerSeconds ? timerSeconds * 1000 : null,
+        timerDurationMs: baseTimerSeconds ? baseTimerSeconds * 1000 : null,
         isCorrectOverride: numericIsCorrectOverride,
         numericEstimateValue:
           questionType === 'NUMERIC_ESTIMATE' ? (input.numericValue ?? null) : null,

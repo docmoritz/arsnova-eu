@@ -7,6 +7,7 @@ const { prismaMock, hostAuthMocks, presenceMocks } = vi.hoisted(() => ({
     },
     participant: {
       findFirst: vi.fn(),
+      update: vi.fn(),
     },
   },
   hostAuthMocks: {
@@ -182,6 +183,7 @@ describe('session participant access (Story 2.2)', () => {
       id: participantId,
       nickname: 'Ada Lovelace',
       teamId: '22222222-2222-4222-8222-222222222222',
+      timerAccommodation: 'EXTENDED',
       team: { name: 'Rot' },
     });
 
@@ -193,6 +195,7 @@ describe('session participant access (Story 2.2)', () => {
         id: true,
         nickname: true,
         teamId: true,
+        timerAccommodation: true,
         team: { select: { name: true } },
       },
     });
@@ -201,6 +204,32 @@ describe('session participant access (Story 2.2)', () => {
       nickname: 'Ada Lovelace',
       teamId: '22222222-2222-4222-8222-222222222222',
       teamName: 'Rot',
+      timerAccommodation: 'EXTENDED',
+    });
+  });
+
+  it('setzt die persönliche Timer-Anpassung nur für die eigene Teilnahme', async () => {
+    const participantId = '11111111-1111-4111-8111-111111111111';
+    prismaMock.participant.findFirst.mockResolvedValue({
+      id: participantId,
+      sessionId: SESSION_ID,
+    });
+    prismaMock.participant.update.mockResolvedValue({
+      id: participantId,
+      timerAccommodation: 'OFF',
+    });
+
+    await expect(
+      caller.setTimerAccommodation({
+        code: 'ABC123',
+        participantId,
+        accommodation: 'OFF',
+      }),
+    ).resolves.toEqual({ timerAccommodation: 'OFF' });
+
+    expect(prismaMock.participant.update).toHaveBeenCalledWith({
+      where: { id: participantId },
+      data: { timerAccommodation: 'OFF' },
     });
   });
 

@@ -26,7 +26,6 @@ import {
   SessionInfoDTOSchema,
   SessionExportDTOSchema,
   SessionExportPdfOutputSchema,
-  ParticipantDTOSchema,
   SessionParticipantsPayloadSchema,
   SessionParticipantNicknamesPayloadSchema,
   SessionChannelsDTOSchema,
@@ -86,6 +85,9 @@ import {
   UpdateSessionQaTitleOutputSchema,
   UpdateSessionChannelsOutputSchema,
   GetSessionParticipantInputSchema,
+  ParticipantSelfDTOSchema,
+  SetTimerAccommodationInputSchema,
+  SetTimerAccommodationOutputSchema,
   SendEmojiReactionInputSchema,
   EMOJI_REACTIONS,
   DEFAULT_TEAM_COUNT,
@@ -97,7 +99,9 @@ import {
   evaluateNumericAnswer,
   evaluateShortAnswer,
   normalizeShortTextValue,
+  normalizeTimerAccommodation,
   resolveEffectiveQuestionTimer,
+  resolvePersonalTimerSeconds,
   resolveNumericQuestionEvaluationSettings,
   resolveShortTextEvaluationKind,
   resolveShortTextMaxLength,
@@ -4583,7 +4587,7 @@ export const sessionRouter = router({
   /** Öffentliche Self-Info für Teilnehmende ohne komplette Teilnehmerliste preiszugeben. */
   getParticipantSelf: publicProcedure
     .input(GetSessionParticipantInputSchema)
-    .output(ParticipantDTOSchema.nullable())
+    .output(ParticipantSelfDTOSchema.nullable())
     .query(async ({ input }) => {
       const code = input.code.toUpperCase();
       const session = await prisma.session.findUnique({
@@ -4603,6 +4607,7 @@ export const sessionRouter = router({
           id: true,
           nickname: true,
           teamId: true,
+          timerAccommodation: true,
           team: { select: { name: true } },
         },
       });
@@ -4615,7 +4620,43 @@ export const sessionRouter = router({
         nickname: participant.nickname,
         teamId: participant.teamId ?? null,
         teamName: participant.team?.name ?? null,
+        timerAccommodation: normalizeTimerAccommodation(participant.timerAccommodation),
       };
+    }),
+
+  /**
+   * Persönliche Timer-Anpassung setzen (WCAG 2.2.1).
+   * Wirkt nur auf die Vote-Deadline der anfragenden Teilnehmer:in; keine Lösungsdaten.
+   */
+  setTimerAccommodation: publicProcedure
+    .input(SetTimerAccommodationInputSchema)
+    .output(SetTimerAccommodationOutputSchema)
+    .mutation(async ({ input }) => {
+      const code = input.code.toUpperCase();
+      const accommodation = normalizeTimerAccommodation(input.accommodation);
+      const participant = await prisma.participant.findFirst({
+        where: {
+          id: input.participantId,
+          session: { code },
+        },
+        select: { id: true, sessionId: true },
+      });
+      if (!participant) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Teilnehmende oder Session nicht gefunden.',
+        });
+      }
+
+      await prisma.participant.update({
+        where: { id: participant.id },
+        data: { timerAccommodation: accommodation },
+      });
+      void touchParticipantPresence(participant.sessionId, participant.id);
+      // Persönliche Felder liegen außerhalb des gemeinsamen ACTIVE-Caches.
+      clearCurrentQuestionCache(code);
+
+      return { timerAccommodation: accommodation };
     }),
 
   /** Teilnehmende verlassen die Live-Ansicht: nur Online-Presence entfernen, nicht die Teilnahme. */
@@ -5484,26 +5525,28 @@ export const sessionRouter = router({
           question.id,
           session.currentRound,
         );
-        return (await getOrComputeCached(
+        const baseDto = (await getOrComputeCached(
           currentQuestionCache,
           currentQuestionInFlight,
           `${code}:active:${session.currentQuestion}:${session.currentRound}`,
           CURRENT_QUESTION_CACHE_TTL_MS,
-          async () =>
-            QuestionStudentDTOSchema.parse({
+          async () => {
+            const sessionTimer =
+              session.currentRound === 2
+                ? null
+                : resolveEffectiveQuestionTimer(
+                    question.timer,
+                    quiz.defaultTimer,
+                    question.difficulty,
+                    quiz.timerScaleByDifficulty ?? true,
+                  );
+            return QuestionStudentDTOSchema.parse({
               id: question.id,
               text: question.text,
               type: question.type,
               showQuestionTypeIndicators: quiz.showQuestionTypeIndicators ?? true,
-              timer:
-                session.currentRound === 2
-                  ? null
-                  : resolveEffectiveQuestionTimer(
-                      question.timer,
-                      quiz.defaultTimer,
-                      question.difficulty,
-                      quiz.timerScaleByDifficulty ?? true,
-                    ),
+              timer: sessionTimer,
+              sessionTimer,
               difficulty: question.difficulty,
               order: question.order,
               totalQuestions,
@@ -5526,8 +5569,26 @@ export const sessionRouter = router({
               participantCount: session._count.participants,
               totalVotes,
               currentRound: session.currentRound,
-            }),
+            });
+          },
         )) as z.infer<typeof QuestionStudentDTOSchema>;
+
+        if (!participantBelongsToSession || !participantId) {
+          return baseDto;
+        }
+
+        const participant = await prisma.participant.findFirst({
+          where: { id: participantId, sessionId: session.id },
+          select: { timerAccommodation: true },
+        });
+        const timerAccommodation = normalizeTimerAccommodation(participant?.timerAccommodation);
+        const sessionTimer = baseDto.sessionTimer ?? baseDto.timer;
+        return QuestionStudentDTOSchema.parse({
+          ...baseDto,
+          sessionTimer,
+          timer: resolvePersonalTimerSeconds(sessionTimer, timerAccommodation),
+          timerAccommodation,
+        });
       }
 
       if (session.status === 'RESULTS') {
@@ -5879,6 +5940,7 @@ export const sessionRouter = router({
       let assignedTeamName: string | null = null;
       let participantId: string | null = null;
 
+      let rejoinedTimerAccommodation: ReturnType<typeof normalizeTimerAccommodation> = 'DEFAULT';
       if (input.rejoinToken) {
         const existingParticipant = await prisma.participant.findFirst({
           where: {
@@ -5888,6 +5950,7 @@ export const sessionRouter = router({
           select: {
             id: true,
             teamId: true,
+            timerAccommodation: true,
             team: {
               select: {
                 name: true,
@@ -5899,6 +5962,9 @@ export const sessionRouter = router({
           participantId = existingParticipant.id;
           assignedTeamId = existingParticipant.teamId ?? undefined;
           assignedTeamName = existingParticipant.team?.name ?? null;
+          rejoinedTimerAccommodation = normalizeTimerAccommodation(
+            existingParticipant.timerAccommodation,
+          );
         }
       }
 
@@ -5938,21 +6004,24 @@ export const sessionRouter = router({
 
       if (!participantId) {
         await awaitJoinAdmissionSlot(session.id);
-        const participant = await prisma.participant
-          .create({
+        try {
+          const participant = await prisma.participant.create({
             data: {
               sessionId: session.id,
               nickname: trimmedNickname,
               teamId: assignedTeamId,
             },
-          })
-          .catch(() => {
+          });
+          participantId = participant.id;
+        } catch (error) {
+          if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
             throw new TRPCError({
               code: 'CONFLICT',
               message: 'Dieser Nickname ist in dieser Session bereits vergeben.',
             });
-          });
-        participantId = participant.id;
+          }
+          throw error;
+        }
       }
       if (!participantId) {
         throw new TRPCError({
@@ -5994,6 +6063,7 @@ export const sessionRouter = router({
         rejoinToken: participantId,
         teamId: assignedTeamId ?? null,
         teamName: assignedTeamName,
+        timerAccommodation: rejoinedTimerAccommodation,
       };
     }),
 

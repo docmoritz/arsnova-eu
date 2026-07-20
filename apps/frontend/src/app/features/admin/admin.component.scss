@@ -109,6 +109,13 @@
   width: 100%;
 }
 
+.admin-card :is(h1, h2)[mat-card-title],
+.admin-card :is(h1, h2).mat-mdc-card-title {
+  margin: 0;
+  font: inherit;
+  font-weight: inherit;
+}
+
 .admin-card mat-card-header {
   padding-bottom: 0.15rem;
 }
