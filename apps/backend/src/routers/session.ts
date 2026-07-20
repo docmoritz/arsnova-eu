@@ -13,6 +13,7 @@ import {
   CreateSessionOutputSchema,
   GetCurrentQuestionForStudentInputSchema,
   GetSessionInfoInputSchema,
+  HostSteeringWithTimerOverrideInputSchema,
   NextQuestionInputSchema,
   GetLiveFreetextInputSchema,
   GetActiveQuizIdsInputSchema,
@@ -144,6 +145,7 @@ import {
   touchParticipantPresence,
 } from '../lib/presence';
 import { markCountdownSessionActive, recordSessionTransitionActivity } from '../lib/loadSignal';
+import { logger } from '../lib/logger';
 import { awaitJoinAdmissionSlot } from '../lib/joinAdmission';
 import {
   clearReadingReady,
@@ -3692,6 +3694,120 @@ async function fetchHostCurrentQuestion(
   return envelope.payload;
 }
 
+type TimerAccommodationProgressInput = {
+  sessionId: string;
+  questionId: string;
+  round: number;
+  activeQuestionStartedAt: Date | null;
+  baseTimerSeconds: number | null;
+};
+
+type TimerDbClient = Pick<typeof prisma, 'participant'> & {
+  $executeRaw: typeof prisma.$executeRaw;
+  session: Pick<typeof prisma.session, 'update' | 'findUnique'>;
+};
+
+async function lockSessionRow(db: TimerDbClient, sessionId: string): Promise<void> {
+  // Session.id ist textuell (UUID-String); kein `::uuid`-Cast, sonst text = uuid.
+  await db.$executeRaw`SELECT 1 FROM "Session" WHERE id = ${sessionId} FOR UPDATE`;
+}
+
+async function getTimerAccommodationProgress(
+  input: TimerAccommodationProgressInput,
+  db: TimerDbClient = prisma,
+): Promise<{ pendingCount: number; blockingCount: number }> {
+  if (
+    input.round !== 1 ||
+    !input.activeQuestionStartedAt ||
+    !input.baseTimerSeconds ||
+    input.baseTimerSeconds <= 0
+  ) {
+    return { pendingCount: 0, blockingCount: 0 };
+  }
+
+  const groups = await db.participant.groupBy({
+    by: ['timerAccommodation'],
+    where: {
+      sessionId: input.sessionId,
+      timerAccommodation: { in: ['EXTENDED', 'OFF'] },
+      votes: {
+        none: {
+          questionId: input.questionId,
+          round: input.round,
+        },
+      },
+    },
+    _count: { _all: true },
+  });
+  const counts = new Map(groups.map((group) => [group.timerAccommodation, group._count._all]));
+  const extendedCount = counts.get('EXTENDED') ?? 0;
+  const untimedCount = counts.get('OFF') ?? 0;
+  const extendedTimerSeconds = resolvePersonalTimerSeconds(input.baseTimerSeconds, 'EXTENDED');
+  const extendedDeadline =
+    extendedTimerSeconds && extendedTimerSeconds > 0
+      ? input.activeQuestionStartedAt.getTime() + extendedTimerSeconds * 1000
+      : 0;
+  const blockingCount = Date.now() <= extendedDeadline + 2000 ? extendedCount : 0;
+
+  return {
+    pendingCount: blockingCount + untimedCount,
+    blockingCount,
+  };
+}
+
+function isRoomCountdownElapsed(input: TimerAccommodationProgressInput): boolean {
+  if (!input.activeQuestionStartedAt || !input.baseTimerSeconds || input.baseTimerSeconds <= 0) {
+    return true;
+  }
+  const roomDeadlineMs = input.activeQuestionStartedAt.getTime() + input.baseTimerSeconds * 1000;
+  return Date.now() >= roomDeadlineMs;
+}
+
+/**
+ * Persönliche 10×-Fenster blockieren Host-Freigabe, bis sie enden —
+ * außer der Host forciert nach Ablauf des Raum-Countdowns (Anti-Sabotage).
+ */
+async function assertPersonalTimerGate(
+  input: TimerAccommodationProgressInput,
+  options: {
+    forceClosePersonalTimers?: boolean;
+    action: 'revealResults' | 'startDiscussion';
+  },
+  db: TimerDbClient = prisma,
+): Promise<void> {
+  const progress = await getTimerAccommodationProgress(input, db);
+  if (progress.blockingCount <= 0) {
+    return;
+  }
+
+  if (options.forceClosePersonalTimers) {
+    if (!isRoomCountdownElapsed(input)) {
+      throw new TRPCError({
+        code: 'PRECONDITION_FAILED',
+        message:
+          'Persönliche Fristen dürfen erst nach Ablauf des Raum-Countdowns vorzeitig beendet werden.',
+      });
+    }
+    logger.info('session.host_force_close_personal_timers', {
+      sessionId: input.sessionId,
+      questionId: input.questionId,
+      round: input.round,
+      action: options.action,
+      blockingCount: progress.blockingCount,
+      pendingCount: progress.pendingCount,
+    });
+    return;
+  }
+
+  throw new TRPCError({
+    code: 'PRECONDITION_FAILED',
+    message:
+      progress.blockingCount === 1
+        ? 'Eine Person nutzt noch ihre garantierte Zusatzzeit.'
+        : `${progress.blockingCount} Personen nutzen noch ihre garantierte Zusatzzeit.`,
+  });
+}
+
 async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO | null> {
   const normalizedCode = code.toUpperCase();
   const session = await prisma.session.findUnique({
@@ -3702,14 +3818,19 @@ async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO 
       status: true,
       currentQuestion: true,
       currentRound: true,
+      activeQuestionStartedAt: true,
       quiz: {
         select: {
+          defaultTimer: true,
+          timerScaleByDifficulty: true,
           questions: {
             orderBy: { order: 'asc' },
             select: {
               id: true,
               order: true,
               type: true,
+              timer: true,
+              difficulty: true,
               shortTextEvaluationKind: true,
               shortTextMaxLength: true,
               shortTextCaseSensitive: true,
@@ -3747,23 +3868,32 @@ async function fetchHostVoteProgress(code: string): Promise<HostVoteProgressDTO 
 
   const round = session.currentRound ?? 1;
   const questionType = question.type as QuestionType;
-  const pendingTimerAccommodationCount = await prisma.participant.count({
-    where: {
-      sessionId: session.id,
-      timerAccommodation: { in: ['EXTENDED', 'OFF'] },
-      votes: {
-        none: {
-          questionId: question.id,
-          round,
-        },
-      },
-    },
+  const baseTimerSeconds =
+    round === 2
+      ? null
+      : resolveEffectiveQuestionTimer(
+          question.timer,
+          session.quiz.defaultTimer,
+          question.difficulty as Difficulty,
+          session.quiz.timerScaleByDifficulty,
+        );
+  const timerAccommodationProgress = await getTimerAccommodationProgress({
+    sessionId: session.id,
+    questionId: question.id,
+    round,
+    activeQuestionStartedAt: session.activeQuestionStartedAt,
+    baseTimerSeconds,
   });
   const base = {
     questionId: question.id,
     questionOrder: question.order,
     round,
-    ...(pendingTimerAccommodationCount > 0 ? { pendingTimerAccommodationCount } : {}),
+    ...(timerAccommodationProgress.pendingCount > 0
+      ? { pendingTimerAccommodationCount: timerAccommodationProgress.pendingCount }
+      : {}),
+    ...(timerAccommodationProgress.blockingCount > 0
+      ? { blockingTimerAccommodationCount: timerAccommodationProgress.blockingCount }
+      : {}),
   };
 
   if (questionType === 'SINGLE_CHOICE' || questionType === 'MULTIPLE_CHOICE') {
@@ -4661,9 +4791,12 @@ export const sessionRouter = router({
         });
       }
 
-      await prisma.participant.update({
-        where: { id: participant.id },
-        data: { timerAccommodation: accommodation },
+      await prisma.$transaction(async (tx) => {
+        await lockSessionRow(tx, participant.sessionId);
+        await tx.participant.update({
+          where: { id: participant.id },
+          data: { timerAccommodation: accommodation },
+        });
       });
       void touchParticipantPresence(participant.sessionId, participant.id);
       // Persönliche Felder liegen außerhalb des gemeinsamen ACTIVE-Caches.
@@ -5209,7 +5342,7 @@ export const sessionRouter = router({
 
   /** Ergebnis anzeigen (Story 2.3). Nur bei ACTIVE. */
   revealResults: hostProcedure
-    .input(GetSessionInfoInputSchema)
+    .input(HostSteeringWithTimerOverrideInputSchema)
     .output(SessionStatusUpdateSchema)
     .mutation(async ({ input }) => {
       const code = input.code.toUpperCase();
@@ -5220,11 +5353,20 @@ export const sessionRouter = router({
           status: true,
           currentQuestion: true,
           currentRound: true,
+          activeQuestionStartedAt: true,
           quiz: {
             select: {
+              defaultTimer: true,
+              timerScaleByDifficulty: true,
               questions: {
                 orderBy: { order: 'asc' },
-                select: { type: true, numericTwoRounds: true },
+                select: {
+                  id: true,
+                  type: true,
+                  timer: true,
+                  difficulty: true,
+                  numericTwoRounds: true,
+                },
               },
             },
           },
@@ -5239,10 +5381,54 @@ export const sessionRouter = router({
           message: 'Ergebnis anzeigen nur im Status ACTIVE.',
         });
       }
-      await prisma.session.update({
-        where: { id: session.id },
-        data: { status: 'RESULTS', statusChangedAt: new Date() },
-      });
+      const question =
+        session.currentQuestion !== null && session.currentQuestion !== undefined
+          ? (session.quiz?.questions[session.currentQuestion] ?? null)
+          : null;
+      if (question && session.quiz) {
+        const baseTimerSeconds = resolveEffectiveQuestionTimer(
+          question.timer,
+          session.quiz.defaultTimer,
+          question.difficulty as Difficulty,
+          session.quiz.timerScaleByDifficulty,
+        );
+        await prisma.$transaction(async (tx) => {
+          await lockSessionRow(tx, session.id);
+          const locked = await tx.session.findUnique({
+            where: { id: session.id },
+            select: { status: true },
+          });
+          if (!locked || locked.status !== 'ACTIVE') {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Ergebnis anzeigen nur im Status ACTIVE.',
+            });
+          }
+          await assertPersonalTimerGate(
+            {
+              sessionId: session.id,
+              questionId: question.id,
+              round: session.currentRound,
+              activeQuestionStartedAt: session.activeQuestionStartedAt,
+              baseTimerSeconds,
+            },
+            {
+              forceClosePersonalTimers: input.forceClosePersonalTimers,
+              action: 'revealResults',
+            },
+            tx,
+          );
+          await tx.session.update({
+            where: { id: session.id },
+            data: { status: 'RESULTS', statusChangedAt: new Date() },
+          });
+        });
+      } else {
+        await prisma.session.update({
+          where: { id: session.id },
+          data: { status: 'RESULTS', statusChangedAt: new Date() },
+        });
+      }
       invalidateSessionStatusCachesForCode(code);
       void recordSessionTransitionActivity();
       return {
@@ -5254,7 +5440,7 @@ export const sessionRouter = router({
 
   /** Diskussionsphase starten (Story 2.7 Peer Instruction). Nur bei ACTIVE (Runde 1). */
   startDiscussion: hostProcedure
-    .input(GetSessionInfoInputSchema)
+    .input(HostSteeringWithTimerOverrideInputSchema)
     .output(SessionStatusUpdateSchema)
     .mutation(async ({ input }) => {
       const code = input.code.toUpperCase();
@@ -5265,11 +5451,20 @@ export const sessionRouter = router({
           status: true,
           currentQuestion: true,
           currentRound: true,
+          activeQuestionStartedAt: true,
           quiz: {
             select: {
+              defaultTimer: true,
+              timerScaleByDifficulty: true,
               questions: {
                 orderBy: { order: 'asc' },
-                select: { type: true, numericTwoRounds: true },
+                select: {
+                  id: true,
+                  type: true,
+                  timer: true,
+                  difficulty: true,
+                  numericTwoRounds: true,
+                },
               },
             },
           },
@@ -5297,10 +5492,50 @@ export const sessionRouter = router({
           message: 'Diese Frage ist nicht für eine zweite Runde konfiguriert.',
         });
       }
-      await prisma.session.update({
-        where: { id: session.id },
-        data: { status: 'DISCUSSION', statusChangedAt: new Date() },
-      });
+      if (question && session.quiz) {
+        const baseTimerSeconds = resolveEffectiveQuestionTimer(
+          question.timer,
+          session.quiz.defaultTimer,
+          question.difficulty as Difficulty,
+          session.quiz.timerScaleByDifficulty,
+        );
+        await prisma.$transaction(async (tx) => {
+          await lockSessionRow(tx, session.id);
+          const locked = await tx.session.findUnique({
+            where: { id: session.id },
+            select: { status: true, currentRound: true },
+          });
+          if (!locked || locked.status !== 'ACTIVE' || locked.currentRound !== 1) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Diskussionsphase nur aus Status ACTIVE.',
+            });
+          }
+          await assertPersonalTimerGate(
+            {
+              sessionId: session.id,
+              questionId: question.id,
+              round: session.currentRound,
+              activeQuestionStartedAt: session.activeQuestionStartedAt,
+              baseTimerSeconds,
+            },
+            {
+              forceClosePersonalTimers: input.forceClosePersonalTimers,
+              action: 'startDiscussion',
+            },
+            tx,
+          );
+          await tx.session.update({
+            where: { id: session.id },
+            data: { status: 'DISCUSSION', statusChangedAt: new Date() },
+          });
+        });
+      } else {
+        await prisma.session.update({
+          where: { id: session.id },
+          data: { status: 'DISCUSSION', statusChangedAt: new Date() },
+        });
+      }
       invalidateSessionStatusCachesForCode(code);
       void recordSessionTransitionActivity();
       return {
