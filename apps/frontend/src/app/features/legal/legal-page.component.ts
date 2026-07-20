@@ -79,9 +79,9 @@ export class LegalPageComponent implements OnInit, OnDestroy {
         this.http.get(path, { responseType: 'text' }).subscribe({
           next: (md) => {
             this.ngZone.run(() => {
-              const html = renderMarkdownWithoutKatex(md);
-              // Markdown-`# Titel` wird mit headingStartLevel 2 als <h2> gerendert;
-              // die Seitenüberschrift kommt aus dem dialog-title-header.
+              // Legal-Markdown: `#` → h1 (wird gestrippt), `##` → h2 unter dem UI-h1.
+              // Default headingStartLevel 2 würde nach dem Strip h1→h3 erzeugen (heading-order).
+              const html = renderMarkdownWithoutKatex(md, { headingStartLevel: 1 });
               const withoutLeadingTitle = stripLeadingMarkdownTitle(html);
               this.content.set(this.sanitizer.bypassSecurityTrustHtml(withoutLeadingTitle));
               this.loading.set(false);

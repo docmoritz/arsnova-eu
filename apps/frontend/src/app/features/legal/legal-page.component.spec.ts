@@ -104,6 +104,8 @@ describe('LegalPageComponent', () => {
         '',
         'Sie haben folgende Rechte:',
         '',
+        '## Betroffenenrechte',
+        '',
         '- **Auskunft** über Ihre Daten',
         '- **Berichtigung** unrichtiger Daten',
       ].join('\n'),
@@ -114,11 +116,17 @@ describe('LegalPageComponent', () => {
 
     const root: HTMLElement = fixture.nativeElement;
     const md = root.querySelector('.legal-page__md');
-    expect(md?.querySelector('h1, h2')?.textContent?.trim()).not.toBe('Datenschutz');
+    expect(md?.querySelector('h1')?.textContent?.trim()).not.toBe('Datenschutz');
+    expect(md?.querySelector('h2')?.textContent?.trim()).toBe('Betroffenenrechte');
     const listItems = Array.from(root.querySelectorAll('.legal-page__md li'));
     expect(listItems).toHaveLength(2);
     expect(listItems[0].querySelector('strong')?.textContent).toBe('Auskunft');
     expect(listItems[1].querySelector('strong')?.textContent).toBe('Berichtigung');
+    // UI-h1, dann Abschnitte als h2 (kein übersprungenes Level).
+    const headingTags = Array.from(root.querySelectorAll('h1, h2, h3, h4, h5, h6')).map(
+      (el) => el.tagName,
+    );
+    expect(headingTags).toEqual(['H1', 'H2']);
   });
 
   it('lädt Accessibility-Markdown und zeigt den Seiten-Titel Barrierefreiheit', async () => {
@@ -131,7 +139,9 @@ describe('LegalPageComponent', () => {
     fixture.detectChanges();
 
     const req = httpMock.expectOne((r) => r.url.includes('assets/legal/accessibility.de.md'));
-    req.flush('# Barrierefreiheit\n\n**Stand: 20. Juli 2026**\n\nText zur **Persönliche Zeit**.');
+    req.flush(
+      '# Barrierefreiheit\n\n**Stand: 20. Juli 2026**\n\n## Was du nutzen kannst\n\nText zur **Persönliche Zeit**.',
+    );
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -146,6 +156,7 @@ describe('LegalPageComponent', () => {
     const md = root.querySelector('.legal-page__md');
     expect(md?.textContent).toContain('Persönliche Zeit');
     expect(md?.querySelector('h1, h2')?.textContent?.trim()).not.toBe('Barrierefreiheit');
+    expect(md?.querySelector('h2')?.textContent?.trim()).toBe('Was du nutzen kannst');
     expect(root.querySelectorAll('h1').length).toBe(1);
   });
 });
