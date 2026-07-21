@@ -622,17 +622,20 @@ async function endSessionAndScan(host, participant, hardFailures) {
     .then(() => 'gate');
   const settled = await Promise.race([homeNamed, gateVisible]).catch(() => null);
 
-  let returnedHome =
-    settled === 'home' || homePathRe.test(new URL(participant.url()).pathname);
+  let returnedHome = settled === 'home' || homePathRe.test(new URL(participant.url()).pathname);
   if (returnedHome) {
     const ready = await participant
-      .waitForFunction(() => {
-        const btn = document.querySelector('.home-feedback-tempo-spotlight');
-        if (!(btn instanceof HTMLElement)) return false;
-        const label = (btn.getAttribute('aria-label') || '').trim();
-        const text = (btn.innerText || '').trim();
-        return label.length > 0 || text.length > 0;
-      }, undefined, { timeout: 15_000 })
+      .waitForFunction(
+        () => {
+          const btn = document.querySelector('.home-feedback-tempo-spotlight');
+          if (!(btn instanceof HTMLElement)) return false;
+          const label = (btn.getAttribute('aria-label') || '').trim();
+          const text = (btn.innerText || '').trim();
+          return label.length > 0 || text.length > 0;
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
       .then(() => true)
       .catch(() => false);
     if (!ready) {
