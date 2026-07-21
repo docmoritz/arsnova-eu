@@ -282,8 +282,11 @@
           class="home-feedback-tempo-spotlight"
           (click)="startQuickFeedback(quickFeedbackTempoSpotlight.type)"
           [disabled]="!!quickFeedbackStarting()"
-          [attr.aria-busy]="quickFeedbackStarting() === quickFeedbackTempoSpotlight.type"
-          [attr.aria-label]="quickFeedbackTempoSpotlight.actionLabel"
+          [attr.aria-busy]="
+            quickFeedbackStarting() === quickFeedbackTempoSpotlight.type ? true : null
+          "
+          i18n-aria-label="@@feedback.tempoSpotlightAction"
+          aria-label="Tempo-Feedback"
         >
           <span class="home-feedback-tempo-spotlight__copy">
             <span class="home-feedback-tempo-spotlight__eyebrow">{{

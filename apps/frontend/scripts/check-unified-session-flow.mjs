@@ -583,14 +583,93 @@ async function endSessionAndScan(host, participant, hardFailures) {
   await scanA11y(host, 'end-confirmation');
   await confirmation.click();
 
+  const homePathRe = /^\/(?:de|en|fr|it|es)\/?$/;
+
   await participant.waitForFunction(
-    () =>
-      Boolean(document.querySelector('#vote-session-end-anchor, #finished-heading')) ||
-      /^\/(?:de|en|fr|it|es)\/?$/.test(window.location.pathname),
-    undefined,
+    (homePathSource) => {
+      const homePath = new RegExp(homePathSource);
+      return (
+        Boolean(document.querySelector('#vote-session-end-anchor, #finished-heading')) ||
+        homePath.test(window.location.pathname)
+      );
+    },
+    homePathRe.source,
     { timeout: 30_000 },
   );
-  const returnedHome = /^\/(?:de|en|fr|it|es)\/?$/.test(new URL(participant.url()).pathname);
+
+  // Nach Session-Ende erfolgt oft ein schneller Redirect nach Home. Axe darf
+  // nicht mitten in der Navigation laufen: der Tempo-Spotlight-Button existiert
+  // dann schon als leere Shell ohne Text/aria-label (button-name).
+  // Nur #vote-session-end-anchor zählt als settled Gate — #finished-heading
+  // erscheint schon im transienten FINISHED-Zustand, bevor runSessionEndRedirect
+  // entscheidet (Home vs. End-Gate); sonst gewinnt gateVisible zu früh.
+  const homeNamed = participant
+    .waitForFunction(
+      (homePathSource) => {
+        const homePath = new RegExp(homePathSource);
+        if (!homePath.test(window.location.pathname)) return false;
+        const btn = document.querySelector('.home-feedback-tempo-spotlight');
+        if (!(btn instanceof HTMLElement)) return false;
+        const label = (btn.getAttribute('aria-label') || '').trim();
+        const text = (btn.innerText || '').trim();
+        return label.length > 0 || text.length > 0;
+      },
+      homePathRe.source,
+      { timeout: 20_000 },
+    )
+    .then(() => 'home');
+  const gateVisible = participant
+    .locator('#vote-session-end-anchor')
+    .first()
+    .waitFor({ state: 'visible', timeout: 20_000 })
+    .then(() => 'gate');
+  const settled = await Promise.race([homeNamed, gateVisible]).catch(() => null);
+
+  let returnedHome = settled === 'home' || homePathRe.test(new URL(participant.url()).pathname);
+  if (returnedHome) {
+    const ready = await participant
+      .waitForFunction(
+        () => {
+          const btn = document.querySelector('.home-feedback-tempo-spotlight');
+          if (!(btn instanceof HTMLElement)) return false;
+          const label = (btn.getAttribute('aria-label') || '').trim();
+          const text = (btn.innerText || '').trim();
+          return label.length > 0 || text.length > 0;
+        },
+        undefined,
+        { timeout: 15_000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+    if (!ready) {
+      hardFailures.push(
+        'Home after session end did not expose a named tempo-spotlight button before axe.',
+      );
+      return;
+    }
+  } else if (settled !== 'gate') {
+    // Redirect kann zwischen Gate und Home liegen: noch einmal auf Home warten.
+    const redirectedHome = await participant
+      .waitForFunction(
+        (homePathSource) => {
+          const homePath = new RegExp(homePathSource);
+          if (!homePath.test(window.location.pathname)) return false;
+          const btn = document.querySelector('.home-feedback-tempo-spotlight');
+          if (!(btn instanceof HTMLElement)) return false;
+          const label = (btn.getAttribute('aria-label') || '').trim();
+          const text = (btn.innerText || '').trim();
+          return label.length > 0 || text.length > 0;
+        },
+        homePathRe.source,
+        { timeout: 10_000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+    if (redirectedHome) {
+      returnedHome = true;
+    }
+  }
+
   await scanA11y(
     participant,
     returnedHome ? 'participant-session-ended-home' : 'participant-session-ended',
