@@ -8,11 +8,13 @@ import { MotdHeaderRefreshService } from '../../core/motd-header-refresh.service
 import type { NewsArchiveInitialModel } from './news-archive-initial';
 
 const listArchiveQuery = vi.fn();
+const getHeaderStateQuery = vi.fn();
 
 vi.mock('../../core/trpc.client', () => ({
   trpc: {
     motd: {
       listArchive: { query: (...args: unknown[]) => listArchiveQuery(...args) },
+      getHeaderState: { query: (...args: unknown[]) => getHeaderStateQuery(...args) },
     },
   },
 }));
@@ -31,14 +33,21 @@ describe('NewsArchivePageComponent', () => {
   beforeEach(() => {
     localStorage.clear();
     listArchiveQuery.mockReset();
+    getHeaderStateQuery.mockReset();
     listArchiveQuery.mockResolvedValue({ items: [], nextCursor: null });
+    getHeaderStateQuery.mockResolvedValue({
+      hasActiveOverlay: false,
+      hasArchiveEntries: false,
+      archiveMaxEndsAtIso: null,
+      archiveUnreadCount: 0,
+    });
   });
 
   afterEach(() => {
     localStorage.clear();
   });
 
-  it('nutzt Resolver-Daten ohne weiteres listArchive', () => {
+  it('zeigt Resolver-Daten und lädt nach Hydration die erste Seite live nach', async () => {
     TestBed.configureTestingModule({
       imports: [NewsArchivePageComponent],
       providers: [
@@ -56,8 +65,209 @@ describe('NewsArchivePageComponent', () => {
       TestBed.createComponent(NewsArchivePageComponent);
     fixture.detectChanges();
 
-    expect(listArchiveQuery).not.toHaveBeenCalled();
     expect(fixture.componentInstance.items().length).toBe(0);
+
+    await fixture.whenStable();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(listArchiveQuery).toHaveBeenCalled();
+    expect(getHeaderStateQuery).toHaveBeenCalled();
+  });
+
+  it('ersetzt prerenderte Einträge durch neuere Live-Daten', async () => {
+    const stale: NewsArchiveInitialModel = {
+      ...emptyResolved,
+      items: [
+        {
+          id: 'c0222222-c222-4c22-8c22-c02222222222',
+          contentVersion: 6,
+          markdown: '### Neu: Der Nachbesprechungsplan als PDF\n\nAlt',
+          startsAt: '2026-07-17T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+      ],
+      titleById: {
+        'c0222222-c222-4c22-8c22-c02222222222': 'Neu: Der Nachbesprechungsplan als PDF',
+      },
+    };
+
+    listArchiveQuery.mockResolvedValue({
+      items: [
+        {
+          id: 'c0333333-c333-4c33-8c33-c03333333333',
+          contentVersion: 1,
+          markdown: '### Barrierefreiheit, die allen hilft\n\nNeu',
+          startsAt: '2026-07-22T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+        {
+          id: 'c0222222-c222-4c22-8c22-c02222222222',
+          contentVersion: 6,
+          markdown: '### Neu: Der Nachbesprechungsplan als PDF\n\nAlt',
+          startsAt: '2026-07-17T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+      ],
+      nextCursor: null,
+    });
+
+    TestBed.configureTestingModule({
+      imports: [NewsArchivePageComponent],
+      providers: [
+        { provide: LOCALE_ID, useValue: 'de' },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { data: { newsArchive: stale } } },
+        },
+        { provide: MatSnackBar, useValue: { open: vi.fn() } },
+        { provide: MotdHeaderRefreshService, useValue: { notifyMotdHeaderRefresh: vi.fn() } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(NewsArchivePageComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.items().map((i) => i.id)).toEqual([
+      'c0222222-c222-4c22-8c22-c02222222222',
+    ]);
+
+    await fixture.whenStable();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.items().map((i) => i.id)).toEqual([
+      'c0333333-c333-4c33-8c33-c03333333333',
+      'c0222222-c222-4c22-8c22-c02222222222',
+    ]);
+    expect(fixture.componentInstance.archiveItemTitle('c0333333-c333-4c33-8c33-c03333333333')).toBe(
+      'Barrierefreiheit, die allen hilft',
+    );
+  });
+
+  it('blockiert loadMore bis der Live-Refresh der ersten Seite fertig ist', async () => {
+    let resolveLiveFirstPage!: (value: {
+      items: Array<{
+        id: string;
+        contentVersion: number;
+        markdown: string;
+        startsAt: string;
+        endsAt: string;
+      }>;
+      nextCursor: string | null;
+    }) => void;
+    const liveFirstPage = new Promise<{
+      items: Array<{
+        id: string;
+        contentVersion: number;
+        markdown: string;
+        startsAt: string;
+        endsAt: string;
+      }>;
+      nextCursor: string | null;
+    }>((resolve) => {
+      resolveLiveFirstPage = resolve;
+    });
+
+    listArchiveQuery.mockImplementation(() => liveFirstPage);
+
+    const stale: NewsArchiveInitialModel = {
+      ...emptyResolved,
+      items: [
+        {
+          id: 'c0222222-c222-4c22-8c22-c02222222222',
+          contentVersion: 6,
+          markdown: '### Alt\n\nText',
+          startsAt: '2026-07-17T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+      ],
+      nextCursor: 'stale-cursor-a30',
+      titleById: {
+        'c0222222-c222-4c22-8c22-c02222222222': 'Alt',
+      },
+    };
+
+    TestBed.configureTestingModule({
+      imports: [NewsArchivePageComponent],
+      providers: [
+        { provide: LOCALE_ID, useValue: 'de' },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { data: { newsArchive: stale } } },
+        },
+        { provide: MatSnackBar, useValue: { open: vi.fn() } },
+        { provide: MotdHeaderRefreshService, useValue: { notifyMotdHeaderRefresh: vi.fn() } },
+      ],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(NewsArchivePageComponent);
+    fixture.detectChanges();
+    // afterNextRender anstoßen, ohne auf den noch hängenden Live-Refresh zu warten
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fixture.componentInstance.liveRefreshPending()).toBe(true);
+    expect(fixture.componentInstance.nextCursor()).toBe('stale-cursor-a30');
+    expect(listArchiveQuery).toHaveBeenCalled();
+    expect(
+      listArchiveQuery.mock.calls.some((call) => {
+        const arg = call[0] as { cursor?: string } | undefined;
+        return arg !== undefined && arg !== null && !('cursor' in arg);
+      }),
+    ).toBe(true);
+    const refreshCallsBeforeLoadMore = listArchiveQuery.mock.calls.length;
+
+    await fixture.componentInstance.loadMoreArchive();
+    expect(listArchiveQuery).toHaveBeenCalledTimes(refreshCallsBeforeLoadMore);
+    expect(
+      listArchiveQuery.mock.calls.every((call) => {
+        const arg = call[0] as { cursor?: string } | undefined;
+        return arg?.cursor !== 'stale-cursor-a30';
+      }),
+    ).toBe(true);
+
+    resolveLiveFirstPage({
+      items: [
+        {
+          id: 'c0333333-c333-4c33-8c33-c03333333333',
+          contentVersion: 1,
+          markdown: '### Neu\n\nText',
+          startsAt: '2026-07-22T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+      ],
+      nextCursor: 'live-cursor-a29',
+    });
+
+    await fixture.whenStable();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.liveRefreshPending()).toBe(false);
+    expect(fixture.componentInstance.nextCursor()).toBe('live-cursor-a29');
+
+    listArchiveQuery.mockResolvedValue({
+      items: [
+        {
+          id: 'c0444444-c444-4c44-8c44-c04444444444',
+          contentVersion: 1,
+          markdown: '### Älter\n\nText',
+          startsAt: '2026-07-10T00:00:00.000Z',
+          endsAt: '2027-03-31T23:59:59.999Z',
+        },
+      ],
+      nextCursor: null,
+    });
+
+    await fixture.componentInstance.loadMoreArchive();
+    expect(listArchiveQuery.mock.calls.at(-1)?.[0]).toMatchObject({ cursor: 'live-cursor-a29' });
+    expect(fixture.componentInstance.items().map((i) => i.id)).toEqual([
+      'c0333333-c333-4c33-8c33-c03333333333',
+      'c0444444-c444-4c44-8c44-c04444444444',
+    ]);
   });
 
   it('macht Meldungstitel als In-Page-Anker per Tab erreichbar', () => {
