@@ -4,20 +4,21 @@ Informations fournies conformément à l'art. 5 de la loi allemande sur les serv
 
 ## Éditeur
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
-Juri-Gagarin-Ring 152  
-99084 Erfurt  
+docmoritz by Peter Moritz  
+c/o IP-Management #4659  
+Ludwig-Erhard-Str. 18  
+20459 Hamburg  
 Allemagne
 
 ## Contact
 
-E-mail : [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org)
+E-mail : [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy)
 
 ## Directeur de la publication / Responsable du contenu
 
 Conformément à l'art. 18 du traité d'État allemand sur les médias (MStV) :
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
+docmoritz by Peter Moritz  
 (Adresse identique à celle ci-dessus)
 
 ## Hébergement
