@@ -69,6 +69,12 @@ export class NewsArchivePageComponent {
   private readonly locale = appLocaleFromInjectedId(inject(LOCALE_ID));
 
   readonly loadingMore = signal(false);
+  /**
+   * Bis der Live-Refresh der ersten Seite fertig ist, keine Pagination:
+   * sonst können Load-More und Refresh unterschiedliche Cursor-Generationen mischen
+   * und Einträge dauerhaft auslassen.
+   */
+  readonly liveRefreshPending = signal(true);
   readonly error = signal<string | null>(null);
   readonly items = signal<MotdArchiveItemDTO[]>([]);
   readonly nextCursor = signal<string | null>(null);
@@ -120,6 +126,8 @@ export class NewsArchivePageComponent {
       this.applyModel(live);
     } catch {
       /* Prerender-/Resolver-Stand behalten */
+    } finally {
+      this.liveRefreshPending.set(false);
     }
   }
 
@@ -177,7 +185,7 @@ export class NewsArchivePageComponent {
 
   async loadMoreArchive(): Promise<void> {
     const cursor = this.nextCursor();
-    if (!cursor || this.loadingMore()) {
+    if (!cursor || this.loadingMore() || this.liveRefreshPending()) {
       return;
     }
     this.loadingMore.set(true);

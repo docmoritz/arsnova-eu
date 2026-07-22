@@ -89,13 +89,13 @@
           @if (nextCursor()) {
             <div
               class="news-archive-page__load-more"
-              [attr.aria-busy]="loadingMore() ? 'true' : null"
+              [attr.aria-busy]="loadingMore() || liveRefreshPending() ? 'true' : null"
             >
               <button
                 matButton="tonal"
                 type="button"
                 i18n="@@motd.archiveLoadMore"
-                [disabled]="loadingMore()"
+                [disabled]="loadingMore() || liveRefreshPending()"
                 (click)="loadMoreArchive()"
               >
                 Weitere Meldungen laden
