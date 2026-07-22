@@ -4,20 +4,21 @@ Informazioni fornite ai sensi del § 5 della legge tedesca sui servizi digitali 
 
 ## Fornitore
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
-Juri-Gagarin-Ring 152  
-99084 Erfurt  
+docmoritz by Peter Moritz  
+c/o IP-Management #4659  
+Ludwig-Erhard-Str. 18  
+20459 Hamburg  
 Germania
 
 ## Contatto
 
-E-mail: [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org)
+E-mail: [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy)
 
 ## Responsabile dei contenuti
 
 Ai sensi del § 18 del Trattato statale tedesco sui media (MStV):
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
+docmoritz by Peter Moritz  
 (Indirizzo come sopra)
 
 ## Hosting
