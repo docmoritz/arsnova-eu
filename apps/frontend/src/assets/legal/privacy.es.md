@@ -4,16 +4,17 @@ Información proporcionada conforme a los artículos 13 y 14 del Reglamento Gene
 
 ## 1. Responsable del tratamiento
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
-Juri-Gagarin-Ring 152  
-99084 Erfurt  
+docmoritz by Peter Moritz  
+c/o IP-Management #4659  
+Ludwig-Erhard-Str. 18  
+20459 Hamburg  
 Alemania
 
-Correo electrónico: [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org)
+Correo electrónico: [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy)
 
 ## 2. Ámbito de aplicación
 
-Esta política de privacidad se aplica a https://arsnova.eu (sitio informativo y de presentación) y, cuando corresponda, al uso de la aplicación arsnova.eu (quizzes y sondeos en directo). Si la aplicación es autoalojada por su organización o institución, estos actúan como responsables del tratamiento y se aplicará su propia política de privacidad.
+Esta política de privacidad se aplica a https://pingo.docmoritz.academy (sitio informativo y de presentación) y, cuando corresponda, al uso de la aplicación arsnova.eu (quizzes y sondeos en directo). Si la aplicación es autoalojada por su organización o institución, estos actúan como responsables del tratamiento y se aplicará su propia política de privacidad.
 
 ## 3. Datos recopilados al visitar arsnova.eu
 
@@ -31,7 +32,7 @@ En arsnova.eu encontrará enlaces a servicios externos (p. ej., GitHub). Al hace
 
 arsnova.eu está alojado en Alemania por Hetzner Online GmbH. Hetzner es auditada anualmente por TÜV Rheinland para garantizar el cumplimiento de los estrictos estándares de seguridad según el art. 32 del RGPD.
 
-El sitio web y la aplicación en https://arsnova.eu funcionan en los servidores de Hetzner. Si el software es alojado **por usted o un tercero** (p. ej., su institución), los datos de acceso (como la dirección IP) pueden registrarse en los servidores del proveedor correspondiente. Si la aplicación se aloja en un país fuera de la UE (p. ej., en EE. UU.), pueden producirse transferencias de datos, sujetas a garantías adecuadas (como las cláusulas contractuales tipo según el art. 46 del RGPD). Ocasionalmente, se puede alojar una página de presentación separada (para demos y marketing) a través de GitHub Pages bajo un dominio diferente, sin vinculación con el sitio principal arsnova.eu; para más detalles, consulte la [Declaración de Privacidad de GitHub](https://docs.github.com/es/site-policy/privacy-policies/github-privacy-statement). El proveedor específico y la ubicación de almacenamiento dependen de la configuración respectiva.
+El sitio web y la aplicación en https://pingo.docmoritz.academy funcionan en los servidores de Hetzner. Si el software es alojado **por usted o un tercero** (p. ej., su institución), los datos de acceso (como la dirección IP) pueden registrarse en los servidores del proveedor correspondiente. Si la aplicación se aloja en un país fuera de la UE (p. ej., en EE. UU.), pueden producirse transferencias de datos, sujetas a garantías adecuadas (como las cláusulas contractuales tipo según el art. 46 del RGPD). Ocasionalmente, se puede alojar una página de presentación separada (para demos y marketing) a través de GitHub Pages bajo un dominio diferente, sin vinculación con el sitio principal arsnova.eu; para más detalles, consulte la [Declaración de Privacidad de GitHub](https://docs.github.com/es/site-policy/privacy-policies/github-privacy-statement). El proveedor específico y la ubicación de almacenamiento dependen de la configuración respectiva.
 
 ## 6. Sus derechos
 
@@ -45,7 +46,7 @@ Con respecto a sus datos personales, usted tiene los siguientes derechos frente 
 - **Retirada del consentimiento** otorgado (art. 7, apdo. 3 RGPD), con efecto para el futuro.
 - **Reclamación** ante una autoridad de control de protección de datos (art. 77 RGPD).
 
-Para consultas o para ejercer sus derechos, póngase en contacto con: [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org).
+Para consultas o para ejercer sus derechos, póngase en contacto con: [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy).
 
 ## 7. Obligación de facilitar datos
 
