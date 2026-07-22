@@ -1,45 +1,111 @@
 # =============================================================================
-# arsnova.eu — Coolify-Overlay (pingo.docmoritz.academy)
+# arsnova.eu — Coolify-Deploy-Datei (pingo.docmoritz.academy)
 # Issue: ar-org#673
 #
-# Diese Datei wird im Fork docmoritz/arsnova-eu als Overlay-Datei committet.
-# Sie ergänzt docker-compose.prod.yml um Traefik-Labels für 3-Port-Routing.
-# Kein Service-Logik-Eingriff — nur Labels-Block auf dem `app`-Service.
-#
-# Traefik-Entry: https / certresolver: letsencrypt
-# (verifiziert gegen termin-calcom — ar-org#606)
+# WICHTIG: Coolify nutzt GENAU EINE Compose-Datei (docker_compose_location) und
+# merged NICHT automatisch mit docker-compose.prod.yml. Diese Datei ist daher
+# der VOLLSTAENDIGE Stack (Postgres+Redis+App) aus docker-compose.prod.yml,
+# uebersetzt auf Coolify-Konventionen:
+#   - env_file .env.production entfernt (existiert im Coolify-Kontext nicht) ->
+#     ${VAR}-Substitution aus den in Coolify gesetzten Env-Vars
+#   - Host-Port-Bindings (127.0.0.1:PORT:PORT) entfernt -> expose (Traefik
+#     routet intern ueber das von Coolify verwaltete Docker-Netzwerk)
+#   - eigener networks-Block entfernt -> Coolify haengt sein eigenes,
+#     ressourcen-eigenes Netzwerk automatisch an
+#   - Traefik-Labels fuer 3-Port-Routing (HTTP/tRPC-WS/Yjs-WS) auf einer Domain
 # =============================================================================
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-arsnova_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-arsnova_v3}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-arsnova_user} -d ${POSTGRES_DB:-arsnova_v3}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
-    # Ports NICHT auf Host-Interface binden — Traefik-intern über Docker-Netzwerk
-    ports: []
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-arsnova_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-arsnova_v3}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: 0.0.0.0
+      WS_PORT: "3001"
+      YJS_WS_PORT: "3002"
+      YJS_WS_HOST: 0.0.0.0
+      TRUST_PROXY_HOPS: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "3000"
+      - "3001"
+      - "3002"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/trpc/health.check"]
+      interval: 30s
+      timeout: 10s
+      start_period: 45s
+      retries: 3
     labels:
-      traefik.enable: "true"
+      - traefik.enable=true
 
-      # ── Router 1: Haupt-HTTP (Frontend + tRPC-HTTP) → Port 3000 ──────────
-      traefik.http.routers.pingo-http.rule: "Host(`pingo.docmoritz.academy`)"
-      traefik.http.routers.pingo-http.entrypoints: "https"
-      traefik.http.routers.pingo-http.tls: "true"
-      traefik.http.routers.pingo-http.tls.certresolver: "letsencrypt"
-      traefik.http.routers.pingo-http.service: "pingo-http-svc"
-      traefik.http.routers.pingo-http.middlewares: "msc-security-headers@file"
-      traefik.http.services.pingo-http-svc.loadbalancer.server.port: "3000"
+      # Router 1: Haupt-HTTP (Frontend + tRPC-HTTP) -> Port 3000
+      - traefik.http.routers.pingo-http.rule=Host(`pingo.docmoritz.academy`)
+      - traefik.http.routers.pingo-http.entrypoints=https
+      - traefik.http.routers.pingo-http.tls=true
+      - traefik.http.routers.pingo-http.tls.certresolver=letsencrypt
+      - traefik.http.routers.pingo-http.service=pingo-http-svc
+      - traefik.http.routers.pingo-http.middlewares=msc-security-headers@file
+      - traefik.http.services.pingo-http-svc.loadbalancer.server.port=3000
 
-      # ── Router 2: tRPC-WebSocket → Port 3001 (Pfad /trpc-ws, Prio 10) ───
-      traefik.http.routers.pingo-trpcws.rule: "Host(`pingo.docmoritz.academy`) && PathPrefix(`/trpc-ws`)"
-      traefik.http.routers.pingo-trpcws.entrypoints: "https"
-      traefik.http.routers.pingo-trpcws.tls: "true"
-      traefik.http.routers.pingo-trpcws.tls.certresolver: "letsencrypt"
-      traefik.http.routers.pingo-trpcws.priority: "10"
-      traefik.http.routers.pingo-trpcws.service: "pingo-trpcws-svc"
-      traefik.http.services.pingo-trpcws-svc.loadbalancer.server.port: "3001"
+      # Router 2: tRPC-WebSocket -> Port 3001, Pfad /trpc-ws, hoehere Prioritaet
+      - traefik.http.routers.pingo-trpcws.rule=Host(`pingo.docmoritz.academy`) && PathPrefix(`/trpc-ws`)
+      - traefik.http.routers.pingo-trpcws.entrypoints=https
+      - traefik.http.routers.pingo-trpcws.tls=true
+      - traefik.http.routers.pingo-trpcws.tls.certresolver=letsencrypt
+      - traefik.http.routers.pingo-trpcws.priority=10
+      - traefik.http.routers.pingo-trpcws.service=pingo-trpcws-svc
+      - traefik.http.services.pingo-trpcws-svc.loadbalancer.server.port=3001
 
-      # ── Router 3: Yjs-WebSocket → Port 3002 (Pfad /yjs-ws, Prio 10) ─────
-      traefik.http.routers.pingo-yjsws.rule: "Host(`pingo.docmoritz.academy`) && PathPrefix(`/yjs-ws`)"
-      traefik.http.routers.pingo-yjsws.entrypoints: "https"
-      traefik.http.routers.pingo-yjsws.tls: "true"
-      traefik.http.routers.pingo-yjsws.tls.certresolver: "letsencrypt"
-      traefik.http.routers.pingo-yjsws.priority: "10"
-      traefik.http.routers.pingo-yjsws.service: "pingo-yjsws-svc"
-      traefik.http.services.pingo-yjsws-svc.loadbalancer.server.port: "3002"
+      # Router 3: Yjs-WebSocket (Quiz-Sync) -> Port 3002, Pfad /yjs-ws, hoehere Prioritaet
+      - traefik.http.routers.pingo-yjsws.rule=Host(`pingo.docmoritz.academy`) && PathPrefix(`/yjs-ws`)
+      - traefik.http.routers.pingo-yjsws.entrypoints=https
+      - traefik.http.routers.pingo-yjsws.tls=true
+      - traefik.http.routers.pingo-yjsws.tls.certresolver=letsencrypt
+      - traefik.http.routers.pingo-yjsws.priority=10
+      - traefik.http.routers.pingo-yjsws.service=pingo-yjsws-svc
+      - traefik.http.services.pingo-yjsws-svc.loadbalancer.server.port=3002
+
+volumes:
+  postgres_data:
+  redis_data:
+
