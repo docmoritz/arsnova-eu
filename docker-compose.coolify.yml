@@ -1,0 +1,45 @@
+# =============================================================================
+# arsnova.eu — Coolify-Overlay (pingo.docmoritz.academy)
+# Issue: ar-org#673
+#
+# Diese Datei wird im Fork docmoritz/arsnova-eu als Overlay-Datei committet.
+# Sie ergänzt docker-compose.prod.yml um Traefik-Labels für 3-Port-Routing.
+# Kein Service-Logik-Eingriff — nur Labels-Block auf dem `app`-Service.
+#
+# Traefik-Entry: https / certresolver: letsencrypt
+# (verifiziert gegen termin-calcom — ar-org#606)
+# =============================================================================
+
+services:
+  app:
+    # Ports NICHT auf Host-Interface binden — Traefik-intern über Docker-Netzwerk
+    ports: []
+    labels:
+      traefik.enable: "true"
+
+      # ── Router 1: Haupt-HTTP (Frontend + tRPC-HTTP) → Port 3000 ──────────
+      traefik.http.routers.pingo-http.rule: "Host(`pingo.docmoritz.academy`)"
+      traefik.http.routers.pingo-http.entrypoints: "https"
+      traefik.http.routers.pingo-http.tls: "true"
+      traefik.http.routers.pingo-http.tls.certresolver: "letsencrypt"
+      traefik.http.routers.pingo-http.service: "pingo-http-svc"
+      traefik.http.routers.pingo-http.middlewares: "msc-security-headers@file"
+      traefik.http.services.pingo-http-svc.loadbalancer.server.port: "3000"
+
+      # ── Router 2: tRPC-WebSocket → Port 3001 (Pfad /trpc-ws, Prio 10) ───
+      traefik.http.routers.pingo-trpcws.rule: "Host(`pingo.docmoritz.academy`) && PathPrefix(`/trpc-ws`)"
+      traefik.http.routers.pingo-trpcws.entrypoints: "https"
+      traefik.http.routers.pingo-trpcws.tls: "true"
+      traefik.http.routers.pingo-trpcws.tls.certresolver: "letsencrypt"
+      traefik.http.routers.pingo-trpcws.priority: "10"
+      traefik.http.routers.pingo-trpcws.service: "pingo-trpcws-svc"
+      traefik.http.services.pingo-trpcws-svc.loadbalancer.server.port: "3001"
+
+      # ── Router 3: Yjs-WebSocket → Port 3002 (Pfad /yjs-ws, Prio 10) ─────
+      traefik.http.routers.pingo-yjsws.rule: "Host(`pingo.docmoritz.academy`) && PathPrefix(`/yjs-ws`)"
+      traefik.http.routers.pingo-yjsws.entrypoints: "https"
+      traefik.http.routers.pingo-yjsws.tls: "true"
+      traefik.http.routers.pingo-yjsws.tls.certresolver: "letsencrypt"
+      traefik.http.routers.pingo-yjsws.priority: "10"
+      traefik.http.routers.pingo-yjsws.service: "pingo-yjsws-svc"
+      traefik.http.services.pingo-yjsws-svc.loadbalancer.server.port: "3002"
