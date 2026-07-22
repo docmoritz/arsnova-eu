@@ -4,7 +4,7 @@
 >
 > **Abhängigkeiten (Kernpfad):** Epic 0 → Epic 1 → Epic 2 → Epic 3 → Epic 4 → Epic 5 ✅
 >
-> **Nächster Fokus (Auswahl offener Stories):** u. a. **0.8** (Komplexitätsabbau / McCabe-Refactor), **2.9** (asynchrone Quiz-Modi), **6.5**/**6.6** (Barrierefreiheit / UX-Testreihen), **1.2ec–1.2ed** (Kurzantwort-Ausbau), **1.2f–1.2h** (neue Fragentypen), **1.6c** (Sync-Sicherheit), **8.5** (delegierbare Q&A-Moderation), **8.9a–8.9c** (didaktischer Live-Moderationskompass) — **Epic 6** im Kern (6.1–6.4: Theme, i18n, Legal, Responsive) ist umgesetzt ✅. **Lehre:** Greenfield-Demo **1.7a** in **3×45 Min.** — [`docs/didaktik/greenfield-demo-1-7a-vorlesung.md`](docs/didaktik/greenfield-demo-1-7a-vorlesung.md).
+> **Nächster Fokus (Auswahl offener Stories):** u. a. **0.8** (Komplexitätsabbau / McCabe-Refactor), **2.9** (asynchrone Quiz-Modi), **6.5**/**6.6** (Barrierefreiheit / UX-Testreihen), **1.2ec–1.2ed** (Kurzantwort-Ausbau), **1.2f–1.2h** (neue Fragentypen), **1.6c** (Sync-Sicherheit), **8.5** (delegierbare Q&A-Moderation), **8.9a–8.9c** (didaktischer Live-Moderationskompass) — **Epic 6** im Kern (6.1–6.4: Theme, i18n, Legal, Responsive) ist umgesetzt ✅; **6.5** bleibt bis zur manuellen AT-/Zoom-/OS-/Reader-Abnahme in Arbeit. **Lehre:** Greenfield-Demo **1.7a** in **3×45 Min.** — [`docs/didaktik/greenfield-demo-1-7a-vorlesung.md`](docs/didaktik/greenfield-demo-1-7a-vorlesung.md).
 >
 > **Weitere Parallelpfade:** Epic 9 ✅ (Admin: Inspektion, Löschen, Auszug für Behörden) · Epic 10 ✅ (MOTD / Plattform-Kommunikation — ADR-0018, `docs/features/motd.md`)
 
@@ -129,7 +129,7 @@
 | 11   | 11.3  | Redaktionsbackend: Veröffentlichung & Quizlink                                     | 🔴   | ⬜ Offen     |
 | 11   | 11.4  | Redaktionsbackend: Passwort/Token-Schutz & accountbezogener Gesamtexport           | 🔴   | ⬜ Offen     |
 
-> **Repo-Abgleich (Codebase 2026-07-19):** Die weiterhin **offenen bzw. laufenden** Stories sind durch den Stand im Monorepo begründet: u. a. noch **kein** asynchroner Quizmodus mit teilnehmendenindividuellem Fortschritt, Feedback-Strategie und Host-/Presenter-Dashboard; Q&A-`moderatorView` ist weiterhin an Host-Authentifizierung gebunden, **kein** eigener Moderator-Token/-Rollenpfad. **Abgeschlossen** ist **0.7** (Baseline-Freigabe 2026-07-12): SLO-parametrisierte k6-Profile, Artillery-Live-/Reconnect-Profile, Classroom-Gates, schwere Vote-Hotpaths, Yjs-/Soak-Szenarien, standardisierte JSON-/JUnit-Reports und freigegebene Baseline in `scripts/load/baselines/manifests/story-0.7-2026-07-12.json`. **Story 6.5** ist technisch weitgehend umgesetzt und durch Template-Lint, axe, Lighthouse-Einzelaudits, Reflow-/Fokus-Smokes sowie veraPDF abgesichert; die manuelle Assistive-Technology-, Zoom-, Hochkontrast- und PDF-Reader-Abnahme bleibt offen. Details stehen im [`Accessibility-Umsetzungsjournal`](docs/praktikum/ACCESSIBILITY-UMSETZUNGSJOURNAL.md). Offen bleiben beim Kurzantwort-Ausbau **1.2ec–1.2ed**, neue Fragentypen **1.2f–1.2h**, **1.6c**/**1.6d** und **1.14a**. **Story 1.2i** (Sicherheitsgrad) ist umgesetzt — siehe [`docs/features/confidence-slider.md`](docs/features/confidence-slider.md).
+> **Repo-Abgleich (Codebase 2026-07-22):** Die weiterhin **offenen bzw. laufenden** Stories sind durch den Stand im Monorepo begründet: u. a. noch **kein** asynchroner Quizmodus mit teilnehmendenindividuellem Fortschritt, Feedback-Strategie und Host-/Presenter-Dashboard; Q&A-`moderatorView` ist weiterhin an Host-Authentifizierung gebunden, **kein** eigener Moderator-Token/-Rollenpfad. **Abgeschlossen** ist **0.7** (Baseline-Freigabe 2026-07-12): SLO-parametrisierte k6-Profile, Artillery-Live-/Reconnect-Profile, Classroom-Gates, schwere Vote-Hotpaths, Yjs-/Soak-Szenarien, standardisierte JSON-/JUnit-Reports und freigegebene Baseline in `scripts/load/baselines/manifests/story-0.7-2026-07-12.json`. **Story 6.5** (WCAG 2.2 AA) ist technisch weitgehend umgesetzt (Semantik/Fokus/Overlays, automatisierte A11y-Gates, PDF/UA, Timer-Nachteilsausgleich inkl. Host-Override und Punktvorschau, Session-Headings, Erklärung zur Barrierefreiheit (`/legal/accessibility`), News-Archiv-Tastaturnavigation, Feature-MOTD — PRs #89–#106, #101, #104, #105, #116); die manuelle Assistive-Technology-, Zoom-, Hochkontrast- und PDF-Reader-Abnahme (PR 7) bleibt offen — siehe [`Accessibility-Umsetzungsjournal`](docs/praktikum/ACCESSIBILITY-UMSETZUNGSJOURNAL.md) und [`Accessibility-Audit`](docs/praktikum/ACCESSIBILITY-AUDIT-WCAG-2.2-AA.md). Offen bleiben **6.6** (UX-Testreihen), beim Kurzantwort-Ausbau **1.2ec–1.2ed**, neue Fragentypen **1.2f–1.2h**, **1.6c**/**1.6d** und **1.14a**. **Story 1.2i** (Sicherheitsgrad) ist umgesetzt — siehe [`docs/features/confidence-slider.md`](docs/features/confidence-slider.md).
 >
 > **Korrektur zum Repo-Abgleich:** `NUMERIC_ESTIMATE` ist als Fragentyp
 > implementiert und Story 1.2d als fertig bewertet. Offen ist seit dem lokalen
@@ -143,7 +143,7 @@
 >
 > **Legende Status:** ⬜ Offen · 🔨 In Arbeit · ✅ Fertig (DoD erfüllt) · ❌ Blockiert
 >
-> **Statistik:** 🔴 Must: 34 · 🟡 Should: 67 · 🟢 Could: 11 = **112 Stories gesamt** (**91** ✅ Fertig · **1** 🔨 In Arbeit · **20** ⬜ Offen)
+> **Statistik:** 🔴 Must: 34 · 🟡 Should: 68 · 🟢 Could: 12 = **114 Stories gesamt** (**95** ✅ Fertig · **0** 🔨 In Arbeit · **19** ⬜ Offen)
 
 ---
 
@@ -1300,10 +1300,11 @@ Epic 6 bündelt **Theming, Internationalisierung, rechtliche Pflichtseiten, Mobi
 Datum/Zahlen), 6.3 (Impressum/Datenschutz) und 6.4 (Mobile-First/PWA) sind
 umgesetzt; Akzeptanzkriterien geprüft (siehe
 `docs/EPIC6-AC-PRUEFUNG.md`). Story 6.5 ist technisch und automatisch
-validiert, bleibt aber bis zur manuellen AT-/Zoom-/OS-/Reader-Abnahme in
-Arbeit. Story 6.6 ergänzt **qualitative UX-Testreihen** (Thinking Aloud) und
-die **konkrete Umsetzung** der daraus abgeleiteten UI/UX-Anpassungen. Der Epic
-wird erst nach Abschluss dieser offenen Abnahmen und Testreihen geschlossen.
+validiert (u. a. #89–#106, #101, #104, #105, #116), bleibt aber bis zur
+manuellen AT-/Zoom-/OS-/Reader-Abnahme in Arbeit. Story 6.6 ergänzt
+**qualitative UX-Testreihen** (Thinking Aloud) und die **konkrete Umsetzung**
+der daraus abgeleiteten UI/UX-Anpassungen. Der Epic wird erst nach Abschluss
+dieser offenen Abnahmen und Testreihen geschlossen.
 
 - **Story 6.1 (Dark/Light/System-Theme):** 🟡 Als Nutzer möchte ich zwischen Dark Theme, Light Theme und System-Einstellung wählen können, damit die App meinen Sehgewohnheiten entspricht.
   - **Akzeptanzkriterien:**
@@ -1349,7 +1350,7 @@ wird erst nach Abschluss dieser offenen Abnahmen und Testreihen geschlossen.
     - Viewport-Meta-Tag ist korrekt gesetzt (`width=device-width, initial-scale=1`).
     - PWA-fähig: `manifest.json` mit Icon-Set, damit die App zum Homescreen hinzugefügt werden kann.
   - **Verifizierung:** Viewport-Meta, `check-viewport-320.mjs`, Touch 44px, `manifest.webmanifest` mit Icons; Breakpoints teils 600px (Backlog 640px).
-- **Story 6.5 (Barrierefreiheit / Accessibility):** 🔴 🔨 Als Nutzer mit Einschränkungen möchte ich die App vollständig per Tastatur, Screenreader und assistive Technologien bedienen können. _(Technisch und automatisch weitgehend validiert; manuelle AT-/OS-/Zoom-Abnahme läuft. Siehe [`Accessibility-Umsetzungsjournal`](docs/praktikum/ACCESSIBILITY-UMSETZUNGSJOURNAL.md).)_
+- **Story 6.5 (Barrierefreiheit / Accessibility):** 🔴 🔨 Als Nutzer mit Einschränkungen möchte ich die App vollständig per Tastatur, Screenreader und assistive Technologien bedienen können. _(Technisch und automatisch weitgehend validiert; manuelle AT-/OS-/Zoom-/Reader-Abnahme läuft. Siehe [`Accessibility-Umsetzungsjournal`](docs/praktikum/ACCESSIBILITY-UMSETZUNGSJOURNAL.md) und [`Accessibility-Audit`](docs/praktikum/ACCESSIBILITY-AUDIT-WCAG-2.2-AA.md).)_
   - **Akzeptanzkriterien:**
     - **Tastaturnavigation:** Alle interaktiven Elemente (Buttons, Inputs, Antwortoptionen, Dropdown-Menüs) sind per `Tab`-Taste erreichbar und per `Enter`/`Space` aktivierbar.
     - **Fokus-Management:** Ein sichtbarer Fokusring (`focus-visible`) ist auf allen interaktiven Elementen vorhanden. Nach einer SPA-Folgenavigation wird die neue Hauptüberschrift, ersatzweise das `main`-Landmark, fokussiert; Modal-Öffnungen setzen einen passenden Initialfokus und geben ihn beim Schließen zurück. Initialnavigation sowie reine Theme-/Sprachwechsel verschieben den Fokus nicht ungefragt, damit Skip-Link und aktuelle Bedienposition erhalten bleiben.
@@ -1360,6 +1361,7 @@ wird erst nach Abschluss dieser offenen Abnahmen und Testreihen geschlossen.
     - **Schriftgröße:** Text ist bis 200% Browser-Zoom ohne Layoutbruch lesbar.
     - **Reduzierte Bewegung:** Bei `prefers-reduced-motion: reduce` werden Animationen (Konfetti, Pulsen, Countdowns) deaktiviert oder stark reduziert.
   - **Zielstandard:** WCAG 2.2 Level AA für alle öffentlich zugänglichen Ansichten.
+  - **Stand (2026-07-22):** Technische Maßnahmen und automatische Gates sind auf `main` gemergt — u. a. Fokus/Overlays/Semantik (#89–#90), automatisierte Gates (#91), PDF/UA (#92), Restblocker inkl. persönlicher Timer/Host-Override/Punktvorschau/Session-Headings (#101, #104), Erklärung zur Barrierefreiheit unter `/legal/accessibility` (#105), News-Archiv-Tastatur-/Fokus-Härtung (#106), Feature-MOTD zur Initiative (#116). Story 6.5 bleibt **in Arbeit**, bis die manuelle Prüfmatrix (VoiceOver/Safari, NVDA/Firefox, 200-/400-%-Zoom, Windows High Contrast, PDF-Reader) ohne offene A/AA-Befunde abgeschlossen ist.
 
 - **Story 6.6 (UX-Testreihen nach „Thinking Aloud“ & Umsetzung der Befunde):** 🟡 Als Produktteam möchten wir die App in **strukturierten Nutzertestreihen** mit der Methode **Thinking Aloud** beobachten und die dabei gewonnenen **UI/UX-Erkenntnisse** priorisiert **in der Implementierung nachziehen**, damit reale Verständnis- und Bedienprobleme sichtbar werden und nicht nur intern vermutet werden.
 
