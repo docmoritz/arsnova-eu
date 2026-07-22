@@ -4,16 +4,17 @@ Informazioni fornite ai sensi degli artt. 13 e 14 del Regolamento Generale sulla
 
 ## 1. Titolare del trattamento
 
-Prof. Dr.-Ing. habil. Klaus Quibeldey-Cirkel  
-Juri-Gagarin-Ring 152  
-99084 Erfurt  
+docmoritz by Peter Moritz  
+c/o IP-Management #4659  
+Ludwig-Erhard-Str. 18  
+20459 Hamburg  
 Germania
 
-E-mail: [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org)
+E-mail: [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy)
 
 ## 2. Ambito di applicazione
 
-Questa informativa sulla privacy si applica a https://arsnova.eu (sito informativo e di presentazione) e, ove indicato, all'utilizzo dell'applicazione arsnova.eu (quiz live e sondaggi). Se l'applicazione è self-hosted dalla tua organizzazione o istituzione, questa agisce in qualità di titolare del trattamento e si applica la sua rispettiva informativa sulla privacy.
+Questa informativa sulla privacy si applica a https://pingo.docmoritz.academy (sito informativo e di presentazione) e, ove indicato, all'utilizzo dell'applicazione arsnova.eu (quiz live e sondaggi). Se l'applicazione è self-hosted dalla tua organizzazione o istituzione, questa agisce in qualità di titolare del trattamento e si applica la sua rispettiva informativa sulla privacy.
 
 ## 3. Dati raccolti durante la visita ad arsnova.eu
 
@@ -31,7 +32,7 @@ Su arsnova.eu troverai link a servizi esterni (ad es. GitHub). Facendo clic su q
 
 arsnova.eu è ospitato in Germania da Hetzner Online GmbH. Hetzner è controllata annualmente dal TÜV Rheinland per garantire la conformità ai rigorosi standard di sicurezza previsti dall'art. 32 del GDPR.
 
-Il sito web e l'applicazione su https://arsnova.eu funzionano sui server di Hetzner. Se il software è ospitato **da te o da terzi** (ad es. la tua istituzione), i dati di accesso (come l'indirizzo IP) potrebbero essere registrati sui server del rispettivo fornitore. Se l'applicazione è ospitata in un paese extra-UE (ad es. negli Stati Uniti), potrebbero verificarsi trasferimenti di dati, soggetti ad adeguate garanzie (come le clausole contrattuali tipo ai sensi dell'art. 46 del GDPR). Occasionalmente, una pagina di presentazione separata (per demo e marketing) potrebbe essere ospitata tramite GitHub Pages sotto un dominio diverso, senza alcun collegamento al sito principale arsnova.eu; per i dettagli, consulta l'[Informativa sulla privacy di GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement). Il fornitore specifico e il luogo di archiviazione dipendono dalla configurazione scelta.
+Il sito web e l'applicazione su https://pingo.docmoritz.academy funzionano sui server di Hetzner. Se il software è ospitato **da te o da terzi** (ad es. la tua istituzione), i dati di accesso (come l'indirizzo IP) potrebbero essere registrati sui server del rispettivo fornitore. Se l'applicazione è ospitata in un paese extra-UE (ad es. negli Stati Uniti), potrebbero verificarsi trasferimenti di dati, soggetti ad adeguate garanzie (come le clausole contrattuali tipo ai sensi dell'art. 46 del GDPR). Occasionalmente, una pagina di presentazione separata (per demo e marketing) potrebbe essere ospitata tramite GitHub Pages sotto un dominio diverso, senza alcun collegamento al sito principale arsnova.eu; per i dettagli, consulta l'[Informativa sulla privacy di GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement). Il fornitore specifico e il luogo di archiviazione dipendono dalla configurazione scelta.
 
 ## 6. I tuoi diritti
 
@@ -45,7 +46,7 @@ Per quanto riguarda i tuoi dati personali, hai i seguenti diritti nei confronti 
 - **Revoca** del consenso prestato (art. 7, par. 3 GDPR), con effetto per il futuro.
 - **Reclamo** presso un'autorità di controllo della protezione dei dati (art. 77 GDPR).
 
-Per informazioni o per esercitare i tuoi diritti, ti preghiamo di contattare: [klaus.quibeldey-cirkel@iu.org](mailto:klaus.quibeldey-cirkel@iu.org).
+Per informazioni o per esercitare i tuoi diritti, ti preghiamo di contattare: [kontakt@docmoritz.academy](mailto:kontakt@docmoritz.academy).
 
 ## 7. Obbligo di conferimento dei dati
 
